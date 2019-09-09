@@ -26,3 +26,5 @@ repos:
         name: PyLint
         args: [--output-format=parseable, --rcfile=.pylintrc]
         exclude: (versioneer.py|saltfactories/_version.py)
+        additional_dependencies:
+          - saltpylint
