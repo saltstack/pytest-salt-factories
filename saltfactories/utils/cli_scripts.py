@@ -1,14 +1,15 @@
 # -*- coding: utf-8 -*-
 '''
-    saltfactories.utils.cli_scripts
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+saltfactories.utils.cli_scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Code to generate Salt CLI scripts for test runs
+Code to generate Salt CLI scripts for test runs
 '''
 
 # Import Python Libs
 from __future__ import absolute_import, unicode_literals
 import os
+import sys
 import stat
 import logging
 import textwrap
@@ -33,7 +34,7 @@ SCRIPT_TEMPLATES = {
             sapi.start()
 
         if __name__ == '__main__':
-            main()'
+            main()
         '''
     ),
     'common': textwrap.dedent(
@@ -88,9 +89,8 @@ SCRIPT_TEMPLATES = {
 def generate_script(
     bin_dir,
     script_name,
-    executable,
-    code_dir,
-    extra_code=None,
+    executable=None,
+    code_dir=None,
     inject_coverage=False,
     inject_sitecustomize=False,
 ):
@@ -113,48 +113,62 @@ def generate_script(
             script_template = SCRIPT_TEMPLATES.get(script_name, None)
             if script_template is None:
                 script_template = SCRIPT_TEMPLATES.get('common', None)
-            if script_template is None:
-                raise RuntimeError(
-                    "Pytest Salt's does not know how to handle the {} script".format(script_name)
-                )
 
-            if len(executable) > 128:
+            if executable and len(executable) > 128:
                 # Too long for a shebang, let's use /usr/bin/env and hope
                 # the right python is picked up
                 executable = '/usr/bin/env python'
 
-            script_contents = textwrap.dedent(
-                '''
+            script_contents = (
+                textwrap.dedent(
+                    '''
                 #!{executable}
 
                 from __future__ import absolute_import
                 import os
                 import sys
-
-                CODE_DIR = r'{code_dir}'
-                if CODE_DIR in sys.path:
-                    sys.path.remove(CODE_DIR)
-                sys.path.insert(0, CODE_DIR)
                 '''.format(
-                    executable=executable, code_dir=code_dir
-                )
+                        executable=executable or sys.executable
+                    )
+                ).strip()
+                + '\n\n'
             )
 
-            if extra_code:
-                script_contents += '\n' + extra_code + '\n'
-
-            if inject_coverage:
-                script_contents += '\n' + SCRIPT_TEMPLATES['coverage'] + '\n'
-
-            if inject_sitecustomize:
-                script_contents += '\n{}\n'.format(
-                    SCRIPT_TEMPLATES['sitecustomize'].format(
-                        sitecustomize_dir=os.path.join(os.path.dirname(__file__), 'coverage')
-                    )
+            if code_dir:
+                script_contents += (
+                    textwrap.dedent(
+                        '''
+                    CODE_DIR = r'{code_dir}'
+                    if CODE_DIR in sys.path:
+                        sys.path.remove(CODE_DIR)
+                    sys.path.insert(0, CODE_DIR)'''.format(
+                            code_dir=code_dir
+                        )
+                    ).strip()
+                    + '\n\n'
                 )
 
-            script_contents += '\n' + script_template.format(script_name.replace('salt-', ''))
-            sfh.write(script_contents.strip())
+            if inject_coverage and not code_dir:
+                raise RuntimeError(
+                    'The inject coverage code needs to know the code root to find the '
+                    "path to the '.coveragerc' file. Please pass 'code_dir'."
+                )
+            if inject_coverage:
+                script_contents += SCRIPT_TEMPLATES['coverage'].strip() + '\n\n'
+
+            if inject_sitecustomize:
+                script_contents += (
+                    SCRIPT_TEMPLATES['sitecustomize']
+                    .format(sitecustomize_dir=os.path.join(os.path.dirname(__file__), 'coverage'))
+                    .strip()
+                    + '\n\n'
+                )
+
+            script_contents += (
+                script_template.format(script_name.replace('salt-', '').replace('-', '_')).strip()
+                + '\n'
+            )
+            sfh.write(script_contents)
             log.debug(
                 'Wrote the following contents to temp script %s:\n%s', script_path, script_contents
             )
