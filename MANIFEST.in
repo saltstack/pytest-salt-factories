@@ -1,2 +1,2 @@
 include versioneer.py
-include saltfactories/_version.py
+recursive-include saltfactories *.py
