@@ -6,7 +6,7 @@ NG PyTest Salt Plugin
 # Import Python libs
 import re
 
-# Import pytest salt libs
+# Import Salt Factories libs
 from saltfactories._version import get_versions
 
 # Store the version attribute

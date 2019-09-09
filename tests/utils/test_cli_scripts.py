@@ -15,7 +15,7 @@ import textwrap
 # Import 3rd-party libs
 import pytest
 
-# Import salt-factories libs
+# Import Salt Factories libs
 import saltfactories.utils.cli_scripts as cli_scripts
 
 

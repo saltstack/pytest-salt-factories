@@ -2,10 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import absolute_import, with_statement
+import codecs
 import os
 import sys
-import codecs
-from setuptools import setup, find_packages
+
+from setuptools import find_packages, setup
+
+# Import Salt Factories libs
 import versioneer
 
 # Change to source's directory prior to running any command

@@ -8,8 +8,8 @@ Ports related utility functions
 
 # Import Python libs
 from __future__ import absolute_import, unicode_literals
-import time
 import socket
+import time
 
 
 def get_unused_localhost_port():

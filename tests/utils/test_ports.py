@@ -8,13 +8,13 @@ Test the port related utilities
 
 # Import Python libs
 from __future__ import absolute_import, unicode_literals
-import time
 import functools
+import time
 
 # Import 3rd-party libs
 import pytest
 
-# Import saltfactories libs
+# Import Salt Factories libs
 import saltfactories.utils.ports as ports_utils
 from saltfactories.utils.compat import mock
 
