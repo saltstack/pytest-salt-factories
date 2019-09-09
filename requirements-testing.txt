@@ -1,0 +1,4 @@
+isort==4.3.21
+pylint==2.3.1
+saltpylint==2019.6.7
+sq-black==2019.1.15; python_version >= '3.7'
