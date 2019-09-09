@@ -105,3 +105,6 @@ venv.bak/
 
 # Local Vim file
 .lvimrc
+
+# Ignore Nox directory
+.nox/
