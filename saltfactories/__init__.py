@@ -2,6 +2,7 @@
 '''
 NG PyTest Salt Plugin
 '''
+# pragma: no cover
 
 # Import Python libs
 import re

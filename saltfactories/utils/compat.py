@@ -5,6 +5,7 @@ saltfactories.utils.compat
 
 Imports compatability layer
 '''
+# pragma: no cover
 # pylint: disable=unused-import,invalid-name
 
 try:

@@ -15,7 +15,10 @@ SALT_REQUIREMENT = os.environ.get('SALT_REQUIREMENT') or 'salt'
 
 # Be verbose when runing under a CI context
 PIP_INSTALL_SILENT = (
-    os.environ.get('JENKINS_URL') or os.environ.get('CI') or os.environ.get('DRONE')
+    os.environ.get('JENKINS_URL')
+    or os.environ.get('CI')
+    or os.environ.get('DRONE')
+    or os.environ.get('GITHUB_ACTIONS')
 ) is None
 
 # Nox options
@@ -25,12 +28,12 @@ nox.options.reuse_existing_virtualenvs = True
 nox.options.error_on_missing_interpreters = False
 
 
-@nox.session(python=('2', '3.5', '3.6', '3.7'))
+@nox.session(python=('2', '2.7', '3.5', '3.6', '3.7'))
 def tests(session):
     '''
     Run tests
     '''
-    session.install('-r', 'requirements.txt', silent=PIP_INSTALL_SILENT)
+    session.install('-r', 'requirements-testing.txt', silent=PIP_INSTALL_SILENT)
     session.install(COVERAGE_VERSION_REQUIREMENT, SALT_REQUIREMENT)
     session.run('coverage', 'erase')
     tests = session.posargs or ['tests/']
@@ -45,6 +48,7 @@ def coverage(session):
     '''
     session.install(COVERAGE_VERSION_REQUIREMENT)
     session.run('coverage', 'report', '--fail-under=100', '--show-missing')
+    session.run('coverage', 'xml', '-o', 'coverage.xml')
     session.run('coverage', 'erase')
 
 
