@@ -29,6 +29,16 @@ def read(fname):
         return rfh.read()
 
 
+def parse_requirements():
+    requirements = []
+    requirements_file_path = os.path.join(SETUP_DIRNAME, 'requirements.txt')
+    for line in read(requirements_file_path):
+        if line.startswith('#'):
+            continue
+        requirements.append(line.strip())
+    return requirements
+
+
 setup(
     name='pytest-salt-factories',
     version=versioneer.get_version(),
@@ -42,7 +52,7 @@ setup(
     long_description=read('README.rst'),
     packages=find_packages(),
     cmdclass=versioneer.get_cmdclass(),
-    install_requires=['six', 'pytest >= 4.6.5'],
+    install_requires=parse_requirements(),
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
