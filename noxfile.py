@@ -12,7 +12,7 @@ from nox.command import CommandFailed
 
 IS_PY3 = sys.version_info > (2,)
 COVERAGE_VERSION_REQUIREMENT = 'coverage==4.5.4'
-SALT_REQUIREMENT = os.environ.get('SALT_REQUIREMENT') or 'salt'
+SALT_REQUIREMENT = os.environ.get('SALT_REQUIREMENT') or 'salt>=2019.2.0'
 
 # Be verbose when runing under a CI context
 PIP_INSTALL_SILENT = (
@@ -36,6 +36,7 @@ def tests(session):
     '''
     session.install('-r', 'requirements-testing.txt', silent=PIP_INSTALL_SILENT)
     session.install(COVERAGE_VERSION_REQUIREMENT, SALT_REQUIREMENT)
+    session.install('.')
     session.run('coverage', 'erase')
     tests = session.posargs or ['tests/']
     session.run('coverage', 'run', '-m', 'py.test', '-ra', *tests)
@@ -48,8 +49,8 @@ def coverage(session):
     Coverage analysis.
     '''
     session.install(COVERAGE_VERSION_REQUIREMENT)
-    session.run('coverage', 'report', '--fail-under=100', '--show-missing')
     session.run('coverage', 'xml', '-o', 'coverage.xml')
+    session.run('coverage', 'report', '--fail-under=80', '--show-missing')
     session.run('coverage', 'erase')
 
 
@@ -65,6 +66,7 @@ def blacken(session):
     session.run('sq-black', '-l 100', '--exclude=saltfactories/_version.py', *files)
     session.run(
         'isort',
+        '-y',
         '--recursive',
         '-a',
         'from __future__ import absolute_import, print_function, unicode_literals',

@@ -6,8 +6,8 @@ tests.utils.test_cli_scripts
 Test saltfactories.utils.cli_scripts
 '''
 
-# Import Python Libs
-from __future__ import absolute_import, unicode_literals
+# Import Python libs
+from __future__ import absolute_import, print_function, unicode_literals
 import os
 import sys
 import textwrap

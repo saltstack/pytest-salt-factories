@@ -5,6 +5,9 @@ saltfactories.utils.compat
 
 Imports compatability layer
 '''
+# Import Python libs
+from __future__ import absolute_import, print_function, unicode_literals
+
 # pragma: no cover
 # pylint: disable=unused-import,invalid-name
 

@@ -6,8 +6,9 @@ saltfactories.utils.cli_scripts
 Code to generate Salt CLI scripts for test runs
 '''
 
+# Import Python libs
 # Import Python Libs
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
 import stat

@@ -5,6 +5,7 @@ NG PyTest Salt Plugin
 # pragma: no cover
 
 # Import Python libs
+from __future__ import absolute_import, print_function, unicode_literals
 import re
 
 # Import Salt Factories libs

@@ -1,4 +1,5 @@
 pytest >= 4.6.5
-pytest-tempdir >= 2019.7.18
+pytest-tempdir >= 2019.9.16
 psutil
 six
+pyzmq
