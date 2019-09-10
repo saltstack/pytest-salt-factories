@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 # Import Python libs
+from __future__ import absolute_import, print_function, unicode_literals
 import os
 import sys
 import tempfile
@@ -62,7 +63,13 @@ def blacken(session):
     )
     files = ['saltfactories', 'tests', 'noxfile.py', 'setup.py']
     session.run('sq-black', '-l 100', '--exclude=saltfactories/_version.py', *files)
-    session.run('isort', '--recursive', *files)
+    session.run(
+        'isort',
+        '--recursive',
+        '-a',
+        'from __future__ import absolute_import, print_function, unicode_literals',
+        *files
+    )
 
 
 def _lint(session, rcfile, flags, paths):
