@@ -1,3 +1,4 @@
 pytest >= 4.6.5
+pytest-tempdir >= 2019.7.18
 psutil
 six
