@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import absolute_import, with_statement
+# Import Python libs
+from __future__ import absolute_import, print_function, unicode_literals, with_statement
 import codecs
 import os
 import sys
 
+# Import 3rd-party libs
 from setuptools import find_packages, setup
 
 # Import Salt Factories libs
@@ -35,7 +37,7 @@ def read(fname):
 def parse_requirements():
     requirements = []
     requirements_file_path = os.path.join(SETUP_DIRNAME, 'requirements.txt')
-    for line in read(requirements_file_path):
+    for line in read(requirements_file_path).splitlines():
         if line.startswith('#'):
             continue
         requirements.append(line.strip())
