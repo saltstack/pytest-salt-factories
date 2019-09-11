@@ -68,7 +68,6 @@ def blacken(session):
         '--recursive',
         '-a',
         'from __future__ import absolute_import, print_function, unicode_literals',
-        *files
     )
 
 
