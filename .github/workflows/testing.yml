@@ -85,7 +85,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install nox-py2 pycryptodome
+        pip install nox-py2
 
     - name: Test
       env:
@@ -139,7 +139,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install nox-py2 pycryptodome
+        pip install nox-py2
 
     - name: Install Windows Dependencies
       #if: startswith('windows', '${{ matrix.os }}')
@@ -201,7 +201,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install nox-py2 pycryptodome
+        pip install nox-py2
 
     - name: Test
       env:

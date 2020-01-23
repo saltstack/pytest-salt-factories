@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 import os
 import sys
 import tempfile
+import textwrap
 
 import nox
 from nox.command import CommandFailed
@@ -47,8 +48,78 @@ def _patch_session(session):
     )
     # Let's patch nox to make it run and in partcular, install, to the system python
     session._runner.venv = VirtualEnv(
-        sys_prefix, interpreter=session._runner.func.python, reuse_existing=True
+        sys_prefix, interpreter=session._runner.func.python, reuse_existing=True,
     )
+
+
+def _check_crypto_lib_installed(session):
+    try:
+        session.run(
+            "python",
+            "-c",
+            textwrap.dedent(
+                """\
+            import sys
+            try:
+                from M2Crypto import RSA
+                sys.exit(0)
+            except ImportError:
+                sys.exit(1)
+            """
+            ),
+            silent=True,
+            log=False,
+        )
+        session.log("The m2crypto library was found installed")
+        return
+    except CommandFailed:
+        session.log("The m2crypto library was NOT found installed")
+
+    try:
+        session.run(
+            "python",
+            "-c",
+            textwrap.dedent(
+                """\
+            import sys
+            try:
+                from Cryptodome.PublicKey import RSA
+                sys.exit(0)
+            except ImportError:
+                sys.exit(1)
+            """
+            ),
+            silent=True,
+            log=False,
+        )
+        session.log("The pycryptodome library was found installed")
+        return
+    except CommandFailed:
+        session.log("The pycryptodome library was NOT found installed")
+
+    try:
+        session.run(
+            "python",
+            "-c",
+            textwrap.dedent(
+                """\
+            import sys
+            try:
+                from Crypto.Hash import SHA
+                sys.exit(0)
+            except ImportError:
+                sys.exit(1)
+            """
+            ),
+            silent=True,
+            log=False,
+        )
+        session.log("The pycrypto or pycryptodomex library was found installed")
+        return
+    except CommandFailed:
+        session.log("The pycrypto and pycryptodomex library were NOT found installed")
+
+    session.install("pycryptodome", silent=PIP_INSTALL_SILENT)
 
 
 @nox.session(python=("2", "2.7", "3.5", "3.6", "3.7"))
@@ -59,6 +130,7 @@ def tests(session):
     _patch_session(session)
     session.install("-r", "requirements-testing.txt", silent=PIP_INSTALL_SILENT)
     session.install(COVERAGE_VERSION_REQUIREMENT, SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+    _check_crypto_lib_installed(session)
     session.install(".")
     session.run("coverage", "erase")
     tests = session.posargs or ["tests/"]
