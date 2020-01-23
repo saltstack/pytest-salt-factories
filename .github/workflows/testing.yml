@@ -33,7 +33,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install nox
+        pip install nox-py2
 
     - name: Lint
       run: |
@@ -51,7 +51,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install nox
+        pip install nox-py2
 
     - name: Code Formatting
       run: |
@@ -72,28 +72,24 @@ jobs:
           - 3.6
           - 3.7
         salt_version:
-          - 2019.2.0
+          - 3000.0rc2
 
     steps:
     - uses: actions/checkout@v1
 
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install nox virtualenv
-
-    - name: Set up Testing Python
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
 
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install nox-py2 pycryptodome
+
     - name: Test
       env:
+        USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
         nox -e tests-${{ matrix.python_version }} -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
@@ -130,36 +126,32 @@ jobs:
           - 3.6
           - 3.7
         salt_version:
-          - 2019.2.0
+          - 3000.0rc2
 
     steps:
     - uses: actions/checkout@v1
 
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install nox virtualenv
-
-    - name: Install Windows Dependencies
-      #if: startswith('windows', '${{ matrix.os }}')
-      run: |
-        choco install openssl || true
-        choco install curl || true
-        choco install vcbuildtools || true
-        choco install visualstudio2019buildtools || true
-
-    - name: Set up Testing Python
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
 
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install nox-py2 pycryptodome
+
+    - name: Install Windows Dependencies
+      #if: startswith('windows', '${{ matrix.os }}')
+      run: |
+        choco install --no-progress openssl
+        choco install --no-progress curl
+        choco install --no-progress vcbuildtools
+        choco install --no-progress visualstudio2019buildtools
+
     - name: Test
       env:
+        USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
         nox -e tests-${{ matrix.python_version }} -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
@@ -196,28 +188,24 @@ jobs:
           - 3.6
           - 3.7
         salt_version:
-          - 2019.2.0
+          - 3000.0rc2
 
     steps:
     - uses: actions/checkout@v1
 
-    - name: Set up Python 3.7
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install nox virtualenv
-
-    - name: Set up Testing Python
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
 
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install nox-py2 pycryptodome
+
     - name: Test
       env:
+        USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
         nox -e tests-${{ matrix.python_version }} -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log

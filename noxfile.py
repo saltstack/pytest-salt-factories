@@ -33,6 +33,7 @@ nox.options.error_on_missing_interpreters = False
 
 def _patch_session(session):
     if USE_SYSTEM_PYTHON is False:
+        session.log('NOT Patching nox to install against the system python')
         return
 
     session.log('Patching nox to install against the system python')
@@ -49,8 +50,7 @@ def _patch_session(session):
     )
 
 
-# @nox.session(python=('2', '2.7', '3.5', '3.6', '3.7'))
-@nox.session(python=False)
+@nox.session(python=('2', '2.7', '3.5', '3.6', '3.7'))
 def tests(session):
     '''
     Run tests
