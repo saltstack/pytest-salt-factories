@@ -33,7 +33,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install nox-py2
+        pip install nox
 
     - name: Lint
       run: |
@@ -51,7 +51,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install nox-py2
+        pip install nox
 
     - name: Code Formatting
       run: |
@@ -77,15 +77,20 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
+    - name: Set up Python 3.7 For Nox
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install Nox
+      run: |
+        python -m pip install --upgrade pip
+        pip install nox
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install nox-py2
 
     - name: Test
       env:
@@ -131,38 +136,29 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
+    - name: Set up Python 3.7 For Nox
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install Nox
+      run: |
+        python -m pip install --upgrade pip
+        pip install nox
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install nox-py2
-
-    - name: Install Windows Dependencies
-      #if: startswith('windows', '${{ matrix.os }}')
-      run: |
-        choco install --no-progress openssl
-        choco install --no-progress curl
-
-    - name: Install Windows Py2 Compiler
-      if: startswith(matrix.python_version, '2')
-      run: |
-        choco install --no-progress vcbuildtools
-
-    - name: Install Windows Py3 Compiler
-      if: startswith(matrix.python_version, '3')
-      run: |
-        choco install --no-progress visualstudio2019buildtools
-
     - name: Test
+      shell: bash
       env:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
-        nox -e tests-system-python -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
+        export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
+        nox -e tests-system-python -- -s --log-cli-level=debug --log-file-level=debug --log-file=runtests.log
 
     - name: Upload Coverage
       shell: bash
@@ -201,15 +197,20 @@ jobs:
     steps:
     - uses: actions/checkout@v1
 
+    - name: Set up Python 3.7 For Nox
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install Nox
+      run: |
+        python -m pip install --upgrade pip
+        pip install nox
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install nox-py2
 
     - name: Test
       env:
