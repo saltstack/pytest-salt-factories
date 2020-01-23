@@ -92,7 +92,7 @@ jobs:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
-        nox -e tests-${{ matrix.python_version }} -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
+        nox -e tests-system-python -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
 
     - name: Upload Coverage
       shell: bash
@@ -154,7 +154,7 @@ jobs:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
-        nox -e tests-${{ matrix.python_version }} -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
+        nox -e tests-system-python -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
 
     - name: Upload Coverage
       shell: bash
@@ -208,7 +208,7 @@ jobs:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
-        nox -e tests-${{ matrix.python_version }} -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
+        nox -e tests-system-python -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
 
     - name: Upload Coverage
       shell: bash

@@ -71,6 +71,7 @@ def _check_crypto_lib_installed(session):
             log=False,
         )
         session.log("The m2crypto library was found installed")
+        session.run("pip", "freeze")
         return
     except CommandFailed:
         session.log("The m2crypto library was NOT found installed")
@@ -93,6 +94,7 @@ def _check_crypto_lib_installed(session):
             log=False,
         )
         session.log("The pycryptodome library was found installed")
+        session.run("pip", "freeze")
         return
     except CommandFailed:
         session.log("The pycryptodome library was NOT found installed")
@@ -115,6 +117,7 @@ def _check_crypto_lib_installed(session):
             log=False,
         )
         session.log("The pycrypto or pycryptodomex library was found installed")
+        session.run("pip", "freeze")
         return
     except CommandFailed:
         session.log("The pycrypto and pycryptodomex library were NOT found installed")
@@ -122,12 +125,10 @@ def _check_crypto_lib_installed(session):
     session.install("pycryptodome", silent=PIP_INSTALL_SILENT)
 
 
-@nox.session(python=("2", "2.7", "3.5", "3.6", "3.7"))
-def tests(session):
+def _tests(session):
     """
     Run tests
     """
-    _patch_session(session)
     session.install("-r", "requirements-testing.txt", silent=PIP_INSTALL_SILENT)
     session.install(COVERAGE_VERSION_REQUIREMENT, SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
     _check_crypto_lib_installed(session)
@@ -136,6 +137,23 @@ def tests(session):
     tests = session.posargs or ["tests/"]
     session.run("coverage", "run", "-m", "py.test", "-ra", *tests)
     session.notify("coverage")
+
+
+@nox.session(python=("2", "2.7", "3.5", "3.6", "3.7"))
+def tests(session):
+    """
+    Run tests
+    """
+    _tests(session)
+
+
+@nox.session(python=False, name="tests-system-python")
+def tests_system_python(session):
+    """
+    Run tests
+    """
+    _patch_session(session)
+    _tests(session)
 
 
 @nox.session
