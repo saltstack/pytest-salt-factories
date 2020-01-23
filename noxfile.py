@@ -130,7 +130,8 @@ def _tests(session):
     Run tests
     """
     session.install("-r", "requirements-testing.txt", silent=PIP_INSTALL_SILENT)
-    session.install(COVERAGE_VERSION_REQUIREMENT, SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+    session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+    session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
     _check_crypto_lib_installed(session)
     session.install(".")
     session.run("coverage", "erase")
