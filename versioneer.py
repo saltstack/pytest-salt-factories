@@ -278,7 +278,6 @@ https://img.shields.io/travis/warner/python-versioneer/master.svg
 
 """
 
-# Import Python libs
 from __future__ import absolute_import, print_function, unicode_literals
 import errno
 import json

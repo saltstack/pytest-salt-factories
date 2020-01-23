@@ -113,7 +113,8 @@ disable=R,
   locally-disabled,
   repr-flag-used-in-string,
   un-indexed-curly-braces-error,
-  un-indexed-curly-braces-warning
+  un-indexed-curly-braces-warning,
+  import-outside-toplevel
 
 # Disabled:
 # R* [refactoring suggestions & reports]

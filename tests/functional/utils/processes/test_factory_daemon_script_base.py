@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 tests.functional.utils.processes.test_factory_daemon_script_base
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test saltfactories.utils.processes.FactoryDaemonScriptBase
-'''
-# Import Python libs
-from __future__ import absolute_import, print_function, unicode_literals
+"""
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import functools
 import os
 import pprint
@@ -14,10 +16,8 @@ import stat
 import sys
 import time
 
-# Import 3rd-party libs
 import psutil
 
-# Import Salt Factories libs
 from saltfactories.utils.processes import FactoryDaemonScriptBase
 
 
@@ -31,7 +31,7 @@ def test_daemon_process_termination(request, testdir):
     primary_childrend_count = 5
     secondary_children_count = 3
     script = testdir.makepyfile(
-        '''
+        """
         #!{shebang}
 
         import time
@@ -73,7 +73,7 @@ def test_daemon_process_termination(request, testdir):
                 break
 
         # We're not terminating child processes on purpose. Our code should handle it.
-        '''.format(
+        """.format(
             shebang=sys.executable,
             primary_childrend_count=primary_childrend_count,
             secondary_children_count=secondary_children_count,
@@ -102,7 +102,7 @@ def test_daemon_process_termination(request, testdir):
         if psutil.pid_exists(child.pid):
             continue
         children.remove(child)
-    assert not children, 'len(children)=={} != 0\n{}'.format(
+    assert not children, "len(children)=={} != 0\n{}".format(
         len(children), pprint.pformat(children)
     )
 
@@ -112,7 +112,7 @@ def test_daemon_process_termination_parent_killed(request, testdir):
     primary_childrend_count = 5
     secondary_children_count = 3
     script = testdir.makepyfile(
-        '''
+        """
         #!{shebang}
 
         import time
@@ -154,7 +154,7 @@ def test_daemon_process_termination_parent_killed(request, testdir):
                 break
 
         # We're not terminating child processes on purpose. Our code should handle it.
-        '''.format(
+        """.format(
             shebang=sys.executable,
             primary_childrend_count=primary_childrend_count,
             secondary_children_count=secondary_children_count,
@@ -188,6 +188,6 @@ def test_daemon_process_termination_parent_killed(request, testdir):
         if psutil.pid_exists(child.pid):
             continue
         children.remove(child)
-    assert not children, 'len(children)=={} != 0\n{}'.format(
+    assert not children, "len(children)=={} != 0\n{}".format(
         len(children), pprint.pformat(children)
     )

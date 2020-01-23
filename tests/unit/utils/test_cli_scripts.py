@@ -1,34 +1,33 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 tests.utils.test_cli_scripts
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Test saltfactories.utils.cli_scripts
-'''
+"""
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
-# Import Python libs
-from __future__ import absolute_import, print_function, unicode_literals
 import os
 import sys
 import textwrap
 
-# Import 3rd-party libs
 import pytest
 
-# Import Salt Factories libs
 import saltfactories.utils.cli_scripts as cli_scripts
 
 
 def test_generate_script_defaults(tmpdir):
-    '''
+    """
     Test defaults script generation
-    '''
-    script_path = cli_scripts.generate_script(tmpdir.strpath, 'salt-foobar')
+    """
+    script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar")
     with open(script_path) as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!{}
 
         from __future__ import absolute_import
@@ -49,7 +48,7 @@ def test_generate_script_defaults(tmpdir):
 
         if __name__ == '__main__':
             main()
-        '''.format(
+        """.format(
             sys.executable
         )
     )
@@ -57,17 +56,17 @@ def test_generate_script_defaults(tmpdir):
 
 
 def test_generate_script_executable(tmpdir):
-    '''
+    """
     Test custom executable path
-    '''
+    """
     script_path = cli_scripts.generate_script(
-        tmpdir.strpath, 'salt-foobar', executable='/usr/bin/python4'
+        tmpdir.strpath, "salt-foobar", executable="/usr/bin/python4"
     )
     with open(script_path) as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!/usr/bin/python4
 
         from __future__ import absolute_import
@@ -88,25 +87,25 @@ def test_generate_script_executable(tmpdir):
 
         if __name__ == '__main__':
             main()
-        '''
+        """
     )
     assert contents == expected
 
 
 def test_generate_script_long_executable(tmpdir):
-    '''
+    """
     Test that long executable paths get converted to `/usr/bin/env python`
-    '''
+    """
     executable = sys.executable
     while len(executable) <= 128:
         executable += executable
 
-    script_path = cli_scripts.generate_script(tmpdir.strpath, 'salt-foobar', executable=executable)
+    script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar", executable=executable)
     with open(script_path) as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!/usr/bin/env python
 
         from __future__ import absolute_import
@@ -127,22 +126,22 @@ def test_generate_script_long_executable(tmpdir):
 
         if __name__ == '__main__':
             main()
-        '''
+        """
     )
     assert contents == expected
 
 
 def test_generate_script_code_dir(tmpdir):
-    '''
+    """
     Test code_dir inclusion in script generation
-    '''
-    code_dir = tmpdir.mkdir('code-dir').strpath
-    script_path = cli_scripts.generate_script(tmpdir.strpath, 'salt-foobar', code_dir=code_dir)
+    """
+    code_dir = tmpdir.mkdir("code-dir").strpath
+    script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar", code_dir=code_dir)
     with open(script_path) as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!{}
 
         from __future__ import absolute_import
@@ -168,7 +167,7 @@ def test_generate_script_code_dir(tmpdir):
 
         if __name__ == '__main__':
             main()
-        '''.format(
+        """.format(
             sys.executable, code_dir
         )
     )
@@ -176,22 +175,22 @@ def test_generate_script_code_dir(tmpdir):
 
 
 def test_generate_script_inject_coverage(tmpdir):
-    '''
+    """
     Test coverage related code included in script generation
-    '''
+    """
     # If code_dir is not passed, assert that we fail
     with pytest.raises(RuntimeError):
-        cli_scripts.generate_script(tmpdir.strpath, 'salt-foobar-fail', inject_coverage=True)
+        cli_scripts.generate_script(tmpdir.strpath, "salt-foobar-fail", inject_coverage=True)
 
-    code_dir = tmpdir.mkdir('code-dir').strpath
+    code_dir = tmpdir.mkdir("code-dir").strpath
     script_path = cli_scripts.generate_script(
-        tmpdir.strpath, 'salt-foobar', code_dir=code_dir, inject_coverage=True
+        tmpdir.strpath, "salt-foobar", code_dir=code_dir, inject_coverage=True
     )
     with open(script_path) as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!{}
 
         from __future__ import absolute_import
@@ -223,7 +222,7 @@ def test_generate_script_inject_coverage(tmpdir):
 
         if __name__ == '__main__':
             main()
-        '''.format(
+        """.format(
             sys.executable, code_dir
         )
     )
@@ -231,14 +230,14 @@ def test_generate_script_inject_coverage(tmpdir):
 
 
 def test_generate_script_inject_sitecustomize(tmpdir):
-    '''
+    """
     Test sitecustomize injection related code included in script generation
-    '''
-    sitecustomize_path = os.path.join(os.path.dirname(cli_scripts.__file__), 'coverage')
-    code_dir = tmpdir.mkdir('code-dir').strpath
+    """
+    sitecustomize_path = os.path.join(os.path.dirname(cli_scripts.__file__), "coverage")
+    code_dir = tmpdir.mkdir("code-dir").strpath
     script_path = cli_scripts.generate_script(
         tmpdir.strpath,
-        'salt-foobar',
+        "salt-foobar",
         code_dir=code_dir,
         inject_coverage=True,
         inject_sitecustomize=True,
@@ -247,7 +246,7 @@ def test_generate_script_inject_sitecustomize(tmpdir):
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!{}
 
         from __future__ import absolute_import
@@ -295,20 +294,20 @@ def test_generate_script_inject_sitecustomize(tmpdir):
 
         if __name__ == '__main__':
             main()
-        '''.format(
+        """.format(
             sys.executable, code_dir, sitecustomize_path
         )
     )
     assert contents == expected
 
     script_path = cli_scripts.generate_script(
-        tmpdir.strpath, 'salt-foobar-2', inject_sitecustomize=True
+        tmpdir.strpath, "salt-foobar-2", inject_sitecustomize=True
     )
     with open(script_path) as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!{}
 
         from __future__ import absolute_import
@@ -345,7 +344,7 @@ def test_generate_script_inject_sitecustomize(tmpdir):
 
         if __name__ == '__main__':
             main()
-        '''.format(
+        """.format(
             sys.executable, sitecustomize_path
         )
     )
@@ -353,15 +352,15 @@ def test_generate_script_inject_sitecustomize(tmpdir):
 
 
 def test_generate_script_salt(tmpdir):
-    '''
+    """
     Test script generation for the salt CLI script
-    '''
-    script_path = cli_scripts.generate_script(tmpdir.strpath, 'salt')
+    """
+    script_path = cli_scripts.generate_script(tmpdir.strpath, "salt")
     with open(script_path) as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!{}
 
         from __future__ import absolute_import
@@ -372,7 +371,7 @@ def test_generate_script_salt(tmpdir):
 
         if __name__ == '__main__':
             salt_main()
-        '''.format(
+        """.format(
             sys.executable
         )
     )
@@ -380,15 +379,15 @@ def test_generate_script_salt(tmpdir):
 
 
 def test_generate_script_salt_api(tmpdir):
-    '''
+    """
     Test script generation for the salt-api CLI script
-    '''
-    script_path = cli_scripts.generate_script(tmpdir.strpath, 'salt-api')
+    """
+    script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-api")
     with open(script_path) as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!{}
 
         from __future__ import absolute_import
@@ -403,7 +402,7 @@ def test_generate_script_salt_api(tmpdir):
 
         if __name__ == '__main__':
             main()
-        '''.format(
+        """.format(
             sys.executable
         )
     )
@@ -411,15 +410,15 @@ def test_generate_script_salt_api(tmpdir):
 
 
 def test_generate_script_creates_missing_bin_dir(tmpdir):
-    '''
+    """
     Test defaults script generation
-    '''
-    script_path = cli_scripts.generate_script(tmpdir.join('blah').strpath, 'salt-foobar')
+    """
+    script_path = cli_scripts.generate_script(tmpdir.join("blah").strpath, "salt-foobar")
     with open(script_path) as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!{}
 
         from __future__ import absolute_import
@@ -440,24 +439,24 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
 
         if __name__ == '__main__':
             main()
-        '''.format(
+        """.format(
             sys.executable
         )
     )
     assert contents == expected
-    assert os.path.isdir(tmpdir.join('blah').strpath)
+    assert os.path.isdir(tmpdir.join("blah").strpath)
 
 
 def test_generate_script_only_generates_once(tmpdir):
-    '''
+    """
     Test defaults script generation
-    '''
-    script_path = cli_scripts.generate_script(tmpdir.strpath, 'salt-foobar')
+    """
+    script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar")
     with open(script_path) as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        '''\
+        """\
         #!{}
 
         from __future__ import absolute_import
@@ -478,14 +477,14 @@ def test_generate_script_only_generates_once(tmpdir):
 
         if __name__ == '__main__':
             main()
-        '''.format(
+        """.format(
             sys.executable
         )
     )
     assert contents == expected
     statinfo_1 = os.stat(script_path)
 
-    script_path = cli_scripts.generate_script(tmpdir.strpath, 'salt-foobar')
+    script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar")
     with open(script_path) as rfh:
         contents = rfh.read()
     assert contents == expected

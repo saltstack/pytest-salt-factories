@@ -1,21 +1,22 @@
 # -*- coding: utf-8 -*-
-'''
+"""
 saltfactories.utils.ports
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Ports related utility functions
-'''
+"""
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 
-# Import Python libs
-from __future__ import absolute_import, print_function, unicode_literals
 import socket
 import time
 
 
 def get_unused_localhost_port():
-    '''
+    """
     Return a random unused port on localhost
-    '''
+    """
     try:
         generated_ports = get_unused_localhost_port.__used_ports__
         # Cleanup ports. The idea behind this call is so that two consecutive calls to this
@@ -29,7 +30,7 @@ def get_unused_localhost_port():
         generated_ports = get_unused_localhost_port.__used_ports__ = {}
 
     usock = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
-    usock.bind(('127.0.0.1', 0))
+    usock.bind(("127.0.0.1", 0))
     port = usock.getsockname()[1]
     usock.close()
     if port not in generated_ports:
