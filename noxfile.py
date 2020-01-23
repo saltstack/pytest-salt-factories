@@ -9,10 +9,12 @@ import tempfile
 # Import 3rd-party libs
 import nox
 from nox.command import CommandFailed
+from nox.virtualenv import VirtualEnv
 
 IS_PY3 = sys.version_info > (2,)
 COVERAGE_VERSION_REQUIREMENT = 'coverage==4.5.4'
 SALT_REQUIREMENT = os.environ.get('SALT_REQUIREMENT') or 'salt>=2019.2.0'
+USE_SYSTEM_PYTHON = 'USE_SYSTEM_PYTHON' in os.environ
 
 # Be verbose when runing under a CI context
 PIP_INSTALL_SILENT = (
@@ -29,11 +31,31 @@ nox.options.reuse_existing_virtualenvs = True
 nox.options.error_on_missing_interpreters = False
 
 
-@nox.session(python=('2', '2.7', '3.5', '3.6', '3.7'))
+def _patch_session(session):
+    if USE_SYSTEM_PYTHON is False:
+        return
+
+    session.log('Patching nox to install against the system python')
+    # Let's get sys.prefix
+    sys_prefix = session.run(
+        'python',
+        '-c' 'import sys; sys.stdout.write("{}".format(sys.prefix))',
+        silent=True,
+        log=False,
+    )
+    # Let's patch nox to make it run and in partcular, install, to the system python
+    session._runner.venv = VirtualEnv(
+        sys_prefix, interpreter=session._runner.func.python, reuse_existing=True,
+    )
+
+
+# @nox.session(python=('2', '2.7', '3.5', '3.6', '3.7'))
+@nox.session(python=False)
 def tests(session):
     '''
     Run tests
     '''
+    _patch_session(session)
     session.install('-r', 'requirements-testing.txt', silent=PIP_INSTALL_SILENT)
     session.install(COVERAGE_VERSION_REQUIREMENT, SALT_REQUIREMENT)
     session.install('.')
@@ -48,6 +70,7 @@ def coverage(session):
     '''
     Coverage analysis.
     '''
+    _patch_session(session)
     session.install(COVERAGE_VERSION_REQUIREMENT)
     session.run('coverage', 'xml', '-o', 'coverage.xml')
     session.run('coverage', 'report', '--fail-under=80', '--show-missing')
@@ -59,6 +82,7 @@ def blacken(session):
     '''
     Run black code formater.
     '''
+    _patch_session(session)
     session.install(
         '--progress-bar=off', '-r', 'requirements-testing.txt', silent=PIP_INSTALL_SILENT
     )
@@ -74,6 +98,7 @@ def blacken(session):
 
 
 def _lint(session, rcfile, flags, paths):
+    _patch_session(session)
     session.install(
         '--progress-bar=off', '-r', 'requirements-testing.txt', silent=PIP_INSTALL_SILENT
     )
