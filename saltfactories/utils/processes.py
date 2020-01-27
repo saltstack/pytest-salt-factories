@@ -30,6 +30,7 @@ import pytest
 import six
 
 from saltfactories.utils import compat
+from saltfactories.utils import nb_popen
 
 
 try:
@@ -384,9 +385,6 @@ class FactoryProcess(object):
         an initial listing of child processes which will be used when terminating the
         terminal
         """
-        # Late import
-        import salt.utils.nb_popen as nb_popen
-
         self._terminal = nb_popen.NonBlockingPopen(cmdline, **kwargs)
         for child in psutil.Process(self._terminal.pid).children(recursive=True):
             if child not in self._children:
