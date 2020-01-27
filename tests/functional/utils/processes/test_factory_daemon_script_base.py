@@ -59,20 +59,26 @@ def test_daemon_process_termination(request, testdir):
                     break
 
 
-        procs = []
+        def main():
+            procs = []
 
-        for idx in range({primary_childrend_count}):
-            proc = multiprocessing.Process(target=spin_children)
-            procs.append(proc)
-            proc.start()
+            for idx in range({primary_childrend_count}):
+                proc = multiprocessing.Process(target=spin_children)
+                procs.append(proc)
+                proc.start()
 
-        while True:
-            try:
-                time.sleep(0.25)
-            except KeyboardInterrupt:
-                break
+            while True:
+                try:
+                    time.sleep(0.25)
+                except KeyboardInterrupt:
+                    break
 
-        # We're not terminating child processes on purpose. Our code should handle it.
+            # We're not terminating child processes on purpose. Our code should handle it.
+
+        # Support for windows test runs
+        if __name__ == '__main__':
+            multiprocessing.freeze_support()
+            main()
         """.format(
             shebang=sys.executable,
             primary_childrend_count=primary_childrend_count,
@@ -139,21 +145,26 @@ def test_daemon_process_termination_parent_killed(request, testdir):
                 except KeyboardInterrupt:
                     break
 
+        def main():
+            procs = []
 
-        procs = []
+            for idx in range({primary_childrend_count}):
+                proc = multiprocessing.Process(target=spin_children)
+                procs.append(proc)
+                proc.start()
 
-        for idx in range({primary_childrend_count}):
-            proc = multiprocessing.Process(target=spin_children)
-            procs.append(proc)
-            proc.start()
+            while True:
+                try:
+                    time.sleep(0.25)
+                except KeyboardInterrupt:
+                    break
 
-        while True:
-            try:
-                time.sleep(0.25)
-            except KeyboardInterrupt:
-                break
+            # We're not terminating child processes on purpose. Our code should handle it.
 
-        # We're not terminating child processes on purpose. Our code should handle it.
+        # Support for windows test runs
+        if __name__ == '__main__':
+            multiprocessing.freeze_support()
+            main()
         """.format(
             shebang=sys.executable,
             primary_childrend_count=primary_childrend_count,
