@@ -594,23 +594,32 @@ class FactoryDaemonScriptBase(FactoryProcess):
         """
         The actual, coroutine aware, start method
         """
+        running = self._running
+        terminal = self._terminal
         try:
-            while self._running.is_set() and self._terminal.poll() is None:
-                # We're not actually interested in processing the output, it will get logged, just consume it
-                if self._terminal.stdout is not None:
-                    self._terminal.recv()
-                if self._terminal.stderr is not None:
-                    self._terminal.recv_err()
-                time.sleep(0.125)
-                if self._terminal.poll() is not None:
-                    self._running.clear()
+            while True:
+                if not running.is_set():
+                    break
+
+                if terminal is None:
+                    break
+
+                if terminal and terminal.poll() is None:
+                    # We're not actually interested in processing the output, it will get logged, just consume it
+                    if terminal.stdout is not None:
+                        terminal.recv()
+                    if terminal.stderr is not None:
+                        terminal.recv_err()
+                    time.sleep(0.125)
+                if terminal and terminal.poll() is not None:
+                    running.clear()
         except (SystemExit, KeyboardInterrupt):
-            self._running.clear()
+            running.clear()
         finally:
-            if self._terminal.stdout:
-                self._terminal.stdout.close()
-            if self._terminal.stderr:
-                self._terminal.stderr.close()
+            if terminal and terminal.stdout:
+                terminal.stdout.close()
+            if terminal and terminal.stderr:
+                terminal.stderr.close()
 
     def terminate(self):
         """
