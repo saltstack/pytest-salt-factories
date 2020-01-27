@@ -10,6 +10,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import sys
+import textwrap
 
 import pytest
 
@@ -19,7 +20,19 @@ from saltfactories.utils.processes import FactoryScriptBase
 @pytest.mark.parametrize("exitcode", [0, 1, 3, 9, 40, 120])
 def test_exitcode(exitcode):
     shell = FactoryScriptBase(sys.executable)
-    result = shell.run("-c", "import time; time.sleep(0.125); exit({})".format(exitcode))
+    result = shell.run(
+        "-c",
+        textwrap.dedent(
+            """\
+            # -*- coding: utf-8 -*-
+            import time
+            time.sleep(0.125)
+            exit({})
+            """.format(
+                exitcode
+            )
+        ),
+    )
     assert result.exitcode == exitcode
 
 
@@ -29,7 +42,17 @@ def test_timeout_defined_on_class_instantiation():
 
     shell = FactoryScriptBase(sys.executable, default_timeout=0.5, fail_callable=raise_exception)
     with pytest.raises(RuntimeError):
-        shell.run("-c", "import time; time.sleep(1); exit(0)")
+        shell.run(
+            "-c",
+            textwrap.dedent(
+                """\
+                # -*- coding: utf-8 -*-
+                import time
+                time.sleep(1)
+                exit(0)
+                """
+            ),
+        )
 
 
 def test_timeout_defined_run():
@@ -37,10 +60,31 @@ def test_timeout_defined_run():
         raise RuntimeError(msg)
 
     shell = FactoryScriptBase(sys.executable, fail_callable=raise_exception)
-    result = shell.run("-c", "import time; time.sleep(0.5); exit(0)")
+    result = shell.run(
+        "-c",
+        textwrap.dedent(
+            """\
+            # -*- coding: utf-8 -*-
+            import time
+            time.sleep(0.5)
+            exit(0)
+            """
+        ),
+    )
     assert result.exitcode == 0
     with pytest.raises(RuntimeError):
-        shell.run("-c", "import time; time.sleep(0.5); exit(0)", _timeout=0.1)
+        shell.run(
+            "-c",
+            textwrap.dedent(
+                """\
+                # -*- coding: utf-8 -*-
+                import time
+                time.sleep(0.5)
+                exit(0)
+                """
+            ),
+            _timeout=0.1,
+        )
 
 
 @pytest.mark.parametrize(
@@ -55,7 +99,17 @@ def test_timeout_defined_run():
 def test_json_output(input_str, expected_object):
     shell = FactoryScriptBase(sys.executable)
     result = shell.run(
-        "-c", '''import sys; sys.stdout.write("""{}"""); exit(0)'''.format(input_str)
+        "-c",
+        textwrap.dedent(
+            """\
+            # -*- coding: utf-8 -*-
+            import sys
+            sys.stdout.write('''{}''')
+            exit(0)
+            """.format(
+                input_str
+            )
+        ),
     )
     assert result.exitcode == 0
     if result.json:
@@ -66,6 +120,16 @@ def test_json_output(input_str, expected_object):
 def test_stderr_output():
     input_str = "Thou shalt not exit cleanly"
     shell = FactoryScriptBase(sys.executable)
-    result = shell.run("-c", """exit("{}")""".format(input_str))
+    result = shell.run(
+        "-c",
+        textwrap.dedent(
+            """\
+            # -*- coding: utf-8 -*-
+            exit("{}")
+            """.format(
+                input_str
+            )
+        ),
+    )
     assert result.exitcode == 1
     assert result.stderr == input_str + "\n"

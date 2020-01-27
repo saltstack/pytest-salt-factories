@@ -33,6 +33,7 @@ def test_daemon_process_termination(request, testdir):
     script = testdir.makepyfile(
         """
         #!{shebang}
+        # -*- coding: utf-8 -*-
 
         import time
         import multiprocessing
@@ -120,6 +121,7 @@ def test_daemon_process_termination_parent_killed(request, testdir):
     script = testdir.makepyfile(
         """
         #!{shebang}
+        # -*- coding: utf-8 -*-
 
         import time
         import multiprocessing
