@@ -40,87 +40,104 @@ def _patch_session(session):
 
     session.log("Patching nox to install against the system python")
     # Let's get sys.prefix
-    sys_prefix = session.run(
-        "python",
-        "-c" 'import sys; sys.stdout.write("{}".format(sys.prefix))',
-        silent=True,
-        log=False,
-    )
-    # Let's patch nox to make it run and in partcular, install, to the system python
-    session._runner.venv = VirtualEnv(
-        sys_prefix, interpreter=session._runner.func.python, reuse_existing=True
-    )
+    old_install_only_value = session._runner.global_config.install_only
+    try:
+        # Force install only to be false for the following chunk of code
+        # For additional information as to why see:
+        #   https://github.com/theacodes/nox/pull/181
+        session._runner.global_config.install_only = False
+        sys_prefix = session.run(
+            "python",
+            "-c" 'import sys; sys.stdout.write("{}".format(sys.prefix))',
+            silent=True,
+            log=False,
+        )
+        # Let's patch nox to make it run and in partcular, install, to the system python
+        session._runner.venv = VirtualEnv(
+            sys_prefix, interpreter=session._runner.func.python, reuse_existing=True
+        )
+    finally:
+        session._runner.global_config.install_only = old_install_only_value
 
 
 def _check_crypto_lib_installed(session):
+    # Let's get sys.prefix
+    old_install_only_value = session._runner.global_config.install_only
     try:
-        session.run(
-            "python",
-            "-c",
-            textwrap.dedent(
-                """\
-            import sys
-            try:
-                from M2Crypto import RSA
-                sys.exit(0)
-            except ImportError:
-                sys.exit(1)
-            """
-            ),
-            silent=True,
-            log=False,
-        )
-        session.log("The m2crypto library was found installed")
-        session.run("pip", "freeze")
-        return
-    except CommandFailed:
-        session.log("The m2crypto library was NOT found installed")
+        # Force install only to be false for the following chunk of code
+        # For additional information as to why see:
+        #   https://github.com/theacodes/nox/pull/181
+        session._runner.global_config.install_only = False
+        try:
+            session.run(
+                "python",
+                "-c",
+                textwrap.dedent(
+                    """\
+                import sys
+                try:
+                    from M2Crypto import RSA
+                    sys.exit(0)
+                except ImportError:
+                    sys.exit(1)
+                """
+                ),
+                silent=True,
+                log=False,
+            )
+            session.log("The m2crypto library was found installed")
+            session.run("pip", "freeze")
+            return
+        except CommandFailed:
+            session.log("The m2crypto library was NOT found installed")
 
-    try:
-        session.run(
-            "python",
-            "-c",
-            textwrap.dedent(
-                """\
-            import sys
-            try:
-                from Cryptodome.PublicKey import RSA
-                sys.exit(0)
-            except ImportError:
-                sys.exit(1)
-            """
-            ),
-            silent=True,
-            log=False,
-        )
-        session.log("The pycryptodome library was found installed")
-        session.run("pip", "freeze")
-        return
-    except CommandFailed:
-        session.log("The pycryptodome library was NOT found installed")
+        try:
+            session.run(
+                "python",
+                "-c",
+                textwrap.dedent(
+                    """\
+                import sys
+                try:
+                    from Cryptodome.PublicKey import RSA
+                    sys.exit(0)
+                except ImportError:
+                    sys.exit(1)
+                """
+                ),
+                silent=True,
+                log=False,
+            )
+            session.log("The pycryptodome library was found installed")
+            session.run("pip", "freeze")
+            return
+        except CommandFailed:
+            session.log("The pycryptodome library was NOT found installed")
 
-    try:
-        session.run(
-            "python",
-            "-c",
-            textwrap.dedent(
-                """\
-            import sys
-            try:
-                from Crypto.Hash import SHA
-                sys.exit(0)
-            except ImportError:
-                sys.exit(1)
-            """
-            ),
-            silent=True,
-            log=False,
-        )
-        session.log("The pycrypto or pycryptodomex library was found installed")
-        session.run("pip", "freeze")
-        return
-    except CommandFailed:
-        session.log("The pycrypto and pycryptodomex library were NOT found installed")
+        try:
+            session.run(
+                "python",
+                "-c",
+                textwrap.dedent(
+                    """\
+                import sys
+                try:
+                    from Crypto.Hash import SHA
+                    sys.exit(0)
+                except ImportError:
+                    sys.exit(1)
+                """
+                ),
+                silent=True,
+                log=False,
+            )
+            session.log("The pycrypto or pycryptodomex library was found installed")
+            session.run("pip", "freeze")
+            return
+        except CommandFailed:
+            session.log("The pycrypto and pycryptodomex library were NOT found installed")
+    finally:
+        session._runner.global_config.install_only = old_install_only_value
 
     session.install("pycryptodome", silent=PIP_INSTALL_SILENT)
 

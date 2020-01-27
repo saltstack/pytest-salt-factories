@@ -92,6 +92,13 @@ jobs:
       with:
         python-version: ${{ matrix.python_version }}
 
+    - name: Install Test Requirements
+      env:
+        USE_SYSTEM_PYTHON: YES
+        SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
+      run: |
+        nox -e tests-system-python --install-only
+
     - name: Test
       env:
         USE_SYSTEM_PYTHON: YES
@@ -150,6 +157,13 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
+
+    - name: Install Test Requirements
+      env:
+        USE_SYSTEM_PYTHON: YES
+        SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
+      run: |
+        nox -e tests-system-python --install-only
 
     - name: Test
       shell: bash
@@ -211,6 +225,13 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python_version }}
+
+    - name: Install Test Requirements
+      env:
+        USE_SYSTEM_PYTHON: YES
+        SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
+      run: |
+        nox -e tests-system-python --install-only
 
     - name: Test
       env:
