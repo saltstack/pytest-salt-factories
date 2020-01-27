@@ -14,12 +14,14 @@ import errno
 import json
 import logging
 import os
+import pprint
 import signal
 import socket
 import subprocess
 import sys
 import threading
 import time
+import weakref
 from collections import namedtuple
 from operator import itemgetter
 
@@ -36,12 +38,6 @@ try:
     HAS_SETPROCTITLE = True
 except ImportError:
     HAS_SETPROCTITLE = False
-
-if sys.platform.startswith("win"):
-    SIGINT = SIGTERM = signal.CTRL_BREAK_EVENT  # pylint: disable=no-member
-else:
-    SIGINT = signal.SIGINT
-    SIGTERM = signal.SIGTERM
 
 log = logging.getLogger(__name__)
 
@@ -65,7 +61,53 @@ def collect_child_processes(pid):
     return children
 
 
-def _terminate_process_list(process_list, kill=False, signum=SIGINT):
+def _get_cmdline(proc):
+    # pylint: disable=protected-access
+    try:
+        return proc._cmdline
+    except AttributeError:
+        # Cache the cmdline since that will be inaccessible once the process is terminated
+        # and we use it in log calls
+        try:
+            cmdline = proc.cmdline()
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            # OSX is more restrictive about the above information
+            cmdline = None
+        except OSError:
+            # On Windows we've seen something like:
+            #   File " c: ... \lib\site-packages\pytestsalt\utils\__init__.py", line 182, in terminate_process
+            #     terminate_process_list(process_list, kill=slow_stop is False, slow_stop=slow_stop)
+            #   File " c: ... \lib\site-packages\pytestsalt\utils\__init__.py", line 130, in terminate_process_list
+            #     _terminate_process_list(process_list, kill=kill, slow_stop=slow_stop)
+            #   File " c: ... \lib\site-packages\pytestsalt\utils\__init__.py", line 78, in _terminate_process_list
+            #     cmdline = process.cmdline()
+            #   File " c: ... \lib\site-packages\psutil\__init__.py", line 786, in cmdline
+            #     return self._proc.cmdline()
+            #   File " c: ... \lib\site-packages\psutil\_pswindows.py", line 667, in wrapper
+            #     return fun(self, *args, **kwargs)
+            #   File " c: ... \lib\site-packages\psutil\_pswindows.py", line 745, in cmdline
+            #     ret = cext.proc_cmdline(self.pid, use_peb=True)
+            #   OSError: [WinError 299] Only part of a ReadProcessMemory or WriteProcessMemory request was completed: 'originated from ReadProcessMemory(ProcessParameters)
+
+            # Late import
+            cmdline = None
+        if not cmdline:
+            try:
+                cmdline = proc.as_dict()
+            except psutil.NoSuchProcess:
+                cmdline = "<could not be retrived; dead process: {}>".format(proc)
+            except (psutil.AccessDenied, OSError):
+                cmdline = weakref.proxy(proc)
+        proc._cmdline = cmdline
+    return proc._cmdline
+    # pylint: enable=protected-access
+
+
+def _terminate_process_list(process_list, kill=False, slow_stop=False):
+    log.info(
+        "Terminating process list:\n%s",
+        pprint.pformat([_get_cmdline(proc) for proc in process_list]),
+    )
     for process in process_list[:]:  # Iterate over copy of the list
         if not psutil.pid_exists(process.pid):
             process_list.remove(process)
@@ -74,25 +116,22 @@ def _terminate_process_list(process_list, kill=False, signum=SIGINT):
             if not kill and process.status() == psutil.STATUS_ZOMBIE:
                 # Zombie processes will exit once child processes also exit
                 continue
-            try:
-                cmdline = process.cmdline()
-            except psutil.AccessDenied:
-                # OSX is more restrictive about the above information
-                cmdline = None
-            if not cmdline:
-                cmdline = process.as_dict()
             if kill:
-                log.info("Killing process(%s): %s", process.pid, cmdline)
+                log.info("Killing process(%s): %s", process.pid, _get_cmdline(process))
                 process.kill()
             else:
-                log.info("Terminating process(%s): %s", process.pid, cmdline)
+                log.info("Terminating process(%s): %s", process.pid, _get_cmdline(process))
                 try:
-                    process.send_signal(signum)
-                    try:
-                        process.wait(0.15)
-                    except psutil.TimeoutExpired:
-                        if psutil.pid_exists(process.pid):
-                            continue
+                    if slow_stop:
+                        # Allow coverage data to be written down to disk
+                        process.send_signal(signal.SIGTERM)
+                        try:
+                            process.wait(2)
+                        except psutil.TimeoutExpired:
+                            if psutil.pid_exists(process.pid):
+                                continue
+                    else:
+                        process.terminate()
                 except OSError as exc:
                     if exc.errno not in (errno.ESRCH, errno.EACCES):
                         raise
@@ -102,50 +141,45 @@ def _terminate_process_list(process_list, kill=False, signum=SIGINT):
             process_list.remove(process)
 
 
-def terminate_process_list(process_list, kill=False):
+def terminate_process_list(process_list, kill=False, slow_stop=False):
     def on_process_terminated(proc):
-        if proc.returncode:
-            log.info(
-                "Process %s terminated with exit code: %s",
-                getattr(proc, "_cmdline", proc),
-                proc.returncode,
-            )
-        else:
-            log.info("Process %s was terminated", getattr(proc, "_cmdline", proc))
+        log.info(
+            "Process %s terminated with exit code: %s",
+            getattr(proc, "_cmdline", proc),
+            proc.returncode,
+        )
 
-    log.info("Terminating process list. 1st step. kill: %s, signum: SIGINT", kill)
+    # Try to terminate processes with the provided kill and slow_stop parameters
+    log.info("Terminating process list. 1st step. kill: %s, slow stop: %s", kill, slow_stop)
 
-    # Cache the cmdline since that will be inaccessible once the process is terminated
-    for proc in process_list:
-        try:
-            cmdline = proc.cmdline()
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
-            # OSX is more restrictive about the above information
-            cmdline = None
-        if not cmdline:
-            try:
-                cmdline = proc
-            except (psutil.NoSuchProcess, psutil.AccessDenied):
-                cmdline = "<could not be retrived; dead process: {}>".format(proc)
-        proc._cmdline = cmdline
-    _terminate_process_list(process_list, kill=kill, signum=SIGINT)
+    # Remove duplicates from the process list
+    seen_pids = []
+    start_count = len(process_list)
+    for proc in process_list[:]:
+        if proc.pid in seen_pids:
+            process_list.remove(proc)
+        seen_pids.append(proc.pid)
+    end_count = len(process_list)
+    if end_count < start_count:
+        log.debug("Removed %d duplicates from the initial process list", start_count - end_count)
+
+    _terminate_process_list(process_list, kill=kill, slow_stop=slow_stop)
     psutil.wait_procs(process_list, timeout=15, callback=on_process_terminated)
 
     if process_list:
-        # Since we don't wait that long to check that the process was terminated in _terminate_process_list
-        # Let's sleep a litle bit before going into the next process termination procedure
-        time.sleep(0.5)
-        log.info("Terminating process list. 2nd step. kill: False, signum: SIGTERM")
-        _terminate_process_list(process_list, kill=kill, signum=SIGTERM)
+        # If there's still processes to be terminated, retry and kill them if slow_stop is False
+        log.info(
+            "Terminating process list. 2nd step. kill: %s, slow stop: %s",
+            slow_stop is False,
+            slow_stop,
+        )
+        _terminate_process_list(process_list, kill=slow_stop is False, slow_stop=slow_stop)
         psutil.wait_procs(process_list, timeout=10, callback=on_process_terminated)
 
     if process_list:
-        # Since we don't wait that long to check that the process was terminated in _terminate_process_list
-        # Let's sleep a litle bit before going into the next process termination procedure
-        time.sleep(0.5)
         # If there's still processes to be terminated, just kill them, no slow stopping now
-        log.info("Terminating process list. 3rd step. kill: True")
-        _terminate_process_list(process_list, kill=True)
+        log.info("Terminating process list. 3rd step. kill: True, slow stop: False")
+        _terminate_process_list(process_list, kill=True, slow_stop=False)
         psutil.wait_procs(process_list, timeout=5, callback=on_process_terminated)
 
     if process_list:
@@ -153,14 +187,16 @@ def terminate_process_list(process_list, kill=False):
         log.warning("Some processes failed to properly terminate: %s", process_list)
 
 
-def terminate_process(pid=None, process=None, children=None, kill=False, kill_children=True):
+def terminate_process(pid=None, process=None, children=None, kill_children=None, slow_stop=False):
     """
     Try to terminate/kill the started processe
     """
     children = children or []
     process_list = []
-    # Always kill children if kill the parent process.
-    kill_children = True if kill is True else kill_children
+
+    if kill_children is None:
+        # Always kill children if kill the parent process and kill_children was not set
+        kill_children = True if slow_stop is False else kill_children
 
     if pid and not process:
         try:
@@ -172,21 +208,16 @@ def terminate_process(pid=None, process=None, children=None, kill=False, kill_ch
 
     if kill_children:
         if process:
-            if not children:
-                children = collect_child_processes(process.pid)
-            else:
-                # Let's collect children again since there might be new ones
-                children.extend(collect_child_processes(pid))
+            children.extend(collect_child_processes(pid))
         if children:
             process_list.extend(children)
-            process_list.reverse()
 
     if process_list:
         if process:
             log.info("Stopping process %s and respective children: %s", process, children)
         else:
             log.info("Terminating process list: %s", process_list)
-        terminate_process_list(process_list, kill=kill)
+        terminate_process_list(process_list, kill=slow_stop is False, slow_stop=slow_stop)
 
 
 def start_daemon(
@@ -205,8 +236,10 @@ def start_daemon(
     """
     attempts = 0
     log_prefix = ""
+
     if fail_callable is None:
         fail_callable = pytest.fail
+
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
         attempts += 1
         process = daemon_class(
@@ -233,11 +266,10 @@ def start_daemon(
                                     log_prefix, daemon_class.__name__, attempts
                                 )
                             )
-                            return
                         continue
             except Exception as exc:  # pylint: disable=broad-except
                 log.exception("%sException caugth: %s", log_prefix, exc, exc_info=True)
-                terminate_process(process.pid, kill=slow_stop is False)
+                terminate_process(process.pid, kill_children=True, slow_stop=slow_stop)
                 if attempts >= max_attempts:
                     fail_callable(str(exc))
                     return
@@ -247,20 +279,20 @@ def start_daemon(
             log.info(
                 "%sThe %s is running after %d attempts", log_prefix, daemon_class.__name__, attempts
             )
-            return process
+            break
         else:
-            terminate_process(process.pid, kill=slow_stop is False)
+            terminate_process(process.pid, kill_children=True, slow_stop=slow_stop)
             time.sleep(1)
             continue
-    else:  # pylint: disable=useless-else-on-loop
-        # Wrong, we have a return, its not useless
+    else:
         if process is not None:
-            terminate_process(process.pid, kill=slow_stop is False)
+            terminate_process(process.pid, kill_children=True, slow_stop=slow_stop)
         fail_callable(
             "{}The {} has failed to start after {} attempts".format(
                 log_prefix, daemon_class.__name__, max_attempts
             )
         )
+    return process
 
 
 class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "json"))):
@@ -368,6 +400,7 @@ class FactoryProcess(object):
         """
         if self._terminal is None:
             return
+        log.info("%sStopping %s", self.log_prefix, self.__class__.__name__)
         # Collect any child processes information before terminating the process
         try:
             for child in psutil.Process(self._terminal.pid).children(recursive=True):
@@ -382,13 +415,17 @@ class FactoryProcess(object):
         if self._terminal.stderr:
             self._terminal.stderr.close()
         terminate_process(
-            pid=self._terminal.pid, children=self._children, kill=self.slow_stop is False
+            pid=self._terminal.pid,
+            kill_children=True,
+            children=self._children,
+            slow_stop=self.slow_stop,
         )
         # This last poll is just to be sure the returncode really get's set on the Popen,
         # out terminal, object.
         self._terminal.poll()
         self._terminal = None
         self._children = []
+        log.info("%sStopped %s", self.log_prefix, self.__class__.__name__)
 
     @property
     def pid(self):
