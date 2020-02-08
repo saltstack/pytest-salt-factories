@@ -86,11 +86,19 @@ jobs:
 
     - name: Upload Test Results
       if: always()
-      uses: check-run-reporter/actions@master
+      shell: bash
       env:
         CHECK_RUN_REPORTER_LABEL: 'Tests'
         CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
         CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
+      run: |
+        curl https://www.check-run-reporter.com/api/v1/submissions \
+          --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
+          -X POST \
+          -F report=@"./junit-report.xml" \
+          -F root="$(pwd)" \
+          -F sha="$GITHUB_SHA" \
+          -F label=$CHECK_RUN_REPORTER_LABEL
 
     - name: Create CodeCov Flags
       id: codecov-flags
@@ -183,11 +191,19 @@ jobs:
 
     - name: Upload Test Results
       if: always()
-      uses: check-run-reporter/actions@master
+      shell: bash
       env:
         CHECK_RUN_REPORTER_LABEL: 'Tests'
         CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
         CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
+      run: |
+        curl https://www.check-run-reporter.com/api/v1/submissions \
+          --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
+          -X POST \
+          -F report=@"./junit-report.xml" \
+          -F root="$(pwd)" \
+          -F sha="$GITHUB_SHA" \
+          -F label=$CHECK_RUN_REPORTER_LABEL
 
     - name: Create CodeCov Flags
       id: codecov-flags
@@ -276,11 +292,19 @@ jobs:
 
     - name: Upload Test Results
       if: always()
-      uses: check-run-reporter/actions@master
+      shell: bash
       env:
         CHECK_RUN_REPORTER_LABEL: 'Tests'
         CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
         CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
+      run: |
+        curl https://www.check-run-reporter.com/api/v1/submissions \
+          --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
+          -X POST \
+          -F report=@"./junit-report.xml" \
+          -F root="$(pwd)" \
+          -F sha="$GITHUB_SHA" \
+          -F label=$CHECK_RUN_REPORTER_LABEL
 
     - name: Create CodeCov Flags
       id: codecov-flags
