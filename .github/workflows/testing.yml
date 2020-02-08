@@ -66,7 +66,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        python_version:
+        python-version:
           - 2.7
           - 3.5
           - 3.6
@@ -90,7 +90,7 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
-        python-version: ${{ matrix.python_version }}
+        python-version: ${{ matrix.python-version }}
 
     - name: Install Test Requirements
       env:
@@ -113,14 +113,14 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
-        export CODECOV_FLAGS="ubuntu,py$(echo ${{ matrix.python_version }} | sed -e 's:\.::g')"
-        test -f coverage.xml && curl -sL https://codecov.io/bash | bash -s -- -R $(pwd) -s $(pwd) -F "${CODECOV_FLAGS}" -e SALT_REQUIREMENT -n ubuntu-py${{ matrix.python_version }} || true
+        export CODECOV_FLAGS="ubuntu,py$(echo ${{ matrix.python-version }} | sed -e 's:\.::g')"
+        test -f coverage.xml && curl -sL https://codecov.io/bash | bash -s -- -R $(pwd) -s $(pwd) -F "${CODECOV_FLAGS}" -e SALT_REQUIREMENT -n ubuntu-py${{ matrix.python-version }} || true
 
     - name: Upload Logs
       if: always()
       uses: actions/upload-artifact@master
       with:
-        name: runtests-ubuntu-py${{ matrix.python_version }}-salt-${{ matrix.salt_version }}.log
+        name: runtests-ubuntu-py${{ matrix.python-version }}-salt-${{ matrix.salt_version }}.log
         path: runtests.log
 
   Windows:
@@ -132,7 +132,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        python_version:
+        python-version:
 #          - 2.7
           - 3.5
           - 3.6
@@ -156,7 +156,7 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
-        python-version: ${{ matrix.python_version }}
+        python-version: ${{ matrix.python-version }}
 
     - name: Install Test Requirements
       env:
@@ -181,14 +181,14 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
-        export CODECOV_FLAGS="windows,py$(echo ${{ matrix.python_version }} | sed -e 's:\.::g')"
-        test -f coverage.xml && curl -sL https://codecov.io/bash | bash -s -- -R $(pwd) -s $(pwd) -F "${CODECOV_FLAGS}" -e SALT_REQUIREMENT -n windows-py${{ matrix.python_version }} || true
+        export CODECOV_FLAGS="windows,py$(echo ${{ matrix.python-version }} | sed -e 's:\.::g')"
+        test -f coverage.xml && curl -sL https://codecov.io/bash | bash -s -- -R $(pwd) -s $(pwd) -F "${CODECOV_FLAGS}" -e SALT_REQUIREMENT -n windows-py${{ matrix.python-version }} || true
 
     - name: Upload Logs
       if: always()
       uses: actions/upload-artifact@master
       with:
-        name: runtests-windows-py${{ matrix.python_version }}-salt-${{ matrix.salt_version }}.log
+        name: runtests-windows-py${{ matrix.python-version }}-salt-${{ matrix.salt_version }}.log
         path: runtests.log
 
   macOS:
@@ -200,7 +200,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        python_version:
+        python-version:
           - 2.7
           - 3.5
           - 3.6
@@ -224,7 +224,7 @@ jobs:
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
-        python-version: ${{ matrix.python_version }}
+        python-version: ${{ matrix.python-version }}
 
     - name: Install Test Requirements
       env:
@@ -247,12 +247,12 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
-        export CODECOV_FLAGS="macos,py$(echo ${{ matrix.python_version }} | sed -e 's:\.::g')"
-        test -f coverage.xml && curl -sL https://codecov.io/bash | bash -s -- -R $(pwd) -s $(pwd) -F "${CODECOV_FLAGS}" -e SALT_REQUIREMENT -n macos-py${{ matrix.python_version }} || true
+        export CODECOV_FLAGS="macos,py$(echo ${{ matrix.python-version }} | sed -e 's:\.::g')"
+        test -f coverage.xml && curl -sL https://codecov.io/bash | bash -s -- -R $(pwd) -s $(pwd) -F "${CODECOV_FLAGS}" -e SALT_REQUIREMENT -n macos-py${{ matrix.python-version }} || true
 
     - name: Upload Logs
       if: always()
       uses: actions/upload-artifact@master
       with:
-        name: runtests-macos-py${{ matrix.python_version }}-salt-${{ matrix.salt_version }}.log
+        name: runtests-macos-py${{ matrix.python-version }}-salt-${{ matrix.salt_version }}.log
         path: runtests.log
