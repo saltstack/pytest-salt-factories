@@ -159,10 +159,12 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install Test Requirements
+      shell: bash
       env:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
       run: |
+        export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox -e tests-system-python --install-only
 
     - name: Test
