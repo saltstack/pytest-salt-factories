@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import functools
+import logging
 import os
 import stat
 import tempfile
@@ -11,6 +12,8 @@ import textwrap
 
 import pytest
 import salt.version
+
+log = logging.getLogger(__name__)
 
 
 def pytest_report_header():
@@ -36,6 +39,13 @@ class Tempfiles:
             st = os.stat(tfile.name)
             os.chmod(tfile.name, st.st_mode | stat.S_IEXEC)
         self.request.addfinalizer(functools.partial(self._delete_temp_file, tfile.name))
+        with open(tfile.name, "r") as rfh:
+            log.debug(
+                "Created python file with contents:\n>>>>> %s >>>>>\n%s\n<<<<< %s <<<<<\n",
+                tfile.name,
+                rfh.read(),
+                tfile.name,
+            )
         return tfile.name
 
     def _delete_temp_file(self, fpath):
