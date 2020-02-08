@@ -57,6 +57,18 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Create Cache Variables
+      id: cache-vars
+      run: |
+        echo ::set-output name=python::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info[:3]))")
+        echo ::set-output name=salt::$(python -c "import sys; print('-'.join(str(v) for v in '${{ matrix.salt_version }}'.split('.')))")
+
+    - name: Set up cache
+      uses: actions/cache@v1
+      with:
+        path: .nox
+        key: venv-${{ runner.os }}-py${{ steps.cache-vars.outputs.python }}-salt${{ steps.cache-vars.outputs.salt }}-${{ hashFiles('**/requirements*.txt') }}
+
     - name: Install Test Requirements
       env:
         USE_SYSTEM_PYTHON: YES
@@ -124,6 +136,18 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Create Cache Variables
+      id: cache-vars
+      run: |
+        echo ::set-output name=python::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info[:3]))")
+        echo ::set-output name=salt::$(python -c "import sys; print('-'.join(str(v) for v in '${{ matrix.salt_version }}'.split('.')))")
+
+    - name: Set up cache
+      uses: actions/cache@v1
+      with:
+        path: .nox
+        key: venv-${{ runner.os }}-py${{ steps.cache-vars.outputs.python }}-salt${{ steps.cache-vars.outputs.salt }}-${{ hashFiles('**/requirements*.txt') }}
 
     - name: Install Test Requirements
       shell: bash
@@ -196,6 +220,18 @@ jobs:
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Create Cache Variables
+      id: cache-vars
+      run: |
+        echo ::set-output name=python::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info[:3]))")
+        echo ::set-output name=salt::$(python -c "import sys; print('-'.join(str(v) for v in '${{ matrix.salt_version }}'.split('.')))")
+
+    - name: Set up cache
+      uses: actions/cache@v1
+      with:
+        path: .nox
+        key: venv-${{ runner.os }}-py${{ steps.cache-vars.outputs.python }}-salt${{ steps.cache-vars.outputs.salt }}-${{ hashFiles('**/requirements*.txt') }}
 
     - name: Install Test Requirements
       env:
