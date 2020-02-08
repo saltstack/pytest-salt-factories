@@ -10,9 +10,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import functools
-import os
 import pprint
-import stat
 import sys
 import time
 
@@ -27,10 +25,10 @@ def kill_children(procs):
         p.kill()
 
 
-def test_daemon_process_termination(request, testdir):
+def test_daemon_process_termination(request, tempfiles):
     primary_childrend_count = 5
     secondary_children_count = 3
-    script = testdir.makepyfile(
+    script = tempfiles.makepyfile(
         """
         #!{shebang}
         # -*- coding: utf-8 -*-
@@ -84,10 +82,9 @@ def test_daemon_process_termination(request, testdir):
             shebang=sys.executable,
             primary_childrend_count=primary_childrend_count,
             secondary_children_count=secondary_children_count,
-        )
-    ).strpath
-    st = os.stat(script)
-    os.chmod(script, st.st_mode | stat.S_IEXEC)
+        ),
+        executable=True,
+    )
     daemon = FactoryDaemonScriptBase(script)
     daemon.start()
     daemon_pid = daemon.pid
@@ -114,11 +111,11 @@ def test_daemon_process_termination(request, testdir):
     )
 
 
-def test_daemon_process_termination_parent_killed(request, testdir):
+def test_daemon_process_termination_parent_killed(request, tempfiles):
 
     primary_childrend_count = 5
     secondary_children_count = 3
-    script = testdir.makepyfile(
+    script = tempfiles.makepyfile(
         """
         #!{shebang}
         # -*- coding: utf-8 -*-
@@ -171,10 +168,9 @@ def test_daemon_process_termination_parent_killed(request, testdir):
             shebang=sys.executable,
             primary_childrend_count=primary_childrend_count,
             secondary_children_count=secondary_children_count,
-        )
-    ).strpath
-    st = os.stat(script)
-    os.chmod(script, st.st_mode | stat.S_IEXEC)
+        ),
+        executable=True,
+    )
     daemon = FactoryDaemonScriptBase(script)
     daemon.start()
     daemon_pid = daemon.pid

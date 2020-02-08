@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-tests.funtional.conftest
-~~~~~~~~~~~~~~~~~~~~~~~~
+tests.functional.factories.conftest
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
 from __future__ import absolute_import
 from __future__ import print_function
