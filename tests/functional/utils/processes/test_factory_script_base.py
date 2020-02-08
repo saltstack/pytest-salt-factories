@@ -9,6 +9,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import os
 import sys
 
 import pytest
@@ -119,4 +120,4 @@ def test_stderr_output(tempfiles):
     )
     result = shell.run(script)
     assert result.exitcode == 1
-    assert result.stderr == input_str + "\n"
+    assert result.stderr.replace(os.linesep, "\n") == input_str + "\n"
