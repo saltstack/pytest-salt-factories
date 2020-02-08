@@ -25,6 +25,7 @@ PIP_INSTALL_SILENT = (
     or os.environ.get("DRONE")
     or os.environ.get("GITHUB_ACTIONS")
 ) is None
+SKIP_REQUIREMENTS_INSTALL = "SKIP_REQUIREMENTS_INSTALL" in os.environ
 
 # Nox options
 #  Reuse existing virtualenvs
@@ -146,11 +147,12 @@ def _tests(session):
     """
     Run tests
     """
-    session.install("-r", "requirements-testing.txt", silent=PIP_INSTALL_SILENT)
-    session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
-    session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
-    _check_crypto_lib_installed(session)
-    session.install(".")
+    if SKIP_REQUIREMENTS_INSTALL is False:
+        session.install("-r", "requirements-testing.txt", silent=PIP_INSTALL_SILENT)
+        session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+        session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+        _check_crypto_lib_installed(session)
+        session.install(".")
     session.run("coverage", "erase")
     tests = session.posargs or ["tests/"]
     session.run("coverage", "run", "-m", "py.test", "-ra", *tests)
