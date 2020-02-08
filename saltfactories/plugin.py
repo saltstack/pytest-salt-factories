@@ -17,6 +17,7 @@ import tempfile
 
 import pytest
 import salt.config
+import salt.loader  # pylint: disable=unused-import
 import salt.utils.verify as salt_verify
 import salt.utils.yaml as yamlserialize
 
