@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding=utf-8
 """
 tests.functional.utils.processes.test_factory_daemon_script_base
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -31,7 +31,7 @@ def test_daemon_process_termination(request, tempfiles):
     script = tempfiles.makepyfile(
         """
         #!{shebang}
-        # -*- coding: utf-8 -*-
+        # coding=utf-8
 
         import time
         import multiprocessing
@@ -118,7 +118,7 @@ def test_daemon_process_termination_parent_killed(request, tempfiles):
     script = tempfiles.makepyfile(
         """
         #!{shebang}
-        # -*- coding: utf-8 -*-
+        # coding=utf-8
 
         import time
         import multiprocessing

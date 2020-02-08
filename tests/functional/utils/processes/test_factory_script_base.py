@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# coding=utf-8
 """
 tests.functional.utils.processes.test_factory_script_base
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -21,7 +21,7 @@ def test_exitcode(exitcode, tempfiles):
     shell = FactoryScriptBase(sys.executable)
     script = tempfiles.makepyfile(
         """
-        # -*- coding: utf-8 -*-
+        # coding=utf-8
         import time
         time.sleep(0.125)
         exit({})
@@ -40,7 +40,7 @@ def test_timeout_defined_on_class_instantiation(tempfiles):
     shell = FactoryScriptBase(sys.executable, default_timeout=0.5, fail_callable=raise_exception)
     script = tempfiles.makepyfile(
         """
-        # -*- coding: utf-8 -*-
+        # coding=utf-8
         import time
         time.sleep(1)
         exit(0)
@@ -57,7 +57,7 @@ def test_timeout_defined_run(tempfiles):
     shell = FactoryScriptBase(sys.executable, fail_callable=raise_exception)
     script = tempfiles.makepyfile(
         """
-        # -*- coding: utf-8 -*-
+        # coding=utf-8
         import time
         time.sleep(0.5)
         exit(0)
@@ -68,7 +68,7 @@ def test_timeout_defined_run(tempfiles):
 
     script = tempfiles.makepyfile(
         """
-        # -*- coding: utf-8 -*-
+        # coding=utf-8
         import time
         time.sleep(0.5)
         exit(0)
@@ -91,7 +91,7 @@ def test_json_output(input_str, expected_object, tempfiles):
     shell = FactoryScriptBase(sys.executable)
     script = tempfiles.makepyfile(
         """
-        # -*- coding: utf-8 -*-
+        # coding=utf-8
         import sys
         sys.stdout.write('''{}''')
         exit(0)
@@ -111,7 +111,7 @@ def test_stderr_output(tempfiles):
     shell = FactoryScriptBase(sys.executable)
     script = tempfiles.makepyfile(
         """
-        # -*- coding: utf-8 -*-
+        # coding=utf-8
         exit("{}")
         """.format(
             input_str
