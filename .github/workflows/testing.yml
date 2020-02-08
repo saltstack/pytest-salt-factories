@@ -84,15 +84,20 @@ jobs:
       run: |
         nox -e tests-system-python -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
 
-    - name: Upload Coverage
-      shell: bash
-      if: always()
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
+    - name: Create CodeCov Flags
+      id: codecov-flags
       run: |
-        export CODECOV_FLAGS="ubuntu,py$(echo ${{ matrix.python-version }} | sed -e 's:\.::g')"
-        test -f coverage.xml && curl -sL https://codecov.io/bash | bash -s -- -R $(pwd) -s $(pwd) -F "${CODECOV_FLAGS}" -e SALT_REQUIREMENT -n ubuntu-py${{ matrix.python-version }} || true
+        echo ::set-output name=flags::$(python -c "import sys; print('{},{},salt_{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info) ,'_'.join(str(v) for v in '${{ matrix.salt_version }}'.split('.')))")
+
+    - name: Upload Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        #file: ./coverage.xml #optional
+        flags: ${{ steps.codecov-flags.outputs.flags }}
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt_version }} #optional
+        #yml: ./codecov.yml #optional
+        fail_ci_if_error: true #optional (default = false)
 
     - name: Upload Logs
       if: always()
@@ -168,15 +173,20 @@ jobs:
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox -e tests-system-python -- -s --log-cli-level=debug --log-file-level=debug --log-file=runtests.log
 
-    - name: Upload Coverage
-      shell: bash
-      if: always()
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
+    - name: Create CodeCov Flags
+      id: codecov-flags
       run: |
-        export CODECOV_FLAGS="windows,py$(echo ${{ matrix.python-version }} | sed -e 's:\.::g')"
-        test -f coverage.xml && curl -sL https://codecov.io/bash | bash -s -- -R $(pwd) -s $(pwd) -F "${CODECOV_FLAGS}" -e SALT_REQUIREMENT -n windows-py${{ matrix.python-version }} || true
+        echo ::set-output name=flags::$(python -c "import sys; print('{},{},salt_{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info) ,'_'.join(str(v) for v in '${{ matrix.salt_version }}'.split('.')))")
+
+    - name: Upload Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        #file: ./coverage.xml #optional
+        flags: ${{ steps.codecov-flags.outputs.flags }}
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt_version }} #optional
+        #yml: ./codecov.yml #optional
+        fail_ci_if_error: true #optional (default = false)
 
     - name: Upload Logs
       if: always()
@@ -248,15 +258,20 @@ jobs:
       run: |
         nox -e tests-system-python -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log
 
-    - name: Upload Coverage
-      shell: bash
-      if: always()
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        SALT_REQUIREMENT: salt==${{ matrix.salt_version }}
+    - name: Create CodeCov Flags
+      id: codecov-flags
       run: |
-        export CODECOV_FLAGS="macos,py$(echo ${{ matrix.python-version }} | sed -e 's:\.::g')"
-        test -f coverage.xml && curl -sL https://codecov.io/bash | bash -s -- -R $(pwd) -s $(pwd) -F "${CODECOV_FLAGS}" -e SALT_REQUIREMENT -n macos-py${{ matrix.python-version }} || true
+        echo ::set-output name=flags::$(python -c "import sys; print('{},{},salt_{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info) ,'_'.join(str(v) for v in '${{ matrix.salt_version }}'.split('.')))")
+
+    - name: Upload Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        #file: ./coverage.xml #optional
+        flags: ${{ steps.codecov-flags.outputs.flags }}
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt_version }} #optional
+        #yml: ./codecov.yml #optional
+        fail_ci_if_error: true #optional (default = false)
 
     - name: Upload Logs
       if: always()
