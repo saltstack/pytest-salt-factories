@@ -445,7 +445,7 @@ class FactoryScriptBase(FactoryProcess):
 
     def build_cmdline(self, *args, **kwargs):
         proc_args = [self.get_script_path()] + self.get_base_script_args() + self.get_script_args()
-        if sys.platform.startswith("win"):
+        if sys.platform.startswith("win") and proc_args[0] != sys.executable:
             # Windows needs the python executable to come first
             proc_args.insert(0, sys.executable)
         proc_args += list(args)
@@ -567,7 +567,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
         log.info("%sStarting DAEMON %s in CWD: %s", self.log_prefix, self.cli_script_name, self.cwd)
         proc_args = [self.get_script_path()] + self.get_base_script_args() + self.get_script_args()
 
-        if sys.platform.startswith("win"):
+        if sys.platform.startswith("win") and proc_args[0] != sys.executable:
             # Windows needs the python executable to come first
             proc_args.insert(0, sys.executable)
 
@@ -716,7 +716,7 @@ class SaltScriptBase(FactoryScriptBase):
     def build_cmdline(self, *args, **kwargs):
         minion_tgt = self._minion_tgt = self.get_minion_tgt(kwargs)
         proc_args = [self.get_script_path()] + self.get_base_script_args() + self.get_script_args()
-        if sys.platform.startswith("win"):
+        if sys.platform.startswith("win") and proc_args[0] != sys.executable:
             # Windows needs the python executable to come first
             proc_args.insert(0, sys.executable)
         if minion_tgt:
