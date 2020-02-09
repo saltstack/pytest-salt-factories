@@ -102,10 +102,12 @@ jobs:
       if: always()
       shell: bash
       env:
+        REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
         CHECK_RUN_REPORTER_LABEL: 'Tests'
         CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
         CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
       run: |
+        (curl -s https://report.ci/upload.py | python - --include='*.xml' --framework=pytest) || true
         curl https://www.check-run-reporter.com/api/v1/submissions \
           --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
           -X POST \
@@ -225,10 +227,12 @@ jobs:
       if: always()
       shell: bash
       env:
+        REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
         CHECK_RUN_REPORTER_LABEL: 'Tests'
         CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
         CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
       run: |
+        (curl -s https://report.ci/upload.py | python - --include='*.xml' --framework=pytest) || true
         curl https://www.check-run-reporter.com/api/v1/submissions \
           --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
           -X POST \
@@ -343,10 +347,12 @@ jobs:
       if: always()
       shell: bash
       env:
+        REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
         CHECK_RUN_REPORTER_LABEL: 'Tests'
         CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
         CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
       run: |
+        (curl -s https://report.ci/upload.py | python - --include='*.xml' --framework=pytest) || true
         curl https://www.check-run-reporter.com/api/v1/submissions \
           --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
           -X POST \
