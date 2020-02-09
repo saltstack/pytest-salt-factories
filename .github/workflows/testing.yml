@@ -107,7 +107,7 @@ jobs:
         CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
         CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
       run: |
-        (curl -s https://report.ci/upload.py | python - --include='*.xml' --framework=pytest) || true
+        (curl -s https://report.ci/upload.py | python - --include='*.xml' --framework=pytest --merge ".*") || true
         curl https://www.check-run-reporter.com/api/v1/submissions \
           --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
           -X POST \
@@ -232,7 +232,7 @@ jobs:
         CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
         CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
       run: |
-        (curl -s https://report.ci/upload.py | python - --include='*.xml' --framework=pytest) || true
+        (curl -s https://report.ci/upload.py | python - --include='*.xml' --framework=pytest --merge ".*") || true
         curl https://www.check-run-reporter.com/api/v1/submissions \
           --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
           -X POST \
@@ -352,7 +352,7 @@ jobs:
         CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
         CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
       run: |
-        (curl -s https://report.ci/upload.py | python - --include='*.xml' --framework=pytest) || true
+        (curl -s https://report.ci/upload.py | python - --include='*.xml' --framework=pytest --merge ".*") || true
         curl https://www.check-run-reporter.com/api/v1/submissions \
           --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
           -X POST \
