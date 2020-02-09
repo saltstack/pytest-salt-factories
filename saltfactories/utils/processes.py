@@ -468,7 +468,7 @@ class FactoryScriptBase(FactoryProcess):
         # Build the cmdline to pass to the terminal
         proc_args = self.build_cmdline(*args, **kwargs)
 
-        log.info("%sRunning '%s' in CWD: %s ...", self.log_prefix, " ".join(proc_args), self.cwd)
+        log.info("%sRunning %r in CWD: %s ...", self.log_prefix, proc_args, self.cwd)
 
         terminal = self.init_terminal(
             proc_args, cwd=self.cwd, env=environ, stdout=stdout, stderr=stderr
@@ -501,11 +501,10 @@ class FactoryScriptBase(FactoryProcess):
                 #    break
                 if timeout_expire < time.time():
                     fail_callable(
-                        "{}Failed to run: args: {!r}; kwargs: {!r}; Error: {}".format(
-                            self.log_prefix,
-                            args,
-                            kwargs,
-                            "{}Timed out after {} seconds!".format(self.log_prefix, timeout),
+                        "{}Failed to run: {}; Error: Timed out after {} seconds!\n"
+                        ">>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
+                        ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
+                            self.log_prefix, proc_args, timeout, stdout, stderr,
                         )
                     )
         except (SystemExit, KeyboardInterrupt):
@@ -571,7 +570,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
             # Windows needs the python executable to come first
             proc_args.insert(0, sys.executable)
 
-        log.info("%sRunning '%s'...", self.log_prefix, " ".join(proc_args))
+        log.info("%sRunning %r...", self.log_prefix, proc_args)
 
         self.init_terminal(
             proc_args,
