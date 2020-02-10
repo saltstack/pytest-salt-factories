@@ -743,11 +743,11 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
             return [engine_port]
         return super(SaltDaemonScriptBase, self).get_check_ports()
 
-    def get_check_events(self):  # pylint: disable=no-self-use
+    def get_check_events(self):
         """
         Return a list of event tags to check against to ensure the daemon is running
         """
-        return self.config.get("pytest", {}).get("engine", {}).get("events") or []
+        return ["pytest/{__role}/{id}/start".format(**self.config)]
 
     def wait_until_running(self, timeout=5):
         """
@@ -766,7 +766,7 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
             self._connectable.clear()
 
         # Now check events
-        check_events = self.get_check_events()
+        check_events = set(self.get_check_events())
         if not check_events:
             self._connectable.set()
             return self._connectable.is_set()
@@ -785,55 +785,52 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
             timeout,
             time.time(),
         )
-        event_listener = None
         try:
             # Late import
             import salt.utils.event
 
-            event_listener = salt.utils.event.get_event(
-                "master", self.config["sock_dir"], opts=self.config.copy(), raise_errors=True
+            stop_sending_events_file = (
+                self.config.get("pytest", {}).get("engine", {}).get("stop_sending_events_file")
             )
-            while True:
-                if self._running.is_set() is False:
-                    # No longer running, break
-                    log.warning("%sNo longer running!", self.log_prefix)
-                    break
+            if self.config["__role"] == "master":
+                config = self.config.copy()
+            else:
+                config = self.config["pytest"]["master_config"].copy()
+            with salt.utils.event.get_master_event(
+                config, config["sock_dir"], listen=True, raise_errors=True,
+            ) as event_listener:
+                while True:
+                    if self._running.is_set() is False:
+                        # No longer running, break
+                        log.warning("%sNo longer running!", self.log_prefix)
+                        break
 
-                if time.time() > expire:
-                    # Timeout, break
-                    log.debug(
-                        "%sExpired at %s(was set to %s)", self.log_prefix, time.time(), expire
-                    )
-                    break
-
-                if not check_events:
-                    stop_sending_events_file = (
-                        self.config.get("pytest", {})
-                        .get("engine", {})
-                        .get("stop_sending_events_file")
-                    )
-                    if stop_sending_events_file and os.path.exists(stop_sending_events_file):
-                        log.warning(
-                            "%sRemoving stop_sending_events_file: %s",
-                            self.log_prefix,
-                            stop_sending_events_file,
+                    if time.time() > expire:
+                        # Timeout, break
+                        log.debug(
+                            "%sExpired at %s(was set to %s)", self.log_prefix, time.time(), expire
                         )
-                        os.unlink(stop_sending_events_file)
-                    self._connectable.set()
-                    break
+                        break
 
-                for tag in set(check_events):
-                    log.info("%s Waiting for event with tag: %s", self.log_prefix, tag)
-                    event = event_listener.get_event(tag=tag, wait=0.5, match_type="startswith")
-                    if event and event["tag"].startswith(tag):
-                        log.info("%sGot event tag: %s", self.log_prefix, tag)
-                        check_events.remove(tag)
+                    if not check_events:
+                        if stop_sending_events_file and os.path.exists(stop_sending_events_file):
+                            log.warning(
+                                "%sRemoving stop_sending_events_file: %s",
+                                self.log_prefix,
+                                stop_sending_events_file,
+                            )
+                            os.unlink(stop_sending_events_file)
+                        self._connectable.set()
+                        break
+
+                    for tag in set(check_events):
+                        log.info("%s Waiting for event with tag: %s", self.log_prefix, tag)
+                        event = event_listener.get_event(tag=tag, wait=0.5, match_type="startswith")
+                        if event and event["tag"].startswith(tag):
+                            log.info("%sGot event tag: %s", self.log_prefix, tag)
+                            check_events.remove(tag)
         except KeyboardInterrupt:
             return self._connectable.is_set()
-        finally:
-            if event_listener is not None:
-                event_listener.destroy()
-                event_listener = None
         if self._connectable.is_set():
             log.debug("%sAll events checked. Running!", self.log_prefix)
         return self._connectable.is_set()

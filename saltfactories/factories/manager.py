@@ -151,6 +151,11 @@ class SaltFactoriesManager(object):
             minion_config=minion_config,
             username=SaltFactoriesManager.get_running_username(),
         )
+        if master_id:
+            # The in-memory minion config dictionary will hold a copy of the master config
+            # in order to listen to start events so that we can confirm the minion is up, running
+            # and accepting requests
+            minion_config["pytest"]["master_config"] = self.cache["configs"]["masters"][master_id]
         self.cache["configs"]["minions"][minion_id] = minion_config
         request.addfinalizer(lambda: self.cache["configs"]["minions"].pop(minion_id))
         return minion_config
@@ -288,6 +293,11 @@ class SaltFactoriesManager(object):
             syndic_config=syndic_config,
             username=SaltFactoriesManager.get_running_username(),
         )
+        if master_id:
+            # The in-memory syndic config dictionary will hold a copy of the master config
+            # in order to listen to start events so that we can confirm the syndic is up, running
+            # and accepting requests
+            syndic_config["pytest"]["master_config"] = self.cache["configs"]["masters"][master_id]
         self.cache["configs"]["syndics"][syndic_id] = syndic_config
         request.addfinalizer(lambda: self.cache["configs"]["syndics"].pop(syndic_id))
         return syndic_config

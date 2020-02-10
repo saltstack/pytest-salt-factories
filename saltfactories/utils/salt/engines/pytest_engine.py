@@ -58,10 +58,6 @@ class PyTestEngine(object):
         self.port = int(opts["pytest"]["engine"]["port"])
         self.tcp_server_sock = None
         self.stop_sending_events_file = opts["pytest"]["engine"]["stop_sending_events_file"]
-        events = opts["pytest"]["engine"].get("events") or []
-        # if not events:
-        #    events.append('pytest/{}/{}/start'.format(self.role, self.id))
-        self.events = events
 
     def start(self):
         self.io_loop = ioloop.IOLoop()
@@ -94,8 +90,7 @@ class PyTestEngine(object):
             self.role,
             self.id,
         )
-        if self.events:
-            self.io_loop.add_callback(self.fire_started_event)
+        self.io_loop.add_callback(self.fire_started_event)
         # We just need to know that the daemon running the engine is alive...
         try:
             connection.shutdown(socket.SHUT_RDWR)  # pylint: disable=no-member
@@ -112,24 +107,43 @@ class PyTestEngine(object):
 
     @gen.coroutine
     def fire_started_event(self):
-        log.warning("Starting to send started events for %s with ID %s", self.role, self.id)
-        event_bus = salt.utils.event.get_master_event(self.opts, self.sock_dir, listen=False)
-        # 30 seconds should be more than enough to fire these events every second in order
-        # for pytest-salt to pickup that the master is running
-        timeout = 30
-        while True:
-            if self.stop_sending_events_file and not os.path.exists(self.stop_sending_events_file):
-                log.info('The stop sending events file "marker" is done. Stop sending events...')
-                break
-            timeout -= 1
-            for event_tag in self.events:
-                log.info("Firing started event. Tag: %s", event_tag)
+        if self.role == "master":
+            event_bus = salt.utils.event.get_master_event(self.opts, self.sock_dir, listen=False)
+            fire_master = False
+        else:
+            event_bus = salt.utils.event.get_event(
+                "minion", opts=self.opts, sock_dir=self.sock_dir, listen=False
+            )
+            fire_master = True
+        event_tag = "pytest/{}/{}/start".format(self.role, self.id)
+        with event_bus:
+            # 30 seconds should be more than enough to fire these events every second in order
+            # for pytest-salt to pickup that the master is running
+            send_timeout = timeout = 30
+            while True:
+                if self.stop_sending_events_file and not os.path.exists(
+                    self.stop_sending_events_file
+                ):
+                    log.info(
+                        'The stop sending events file "marker" is done. Stop sending events...'
+                    )
+                    break
+                timeout -= 1
+                log.info("Firing event on engine start. Tag: %s", event_tag)
                 load = {"id": self.id, "tag": event_tag, "data": {}}
                 try:
-                    event_bus.fire_event(load, event_tag, timeout=500)
+                    if fire_master:
+                        event_bus.fire_master(load, event_tag, timeout=500)
+                    else:
+                        event_bus.fire_event(load, event_tag, timeout=500)
                 except iostream.StreamClosedError:
                     break
-            if timeout <= 0:
-                break
-            yield gen.sleep(1)
-        event_bus.destroy()
+                if timeout <= 0:
+                    log.warning(
+                        "Timmed out after %d seconds while sending event for %s with ID %s",
+                        send_timeout,
+                        self.role,
+                        self.id,
+                    )
+                    break
+                yield gen.sleep(1)
