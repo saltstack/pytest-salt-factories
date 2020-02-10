@@ -107,9 +107,11 @@ class SaltFactoriesManager(object):
             config["engines_dirs"] = []
         config["engines_dirs"].insert(0, SaltFactoriesManager.get_salt_engines_path())
         config["user"] = SaltFactoriesManager.get_running_username()
-        if "log_handlers_dirs" not in config:
-            config["log_handlers_dirs"] = []
-        config["log_handlers_dirs"].insert(0, SaltFactoriesManager.get_salt_log_handlers_path())
+        if "log_forwarding_consumer" not in config:
+            # Still using old logging, let's add our custom log handler
+            if "log_handlers_dirs" not in config:
+                config["log_handlers_dirs"] = []
+            config["log_handlers_dirs"].insert(0, SaltFactoriesManager.get_salt_log_handlers_path())
 
         config.setdefault("pytest", {}).setdefault("log", {})
         config["pytest"]["log"]["host"] = "localhost"
