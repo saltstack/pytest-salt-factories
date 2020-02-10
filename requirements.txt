@@ -4,3 +4,4 @@ pytest-tempdir >= 2019.9.16
 psutil
 six
 pyzmq
+subprocess32; python_version < "3.5"

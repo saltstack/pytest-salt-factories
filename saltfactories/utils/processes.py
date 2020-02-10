@@ -17,7 +17,6 @@ import os
 import pprint
 import signal
 import socket
-import subprocess
 import sys
 import threading
 import time
@@ -30,7 +29,6 @@ import pytest
 import six
 
 from saltfactories.utils import compat
-from saltfactories.utils import nb_popen
 
 
 try:
@@ -385,14 +383,14 @@ class FactoryProcess(object):
         an initial listing of child processes which will be used when terminating the
         terminal
         """
-        self._terminal = nb_popen.NonBlockingPopen(cmdline, **kwargs)
+        self._terminal = compat.subprocess.Popen(cmdline, **kwargs)
         for child in psutil.Process(self._terminal.pid).children(recursive=True):
             if child not in self._children:
                 self._children.append(child)
         atexit.register(self.terminate)
         return self._terminal
 
-    def terminate(self):
+    def terminate(self, close_stds=True):
         """
         Terminate the started daemon
         """
@@ -408,10 +406,11 @@ class FactoryProcess(object):
             # The terminal process is gone
             pass
         # Lets log and kill any child processes which salt left behind
-        if self._terminal.stdout:
-            self._terminal.stdout.close()
-        if self._terminal.stderr:
-            self._terminal.stderr.close()
+        if close_stds:
+            if self._terminal.stdout:
+                self._terminal.stdout.close()
+            if self._terminal.stderr:
+                self._terminal.stderr.close()
         terminate_process(
             pid=self._terminal.pid,
             kill_children=True,
@@ -457,8 +456,8 @@ class FactoryScriptBase(FactoryProcess):
         """
         timeout = kwargs.pop("_timeout", None) or self.default_timeout
         fail_callable = kwargs.pop("_fail_callable", None) or self.fail_callable
-        stdout = kwargs.pop("_stdout", None) or subprocess.PIPE
-        stderr = kwargs.pop("_stderr", None) or subprocess.PIPE
+        stdout = kwargs.pop("_stdout", None) or compat.subprocess.PIPE
+        stderr = kwargs.pop("_stderr", None) or compat.subprocess.PIPE
         timeout_expire = time.time() + timeout
 
         environ = self.environ.copy()
@@ -473,60 +472,28 @@ class FactoryScriptBase(FactoryProcess):
         terminal = self.init_terminal(
             proc_args, cwd=self.cwd, env=environ, stdout=stdout, stderr=stderr
         )
-
-        # Consume the output
-        stdout = six.b("")
-        stderr = six.b("")
-
+        timmed_out = False
         try:
-            while True:
-                if terminal.stdout is not None:
-                    try:
-                        out = terminal.recv(4096)
-                    except IOError:
-                        out = six.b("")
-                    if out:
-                        stdout += out
-                if terminal.stderr is not None:
-                    try:
-                        err = terminal.recv_err(4096)
-                    except IOError:
-                        err = ""
-                    if err:
-                        stderr += err
-
-                if terminal.poll() is not None:
-                    break
-
-                # if out is None and err is None:
-                #    # stdout and stderr closed
-                #    break
-
-                if timeout_expire < time.time():
-
-                    if six.PY3:
-                        # pylint: disable=undefined-variable
-                        stdout = stdout.decode(__salt_system_encoding__)
-                        stderr = stderr.decode(__salt_system_encoding__)
-                        # pylint: enable=undefined-variable
-
-                    fail_callable(
-                        "{}Failed to run: {}; Error: Timed out after {} seconds!\n"
-                        ">>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
-                        ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                            self.log_prefix, proc_args, timeout, stdout.strip(), stderr.strip(),
-                        )
-                    )
-        except (SystemExit, KeyboardInterrupt):
-            pass
-        finally:
-            self.terminate()
+            stdout, stderr = terminal.communicate(timeout=timeout)
+        except compat.subprocess.TimeoutExpired:
+            self.terminate(close_stds=False)
+            stdout, stderr = terminal.communicate()
+            timmed_out = True
 
         if six.PY3:
             # pylint: disable=undefined-variable
             stdout = stdout.decode(__salt_system_encoding__)
             stderr = stderr.decode(__salt_system_encoding__)
             # pylint: enable=undefined-variable
+
+        if timmed_out:
+            fail_callable(
+                "{}Failed to run: {}; Error: Timed out after {} seconds!\n"
+                ">>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
+                ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
+                    self.log_prefix, proc_args, timeout, stdout.strip(), stderr.strip(),
+                )
+            )
 
         exitcode = terminal.returncode
         stdout, stderr, json_out = self.process_output(stdout, stderr, cli_cmd=proc_args)
@@ -583,52 +550,13 @@ class FactoryDaemonScriptBase(FactoryProcess):
         log.info("%sRunning %r...", self.log_prefix, proc_args)
 
         self.init_terminal(
-            proc_args,
-            env=self.environ,
-            cwd=self.cwd,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            proc_args, env=self.environ, cwd=self.cwd,
         )
         self._running.set()
-        if self._process_cli_output_in_thread:
-            process_output_thread = threading.Thread(target=self._process_output_in_thread)
-            process_output_thread.daemon = True
-            process_output_thread.start()
         self._children.extend(psutil.Process(self.pid).children(recursive=True))
         return True
 
-    def _process_output_in_thread(self):
-        """
-        The actual, coroutine aware, start method
-        """
-        running = self._running
-        terminal = self._terminal
-        try:
-            while True:
-                if not running.is_set():
-                    break
-
-                if terminal is None:
-                    break
-
-                if terminal and terminal.poll() is None:
-                    # We're not actually interested in processing the output, it will get logged, just consume it
-                    if terminal.stdout is not None:
-                        terminal.recv()
-                    if terminal.stderr is not None:
-                        terminal.recv_err()
-                    time.sleep(0.125)
-                if terminal and terminal.poll() is not None:
-                    running.clear()
-        except (SystemExit, KeyboardInterrupt):
-            running.clear()
-        finally:
-            if terminal and terminal.stdout:
-                terminal.stdout.close()
-            if terminal and terminal.stderr:
-                terminal.stderr.close()
-
-    def terminate(self):
+    def terminate(self, close_stds=True):
         """
         Terminate the started daemon
         """
@@ -636,7 +564,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
         self._running.clear()
         self._connectable.clear()
         time.sleep(0.0125)
-        super(FactoryDaemonScriptBase, self).terminate()
+        super(FactoryDaemonScriptBase, self).terminate(close_stds=close_stds)
 
     def wait_until_running(self, timeout=5):
         """
@@ -741,7 +669,7 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
         script_args = super(SaltDaemonScriptBase, self).get_base_script_args()
         if "conf_file" in self.config:
             script_args.extend(["-c", os.path.dirname(self.config["conf_file"])])
-        # script_args.append('-ldebug')
+        script_args.append("--log-level=quiet")
         return script_args
 
     def get_check_ports(self):  # pylint: disable=no-self-use
