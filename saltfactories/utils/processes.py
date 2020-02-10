@@ -494,17 +494,27 @@ class FactoryScriptBase(FactoryProcess):
                         err = ""
                     if err:
                         stderr += err
+
                 if terminal.poll() is not None:
                     break
+
                 # if out is None and err is None:
                 #    # stdout and stderr closed
                 #    break
+
                 if timeout_expire < time.time():
+
+                    if six.PY3:
+                        # pylint: disable=undefined-variable
+                        stdout = stdout.decode(__salt_system_encoding__)
+                        stderr = stderr.decode(__salt_system_encoding__)
+                        # pylint: enable=undefined-variable
+
                     fail_callable(
                         "{}Failed to run: {}; Error: Timed out after {} seconds!\n"
                         ">>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
                         ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                            self.log_prefix, proc_args, timeout, stdout, stderr,
+                            self.log_prefix, proc_args, timeout, stdout.strip(), stderr.strip(),
                         )
                     )
         except (SystemExit, KeyboardInterrupt):
