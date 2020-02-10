@@ -60,6 +60,7 @@ setup(
     cmdclass=versioneer.get_cmdclass(),
     install_requires=parse_requirements(),
     include_package_data=True,
+    zip_safe=False,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
