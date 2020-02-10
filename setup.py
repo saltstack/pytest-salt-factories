@@ -59,6 +59,7 @@ setup(
     packages=find_packages(),
     cmdclass=versioneer.get_cmdclass(),
     install_requires=parse_requirements(),
+    include_package_data=True,
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
