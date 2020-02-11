@@ -33,6 +33,9 @@ nox.options.reuse_existing_virtualenvs = True
 #  Don't fail on missing interpreters
 nox.options.error_on_missing_interpreters = False
 
+# Change to current directory
+os.chdir(os.path.dirname(__file__))
+
 
 def _patch_session(session):
     if USE_SYSTEM_PYTHON is False:
@@ -152,7 +155,6 @@ def _tests(session):
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         _check_crypto_lib_installed(session)
-        session.install(".")
     session.run("coverage", "erase")
     tests = session.posargs or ["tests/"]
     session.run("coverage", "run", "-m", "pytest", "-ra", *tests)
