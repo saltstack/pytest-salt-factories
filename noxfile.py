@@ -14,7 +14,7 @@ from nox.virtualenv import VirtualEnv
 
 
 IS_PY3 = sys.version_info > (2,)
-COVERAGE_VERSION_REQUIREMENT = "coverage==4.5.4"
+COVERAGE_VERSION_REQUIREMENT = "coverage==5.0.3"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000"
 USE_SYSTEM_PYTHON = "USE_SYSTEM_PYTHON" in os.environ
 
