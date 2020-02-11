@@ -18,6 +18,7 @@ import pprint
 import signal
 import socket
 import sys
+import tempfile
 import threading
 import time
 import weakref
@@ -383,7 +384,17 @@ class FactoryProcess(object):
         an initial listing of child processes which will be used when terminating the
         terminal
         """
+        stdout = kwargs.pop("stdout", None)
+        if stdout in (compat.subprocess.PIPE, None):
+            stdout = tempfile.SpooledTemporaryFile(512000)
+        kwargs["stdout"] = stdout
+        stderr = kwargs.pop("stderr", None)
+        if stderr in (compat.subprocess.PIPE, None):
+            stderr = tempfile.SpooledTemporaryFile(512000)
+        kwargs["stderr"] = stderr
         self._terminal = compat.subprocess.Popen(cmdline, **kwargs)
+        self._terminal._stdout = stdout
+        self._terminal._stderr = stderr
         for child in psutil.Process(self._terminal.pid).children(recursive=True):
             if child not in self._children:
                 self._children.append(child)
@@ -409,8 +420,12 @@ class FactoryProcess(object):
         if close_stds:
             if self._terminal.stdout:
                 self._terminal.stdout.close()
+            if self._terminal._stdout:
+                self._terminal._stdout.close()
             if self._terminal.stderr:
                 self._terminal.stderr.close()
+            if self._terminal._stderr:
+                self._terminal._stderr.close()
         terminate_process(
             pid=self._terminal.pid,
             kill_children=True,
@@ -456,8 +471,6 @@ class FactoryScriptBase(FactoryProcess):
         """
         timeout = kwargs.pop("_timeout", None) or self.default_timeout
         fail_callable = kwargs.pop("_fail_callable", None) or self.fail_callable
-        stdout = kwargs.pop("_stdout", None) or compat.subprocess.PIPE
-        stderr = kwargs.pop("_stderr", None) or compat.subprocess.PIPE
         timeout_expire = time.time() + timeout
 
         environ = self.environ.copy()
@@ -469,16 +482,24 @@ class FactoryScriptBase(FactoryProcess):
 
         log.info("%sRunning %r in CWD: %s ...", self.log_prefix, proc_args, self.cwd)
 
-        terminal = self.init_terminal(
-            proc_args, cwd=self.cwd, env=environ, stdout=stdout, stderr=stderr
-        )
-        timmed_out = False
-        try:
-            stdout, stderr = terminal.communicate(timeout=timeout)
-        except compat.subprocess.TimeoutExpired:
-            self.terminate(close_stds=False)
-            stdout, stderr = terminal.communicate()
-            timmed_out = True
+        terminal = self.init_terminal(proc_args, cwd=self.cwd, env=environ, close_fds=True,)
+        with terminal:
+            timmed_out = False
+            try:
+                # from pudb import set_trace; set_trace()
+                stdout, stderr = terminal.communicate(timeout=timeout)
+            except compat.subprocess.TimeoutExpired:
+                self.terminate(close_stds=False)
+                stdout, stderr = terminal.communicate()
+                timmed_out = True
+
+        if stdout is None:
+            terminal._stdout.seek(0)
+            stdout = terminal._stdout.read().strip()
+
+        if stderr is None:
+            terminal._stderr.seek(0)
+            stderr = terminal._stderr.read().strip()
 
         if six.PY3:
             # pylint: disable=undefined-variable
@@ -491,7 +512,7 @@ class FactoryScriptBase(FactoryProcess):
                 "{}Failed to run: {}; Error: Timed out after {} seconds!\n"
                 ">>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
                 ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                    self.log_prefix, proc_args, timeout, stdout.strip(), stderr.strip(),
+                    self.log_prefix, proc_args, timeout, stdout, stderr,
                 )
             )
 
