@@ -9,8 +9,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import sys
-
 # pragma: no cover
 # pylint: disable=unused-import,invalid-name
 
@@ -34,9 +32,4 @@ try:
     from unittest import mock
 except ImportError:
     import mock
-
-if sys.version_info >= (3, 5):
-    import subprocess
-else:
-    import subprocess32 as subprocess
 # pylint: enable=unused-import,invalid-name

@@ -17,6 +17,7 @@ import os
 import pprint
 import signal
 import socket
+import subprocess
 import sys
 import tempfile
 import threading
@@ -385,14 +386,14 @@ class FactoryProcess(object):
         terminal
         """
         stdout = kwargs.pop("stdout", None)
-        if stdout in (compat.subprocess.PIPE, None):
+        if stdout in (subprocess.PIPE, None):
             stdout = tempfile.SpooledTemporaryFile(512000)
         kwargs["stdout"] = stdout
         stderr = kwargs.pop("stderr", None)
-        if stderr in (compat.subprocess.PIPE, None):
+        if stderr in (subprocess.PIPE, None):
             stderr = tempfile.SpooledTemporaryFile(512000)
         kwargs["stderr"] = stderr
-        self._terminal = compat.subprocess.Popen(cmdline, **kwargs)
+        self._terminal = subprocess.Popen(cmdline, **kwargs)
         self._terminal._stdout = stdout
         self._terminal._stderr = stderr
         for child in psutil.Process(self._terminal.pid).children(recursive=True):
@@ -483,23 +484,26 @@ class FactoryScriptBase(FactoryProcess):
         log.info("%sRunning %r in CWD: %s ...", self.log_prefix, proc_args, self.cwd)
 
         terminal = self.init_terminal(proc_args, cwd=self.cwd, env=environ, close_fds=True,)
-        with terminal:
-            timmed_out = False
-            try:
-                # from pudb import set_trace; set_trace()
-                stdout, stderr = terminal.communicate(timeout=timeout)
-            except compat.subprocess.TimeoutExpired:
-                self.terminate(close_stds=False)
-                stdout, stderr = terminal.communicate()
+        timmed_out = False
+        while True:
+            if timeout_expire < time.time():
                 timmed_out = True
+                break
+            if terminal.poll() is not None:
+                break
+            time.sleep(0.25)
 
-        if stdout is None:
+        if timmed_out:
+            self.terminate(close_stds=False)
+        stdout, stderr = terminal.communicate()
+
+        if stdout is None and terminal._stdout:
             terminal._stdout.seek(0)
-            stdout = terminal._stdout.read().strip()
+            stdout = terminal._stdout.read()
 
-        if stderr is None:
+        if stderr is None and terminal._stderr:
             terminal._stderr.seek(0)
-            stderr = terminal._stderr.read().strip()
+            stderr = terminal._stderr.read()
 
         if six.PY3:
             # pylint: disable=undefined-variable
@@ -512,7 +516,11 @@ class FactoryScriptBase(FactoryProcess):
                 "{}Failed to run: {}; Error: Timed out after {} seconds!\n"
                 ">>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
                 ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                    self.log_prefix, proc_args, timeout, stdout, stderr,
+                    self.log_prefix,
+                    proc_args,
+                    timeout,
+                    stdout.strip() if stdout else "",
+                    stderr.strip() if stderr else "",
                 )
             )
 
