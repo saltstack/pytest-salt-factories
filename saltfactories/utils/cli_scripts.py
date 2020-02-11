@@ -20,14 +20,22 @@ log = logging.getLogger(__name__)
 SCRIPT_TEMPLATES = {
     "salt": textwrap.dedent(
         """
+        import atexit
         from salt.scripts import salt_main
 
         if __name__ == '__main__':
-            salt_main()
+            exitcode = 0
+            try:
+                salt_main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """
     ),
     "salt-api": textwrap.dedent(
         """
+        import atexit
         import salt.cli
 
         def main():
@@ -35,11 +43,18 @@ SCRIPT_TEMPLATES = {
             sapi.start()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """
     ),
     "common": textwrap.dedent(
         """
+        import atexit
         from salt.scripts import salt_{0}
         import salt.utils.platform
 
@@ -53,7 +68,13 @@ SCRIPT_TEMPLATES = {
             salt_{0}()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """
     ),
     "coverage": textwrap.dedent(

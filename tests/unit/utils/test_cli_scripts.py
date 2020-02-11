@@ -34,6 +34,7 @@ def test_generate_script_defaults(tmpdir):
         import os
         import sys
 
+        import atexit
         from salt.scripts import salt_foobar
         import salt.utils.platform
 
@@ -47,7 +48,13 @@ def test_generate_script_defaults(tmpdir):
             salt_foobar()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """.format(
             sys.executable
         )
@@ -73,6 +80,7 @@ def test_generate_script_executable(tmpdir):
         import os
         import sys
 
+        import atexit
         from salt.scripts import salt_foobar
         import salt.utils.platform
 
@@ -86,7 +94,13 @@ def test_generate_script_executable(tmpdir):
             salt_foobar()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """
     )
     assert contents == expected
@@ -112,6 +126,7 @@ def test_generate_script_long_executable(tmpdir):
         import os
         import sys
 
+        import atexit
         from salt.scripts import salt_foobar
         import salt.utils.platform
 
@@ -125,7 +140,13 @@ def test_generate_script_long_executable(tmpdir):
             salt_foobar()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """
     )
     assert contents == expected
@@ -153,6 +174,7 @@ def test_generate_script_code_dir(tmpdir):
             sys.path.remove(CODE_DIR)
         sys.path.insert(0, CODE_DIR)
 
+        import atexit
         from salt.scripts import salt_foobar
         import salt.utils.platform
 
@@ -166,7 +188,13 @@ def test_generate_script_code_dir(tmpdir):
             salt_foobar()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """.format(
             sys.executable, code_dir
         )
@@ -208,6 +236,7 @@ def test_generate_script_inject_coverage(tmpdir):
         os.environ[str('COVERAGE_FILE')] = str(COVERAGE_FILE)
         os.environ[str('COVERAGE_PROCESS_START')] = str(COVERAGE_PROCESS_START)
 
+        import atexit
         from salt.scripts import salt_foobar
         import salt.utils.platform
 
@@ -221,7 +250,13 @@ def test_generate_script_inject_coverage(tmpdir):
             salt_foobar()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """.format(
             sys.executable, code_dir
         )
@@ -280,6 +315,7 @@ def test_generate_script_inject_sitecustomize(tmpdir):
             sys.path.remove(SITECUSTOMIZE_DIR)
         sys.path.insert(0, SITECUSTOMIZE_DIR)
 
+        import atexit
         from salt.scripts import salt_foobar
         import salt.utils.platform
 
@@ -293,7 +329,13 @@ def test_generate_script_inject_sitecustomize(tmpdir):
             salt_foobar()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """.format(
             sys.executable, code_dir, sitecustomize_path
         )
@@ -330,6 +372,7 @@ def test_generate_script_inject_sitecustomize(tmpdir):
             sys.path.remove(SITECUSTOMIZE_DIR)
         sys.path.insert(0, SITECUSTOMIZE_DIR)
 
+        import atexit
         from salt.scripts import salt_foobar_2
         import salt.utils.platform
 
@@ -343,7 +386,13 @@ def test_generate_script_inject_sitecustomize(tmpdir):
             salt_foobar_2()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """.format(
             sys.executable, sitecustomize_path
         )
@@ -367,10 +416,17 @@ def test_generate_script_salt(tmpdir):
         import os
         import sys
 
+        import atexit
         from salt.scripts import salt_main
 
         if __name__ == '__main__':
-            salt_main()
+            exitcode = 0
+            try:
+                salt_main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """.format(
             sys.executable
         )
@@ -394,6 +450,7 @@ def test_generate_script_salt_api(tmpdir):
         import os
         import sys
 
+        import atexit
         import salt.cli
 
         def main():
@@ -401,7 +458,13 @@ def test_generate_script_salt_api(tmpdir):
             sapi.start()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """.format(
             sys.executable
         )
@@ -425,6 +488,7 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
         import os
         import sys
 
+        import atexit
         from salt.scripts import salt_foobar
         import salt.utils.platform
 
@@ -438,7 +502,13 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
             salt_foobar()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """.format(
             sys.executable
         )
@@ -463,6 +533,7 @@ def test_generate_script_only_generates_once(tmpdir):
         import os
         import sys
 
+        import atexit
         from salt.scripts import salt_foobar
         import salt.utils.platform
 
@@ -476,7 +547,13 @@ def test_generate_script_only_generates_once(tmpdir):
             salt_foobar()
 
         if __name__ == '__main__':
-            main()
+            exitcode = 0
+            try:
+                main()
+            except SystemExit as exc:
+                exitcode = exc.code
+            atexit._run_exitfuncs()
+            os._exit(exitcode)
         """.format(
             sys.executable
         )
