@@ -31,6 +31,13 @@ from saltfactories.utils.log_server import log_server_listener
 log = logging.getLogger(__name__)
 
 
+def pytest_addhooks(pluginmanager):
+    """
+    Register our custom hooks
+    """
+    pluginmanager.add_hookspecs(hookspec)
+
+
 def pytest_tempdir_temproot():
     # Taken from https://github.com/saltstack/salt/blob/v2019.2.0/tests/support/paths.py
     # Avoid ${TMPDIR} and gettempdir() on MacOS as they yield a base path too long
@@ -48,13 +55,6 @@ def pytest_tempdir_basename():
     Return the temporary directory basename for the salt test suite.
     """
     return "saltfactories"
-
-
-def pytest_addhooks(pluginmanager):
-    """
-    Register our custom hooks
-    """
-    pluginmanager.add_hookspecs(hookspec)
 
 
 @pytest.fixture(scope="session")

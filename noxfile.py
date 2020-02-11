@@ -14,6 +14,7 @@ from nox.virtualenv import VirtualEnv
 
 
 IS_PY3 = sys.version_info > (2,)
+IS_WINDOWS = sys.platform.lower().startswith("win")
 COVERAGE_VERSION_REQUIREMENT = "coverage==5.0.3"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000"
 USE_SYSTEM_PYTHON = "USE_SYSTEM_PYTHON" in os.environ
@@ -155,6 +156,8 @@ def _tests(session):
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         _check_crypto_lib_installed(session)
+        if IS_WINDOWS:
+            session.install(".", silent=PIP_INSTALL_SILENT)
     session.run("coverage", "erase")
     args = []
     if session._runner.global_config.forcecolor:

@@ -17,6 +17,8 @@ from saltfactories.plugin import *  # pylint: disable=wildcard-import,unused-wil
 
 log = logging.getLogger(__name__)
 
+pytest_plugins = ["pytester"]
+
 
 def pytest_report_header():
     return "salt-version: {}".format(salt.version.__version__)
