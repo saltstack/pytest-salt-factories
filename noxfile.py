@@ -155,7 +155,7 @@ def _tests(session):
         session.install(".")
     session.run("coverage", "erase")
     tests = session.posargs or ["tests/"]
-    session.run("coverage", "run", "-m", "py.test", "-ra", *tests)
+    session.run("coverage", "run", "-m", "pytest", "-ra", *tests)
     session.notify("coverage")
 
 
