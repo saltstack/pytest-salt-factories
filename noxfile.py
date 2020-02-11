@@ -156,8 +156,17 @@ def _tests(session):
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         _check_crypto_lib_installed(session)
     session.run("coverage", "erase")
-    tests = session.posargs or ["tests/"]
-    session.run("coverage", "run", "-m", "pytest", "-ra", *tests)
+    args = []
+    if session._runner.global_config.forcecolor:
+        args.append("--color=yes")
+    if not session.posargs:
+        args.append("tests/")
+    else:
+        for arg in session.posargs:
+            if arg.startswith("--color") and args[0].startswith("--color"):
+                args.pop(0)
+            args.append(arg)
+    session.run("coverage", "run", "-m", "pytest", "-ra", *args)
     session.notify("coverage")
 
 
