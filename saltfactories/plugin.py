@@ -200,21 +200,10 @@ def pytest_saltfactories_verify_syndic_configuration(request, syndic_config, use
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
-        os.path.join(syndic_config["pki_dir"], "minions"),
-        os.path.join(syndic_config["pki_dir"], "minions_pre"),
-        os.path.join(syndic_config["pki_dir"], "minions_rejected"),
-        os.path.join(syndic_config["pki_dir"], "accepted"),
-        os.path.join(syndic_config["pki_dir"], "rejected"),
-        os.path.join(syndic_config["pki_dir"], "pending"),
-        os.path.dirname(syndic_config.get("syndic_log_file") or syndic_config.get("log_file")),
-        os.path.join(syndic_config["cachedir"], "proc"),
-        # syndic_config['extension_modules'],
-        syndic_config.get("syndic_sock_dir") or syndic_config.get("sock_dir"),
+        os.path.dirname(syndic_config["syndic_log_file"]),
     ]
     salt_verify.verify_env(
-        verify_env_entries,
-        username,
-        pki_dir=syndic_config.get("syndic_sock_dir") or syndic_config.get("sock_dir"),
+        verify_env_entries, username,
     )
 
 
@@ -233,6 +222,10 @@ def pytest_saltfactories_write_syndic_configuration(request, syndic_config):
     with compat.fopen(config_file, "w") as wfh:
         yamlserialize.safe_dump(syndic_config, wfh, default_flow_style=False)
 
+    conf_dir = os.path.dirname(os.path.dirname(config_file))
+    master_config_file = os.path.join(conf_dir, "master")
+    minion_config_file = os.path.join(conf_dir, "minion")
+
     # Make sure to load the config file as a salt-master starting from CLI
-    options = salt.config.syndic_config(None, config_file)
+    options = salt.config.syndic_config(master_config_file, minion_config_file)
     return options

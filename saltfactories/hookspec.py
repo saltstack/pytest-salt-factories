@@ -86,10 +86,14 @@ def pytest_saltfactories_write_master_configuration(request, master_config):
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_generate_default_syndic_configuration(
-    request, factories_manager, syndic_id, master_port
+    request, factories_manager, syndic_id, syndic_master_port
 ):
     """
-    Hook which should return a dictionary tailored for the provided syndic_id
+    Hook which should return a dictionary tailored for the provided syndic_id with 3 keys:
+
+    * `master`: The default config for the master running along with the syndic
+    * `minion`: The default config for the master running along with the syndic
+    * `syndic`: The default config for the master running along with the syndic
 
     Stops at the first non None result
     """
@@ -97,11 +101,20 @@ def pytest_saltfactories_generate_default_syndic_configuration(
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_syndic_configuration_overrides(
-    request, factories_manager, default_options, syndic_id
+    request, factories_manager, syndic_id, default_options
 ):
     """
     Hook which should return a dictionary tailored for the provided syndic_id.
     This dictionary will override the default_options dictionary.
+
+    The returned dictionary should contain 3 keys:
+
+    * `master`: The config overrides for the master running along with the syndic
+    * `minion`: The config overrides for the master running along with the syndic
+    * `syndic`: The config overridess for the master running along with the syndic
+
+    The `default_options` parameter be None or have 3 keys, `master`, `minion`, `syndic`,
+    while will contain the default options for each of the daemons.
 
     Stops at the first non None result
     """

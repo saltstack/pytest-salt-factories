@@ -28,7 +28,15 @@ class MinionFactory(object):
         if default_options is None:
             default_options = salt.config.DEFAULT_MINION_OPTS.copy()
 
-        root_dir = root_dir.join("minions", minion_id).ensure(dir=True)
+        counter = 1
+        root_dir = root_dir.join("minions", minion_id)
+        while True:
+            if not root_dir.check(dir=True):
+                break
+            root_dir = root_dir.join("minions", "{}_{}".format(minion_id, counter))
+            counter += 1
+        root_dir.ensure(dir=True)
+
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_file = conf_dir.join("minion").strpath
 
@@ -48,7 +56,7 @@ class MinionFactory(object):
             "pidfile": "run/minion.pid",
             "pki_dir": "pki",
             "cachedir": "cache",
-            "sock_dir": ".salt-unix",
+            "sock_dir": "run/minion",
             "log_file": "logs/minion.log",
             "log_level_logfile": "debug",
             "loop_interval": 0.05,

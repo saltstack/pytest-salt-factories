@@ -166,7 +166,7 @@ def terminate_process_list(process_list, kill=False, slow_stop=False):
         log.debug("Removed %d duplicates from the initial process list", start_count - end_count)
 
     _terminate_process_list(process_list, kill=kill, slow_stop=slow_stop)
-    psutil.wait_procs(process_list, timeout=15, callback=on_process_terminated)
+    psutil.wait_procs(process_list, timeout=5, callback=on_process_terminated)
 
     if process_list:
         # If there's still processes to be terminated, retry and kill them if slow_stop is False
@@ -176,7 +176,7 @@ def terminate_process_list(process_list, kill=False, slow_stop=False):
             slow_stop,
         )
         _terminate_process_list(process_list, kill=slow_stop is False, slow_stop=slow_stop)
-        psutil.wait_procs(process_list, timeout=10, callback=on_process_terminated)
+        psutil.wait_procs(process_list, timeout=5, callback=on_process_terminated)
 
     if process_list:
         # If there's still processes to be terminated, just kill them, no slow stopping now
@@ -253,7 +253,7 @@ def start_daemon(
             cwd=cwd,
         )
         log_prefix = process.log_prefix
-        log.info("%sStarting %s. Attempt: %s", log_prefix, daemon_class.__name__, attempts)
+        log.info("%sStarting %r. Attempt: %s", log_prefix, process, attempts)
         process.start()
         if process.is_alive():
             try:
@@ -261,48 +261,35 @@ def start_daemon(
                     timeout=start_timeout, monitor_events=monitor_events
                 )
                 if connectable is False:
-                    connectable = process.wait_until_running(
-                        timeout=start_timeout / 2, monitor_events=monitor_events
-                    )
-                    if connectable is False:
-                        result = process.terminate()
-                        if attempts >= max_attempts:
-                            fail_callable(
-                                "{}The {} has failed to confirm running status after {} attempts.\n"
-                                "Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
-                                ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                                    log_prefix,
-                                    daemon_class.__name__,
-                                    attempts,
-                                    result.stdout,
-                                    result.stderr,
-                                )
+                    result = process.terminate()
+                    if attempts >= max_attempts:
+                        fail_callable(
+                            "{}The {!r} has failed to confirm running status after {} attempts.\n"
+                            "Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
+                            ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
+                                log_prefix, process, attempts, result.stdout, result.stderr,
                             )
-                        continue
+                        )
+                    continue
             except Exception as exc:  # pylint: disable=broad-except
-                log.exception("%sException caugth: %s", log_prefix, exc, exc_info=True)
+                log.exception(
+                    "%sException caugth on %r: %s", log_prefix, process, exc, exc_info=True
+                )
                 result = process.terminate()
                 if attempts >= max_attempts:
                     fail_callable(
-                        "{}The {} has failed to confirm running status after {} attempts and raised an "
+                        "{}The {!r} has failed to confirm running status after {} attempts and raised an "
                         "exception: {}.\n"
                         "Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
                         ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                            log_prefix,
-                            daemon_class.__name__,
-                            attempts,
-                            str(exc),
-                            result.stdout,
-                            result.stderr,
+                            log_prefix, process, attempts, str(exc), result.stdout, result.stderr,
                         )
                     )
                     return
                 continue
             # A little breathing before returning the process
             time.sleep(0.5)
-            log.info(
-                "%sThe %s is running after %d attempts", log_prefix, daemon_class.__name__, attempts
-            )
+            log.info("%sThe %r is running after %d attempts", log_prefix, process, attempts)
             break
         else:
             process.terminate()
@@ -312,16 +299,16 @@ def start_daemon(
         if process is not None:
             result = process.terminate()
             fail_callable(
-                "{}The {} has failed to confirm running status after {} attempts.\n"
+                "{}The {!r} has failed to confirm running status after {} attempts.\n"
                 "Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
                 ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                    log_prefix, daemon_class.__name__, attempts, result.stdout, result.stderr
+                    log_prefix, process, attempts, result.stdout, result.stderr
                 )
             )
             return
         fail_callable(
-            "{}The {} has failed to start after {} attempts".format(
-                log_prefix, daemon_class.__name__, max_attempts
+            "{}The {!r} has failed to start after {} attempts".format(
+                log_prefix, process, max_attempts
             )
         )
     return process
@@ -433,11 +420,13 @@ class FactoryProcess(object):
         if config is None:
             config = {}
         self.config = config
-        log_prefix = (
-            config.get("pytest-{}".format(config["__role"]), {}).get("log", {}).get("prefix") or ""
-        )
-        if log_prefix:
-            log_prefix = "[{}] ".format(log_prefix)
+        if "__role" in config:
+            pytest_config_key = "pytest-{}".format(config["__role"])
+            log_prefix = config.get(pytest_config_key, {}).get("log", {}).get("prefix") or ""
+            if log_prefix:
+                log_prefix = "[{}] ".format(log_prefix)
+        else:
+            log_prefix = ""
         self.log_prefix = log_prefix
         self.slow_stop = slow_stop
         self.environ = environ or os.environ.copy()
@@ -535,6 +524,9 @@ class FactoryProcess(object):
             return
         return terminal.pid
 
+    def __repr__(self):
+        return "<{}>".format(self.__class__.__name__)
+
 
 class FactoryScriptBase(FactoryProcess):
     """
@@ -567,7 +559,7 @@ class FactoryScriptBase(FactoryProcess):
 
         log.info("%sRunning %r in CWD: %s ...", self.log_prefix, proc_args, self.cwd)
 
-        terminal = self.init_terminal(proc_args, cwd=self.cwd, env=self.environ, close_fds=True,)
+        terminal = self.init_terminal(proc_args, cwd=self.cwd, env=self.environ,)
         timmed_out = False
         while True:
             if timeout_expire < time.time():
@@ -730,13 +722,19 @@ class FactoryDaemonScriptBase(FactoryProcess):
                 pass
         return self._connectable.is_set()
 
+    def __repr__(self):
+        try:
+            return "<{} id='{id}' role='{__role}'>".format(self.__class__.__name__, **self.config)
+        except KeyError:
+            return super(FactoryDaemonScriptBase, self).__repr__()
+
 
 class SaltScriptBase(FactoryScriptBase):
     def get_base_script_args(self):
         script_args = super(SaltScriptBase, self).get_base_script_args()
         if "conf_file" in self.config:
             script_args.extend(["-c", os.path.dirname(self.config["conf_file"])])
-        script_args.append("-ldebug")
+        script_args.append("--log-level=quiet")
         script_args.append("--out=json")
         return script_args
 
@@ -792,7 +790,7 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
             config = self.config.copy()
         else:
             config = self.config["pytest-{}".format(self.config["__role"])]["master_config"].copy()
-        log.warning(
+        log.info(
             "Monitoring events for %s(id=%s, sock_dir=%s)",
             self.__class__.__name__,
             config["id"],
@@ -809,7 +807,7 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
                         break
                     event = event_listener.get_event(full=True, wait=0.5)
                     if event:
-                        log.warning("%sMonitored event: %s", self.log_prefix, event)
+                        log.info("%sMonitored event: %s", self.log_prefix, event)
         except iostream.StreamClosedError:
             pass
 
@@ -889,7 +887,7 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
 
                     if not check_events:
                         if stop_sending_events_file and os.path.exists(stop_sending_events_file):
-                            log.warning(
+                            log.info(
                                 "%sRemoving stop_sending_events_file: %s",
                                 self.log_prefix,
                                 stop_sending_events_file,

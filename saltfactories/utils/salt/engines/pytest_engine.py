@@ -95,7 +95,7 @@ class PyTestEngine(object):
             netutil.add_accept_handler(self.tcp_server_sock, self.handle_connection)
 
     def handle_connection(self, connection, address):
-        log.warning(
+        log.info(
             "Accepted connection from %s on %s. Role: %s  ID: %s",
             address,
             self.port,

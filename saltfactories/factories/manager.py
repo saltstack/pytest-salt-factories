@@ -203,9 +203,10 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["minions"].pop(minion_id))
         return proc
 
-    def configure_master(self, request, master_id, order_masters=False):
+    def configure_master(self, request, master_id, order_masters=False, master_of_masters_id=None):
         if master_id in self.cache["configs"]["masters"]:
             return self.cache["configs"]["masters"][master_id]
+
         default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_master_configuration(
             request=request,
             factories_manager=self,
@@ -219,6 +220,16 @@ class SaltFactoriesManager(object):
             default_options=default_options,
             order_masters=order_masters,
         )
+
+        if master_of_masters_id:
+            master_of_masters_config = self.cache["configs"]["masters"].get(master_of_masters_id)
+            if master_of_masters_config is None:
+                raise RuntimeError("No config found for {}".format(master_of_masters_id))
+            if config_overrides is None:
+                config_overrides = {}
+            config_overrides["syndic_master"] = master_of_masters_config["interface"]
+            config_overrides["syndic_master_port"] = master_of_masters_config["ret_port"]
+
         master_config = master.MasterFactory.default_config(
             self.root_dir,
             master_id=master_id,
@@ -239,13 +250,25 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["masters"].pop(master_id))
         return master_config
 
-    def spawn_master(self, request, master_id, monitor_events=False, order_masters=False):
+    def spawn_master(
+        self,
+        request,
+        master_id,
+        monitor_events=False,
+        order_masters=False,
+        master_of_masters_id=None,
+    ):
         if master_id in self.cache["masters"]:
             raise RuntimeError("A master by the ID of '{}' was already spawned".format(master_id))
 
         master_config = self.cache["configs"]["masters"].get(master_id)
         if master_config is None:
-            master_config = self.configure_master(request, master_id, order_masters=order_masters)
+            master_config = self.configure_master(
+                request,
+                master_id,
+                order_masters=order_masters,
+                master_of_masters_id=master_of_masters_id,
+            )
 
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
@@ -272,34 +295,82 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["masters"].pop(master_id))
         return proc
 
-    def configure_syndic(self, request, syndic_id, master_id=None):
+    def configure_syndic(self, request, syndic_id, master_of_masters_id=None):
+        """
+        In order for the syndic to be reactive, it actually needs three(3) daemons running, `salt-master`,
+        `salt-minion` and `salt-syndic`.
+
+        """
         if syndic_id in self.cache["configs"]["syndics"]:
             return self.cache["configs"]["syndics"][syndic_id]
+        elif syndic_id in self.cache["configs"]["masters"]:
+            raise RuntimeError(
+                "A master by the ID of '{}' was already configured".format(syndic_id)
+            )
+        elif syndic_id in self.cache["configs"]["minions"]:
+            raise RuntimeError(
+                "A minion by the ID of '{}' was already configured".format(syndic_id)
+            )
 
-        master_config = self.cache["configs"]["masters"].get(master_id)
-        if master_config is None and master_id:
-            master_config = self.configure_master(request, master_id)
+        master_of_masters_config = self.cache["configs"]["masters"].get(master_of_masters_id)
+        if master_of_masters_config is None and master_of_masters_id:
+            master_of_masters_config = self.configure_master(
+                request, master_of_masters_id, order_masters=True
+            )
 
-        master_port = None
-        if master_config:
-            master_port = master_config.get("ret_port")
+        syndic_master_port = master_of_masters_config["ret_port"]
 
         default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_syndic_configuration(
-            request=request, factories_manager=self, syndic_id=syndic_id, master_port=master_port
+            request=request,
+            factories_manager=self,
+            syndic_id=syndic_id,
+            syndic_master_port=syndic_master_port,
         )
+
         config_overrides = self.pytestconfig.hook.pytest_saltfactories_syndic_configuration_overrides(
             request=request,
             factories_manager=self,
             syndic_id=syndic_id,
             default_options=default_options,
         )
-        syndic_config = syndic.SyndicFactory.default_config(
+
+        syndic_setup_config = syndic.SyndicFactory.default_config(
             self.root_dir,
             syndic_id=syndic_id,
             default_options=default_options,
             config_overrides=config_overrides,
-            master_port=master_port,
+            syndic_master_port=syndic_master_port,
         )
+
+        master_config = syndic_setup_config["master"]
+        self.final_master_config_tweaks(master_config)
+        master_config = self.pytestconfig.hook.pytest_saltfactories_write_master_configuration(
+            request=request, master_config=master_config
+        )
+        self.pytestconfig.hook.pytest_saltfactories_verify_master_configuration(
+            request=request,
+            master_config=master_config,
+            username=SaltFactoriesManager.get_running_username(),
+        )
+        master_config["pytest-master"]["master_config"] = master_of_masters_config
+        self.cache["configs"]["masters"][syndic_id] = master_config
+        request.addfinalizer(lambda: self.cache["configs"]["masters"].pop(syndic_id))
+
+        minion_config = syndic_setup_config["minion"]
+        self.final_minion_config_tweaks(minion_config)
+        minion_config = self.pytestconfig.hook.pytest_saltfactories_write_minion_configuration(
+            request=request, minion_config=minion_config
+        )
+        self.pytestconfig.hook.pytest_saltfactories_verify_minion_configuration(
+            request=request,
+            minion_config=minion_config,
+            username=SaltFactoriesManager.get_running_username(),
+        )
+        minion_config["pytest-minion"]["master_config"] = master_config
+        self.cache["configs"]["minions"][syndic_id] = minion_config
+        request.addfinalizer(lambda: self.cache["configs"]["minions"].pop(syndic_id))
+
+        syndic_config = syndic_setup_config["syndic"]
         self.final_syndic_config_tweaks(syndic_config)
         syndic_config = self.pytestconfig.hook.pytest_saltfactories_write_syndic_configuration(
             request=request, syndic_config=syndic_config
@@ -309,22 +380,31 @@ class SaltFactoriesManager(object):
             syndic_config=syndic_config,
             username=SaltFactoriesManager.get_running_username(),
         )
-        if master_id:
-            # The in-memory syndic config dictionary will hold a copy of the master config
-            # in order to listen to start events so that we can confirm the syndic is up, running
-            # and accepting requests
-            syndic_config["pytest"]["master_config"] = self.cache["configs"]["masters"][master_id]
+        syndic_config["pytest-syndic"]["master_config"] = master_of_masters_config
+        # Just to get info about the master running along with the syndic
+        syndic_config["pytest-syndic"]["syndic_master"] = master_config
         self.cache["configs"]["syndics"][syndic_id] = syndic_config
         request.addfinalizer(lambda: self.cache["configs"]["syndics"].pop(syndic_id))
         return syndic_config
 
-    def spawn_syndic(self, request, syndic_id, master_id=None, monitor_events=False):
+    def spawn_syndic(
+        self, request, syndic_id, master_id=None, master_of_masters_id=None, monitor_events=False
+    ):
         if syndic_id in self.cache["syndics"]:
             raise RuntimeError("A syndic by the ID of '{}' was already spawned".format(syndic_id))
 
         syndic_config = self.cache["configs"]["syndics"].get(syndic_id)
         if syndic_config is None:
-            syndic_config = self.configure_syndic(request, syndic_id, master_id=master_id)
+            syndic_config = self.configure_syndic(
+                request, syndic_id, master_of_masters_id=master_of_masters_id
+            )
+
+        # We need the syndic master and minion running
+        if syndic_id not in self.cache["masters"]:
+            self.spawn_master(request, syndic_id, monitor_events=monitor_events)
+
+        if syndic_id not in self.cache["minions"]:
+            self.spawn_minion(request, syndic_id)
 
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
