@@ -231,6 +231,7 @@ def start_daemon(
     environ=None,
     cwd=None,
     max_attempts=3,
+    monitor_events=False,
 ):
     """
     Returns a running process daemon
@@ -255,9 +256,13 @@ def start_daemon(
         process.start()
         if process.is_alive():
             try:
-                connectable = process.wait_until_running(timeout=start_timeout)
+                connectable = process.wait_until_running(
+                    timeout=start_timeout, monitor_events=monitor_events
+                )
                 if connectable is False:
-                    connectable = process.wait_until_running(timeout=start_timeout / 2)
+                    connectable = process.wait_until_running(
+                        timeout=start_timeout / 2, monitor_events=monitor_events
+                    )
                     if connectable is False:
                         process.terminate()
                         if attempts >= max_attempts:
@@ -551,6 +556,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
         super(FactoryDaemonScriptBase, self).__init__(*args, **kwargs)
         self._running = threading.Event()
         self._connectable = threading.Event()
+        self._monitor_events_event = threading.Event()
 
     def is_alive(self):
         """
@@ -568,7 +574,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
         """
         Start the daemon subprocess
         """
-        # Late import
+        self._monitor_events_event.set()
         log.info("%sStarting DAEMON %s in CWD: %s", self.log_prefix, self.cli_script_name, self.cwd)
         proc_args = [self.get_script_path()] + self.get_base_script_args() + self.get_script_args()
 
@@ -592,6 +598,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
         # Let's get the child processes of the started subprocess
         self._running.clear()
         self._connectable.clear()
+        self._monitor_events_event.clear()
         time.sleep(0.0125)
         super(FactoryDaemonScriptBase, self).terminate(close_stds=close_stds)
 
@@ -714,9 +721,37 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
         """
         Return a list of event tags to check against to ensure the daemon is running
         """
-        return ["pytest/{__role}/{id}/start".format(**self.config)]
+        raise NotImplementedError
 
-    def wait_until_running(self, timeout=5):
+    def monitor_events(self, monitor_event):
+        # Late import
+        import salt.utils.event
+
+        if self.config["__role"] == "master":
+            config = self.config.copy()
+        else:
+            config = self.config["pytest"]["master_config"].copy()
+        log.warning(
+            "\nMonitoring events for %s(id=%s, sock_dir=%s)\n",
+            self.__class__.__name__,
+            config["id"],
+            config["sock_dir"],
+        )
+        with salt.utils.event.get_master_event(
+            config, config["sock_dir"], listen=True, raise_errors=True,
+        ) as event_listener:
+            while monitor_event.is_set():
+                if self._running.is_set() is False:
+                    # No longer running, break
+                    log.warning("%sNo longer running!", self.log_prefix)
+                    break
+                event = event_listener.get_event(full=True, wait=0.5)
+                if event:
+                    log.warning("\n%sMonitored event: %s\n", self.log_prefix, event)
+
+    def wait_until_running(
+        self, timeout=5, monitor_events=False
+    ):  # pylint: disable=arguments-differ
         """
         Blocking call to wait for the daemon to start listening
         """
@@ -737,6 +772,14 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
         if not check_events:
             self._connectable.set()
             return self._connectable.is_set()
+
+        if monitor_events:
+            self._monitor_events_event.set()
+            monitor_events_thread = threading.Thread(
+                target=self.monitor_events, args=(self._monitor_events_event,)
+            )
+            monitor_events_thread.daemon = True
+            monitor_events_thread.start()
 
         expire = time.time() + timeout
         if check_events:
@@ -797,9 +840,11 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
                             log.info("%sGot event tag: %s", self.log_prefix, tag)
                             check_events.remove(tag)
         except KeyboardInterrupt:
+            # self._monitor_events_event.clear()
             return self._connectable.is_set()
         if self._connectable.is_set():
             log.debug("%sAll events checked. Running!", self.log_prefix)
+        # self._monitor_events_event.clear()
         return self._connectable.is_set()
 
 
@@ -808,17 +853,37 @@ class SaltMaster(SaltDaemonScriptBase):
     Simple subclass to define a salt master daemon
     """
 
+    def get_check_events(self):
+        """
+        Return a list of event tags to check against to ensure the daemon is running
+        """
+        return ["pytest/{__role}/{id}/start".format(**self.config)]
+
 
 class SaltMinion(SaltDaemonScriptBase):
     """
     Simple subclass to define a salt minion daemon
     """
 
+    def get_check_events(self):
+        """
+        Return a list of event tags to check against to ensure the daemon is running
+        """
+        # We don't use "salt/{__role}/{id}/start" because those were seen being fired
+        # before we even got our engine running
+        return ["pytest/{__role}/{id}/start".format(**self.config)]
+
 
 class SaltSyndic(SaltDaemonScriptBase):
     """
     Simple subclass to define a salt minion daemon
     """
+
+    def get_check_events(self):
+        """
+        Return a list of event tags to check against to ensure the daemon is running
+        """
+        return ["salt/{__role}/{id}/start".format(**self.config)]
 
 
 class SaltCLI(SaltScriptBase):

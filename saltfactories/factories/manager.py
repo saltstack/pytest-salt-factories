@@ -160,7 +160,7 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["minions"].pop(minion_id))
         return minion_config
 
-    def spawn_minion(self, request, minion_id, master_id=None):
+    def spawn_minion(self, request, minion_id, master_id=None, monitor_events=False):
         if minion_id in self.cache["minions"]:
             raise RuntimeError("A minion by the ID of '{}' was already spawned".format(minion_id))
 
@@ -224,7 +224,7 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["masters"].pop(master_id))
         return master_config
 
-    def spawn_master(self, request, master_id):
+    def spawn_master(self, request, master_id, monitor_events=False):
         if master_id in self.cache["masters"]:
             raise RuntimeError("A master by the ID of '{}' was already spawned".format(master_id))
 
@@ -250,6 +250,7 @@ class SaltFactoriesManager(object):
             environ=self.environ,
             cwd=self.cwd,
             max_attempts=3,
+            monitor_events=monitor_events,
         )
         self.cache["masters"][master_id] = proc
         request.addfinalizer(proc.terminate)
@@ -302,7 +303,7 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["syndics"].pop(syndic_id))
         return syndic_config
 
-    def spawn_syndic(self, request, syndic_id, master_id=None):
+    def spawn_syndic(self, request, syndic_id, master_id=None, monitor_events=False):
         if syndic_id in self.cache["syndics"]:
             raise RuntimeError("A syndic by the ID of '{}' was already spawned".format(syndic_id))
 
@@ -328,6 +329,7 @@ class SaltFactoriesManager(object):
             environ=self.environ,
             cwd=self.cwd,
             max_attempts=3,
+            monitor_events=monitor_events,
         )
         self.cache["syndics"][syndic_id] = proc
         request.addfinalizer(proc.terminate)

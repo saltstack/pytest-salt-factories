@@ -90,7 +90,8 @@ class PyTestEngine(object):
             self.role,
             self.id,
         )
-        self.io_loop.add_callback(self.fire_started_event)
+        if self.role in ("master", "minion"):
+            self.io_loop.add_callback(self.fire_started_event)
         # We just need to know that the daemon running the engine is alive...
         try:
             connection.shutdown(socket.SHUT_RDWR)  # pylint: disable=no-member
