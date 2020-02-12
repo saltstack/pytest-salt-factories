@@ -22,7 +22,9 @@ class MasterFactory(object):
         self.config = config
 
     @staticmethod
-    def default_config(root_dir, master_id, default_options=None, config_overrides=None):
+    def default_config(
+        root_dir, master_id, default_options=None, config_overrides=None, order_masters=False
+    ):
         if default_options is None:
             default_options = salt.config.DEFAULT_MASTER_OPTS.copy()
 
@@ -58,7 +60,6 @@ class MasterFactory(object):
             "timeout": 3,
             "sock_dir": ".salt-unix",
             "open_mode": True,
-            "syndic_master": "localhost",
             "fileserver_list_cache_time": 0,
             "fileserver_backend": ["roots"],
             "pillar_opts": False,
@@ -75,6 +76,7 @@ class MasterFactory(object):
             "pillar_roots": {"base": pillar_tree_root_base, "prod": pillar_tree_root_prod},
             "hash_type": "sha256",
             "transport": "zeromq",
+            "order_masters": order_masters,
             "pytest": {
                 "log": {"prefix": "salt-master({})".format(master_id)},
                 "engine": {

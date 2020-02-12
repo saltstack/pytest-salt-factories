@@ -50,7 +50,7 @@ def pytest_saltfactories_write_minion_configuration(request, minion_config):
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_generate_default_master_configuration(
-    request, factories_manager, master_id
+    request, factories_manager, master_id, order_masters
 ):
     """
     Hook which should return a dictionary tailored for the provided master_id
@@ -61,7 +61,7 @@ def pytest_saltfactories_generate_default_master_configuration(
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_master_configuration_overrides(
-    request, factories_manager, default_options, master_id
+    request, factories_manager, default_options, master_id, order_masters
 ):
     """
     Hook which should return a dictionary tailored for the provided master_id.

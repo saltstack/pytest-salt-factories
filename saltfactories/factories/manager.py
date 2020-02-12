@@ -193,23 +193,28 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["minions"].pop(minion_id))
         return proc
 
-    def configure_master(self, request, master_id):
+    def configure_master(self, request, master_id, order_masters=False):
         if master_id in self.cache["configs"]["masters"]:
             return self.cache["configs"]["masters"][master_id]
         default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_master_configuration(
-            request=request, factories_manager=self, master_id=master_id
+            request=request,
+            factories_manager=self,
+            master_id=master_id,
+            order_masters=order_masters,
         )
         config_overrides = self.pytestconfig.hook.pytest_saltfactories_master_configuration_overrides(
             request=request,
             factories_manager=self,
             master_id=master_id,
             default_options=default_options,
+            order_masters=order_masters,
         )
         master_config = master.MasterFactory.default_config(
             self.root_dir,
             master_id=master_id,
             default_options=default_options,
             config_overrides=config_overrides,
+            order_masters=order_masters,
         )
         self.final_master_config_tweaks(master_config)
         master_config = self.pytestconfig.hook.pytest_saltfactories_write_master_configuration(
@@ -224,13 +229,13 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["masters"].pop(master_id))
         return master_config
 
-    def spawn_master(self, request, master_id, monitor_events=False):
+    def spawn_master(self, request, master_id, monitor_events=False, order_masters=False):
         if master_id in self.cache["masters"]:
             raise RuntimeError("A master by the ID of '{}' was already spawned".format(master_id))
 
         master_config = self.cache["configs"]["masters"].get(master_id)
         if master_config is None:
-            master_config = self.configure_master(request, master_id)
+            master_config = self.configure_master(request, master_id, order_masters=order_masters)
 
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
