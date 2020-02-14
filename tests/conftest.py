@@ -13,8 +13,6 @@ import textwrap
 import pytest
 import salt.version
 
-from saltfactories.plugin import *  # pylint: disable=wildcard-import,unused-wildcard-import
-
 log = logging.getLogger(__name__)
 
 pytest_plugins = ["pytester"]
