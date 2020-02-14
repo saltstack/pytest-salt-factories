@@ -87,11 +87,6 @@ class MasterFactory(object):
                 }
             },
         }
-        for varname in ("sock_dir",):
-            # These are settings which are tested against and provided by Salt's test suite, so,
-            # let's not override them if provided
-            if varname in default_options:
-                _default_options.pop(varname)
         # Merge in the initial default options with the internal _default_options
         dictupdate.update(default_options, _default_options, merge_lists=True)
 
