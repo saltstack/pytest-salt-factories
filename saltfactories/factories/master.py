@@ -77,14 +77,12 @@ class MasterFactory(object):
             "hash_type": "sha256",
             "transport": "zeromq",
             "order_masters": order_masters,
-            "pytest": {
-                "master": {
-                    "log": {"prefix": "salt-master({})".format(master_id)},
-                    "engine": {
-                        "port": ports.get_unused_localhost_port(),
-                        "stop_sending_events_file": stop_sending_events_file,
-                    },
-                }
+            "pytest-master": {
+                "log": {"prefix": "salt-master({})".format(master_id)},
+                "engine": {
+                    "port": ports.get_unused_localhost_port(),
+                    "stop_sending_events_file": stop_sending_events_file,
+                },
             },
         }
         # Merge in the initial default options with the internal _default_options

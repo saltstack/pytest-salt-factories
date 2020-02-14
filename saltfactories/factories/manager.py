@@ -113,14 +113,11 @@ class SaltFactoriesManager(object):
                 config["log_handlers_dirs"] = []
             config["log_handlers_dirs"].insert(0, SaltFactoriesManager.get_salt_log_handlers_path())
 
-        if "pytest" not in config:
-            config["pytest"] = {}
+        pytest_key = "pytest-{}".format(role)
+        if pytest_key not in config:
+            config[pytest_key] = {}
 
-        pytest_config = config["pytest"]
-        if role not in pytest_config:
-            pytest_config[role] = {}
-
-        pytest_config = pytest_config[role]
+        pytest_config = config[pytest_key]
         if "log" not in pytest_config:
             pytest_config["log"] = {}
 
@@ -166,7 +163,7 @@ class SaltFactoriesManager(object):
             # The in-memory minion config dictionary will hold a copy of the master config
             # in order to listen to start events so that we can confirm the minion is up, running
             # and accepting requests
-            minion_config["pytest"]["minion"]["master_config"] = self.cache["configs"]["masters"][
+            minion_config["pytest-minion"]["master_config"] = self.cache["configs"]["masters"][
                 master_id
             ]
         self.cache["configs"]["minions"][minion_id] = minion_config

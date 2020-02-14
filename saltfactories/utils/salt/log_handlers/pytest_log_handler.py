@@ -34,16 +34,12 @@ log = logging.getLogger(__name__)
 
 
 def __virtual__():
-    if "pytest" not in __opts__:
-        return False, "No 'pytest' key in opts dictionary"
-
     role = __opts__["__role"]
-    if role not in __opts__["pytest"]:
-        return False, "No '{}' key in 'pytest' dictionary".format(role)
+    pytest_key = "pytest-{}".format(role)
 
-    pytest_config = __opts__["pytest"][role]
+    pytest_config = __opts__[pytest_key]
     if "log" not in pytest_config:
-        return False, "No 'log' key in pytest['{}'] dictionary".format(role)
+        return False, "No 'log' key in opts {} dictionary".format(pytest_key)
 
     log_opts = pytest_config["log"]
     if "port" not in log_opts:
@@ -62,7 +58,9 @@ def __virtual__():
 
 def setup_handlers():
     role = __opts__["__role"]
-    log_opts = __opts__["pytest"][role]["log"]
+    pytest_key = "pytest-{}".format(role)
+    pytest_config = __opts__[pytest_key]
+    log_opts = __opts__[pytest_key]["log"]
     host_addr = log_opts.get("host")
     if not host_addr:
         import subprocess

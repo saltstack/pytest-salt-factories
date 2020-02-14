@@ -433,7 +433,9 @@ class FactoryProcess(object):
         if config is None:
             config = {}
         self.config = config
-        log_prefix = config.get("pytest", {}).get("log", {}).get("prefix") or ""
+        log_prefix = (
+            config.get("pytest-{}".format(config["__role"]), {}).get("log", {}).get("prefix") or ""
+        )
         if log_prefix:
             log_prefix = "[{}] ".format(log_prefix)
         self.log_prefix = log_prefix
@@ -767,11 +769,10 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
         """
         Return a list of ports to check against to ensure the daemon is running
         """
-        pytest_config = self.config.get("pytest", {}).get(self.config["__role"])
+        pytest_config = self.config.get("pytest-{}".format(self.config["__role"]), {})
         if pytest_config:
             engine_config = pytest_config["engine"]
             if engine_config:
-                log.warning("ENGINE CONFIG: %s", engine_config)
                 engine_port = engine_config.get("port")
                 if engine_port:
                     return [engine_port]
@@ -790,9 +791,9 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
         if self.config["__role"] == "master":
             config = self.config.copy()
         else:
-            config = self.config["pytest"]["master_config"].copy()
+            config = self.config["pytest-{}".format(self.config["__role"])]["master_config"].copy()
         log.warning(
-            "\nMonitoring events for %s(id=%s, sock_dir=%s)\n",
+            "Monitoring events for %s(id=%s, sock_dir=%s)",
             self.__class__.__name__,
             config["id"],
             config["sock_dir"],
@@ -862,9 +863,7 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
             # Late import
             import salt.utils.event
 
-            pytest_config = self.config["pytest"]
-            if self.config["__role"] in pytest_config:
-                pytest_config = pytest_config[self.config["__role"]]
+            pytest_config = self.config["pytest-{}".format(self.config["__role"])]
 
             stop_sending_events_file = pytest_config["engine"]["stop_sending_events_file"]
             if self.config["__role"] == "master":

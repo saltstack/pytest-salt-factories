@@ -58,14 +58,12 @@ class MinionFactory(object):
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-5s:%(lineno)-4d][%(levelname)-8s] %(message)s",
             "hash_type": "sha256",
             "transport": "zeromq",
-            "pytest": {
-                "minion": {
-                    "log": {"prefix": "salt-minion({})".format(minion_id)},
-                    "engine": {
-                        "port": ports.get_unused_localhost_port(),
-                        "stop_sending_events_file": stop_sending_events_file,
-                    },
-                }
+            "pytest-minion": {
+                "log": {"prefix": "salt-minion({})".format(minion_id)},
+                "engine": {
+                    "port": ports.get_unused_localhost_port(),
+                    "stop_sending_events_file": stop_sending_events_file,
+                },
             },
         }
         # Merge in the initial default options with the internal _default_options
