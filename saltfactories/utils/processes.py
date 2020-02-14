@@ -264,20 +264,37 @@ def start_daemon(
                         timeout=start_timeout / 2, monitor_events=monitor_events
                     )
                     if connectable is False:
-                        process.terminate()
+                        result = process.terminate()
                         if attempts >= max_attempts:
                             fail_callable(
-                                "{}The {} has failed to confirm running status "
-                                "after {} attempts".format(
-                                    log_prefix, daemon_class.__name__, attempts
+                                "{}The {} has failed to confirm running status after {} attempts.\n"
+                                "Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
+                                ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
+                                    log_prefix,
+                                    daemon_class.__name__,
+                                    attempts,
+                                    result.stdout,
+                                    result.stderr,
                                 )
                             )
                         continue
             except Exception as exc:  # pylint: disable=broad-except
                 log.exception("%sException caugth: %s", log_prefix, exc, exc_info=True)
-                terminate_process(process.pid, kill_children=True, slow_stop=slow_stop)
+                result = process.terminate()
                 if attempts >= max_attempts:
-                    fail_callable(str(exc))
+                    fail_callable(
+                        "{}The {} has failed to confirm running status after {} attempts and raised an "
+                        "exception: {}.\n"
+                        "Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
+                        ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
+                            log_prefix,
+                            daemon_class.__name__,
+                            attempts,
+                            str(exc),
+                            result.stdout,
+                            result.stderr,
+                        )
+                    )
                     return
                 continue
             # A little breathing before returning the process
@@ -287,18 +304,86 @@ def start_daemon(
             )
             break
         else:
-            terminate_process(process.pid, kill_children=True, slow_stop=slow_stop)
+            process.terminate()
             time.sleep(1)
             continue
     else:
         if process is not None:
-            terminate_process(process.pid, kill_children=True, slow_stop=slow_stop)
+            result = process.terminate()
+            fail_callable(
+                "{}The {} has failed to confirm running status after {} attempts.\n"
+                "Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
+                ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
+                    log_prefix, daemon_class.__name__, attempts, result.stdout, result.stderr
+                )
+            )
+            return
         fail_callable(
             "{}The {} has failed to start after {} attempts".format(
                 log_prefix, daemon_class.__name__, max_attempts
             )
         )
     return process
+
+
+class Popen(subprocess.Popen):
+    def __init__(self, *args, **kwargs):
+        for key in ("stdout", "stderr"):
+            if key in kwargs:
+                raise RuntimeError(
+                    "{}.Popen() does not accept {} as a valid keyword argument".format(
+                        __name__, key
+                    )
+                )
+        stdout = tempfile.SpooledTemporaryFile(512000)
+        kwargs["stdout"] = stdout
+        stderr = tempfile.SpooledTemporaryFile(512000)
+        kwargs["stderr"] = stderr
+        super(Popen, self).__init__(*args, **kwargs)
+        self.__stdout = stdout
+        self.__stderr = stderr
+        compat.weakref.finalize(self, stdout.close)
+        compat.weakref.finalize(self, stderr.close)
+
+    def communicate(self, input=None):  # pylint: disable=arguments-differ
+        super(Popen, self).communicate(input)
+        stdout = stderr = None
+        if self.__stdout:
+            self.__stdout.seek(0)
+            stdout = self.__stdout.read()
+
+            if six.PY3:
+                # pylint: disable=undefined-variable
+                stdout = stdout.decode(__salt_system_encoding__)
+                # pylint: enable=undefined-variable
+        if self.__stderr:
+            self.__stderr.seek(0)
+            stderr = self.__stderr.read()
+
+            if six.PY3:
+                # pylint: disable=undefined-variable
+                stderr = stderr.decode(__salt_system_encoding__)
+                # pylint: enable=undefined-variable
+        return stdout, stderr
+
+
+class ProcessResult(namedtuple("ProcessResult", ("exitcode", "stdout", "stderr"))):
+    """
+    This class serves the purpose of having a common result class which will hold the
+    resulting data from a subprocess command.
+    """
+
+    __slots__ = ()
+
+    def __new__(cls, exitcode, stdout, stderr):
+        if not isinstance(exitcode, int):
+            raise ValueError("'exitcode' needs to be an integer, not '{}'".format(type(exitcode)))
+        return super(ProcessResult, cls).__new__(cls, exitcode, stdout, stderr)
+
+    # These are copied from the namedtuple verbose output in order to quiet down PyLint
+    exitcode = property(itemgetter(0), doc="ShellResult exit code property")
+    stdout = property(itemgetter(1), doc="ShellResult stdout property")
+    stderr = property(itemgetter(2), doc="ShellResult stderr property")
 
 
 class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "json"))):
@@ -353,6 +438,8 @@ class FactoryProcess(object):
         self.log_prefix = log_prefix
         self.slow_stop = slow_stop
         self.environ = environ or os.environ.copy()
+        # We really do not want buffered output
+        self.environ.setdefault(str("PYTHONUNBUFFERED"), str("1"))
         self.cwd = cwd or os.getcwd()
         self.fail_callable = fail_callable or pytest.fail
         self._terminal = None
@@ -390,24 +477,14 @@ class FactoryProcess(object):
         an initial listing of child processes which will be used when terminating the
         terminal
         """
-        stdout = kwargs.pop("stdout", None)
-        if stdout in (subprocess.PIPE, None):
-            stdout = tempfile.SpooledTemporaryFile(512000)
-        kwargs["stdout"] = stdout
-        stderr = kwargs.pop("stderr", None)
-        if stderr in (subprocess.PIPE, None):
-            stderr = tempfile.SpooledTemporaryFile(512000)
-        kwargs["stderr"] = stderr
-        self._terminal = subprocess.Popen(cmdline, **kwargs)
-        self._terminal._stdout = stdout
-        self._terminal._stderr = stderr
+        self._terminal = Popen(cmdline, **kwargs)
         for child in psutil.Process(self._terminal.pid).children(recursive=True):
             if child not in self._children:
                 self._children.append(child)
         atexit.register(self.terminate)
         return self._terminal
 
-    def terminate(self, close_stds=True):
+    def terminate(self):
         """
         Terminate the started daemon
         """
@@ -422,28 +499,31 @@ class FactoryProcess(object):
         except psutil.NoSuchProcess:
             # The terminal process is gone
             pass
+
         # Lets log and kill any child processes which salt left behind
-        if close_stds:
-            if self._terminal.stdout:
-                self._terminal.stdout.close()
-            if self._terminal._stdout:
-                self._terminal._stdout.close()
-            if self._terminal.stderr:
-                self._terminal.stderr.close()
-            if self._terminal._stderr:
-                self._terminal._stderr.close()
         terminate_process(
             pid=self._terminal.pid,
             kill_children=True,
             children=self._children,
             slow_stop=self.slow_stop,
         )
-        # This last poll is just to be sure the returncode really get's set on the Popen,
-        # out terminal, object.
+        # This last poll is just to be sure the returncode really get's set on the Popen object.
         self._terminal.poll()
-        self._terminal = None
-        self._children = []
-        log.info("%sStopped %s", self.log_prefix, self.__class__.__name__)
+        stdout, stderr = self._terminal.communicate()
+        try:
+            log_message = "{}Terminated {}.".format(self.log_prefix, self.__class__.__name__)
+            if stdout or stderr:
+                log_message += (
+                    " Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
+                    ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
+                        stdout.strip() if stdout else "", stderr.strip() if stderr else ""
+                    )
+                )
+            log.info(log_message)
+            return ProcessResult(self._terminal.returncode, stdout, stderr)
+        finally:
+            self._terminal = None
+            self._children = []
 
     @property
     def pid(self):
@@ -479,16 +559,12 @@ class FactoryScriptBase(FactoryProcess):
         fail_callable = kwargs.pop("_fail_callable", None) or self.fail_callable
         timeout_expire = time.time() + timeout
 
-        environ = self.environ.copy()
-        # We really do not want buffered output
-        environ["PYTHONUNBUFFERED"] = "1"
-
         # Build the cmdline to pass to the terminal
         proc_args = self.build_cmdline(*args, **kwargs)
 
         log.info("%sRunning %r in CWD: %s ...", self.log_prefix, proc_args, self.cwd)
 
-        terminal = self.init_terminal(proc_args, cwd=self.cwd, env=environ, close_fds=True,)
+        terminal = self.init_terminal(proc_args, cwd=self.cwd, env=self.environ, close_fds=True,)
         timmed_out = False
         while True:
             if timeout_expire < time.time():
@@ -498,43 +574,21 @@ class FactoryScriptBase(FactoryProcess):
                 break
             time.sleep(0.25)
 
-        if timmed_out:
-            self.terminate(close_stds=False)
-        stdout, stderr = terminal.communicate()
-
-        if stdout is None and terminal._stdout:
-            terminal._stdout.seek(0)
-            stdout = terminal._stdout.read()
-
-        if stderr is None and terminal._stderr:
-            terminal._stderr.seek(0)
-            stderr = terminal._stderr.read()
-
-        if six.PY3:
-            # pylint: disable=undefined-variable
-            stdout = stdout.decode(__salt_system_encoding__)
-            stderr = stderr.decode(__salt_system_encoding__)
-            # pylint: enable=undefined-variable
-
+        result = self.terminate()
         if timmed_out:
             fail_callable(
                 "{}Failed to run: {}; Error: Timed out after {} seconds!\n"
                 ">>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
                 ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                    self.log_prefix,
-                    proc_args,
-                    timeout,
-                    stdout.strip() if stdout else "",
-                    stderr.strip() if stderr else "",
+                    self.log_prefix, proc_args, timeout, result.stdout, result.stderr,
                 )
             )
 
-        exitcode = terminal.returncode
-        stdout, stderr, json_out = self.process_output(stdout, stderr, cli_cmd=proc_args)
-        try:
-            return ShellResult(exitcode, stdout, stderr, json_out)
-        finally:
-            self.terminate()
+        exitcode = result.exitcode
+        stdout, stderr, json_out = self.process_output(
+            result.stdout, result.stderr, cli_cmd=proc_args
+        )
+        return ShellResult(exitcode, stdout, stderr, json_out)
 
     def process_output(self, stdout, stderr, cli_cmd=None):
         if stdout:
@@ -591,7 +645,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
         self._children.extend(psutil.Process(self.pid).children(recursive=True))
         return True
 
-    def terminate(self, close_stds=True):
+    def terminate(self):
         """
         Terminate the started daemon
         """
@@ -600,7 +654,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
         self._connectable.clear()
         self._monitor_events_event.clear()
         time.sleep(0.0125)
-        super(FactoryDaemonScriptBase, self).terminate(close_stds=close_stds)
+        return super(FactoryDaemonScriptBase, self).terminate()
 
     def wait_until_running(self, timeout=5):
         """
