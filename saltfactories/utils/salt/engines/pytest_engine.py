@@ -39,8 +39,21 @@ __virtualname__ = "pytest"
 def __virtual__():
     if "pytest" not in __opts__:
         return False, "No 'pytest' key in opts dictionary"
-    if "engine" not in __opts__["pytest"]:
-        return False, "No 'engine' key in 'pytest' opts dictionary"
+
+    role = __opts__["__role"]
+    if role not in __opts__["pytest"]:
+        return False, "No '{}' key in 'pytest' dictionary".format(role)
+
+    pytest_config = __opts__["pytest"][role]
+    if "engine" not in pytest_config:
+        return False, "No 'engine' key in pytest['{}'] dictionary".format(role)
+
+    engine_opts = pytest_config["engine"]
+    if engine_opts is None:
+        return (
+            False,
+            "No 'engine' key in opts['pytest'][{}]' dictionary".format(__opts__["__role"]),
+        )
     return True
 
 
@@ -55,9 +68,10 @@ class PyTestEngine(object):
         self.id = opts["id"]
         self.role = opts["__role"]
         self.sock_dir = opts["sock_dir"]
-        self.port = int(opts["pytest"]["engine"]["port"])
+        engine_opts = opts["pytest"][self.role]["engine"]
+        self.port = int(engine_opts["port"])
         self.tcp_server_sock = None
-        self.stop_sending_events_file = opts["pytest"]["engine"]["stop_sending_events_file"]
+        self.stop_sending_events_file = engine_opts["stop_sending_events_file"]
 
     def start(self):
         self.io_loop = ioloop.IOLoop()

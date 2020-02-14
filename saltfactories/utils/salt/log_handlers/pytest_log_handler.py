@@ -36,10 +36,23 @@ log = logging.getLogger(__name__)
 def __virtual__():
     if "pytest" not in __opts__:
         return False, "No 'pytest' key in opts dictionary"
-    if "log" not in __opts__["pytest"]:
-        return False, "No 'log' key  in 'pytest' opts dictionary"
-    if "port" not in __opts__["pytest"]["log"]:
-        return False, "No 'port' key  in pytest 'log' opts dictionary"
+
+    role = __opts__["__role"]
+    if role not in __opts__["pytest"]:
+        return False, "No '{}' key in 'pytest' dictionary".format(role)
+
+    pytest_config = __opts__["pytest"][role]
+    if "log" not in pytest_config:
+        return False, "No 'log' key in pytest['{}'] dictionary".format(role)
+
+    log_opts = pytest_config["log"]
+    if "port" not in log_opts:
+        return (
+            False,
+            "No 'port' key in opts['pytest']['log'] or opts['pytest'][{}]['log']".format(
+                __opts__["role"]
+            ),
+        )
     if salt.utils.msgpack.HAS_MSGPACK is False:
         return False, "msgpack was not importable. Please install msgpack."
     if zmq is None:
@@ -48,11 +61,13 @@ def __virtual__():
 
 
 def setup_handlers():
-    host_addr = __opts__["pytest"]["log"].get("host")
+    role = __opts__["__role"]
+    log_opts = __opts__["pytest"][role]["log"]
+    host_addr = log_opts.get("host")
     if not host_addr:
         import subprocess
 
-        if __opts__["pytest_windows_guest"] is True:
+        if log_opts["pytest_windows_guest"] is True:
             proc = subprocess.Popen("ipconfig", stdout=subprocess.PIPE)
             for line in proc.stdout.read().strip().encode(__salt_system_encoding__).splitlines():
                 if "Default Gateway" in line:
@@ -66,7 +81,7 @@ def setup_handlers():
                 stdout=subprocess.PIPE,
             )
             host_addr = proc.stdout.read().strip().encode(__salt_system_encoding__)
-    host_port = __opts__["pytest"]["log"]["port"]
+    host_port = log_opts["port"]
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.connect((host_addr, host_port))
@@ -77,8 +92,8 @@ def setup_handlers():
     finally:
         sock.close()
 
-    pytest_log_prefix = __opts__["pytest"]["log"].get("prefix")
-    level = LOG_LEVELS[(__opts__["pytest"]["log"].get("level") or "error").lower()]
+    pytest_log_prefix = log_opts.get("prefix")
+    level = LOG_LEVELS[(log_opts.get("level") or "error").lower()]
     handler = ZMQHandler(host=host_addr, port=host_port, log_prefix=pytest_log_prefix, level=level)
     handler.setLevel(level)
     handler.start()

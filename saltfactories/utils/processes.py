@@ -29,6 +29,7 @@ from operator import itemgetter
 import psutil
 import pytest
 import six
+from tornado import iostream
 
 from saltfactories.utils import compat
 
@@ -766,9 +767,14 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
         """
         Return a list of ports to check against to ensure the daemon is running
         """
-        engine_port = self.config.get("pytest", {}).get("engine", {}).get("port")
-        if engine_port:
-            return [engine_port]
+        pytest_config = self.config.get("pytest", {}).get(self.config["__role"])
+        if pytest_config:
+            engine_config = pytest_config["engine"]
+            if engine_config:
+                log.warning("ENGINE CONFIG: %s", engine_config)
+                engine_port = engine_config.get("port")
+                if engine_port:
+                    return [engine_port]
         return super(SaltDaemonScriptBase, self).get_check_ports()
 
     def get_check_events(self):
@@ -791,17 +797,20 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
             config["id"],
             config["sock_dir"],
         )
-        with salt.utils.event.get_master_event(
-            config, config["sock_dir"], listen=True, raise_errors=True,
-        ) as event_listener:
-            while monitor_event.is_set():
-                if self._running.is_set() is False:
-                    # No longer running, break
-                    log.warning("%sNo longer running!", self.log_prefix)
-                    break
-                event = event_listener.get_event(full=True, wait=0.5)
-                if event:
-                    log.warning("\n%sMonitored event: %s\n", self.log_prefix, event)
+        try:
+            with salt.utils.event.get_master_event(
+                config, config["sock_dir"], listen=True, raise_errors=True,
+            ) as event_listener:
+                while monitor_event.is_set():
+                    if self._running.is_set() is False:
+                        # No longer running, break
+                        log.warning("%sNo longer running!", self.log_prefix)
+                        break
+                    event = event_listener.get_event(full=True, wait=0.5)
+                    if event:
+                        log.warning("%sMonitored event: %s", self.log_prefix, event)
+        except iostream.StreamClosedError:
+            pass
 
     def wait_until_running(
         self, timeout=5, monitor_events=False
@@ -853,13 +862,16 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
             # Late import
             import salt.utils.event
 
-            stop_sending_events_file = (
-                self.config.get("pytest", {}).get("engine", {}).get("stop_sending_events_file")
-            )
+            pytest_config = self.config["pytest"]
+            if self.config["__role"] in pytest_config:
+                pytest_config = pytest_config[self.config["__role"]]
+
+            stop_sending_events_file = pytest_config["engine"]["stop_sending_events_file"]
             if self.config["__role"] == "master":
                 config = self.config.copy()
             else:
-                config = self.config["pytest"]["master_config"].copy()
+                config = pytest_config["master_config"].copy()
+
             with salt.utils.event.get_master_event(
                 config, config["sock_dir"], listen=True, raise_errors=True,
             ) as event_listener:

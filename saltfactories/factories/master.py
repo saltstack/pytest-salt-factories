@@ -78,12 +78,13 @@ class MasterFactory(object):
             "transport": "zeromq",
             "order_masters": order_masters,
             "pytest": {
-                "log": {"prefix": "salt-master({})".format(master_id)},
-                "engine": {
-                    "port": ports.get_unused_localhost_port(),
-                    "stop_sending_events_file": stop_sending_events_file,
-                    #'events': ['pytest/master/{}/start'.format(master_id)],
-                },
+                "master": {
+                    "log": {"prefix": "salt-master({})".format(master_id)},
+                    "engine": {
+                        "port": ports.get_unused_localhost_port(),
+                        "stop_sending_events_file": stop_sending_events_file,
+                    },
+                }
             },
         }
         for varname in ("sock_dir",):

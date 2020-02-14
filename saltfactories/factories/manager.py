@@ -90,15 +90,15 @@ class SaltFactoriesManager(object):
         return os.path.join(CODE_ROOT_DIR, "utils", "salt", "engines")
 
     def final_minion_config_tweaks(self, config):
-        self.final_common_config_tweaks(config)
+        self.final_common_config_tweaks(config, "minion")
 
     def final_master_config_tweaks(self, config):
-        self.final_common_config_tweaks(config)
+        self.final_common_config_tweaks(config, "master")
 
     def final_syndic_config_tweaks(self, config):
-        self.final_common_config_tweaks(config)
+        self.final_common_config_tweaks(config, "syndic")
 
-    def final_common_config_tweaks(self, config):
+    def final_common_config_tweaks(self, config, role):
         config.setdefault("engines", [])
         if "pytest" not in config["engines"]:
             config["engines"].append("pytest")
@@ -113,10 +113,21 @@ class SaltFactoriesManager(object):
                 config["log_handlers_dirs"] = []
             config["log_handlers_dirs"].insert(0, SaltFactoriesManager.get_salt_log_handlers_path())
 
-        config.setdefault("pytest", {}).setdefault("log", {})
-        config["pytest"]["log"]["host"] = "localhost"
-        config["pytest"]["log"]["port"] = self.log_server_port
-        config["pytest"]["log"]["level"] = self.log_server_level
+        if "pytest" not in config:
+            config["pytest"] = {}
+
+        pytest_config = config["pytest"]
+        if role not in pytest_config:
+            pytest_config[role] = {}
+
+        pytest_config = pytest_config[role]
+        if "log" not in pytest_config:
+            pytest_config["log"] = {}
+
+        log_config = pytest_config["log"]
+        log_config["host"] = "localhost"
+        log_config["port"] = self.log_server_port
+        log_config["level"] = self.log_server_level
 
     def configure_minion(self, request, minion_id, master_id=None):
         if minion_id in self.cache["configs"]["minions"]:
@@ -155,7 +166,9 @@ class SaltFactoriesManager(object):
             # The in-memory minion config dictionary will hold a copy of the master config
             # in order to listen to start events so that we can confirm the minion is up, running
             # and accepting requests
-            minion_config["pytest"]["master_config"] = self.cache["configs"]["masters"][master_id]
+            minion_config["pytest"]["minion"]["master_config"] = self.cache["configs"]["masters"][
+                master_id
+            ]
         self.cache["configs"]["minions"][minion_id] = minion_config
         request.addfinalizer(lambda: self.cache["configs"]["minions"].pop(minion_id))
         return minion_config

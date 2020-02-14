@@ -59,12 +59,13 @@ class MinionFactory(object):
             "hash_type": "sha256",
             "transport": "zeromq",
             "pytest": {
-                "log": {"prefix": "salt-minion({})".format(minion_id)},
-                "engine": {
-                    "port": ports.get_unused_localhost_port(),
-                    "stop_sending_events_file": stop_sending_events_file,
-                    #'events': ['pytest/minion/{}/start'.format(minion_id)],
-                },
+                "minion": {
+                    "log": {"prefix": "salt-minion({})".format(minion_id)},
+                    "engine": {
+                        "port": ports.get_unused_localhost_port(),
+                        "stop_sending_events_file": stop_sending_events_file,
+                    },
+                }
             },
         }
         for varname in ("sock_dir",):
