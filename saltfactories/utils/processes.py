@@ -240,6 +240,10 @@ def start_daemon(
     attempts = 0
     log_prefix = ""
 
+    if sys.platform.startswith("win"):
+        # Double the start timeout on windows
+        start_timeout = start_timeout * 2
+
     if fail_callable is None:
         fail_callable = pytest.fail
 
@@ -666,13 +670,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
                 self.log_prefix,
                 check_ports,
             )
-        log.debug(
-            "%sWait until running;  Expire: %s;  Timeout: %s;  Current Time: %s",
-            self.log_prefix,
-            expire,
-            timeout,
-            time.time(),
-        )
+        log.debug("%sWaiting %d seconds for running checks to complete.", self.log_prefix, timeout)
         try:
             while True:
                 if self._running.is_set() is False:
@@ -682,9 +680,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
 
                 if time.time() > expire:
                     # Timeout, break
-                    log.debug(
-                        "%sExpired at %s(was set to %s)", self.log_prefix, time.time(), expire
-                    )
+                    log.debug("%sExpired after %d seconds", self.log_prefix, timeout)
                     break
 
                 if not check_ports:

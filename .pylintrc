@@ -114,7 +114,8 @@ disable=R,
   repr-flag-used-in-string,
   un-indexed-curly-braces-error,
   un-indexed-curly-braces-warning,
-  import-outside-toplevel
+  import-outside-toplevel,
+  wrong-import-position
 
 # Disabled:
 # R* [refactoring suggestions & reports]
