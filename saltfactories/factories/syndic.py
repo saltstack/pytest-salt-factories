@@ -222,6 +222,7 @@ class SyndicFactory(object):
             "hash_type": "sha256",
             "transport": "zeromq",
             "order_masters": False,
+            "max_open_files": 10240,
             "pytest-master": {
                 "log": {"prefix": "salt-master({})".format(master_id)},
                 "engine": {

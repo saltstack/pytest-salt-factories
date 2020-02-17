@@ -85,6 +85,7 @@ class MasterFactory(object):
             "hash_type": "sha256",
             "transport": "zeromq",
             "order_masters": order_masters,
+            "max_open_files": 10240,
             "pytest-master": {
                 "log": {"prefix": "salt-master({})".format(master_id)},
                 "engine": {
