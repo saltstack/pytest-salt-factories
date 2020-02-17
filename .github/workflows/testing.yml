@@ -104,7 +104,12 @@ jobs:
       env:
         REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
       run: |
-        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | python - --include='junit-report.xml' --framework=pytest --merge ".*"
+        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
+          python - \
+          --include='junit-report.xml' \
+          --framework=pytest \
+          --merge ".*" \
+          --name="${{ runner.os }} Py${{ matrix.python-version }}"
 
     - name: Create CodeCov Flags
       id: codecov-flags
@@ -219,7 +224,12 @@ jobs:
       env:
         REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
       run: |
-        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | python - --include='junit-report.xml' --framework=pytest --merge ".*"
+        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
+          python - \
+          --include='junit-report.xml' \
+          --framework=pytest \
+          --merge ".*" \
+          --name="${{ runner.os }} Py${{ matrix.python-version }}"
 
     - name: Create CodeCov Flags
       id: codecov-flags
@@ -329,7 +339,12 @@ jobs:
       env:
         REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
       run: |
-        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | python - --include='junit-report.xml' --framework=pytest --merge ".*"
+        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
+          python - \
+          --include='junit-report.xml' \
+          --framework=pytest \
+          --merge ".*" \
+          --name="${{ runner.os }} Py${{ matrix.python-version }}"
 
     - name: Create CodeCov Flags
       id: codecov-flags
