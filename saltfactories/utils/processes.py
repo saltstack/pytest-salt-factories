@@ -954,9 +954,9 @@ class SaltCLI(SaltScriptBase):
         """
         Returns any additional arguments to pass to the CLI script
         """
-        return ["--log-level=quiet", "--hard-crash"]
+        return ["--hard-crash"]
 
-    def process_output(self, stdout, stderr, cli_cmd):  # pylint: disable=signature-differs
+    def process_output(self, stdout, stderr, cli_cmd=None):
         if "No minions matched the target. No command was sent, no jid was assigned.\n" in stdout:
             stdout = stdout.split("\n", 1)[1:][0]
         old_stdout = None
@@ -966,6 +966,35 @@ class SaltCLI(SaltScriptBase):
         stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cli_cmd)
         if old_stdout is not None:
             stdout = old_stdout
+        if json_out:
+            if not isinstance(json_out, dict):
+                # A string was most likely loaded, not what we want.
+                return stdout, stderr, None
+            try:
+                return stdout, stderr, json_out[self._minion_tgt]
+            except KeyError:
+                return stdout, stderr, json_out
+        return stdout, stderr, json_out
+
+
+class SaltCallCLI(SaltScriptBase):
+    """
+    Simple subclass to the salt-call CLI script
+    """
+
+    def get_script_args(self):
+        """
+        Returns any additional arguments to pass to the CLI script
+        """
+        return ["--hard-crash"]
+
+    def get_minion_tgt(self, kwargs):
+        return None
+
+    def process_output(self, stdout, stderr, cli_cmd=None):
+        # Under salt-call, the minion target is always "local"
+        self._minion_tgt = "local"
+        stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cli_cmd)
         if json_out:
             if not isinstance(json_out, dict):
                 # A string was most likely loaded, not what we want.

@@ -6,12 +6,12 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def master(request, salt_factories):
     return salt_factories.spawn_master(request, "master-1")
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def minion(request, salt_factories, master):
     return salt_factories.spawn_minion(request, "minion-1", master_id="master-1")
 
@@ -21,8 +21,24 @@ def salt_cli(request, salt_factories, minion, master):
     return salt_factories.get_salt_cli(request, master.config["id"])
 
 
+@pytest.fixture
+def salt_call_cli(request, salt_factories, minion, master):
+    return salt_factories.get_salt_call_cli(request, minion.config["id"])
+
+
 def test_minion(minion, salt_cli):
     assert minion.is_alive()
     ret = salt_cli.run("test.ping", minion_tgt="minion-1")
+    assert ret.exitcode == 0, ret
+    assert ret.json is True
+
+
+def test_minion_salt_call(minion, salt_call_cli):
+    assert minion.is_alive()
+    ret = salt_call_cli.run("test.ping")
+    assert ret.exitcode == 0, ret
+    assert ret.json is True
+    # Now with --local
+    ret = salt_call_cli.run("--local", "test.ping")
     assert ret.exitcode == 0, ret
     assert ret.json is True
