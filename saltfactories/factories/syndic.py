@@ -40,11 +40,11 @@ class SyndicFactory(object):
             config_overrides = {}
 
         counter = 1
-        root_dir = root_dir.join("syndics", syndic_id)
+        root_dir = root_dir.join(syndic_id)
         while True:
             if not root_dir.check(dir=True):
                 break
-            root_dir = root_dir.join("syndics", "{}_{}".format(syndic_id, counter))
+            root_dir = root_dir.join("{}_{}".format(syndic_id, counter))
             counter += 1
         root_dir.ensure(dir=True)
 

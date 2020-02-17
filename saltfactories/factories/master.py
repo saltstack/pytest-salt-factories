@@ -29,11 +29,11 @@ class MasterFactory(object):
             default_options = salt.config.DEFAULT_MASTER_OPTS.copy()
 
         counter = 1
-        root_dir = root_dir.join("masters", master_id)
+        root_dir = root_dir.join(master_id)
         while True:
             if not root_dir.check(dir=True):
                 break
-            root_dir = root_dir.join("masters", "{}_{}".format(master_id, counter))
+            root_dir = root_dir.join("{}_{}".format(master_id, counter))
             counter += 1
         root_dir.ensure(dir=True)
 
