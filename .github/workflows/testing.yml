@@ -181,26 +181,26 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Create Cache Key Contents
-      shell: bash
-      run: |
-        python --version --version > .cache_key
-        echo "${{ runner.os }}" >> .cache_key
-        #echo "${{ matrix.salt-version }}" >> .cache_key
-        echo "${{ hashFiles('salt-checkout/**/req*.txt') }}" >> .cache_key
-        echo "${{ hashFiles('**/requirements*.txt') }}" >> .cache_key
-
-    - name: Set Cache Key
-      id: cache-vars
-      shell: bash
-      run: |
-        echo "::set-output name=cache_key::${{ hashFiles('.cache_key') }}"
-
-    - name: Set up cache
-      uses: actions/cache@v1
-      with:
-        path: .nox
-        key: venv-${{ steps.cache-vars.outputs.cache_key }}
+#    - name: Create Cache Key Contents
+#      shell: bash
+#      run: |
+#        python --version --version > .cache_key
+#        echo "${{ runner.os }}" >> .cache_key
+#        #echo "${{ matrix.salt-version }}" >> .cache_key
+#        echo "${{ hashFiles('salt-checkout/**/req*.txt') }}" >> .cache_key
+#        echo "${{ hashFiles('**/requirements*.txt') }}" >> .cache_key
+#
+#    - name: Set Cache Key
+#      id: cache-vars
+#      shell: bash
+#      run: |
+#        echo "::set-output name=cache_key::${{ hashFiles('.cache_key') }}"
+#
+#    - name: Set up cache
+#      uses: actions/cache@v1
+#      with:
+#        path: .nox
+#        key: venv-${{ steps.cache-vars.outputs.cache_key }}
 
     - name: Install Test Requirements
       shell: bash
