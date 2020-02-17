@@ -103,18 +103,8 @@ jobs:
       shell: bash
       env:
         REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
-        CHECK_RUN_REPORTER_LABEL: 'Tests'
-        CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
-        CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
       run: |
-        (curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | python - --include='junit-report.xml' --framework=pytest --merge ".*")  || cat junit-report.xml
-        curl https://www.check-run-reporter.com/api/v1/submissions \
-          --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
-          -X POST \
-          -F report=@"./junit-report.xml" \
-          -F root="$(pwd)" \
-          -F sha="$GITHUB_SHA" \
-          -F label=$CHECK_RUN_REPORTER_LABEL
+        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | python - --include='junit-report.xml' --framework=pytest --merge ".*"
 
     - name: Create CodeCov Flags
       id: codecov-flags
@@ -228,18 +218,8 @@ jobs:
       shell: bash
       env:
         REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
-        CHECK_RUN_REPORTER_LABEL: 'Tests'
-        CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
-        CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
       run: |
-        (curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | python - --include='junit-report.xml' --framework=pytest --merge ".*")  || cat junit-report.xml
-        curl https://www.check-run-reporter.com/api/v1/submissions \
-          --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
-          -X POST \
-          -F report=@"./junit-report.xml" \
-          -F root="$(pwd)" \
-          -F sha="$GITHUB_SHA" \
-          -F label=$CHECK_RUN_REPORTER_LABEL
+        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | python - --include='junit-report.xml' --framework=pytest --merge ".*"
 
     - name: Create CodeCov Flags
       id: codecov-flags
@@ -348,18 +328,8 @@ jobs:
       shell: bash
       env:
         REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
-        CHECK_RUN_REPORTER_LABEL: 'Tests'
-        CHECK_RUN_REPORTER_REPORT_GLOB: '**/junit-*.xml'
-        CHECK_RUN_REPORTER_REPO_TOKEN: ${{ secrets.CHECK_RUN_REPORTER_REPO_TOKEN }}
       run: |
-        (curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | python - --include='junit-report.xml' --framework=pytest --merge ".*")  || cat junit-report.xml
-        curl https://www.check-run-reporter.com/api/v1/submissions \
-          --user token:$CHECK_RUN_REPORTER_REPO_TOKEN \
-          -X POST \
-          -F report=@"./junit-report.xml" \
-          -F root="$(pwd)" \
-          -F sha="$GITHUB_SHA" \
-          -F label=$CHECK_RUN_REPORTER_LABEL
+        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | python - --include='junit-report.xml' --framework=pytest --merge ".*"
 
     - name: Create CodeCov Flags
       id: codecov-flags
