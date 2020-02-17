@@ -452,3 +452,14 @@ class SaltFactoriesManager(object):
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return processes.SaltCallCLI(script_path, config=self.cache["minions"][minion_id].config)
+
+    def get_salt_run(self, request, master_id):
+        script_path = cli_scripts.generate_script(
+            self.scripts_dir,
+            "salt-run",
+            executable=self.executable,
+            code_dir=self.code_dir,
+            inject_coverage=self.inject_coverage,
+            inject_sitecustomize=self.inject_sitecustomize,
+        )
+        return processes.SaltRunCLI(script_path, config=self.cache["masters"][master_id].config)

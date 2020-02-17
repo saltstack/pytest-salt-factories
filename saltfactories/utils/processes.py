@@ -1004,3 +1004,18 @@ class SaltCallCLI(SaltScriptBase):
             except KeyError:
                 return stdout, stderr, json_out
         return stdout, stderr, json_out
+
+
+class SaltRunCLI(SaltScriptBase):
+    """
+    Simple subclass to the salt-run CLI script
+    """
+
+    def get_script_args(self):
+        """
+        Returns any additional arguments to pass to the CLI script
+        """
+        return ["--hard-crash"]
+
+    def get_minion_tgt(self, kwargs):
+        return None
