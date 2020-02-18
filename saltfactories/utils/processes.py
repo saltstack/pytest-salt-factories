@@ -419,6 +419,7 @@ class FactoryProcess(object):
         environ=None,
         cwd=None,
         fail_callable=None,
+        base_script_args=None,
     ):
         self.cli_script_name = cli_script_name
         if config is None:
@@ -440,6 +441,7 @@ class FactoryProcess(object):
         self.fail_callable = fail_callable or pytest.fail
         self._terminal = None
         self._children = []
+        self._base_script_args = base_script_args
 
     def get_script_path(self):
         """
@@ -457,6 +459,8 @@ class FactoryProcess(object):
         """
         Returns any additional arguments to pass to the CLI script
         """
+        if self._base_script_args:
+            return list(self._base_script_args)
         return []
 
     def get_script_args(self):  # pylint: disable=no-self-use
@@ -938,6 +942,12 @@ class SaltMinion(SaltDaemonScriptBase):
     Simple subclass to define a salt minion daemon
     """
 
+    def get_base_script_args(self):
+        script_args = super(SaltMinion, self).get_base_script_args()
+        if sys.platform.startswith("win") is False:
+            script_args.append("--disable-keepalive")
+        return script_args
+
     def get_check_events(self):
         """
         Return a list of event tags to check against to ensure the daemon is running
@@ -957,6 +967,26 @@ class SaltSyndic(SaltDaemonScriptBase):
         Return a list of event tags to check against to ensure the daemon is running
         """
         return ["salt/{__role}/{id}/start".format(**self.config)]
+
+
+class SaltProxyMinion(SaltDaemonScriptBase):
+    """
+    Simple subclass to define a salt proxy minion daemon
+    """
+
+    def get_base_script_args(self):
+        script_args = super(SaltProxyMinion, self).get_base_script_args()
+        if sys.platform.startswith("win") is False:
+            script_args.append("--disable-keepalive")
+        script_args.extend(["--proxyid", self.config["id"]])
+        return script_args
+
+    def get_check_events(self):
+        """
+        Return a list of event tags to check against to ensure the daemon is running
+        """
+        return ["pytest/{__role}/{id}/start".format(**self.config)]
+        # return ["salt/{__role}/{id}/start".format(**self.config)]
 
 
 class SaltCLI(SaltScriptBase):

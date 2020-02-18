@@ -14,6 +14,7 @@ import sys
 
 from saltfactories.factories import master
 from saltfactories.factories import minion
+from saltfactories.factories import proxy
 from saltfactories.factories import syndic
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import processes
@@ -58,10 +59,11 @@ class SaltFactoriesManager(object):
         self.masters = {}
         self.minions = {}
         self.cache = {
-            "configs": {"masters": {}, "minions": {}, "syndics": {}},
+            "configs": {"masters": {}, "minions": {}, "syndics": {}, "proxy_minions": {}},
             "masters": {},
             "minions": {},
             "syndics": {},
+            "proxy_minions": {},
         }
 
     @staticmethod
@@ -97,6 +99,9 @@ class SaltFactoriesManager(object):
 
     def final_syndic_config_tweaks(self, config):
         self.final_common_config_tweaks(config, "syndic")
+
+    def final_proxy_minion_config_tweaks(self, config):
+        self.final_common_config_tweaks(config, "minion")
 
     def final_common_config_tweaks(self, config, role):
         config.setdefault("engines", [])
@@ -197,6 +202,7 @@ class SaltFactoriesManager(object):
             environ=self.environ,
             cwd=self.cwd,
             max_attempts=3,
+            monitor_events=monitor_events,
         )
         self.cache["minions"][minion_id] = proc
         request.addfinalizer(proc.terminate)
@@ -431,6 +437,91 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["syndics"].pop(syndic_id))
         return proc
 
+    def configure_proxy_minion(self, request, proxy_minion_id, master_id=None):
+        if proxy_minion_id in self.cache["configs"]["proxy_minions"]:
+            return self.cache["configs"]["proxy_minions"][proxy_minion_id]
+
+        master_port = None
+        if master_id is not None:
+            master_config = self.cache["configs"]["masters"][master_id]
+            master_port = master_config.get("ret_port")
+        default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_proxy_minion_configuration(
+            request=request,
+            factories_manager=self,
+            proxy_minion_id=proxy_minion_id,
+            master_port=master_port,
+        )
+        config_overrides = self.pytestconfig.hook.pytest_saltfactories_proxy_minion_configuration_overrides(
+            request=request,
+            factories_manager=self,
+            proxy_minion_id=proxy_minion_id,
+            default_options=default_options,
+        )
+        proxy_minion_config = proxy.ProxyMinionFactory.default_config(
+            self.root_dir,
+            proxy_minion_id=proxy_minion_id,
+            default_options=default_options,
+            config_overrides=config_overrides,
+            master_port=master_port,
+        )
+        self.final_proxy_minion_config_tweaks(proxy_minion_config)
+        proxy_minion_config = self.pytestconfig.hook.pytest_saltfactories_write_proxy_minion_configuration(
+            request=request, proxy_minion_config=proxy_minion_config
+        )
+        self.pytestconfig.hook.pytest_saltfactories_verify_proxy_minion_configuration(
+            request=request,
+            proxy_minion_config=proxy_minion_config,
+            username=SaltFactoriesManager.get_running_username(),
+        )
+        if master_id:
+            # The in-memory proxy_minion config dictionary will hold a copy of the master config
+            # in order to listen to start events so that we can confirm the proxy_minion is up, running
+            # and accepting requests
+            proxy_minion_config["pytest-minion"]["master_config"] = self.cache["configs"][
+                "masters"
+            ][master_id]
+        self.cache["configs"]["proxy_minions"][proxy_minion_id] = proxy_minion_config
+        request.addfinalizer(lambda: self.cache["configs"]["proxy_minions"].pop(proxy_minion_id))
+        return proxy_minion_config
+
+    def spawn_proxy_minion(self, request, proxy_minion_id, master_id=None, monitor_events=False):
+        if proxy_minion_id in self.cache["proxy_minions"]:
+            raise RuntimeError(
+                "A proxy_minion by the ID of '{}' was already spawned".format(proxy_minion_id)
+            )
+
+        proxy_minion_config = self.cache["configs"]["proxy_minions"].get(proxy_minion_id)
+        if proxy_minion_config is None:
+            proxy_minion_config = self.configure_proxy_minion(
+                request, proxy_minion_id, master_id=master_id
+            )
+
+        script_path = cli_scripts.generate_script(
+            self.scripts_dir,
+            "salt-proxy",
+            executable=self.executable,
+            code_dir=self.code_dir,
+            inject_coverage=self.inject_coverage,
+            inject_sitecustomize=self.inject_sitecustomize,
+        )
+        proc = processes.start_daemon(
+            proxy_minion_config,
+            script_path,
+            processes.SaltProxyMinion,
+            fail_callable=self.fail_callable,
+            # start_timeout=self.start_timeout,
+            start_timeout=20,
+            slow_stop=self.slow_stop,
+            environ=self.environ,
+            cwd=self.cwd,
+            max_attempts=3,
+            monitor_events=monitor_events,
+        )
+        self.cache["proxy_minions"][proxy_minion_id] = proc
+        request.addfinalizer(proc.terminate)
+        request.addfinalizer(lambda: self.cache["proxy_minions"].pop(proxy_minion_id))
+        return proc
+
     def get_salt_cli(self, request, master_id):
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
@@ -451,7 +542,21 @@ class SaltFactoriesManager(object):
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return processes.SaltCallCLI(script_path, config=self.cache["minions"][minion_id].config)
+        try:
+            return processes.SaltCallCLI(
+                script_path, config=self.cache["minions"][minion_id].config
+            )
+        except KeyError:
+            try:
+                return processes.SaltCallCLI(
+                    script_path,
+                    base_script_args=["--proxyid={}".format(minion_id)],
+                    config=self.cache["proxy_minions"][minion_id].config,
+                )
+            except KeyError:
+                raise KeyError(
+                    "Could not find {} in the minions or proxy minions caches".format(minion_id)
+                )
 
     def get_salt_run(self, request, master_id):
         script_path = cli_scripts.generate_script(

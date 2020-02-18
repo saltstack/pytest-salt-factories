@@ -229,3 +229,39 @@ def pytest_saltfactories_write_syndic_configuration(request, syndic_config):
     # Make sure to load the config file as a salt-master starting from CLI
     options = salt.config.syndic_config(master_config_file, minion_config_file)
     return options
+
+
+def pytest_saltfactories_verify_proxy_minion_configuration(request, proxy_minion_config, username):
+    """
+    This hook is called to vefiry the provided proxy_minion configuration
+    """
+    # verify env to make sure all required directories are created and have the
+    # right permissions
+    verify_env_entries = [
+        os.path.dirname(proxy_minion_config["log_file"]),
+        # proxy_proxy_minion_config['extension_modules'],
+        proxy_minion_config["sock_dir"],
+    ]
+    salt_verify.verify_env(verify_env_entries, username, pki_dir=proxy_minion_config["pki_dir"])
+
+
+def pytest_saltfactories_write_proxy_minion_configuration(request, proxy_minion_config):
+    """
+    This hook is called to vefiry the provided proxy_minion configuration
+    """
+    config_file = proxy_minion_config.pop("conf_file")
+    log.debug(
+        "Writing to configuration file %s. Configuration:\n%s",
+        config_file,
+        pprint.pformat(proxy_minion_config),
+    )
+
+    # Write down the computed configuration into the config file
+    with compat.fopen(config_file, "w") as wfh:
+        yamlserialize.safe_dump(proxy_minion_config, wfh, default_flow_style=False)
+
+    # Make sure to load the config file as a salt-master starting from CLI
+    options = salt.config.proxy_config(
+        config_file, minion_id=proxy_minion_config["id"], cache_minion_id=True
+    )
+    return options

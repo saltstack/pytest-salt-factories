@@ -131,3 +131,39 @@ def pytest_saltfactories_write_syndic_configuration(request, syndic_config):
     """
     This hook is called to write the provided syndic configuration
     """
+
+
+@pytest.hookspec(firstresult=True)
+def pytest_saltfactories_generate_default_proxy_minion_configuration(
+    request, factories_manager, proxy_minion_id, master_port
+):
+    """
+    Hook which should return a dictionary tailored for the provided proxy_minion_id
+
+    Stops at the first non None result
+    """
+
+
+@pytest.hookspec(firstresult=True)
+def pytest_saltfactories_proxy_minion_configuration_overrides(
+    request, factories_manager, default_options, proxy_minion_id
+):
+    """
+    Hook which should return a dictionary tailored for the provided proxy_minion_id.
+    This dictionary will override the default_options dictionary.
+
+    Stops at the first non None result
+    """
+
+
+def pytest_saltfactories_verify_proxy_minion_configuration(request, proxy_minion_config, username):
+    """
+    This hook is called to vefiry the provided proxy_minion configuration
+    """
+
+
+@pytest.hookspec(firstresult=True)
+def pytest_saltfactories_write_proxy_minion_configuration(request, proxy_minion_config):
+    """
+    This hook is called to write the provided proxy_minion configuration
+    """
