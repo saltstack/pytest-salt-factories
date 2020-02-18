@@ -96,7 +96,7 @@ jobs:
         SALT_REQUIREMENT: ./salt-checkout
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
-        nox --force-color -e tests-system-python -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
+        nox --force-color -e tests-system-python -- -s --log-cli-level=debug --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
 
     - name: Upload Test Results
       if: always()
@@ -216,7 +216,7 @@ jobs:
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
-        nox --force-color -e tests-system-python -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
+        nox --force-color -e tests-system-python -- -s --log-cli-level=debug --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
 
     - name: Upload Test Results
       if: always()
@@ -331,7 +331,7 @@ jobs:
         SALT_REQUIREMENT: ./salt-checkout
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
-        nox --force-color -e tests-system-python -- -s --log-cli-level=warning --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
+        nox --force-color -e tests-system-python -- -s --log-cli-level=debug --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
 
     - name: Upload Test Results
       if: always()
