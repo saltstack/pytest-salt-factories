@@ -50,6 +50,25 @@ class Tempfiles:
             )
         return tfile.name
 
+    def makeslsfile(self, contents, name=None):
+        """
+        Creates an sls file and returns it's path
+        """
+        if name is None:
+            tfile = tempfile.NamedTemporaryFile("w", suffix=".sls", delete=False)
+            name = tfile.name
+        with open(name, "w") as wfh:
+            wfh.write(textwrap.dedent(contents.lstrip("\n")).strip())
+        self.request.addfinalizer(functools.partial(self._delete_temp_file, name))
+        with open(name, "r") as rfh:
+            log.debug(
+                "Created SLS file with contents:\n>>>>> %s >>>>>\n%s\n<<<<< %s <<<<<\n",
+                name,
+                rfh.read(),
+                name,
+            )
+        return name
+
     def _delete_temp_file(self, fpath):
         """
         Cleanup the temporary path

@@ -542,13 +542,13 @@ class FactoryScriptBase(FactoryProcess):
         super(FactoryScriptBase, self).__init__(*args, **kwargs)
         self.default_timeout = default_timeout
 
-    def build_cmdline(self, *args, **kwargs):
-        proc_args = [self.get_script_path()] + self.get_base_script_args() + self.get_script_args()
-        if sys.platform.startswith("win") and proc_args[0] != sys.executable:
-            # Windows needs the python executable to come first
-            proc_args.insert(0, sys.executable)
-        proc_args += list(args)
-        return proc_args
+    def build_cmdline(self, *args):
+        return (
+            [self.get_script_path()]
+            + self.get_base_script_args()
+            + self.get_script_args()
+            + list(args)
+        )
 
     def run(self, *args, **kwargs):
         """
@@ -601,6 +601,15 @@ class FactoryScriptBase(FactoryProcess):
         else:
             json_out = None
         return stdout, stderr, json_out
+
+
+class FactoryPythonScriptBase(FactoryScriptBase):
+    def build_cmdline(self, *args):
+        proc_args = super(FactoryPythonScriptBase, self).build_cmdline(*args)
+        if sys.platform.startswith("win") and proc_args[0] != sys.executable:
+            # Windows needs the python executable to come first
+            proc_args.insert(0, sys.executable)
+        return proc_args
 
 
 class FactoryDaemonScriptBase(FactoryProcess):
@@ -725,7 +734,7 @@ class FactoryDaemonScriptBase(FactoryProcess):
             return super(FactoryDaemonScriptBase, self).__repr__()
 
 
-class SaltScriptBase(FactoryScriptBase):
+class SaltScriptBase(FactoryPythonScriptBase):
     def get_base_script_args(self):
         script_args = super(SaltScriptBase, self).get_base_script_args()
         if "conf_file" in self.config:
@@ -735,19 +744,24 @@ class SaltScriptBase(FactoryScriptBase):
         return script_args
 
     def get_minion_tgt(self, kwargs):
-        return kwargs.pop("minion_tgt", None)
+        minion_tgt = None
+        if "minion_tgt" in kwargs:
+            minion_tgt = kwargs.pop("minion_tgt")
+        return minion_tgt
 
-    def build_cmdline(self, *args, **kwargs):
+    def build_cmdline(self, *args, **kwargs):  # pylint: disable=arguments-differ
+        log.debug("Building cmdline. Input args: %s; Input kwargs: %s;", args, kwargs)
         minion_tgt = self._minion_tgt = self.get_minion_tgt(kwargs)
-        proc_args = [self.get_script_path()] + self.get_base_script_args() + self.get_script_args()
-        if sys.platform.startswith("win") and proc_args[0] != sys.executable:
-            # Windows needs the python executable to come first
-            proc_args.insert(0, sys.executable)
+        proc_args = []
         if minion_tgt:
             proc_args.append(minion_tgt)
-        proc_args += list(args)
+        # Double dash flags should always come first. Users should be doing this already when calling run()
+        # but we just double check
+        proc_args += sorted(args, key=lambda x: -1 if x.startswith("--") else 1)
         for key in kwargs:
             proc_args.append("{}={}".format(key, kwargs[key]))
+        proc_args = super(SaltScriptBase, self).build_cmdline(*proc_args)
+        log.debug("Built cmdline: %s", proc_args)
         return proc_args
 
 
@@ -1019,3 +1033,29 @@ class SaltRunCLI(SaltScriptBase):
 
     def get_minion_tgt(self, kwargs):
         return None
+
+
+class SaltCpCLI(SaltScriptBase):
+    """
+    Simple subclass to the salt-cp CLI script
+    """
+
+    def get_script_args(self):
+        """
+        Returns any additional arguments to pass to the CLI script
+        """
+        return ["--hard-crash"]
+
+    def process_output(self, stdout, stderr, cli_cmd=None):
+        if "No minions matched the target. No command was sent, no jid was assigned.\n" in stdout:
+            stdout = stdout.split("\n", 1)[1:][0]
+        stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cli_cmd)
+        if json_out:
+            if not isinstance(json_out, dict):
+                # A string was most likely loaded, not what we want.
+                return stdout, stderr, None
+            try:
+                return stdout, stderr, json_out[self._minion_tgt]
+            except KeyError:
+                return stdout, stderr, json_out
+        return stdout, stderr, json_out
