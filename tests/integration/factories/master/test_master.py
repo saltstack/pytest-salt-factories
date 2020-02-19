@@ -64,7 +64,7 @@ def test_salt_cp(master, minion, salt_cp, tempfiles):
         assert minion.is_alive()
         ret = salt_cp.run("minion-1", sls, dest)
         assert ret.exitcode == 0, ret
-        assert ret.json == {"minion-1": {dest: True}}
+        assert ret.json == {"minion-1": {dest: True}}, ret
         assert os.path.exists(dest)
         with open(dest) as rfh:
             assert rfh.read() == contents
@@ -105,7 +105,7 @@ def test_salt_cp_no_match(master, minion, salt_cp, tempfiles):
         assert minion.is_alive()
         ret = salt_cp.run(sls, dest, minion_tgt="minion-2")
         assert ret.exitcode == 0, ret
-        assert not ret.json
+        assert not ret.json, ret
         assert not os.path.exists(dest)
     finally:
         if os.path.exists(dest):
