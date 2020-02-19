@@ -242,7 +242,7 @@ dummy-variables-rgx=_$|dummy
 
 # List of additional names supposed to be defined in builtins. Remember that
 # you should avoid to define new builtins when possible.
-additional-builtins=__opts__,__virtual__,__salt_system_encoding__
+additional-builtins=__opts__,__virtual__,__salt_system_encoding__,__context__
 
 # List of strings which can identify a callback function by name. A callback
 # name must start or end with one of those strings.
@@ -261,7 +261,7 @@ notes=FIXME,XXX,TODO
 bad-functions=map,filter,input
 
 # Good variable names which should always be accepted, separated by a comma
-good-names=i,j,k,ex,Run,_,log,pytest_plugins,__opts__
+good-names=i,j,k,ex,Run,_,log,pytest_plugins,__opts__,__context__
 
 # Bad variable names which should always be refused, separated by a comma
 bad-names=foo,bar,baz,toto,tutu,tata
