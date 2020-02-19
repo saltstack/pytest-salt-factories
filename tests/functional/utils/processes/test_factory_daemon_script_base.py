@@ -93,7 +93,6 @@ def test_daemon_process_termination(request, tempfiles):
     # Allow the script to start
     time.sleep(1)
     assert psutil.pid_exists(daemon_pid)
-    daemon.wait_until_running()
     proc = psutil.Process(daemon_pid)
     children = proc.children(recursive=True)
     request.addfinalizer(functools.partial(kill_children, children))
@@ -179,7 +178,6 @@ def test_daemon_process_termination_parent_killed(request, tempfiles):
     # Allow the script to start
     time.sleep(1)
     assert psutil.pid_exists(daemon_pid)
-    daemon.wait_until_running()
     proc = psutil.Process(daemon_pid)
     children = proc.children(recursive=True)
     request.addfinalizer(functools.partial(kill_children, children))

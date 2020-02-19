@@ -31,7 +31,7 @@ def log_server_listener(log_server_port):
             sender.send(msgpack.dumps(None))
             log.info("Sent sentinel to trigger log server shutdown")
         finally:
-            sender.close(1)
+            sender.close(1000)
             context.term()
         log.debug("Stopped the multiprocessing logging queue listener")
 

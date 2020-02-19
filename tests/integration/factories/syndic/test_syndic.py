@@ -11,9 +11,7 @@ def master_of_masters(request, salt_factories):
     """
     This is the master of all masters, top of the chain
     """
-    return salt_factories.spawn_master(
-        request, "master-of-masters", order_masters=True, monitor_events=True
-    )
+    return salt_factories.spawn_master(request, "master-of-masters", order_masters=True)
 
 
 @pytest.fixture(scope="module")
@@ -45,10 +43,7 @@ def syndic_master(request, salt_factories, master_of_masters, configure_syndic):
     when this master starts.
     """
     return salt_factories.spawn_master(
-        request,
-        "syndic-1",
-        monitor_events=True,
-        master_of_masters_id=master_of_masters.config["id"],
+        request, "syndic-1", master_of_masters_id=master_of_masters.config["id"],
     )
 
 
@@ -61,9 +56,7 @@ def syndic_minion(request, salt_factories, syndic_master):
     when this master starts.
     """
     assert syndic_master.is_alive()
-    return salt_factories.spawn_minion(
-        request, "syndic-1", master_id=syndic_master.config["id"], monitor_events=True,
-    )
+    return salt_factories.spawn_minion(request, "syndic-1", master_id=syndic_master.config["id"])
 
 
 @pytest.fixture(scope="module")

@@ -9,8 +9,11 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import logging
 import socket
 import time
+
+log = logging.getLogger(__name__)
 
 
 def get_unused_localhost_port():
@@ -37,3 +40,32 @@ def get_unused_localhost_port():
         generated_ports[port] = time.time() + 1
         return port
     return get_unused_localhost_port()
+
+
+def check_connectable_ports(ports, timeout=30):
+    ports = set(ports)
+    expire = time.time() + timeout
+    all_ports_connectable = True
+    while True:
+        if not ports:
+            break
+        if time.time() > expire:
+            all_ports_connectable = False
+            break
+
+        for port in set(ports):
+            log.debug("Checking connectable status on port: %s", port)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            conn = sock.connect_ex(("localhost", port))
+            try:
+                if conn == 0:
+                    log.debug("Port %s is connectable!", port)
+                    ports.remove(port)
+                    sock.shutdown(socket.SHUT_RDWR)
+            except socket.error:
+                continue
+            finally:
+                sock.close()
+                del sock
+        time.sleep(0.5)
+    return all_ports_connectable

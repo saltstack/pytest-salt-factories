@@ -16,7 +16,6 @@ import logging
 import os
 import pprint
 import signal
-import socket
 import subprocess
 import sys
 import tempfile
@@ -29,9 +28,9 @@ from operator import itemgetter
 import psutil
 import pytest
 import six
-from tornado import iostream
 
 from saltfactories.utils import compat
+from saltfactories.utils import ports
 
 
 try:
@@ -232,7 +231,7 @@ def start_daemon(
     environ=None,
     cwd=None,
     max_attempts=3,
-    monitor_events=False,
+    event_listener=None,
 ):
     """
     Returns a running process daemon
@@ -258,12 +257,35 @@ def start_daemon(
         )
         log_prefix = process.log_prefix
         log.info("%sStarting %r. Attempt: %s", log_prefix, process, attempts)
+        start_time = time.time()
         process.start()
         if process.is_alive():
             try:
-                connectable = process.wait_until_running(
-                    timeout=start_timeout, monitor_events=monitor_events
-                )
+                check_ports = process.get_check_ports()
+                check_events = list(process.get_check_events())
+
+                if not check_ports and not check_events:
+                    connectable = True
+                else:
+                    connectable = None
+                    if check_ports:
+                        connectable = ports.check_connectable_ports(
+                            check_ports, timeout=start_timeout
+                        )
+
+                    if check_events:
+                        if not event_listener:
+                            process.terminate()
+                            raise RuntimeError(
+                                "Process {} want's to have events checked but no 'event_listener' was "
+                                "passed to start_daemon()".format(process)
+                            )
+                        if connectable or connectable is None:
+                            connectable = event_listener.wait_for_events(
+                                process.get_check_events(),
+                                after_time=start_time,
+                                timeout=start_timeout,
+                            )
                 if connectable is False:
                     result = process.terminate()
                     if attempts >= max_attempts:
@@ -622,7 +644,6 @@ class FactoryDaemonScriptBase(FactoryProcess):
         super(FactoryDaemonScriptBase, self).__init__(*args, **kwargs)
         self._running = threading.Event()
         self._connectable = threading.Event()
-        self._monitor_events_event = threading.Event()
 
     def is_alive(self):
         """
@@ -640,7 +661,6 @@ class FactoryDaemonScriptBase(FactoryProcess):
         """
         Start the daemon subprocess
         """
-        self._monitor_events_event.set()
         log.info("%sStarting DAEMON %s in CWD: %s", self.log_prefix, self.cli_script_name, self.cwd)
         proc_args = [self.get_script_path()] + self.get_base_script_args() + self.get_script_args()
 
@@ -664,72 +684,8 @@ class FactoryDaemonScriptBase(FactoryProcess):
         # Let's get the child processes of the started subprocess
         self._running.clear()
         self._connectable.clear()
-        self._monitor_events_event.clear()
         time.sleep(0.0125)
         return super(FactoryDaemonScriptBase, self).terminate()
-
-    def wait_until_running(self, timeout=5):
-        """
-        Blocking call to wait for the daemon to start listening
-        """
-        if self._connectable.is_set():
-            return True
-
-        expire = time.time() + timeout
-        check_ports = self.get_check_ports()
-        if check_ports:
-            log.debug(
-                "%sChecking the following ports to assure running status: %s",
-                self.log_prefix,
-                check_ports,
-            )
-        log.debug("%sWaiting %d seconds for running checks to complete.", self.log_prefix, timeout)
-        try:
-            while True:
-                if self._running.is_set() is False:
-                    # No longer running, break
-                    log.warning("%sNo longer running!", self.log_prefix)
-                    break
-
-                if time.time() > expire:
-                    # Timeout, break
-                    log.debug("%sExpired after %d seconds", self.log_prefix, timeout)
-                    break
-
-                if not check_ports:
-                    self._connectable.set()
-                    break
-
-                for port in set(check_ports):
-                    if isinstance(port, int):
-                        log.debug(
-                            "%sChecking connectable status on port: %s", self.log_prefix, port
-                        )
-                        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                        conn = sock.connect_ex(("localhost", port))
-                        try:
-                            if conn == 0:
-                                log.debug("%sPort %s is connectable!", self.log_prefix, port)
-                                check_ports.remove(port)
-                                sock.shutdown(socket.SHUT_RDWR)
-                        except socket.error:
-                            continue
-                        finally:
-                            sock.close()
-                            del sock
-                time.sleep(0.5)
-        except KeyboardInterrupt:
-            return self._connectable.is_set()
-        if self._connectable.is_set():
-            log.debug("%sAll ports checked. Running!", self.log_prefix)
-            try:
-                for child in psutil.Process(self.pid).children(recursive=True):
-                    if child not in self._children:
-                        self._children.append(child)
-            except psutil.NoSuchProcess:
-                # The parent process died?!
-                pass
-        return self._connectable.is_set()
 
     def __repr__(self):
         try:
@@ -777,152 +733,11 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase):
         script_args.append("--log-level=quiet")
         return script_args
 
-    def get_check_ports(self):  # pylint: disable=no-self-use
-        """
-        Return a list of ports to check against to ensure the daemon is running
-        """
-        pytest_config = self.config.get("pytest-{}".format(self.config["__role"]), {})
-        if pytest_config:
-            engine_config = pytest_config["engine"]
-            if engine_config:
-                engine_port = engine_config.get("port")
-                if engine_port:
-                    return [engine_port]
-        return super(SaltDaemonScriptBase, self).get_check_ports()
-
     def get_check_events(self):
         """
-        Return a list of event tags to check against to ensure the daemon is running
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         raise NotImplementedError
-
-    def monitor_events(self, monitor_event):
-        # Late import
-        import salt.utils.event
-
-        if self.config["__role"] == "master":
-            config = self.config.copy()
-        else:
-            config = self.config["pytest-{}".format(self.config["__role"])]["master_config"].copy()
-        log.info(
-            "Monitoring events for %s(id=%s, sock_dir=%s)",
-            self.__class__.__name__,
-            config["id"],
-            config["sock_dir"],
-        )
-        try:
-            with salt.utils.event.get_master_event(
-                config, config["sock_dir"], listen=True, raise_errors=True,
-            ) as event_listener:
-                while monitor_event.is_set():
-                    if self._running.is_set() is False:
-                        # No longer running, break
-                        log.warning("%sNo longer running!", self.log_prefix)
-                        break
-                    event = event_listener.get_event(full=True, wait=0.5)
-                    if event:
-                        log.info("%sMonitored event: %s", self.log_prefix, event)
-        except iostream.StreamClosedError:
-            pass
-
-    def wait_until_running(
-        self, timeout=5, monitor_events=False
-    ):  # pylint: disable=arguments-differ
-        """
-        Blocking call to wait for the daemon to start listening
-        """
-        if self._connectable.is_set():
-            return True
-
-        check_ports = self.get_check_ports()
-        if check_ports:
-            connectable = super(SaltDaemonScriptBase, self).wait_until_running(timeout=timeout)
-            if not connectable:
-                # Stop soon
-                return connectable
-            # Don't yet flag as connectable
-            self._connectable.clear()
-
-        # Now check events
-        check_events = set(self.get_check_events())
-        if not check_events:
-            self._connectable.set()
-            return self._connectable.is_set()
-
-        if monitor_events:
-            self._monitor_events_event.set()
-            monitor_events_thread = threading.Thread(
-                target=self.monitor_events, args=(self._monitor_events_event,)
-            )
-            monitor_events_thread.daemon = True
-            monitor_events_thread.start()
-
-        expire = time.time() + timeout
-        if check_events:
-            log.debug(
-                "%sChecking the following salt events to assure running status: %s",
-                self.log_prefix,
-                check_events,
-            )
-        log.debug(
-            "%sWait until running;  Expire: %s;  Timeout: %s;  Current Time: %s",
-            self.log_prefix,
-            expire,
-            timeout,
-            time.time(),
-        )
-        try:
-            # Late import
-            import salt.utils.event
-
-            pytest_config = self.config["pytest-{}".format(self.config["__role"])]
-
-            stop_sending_events_file = pytest_config["engine"]["stop_sending_events_file"]
-            if self.config["__role"] == "master":
-                config = self.config.copy()
-            else:
-                config = pytest_config["master_config"].copy()
-
-            with salt.utils.event.get_master_event(
-                config, config["sock_dir"], listen=True, raise_errors=True,
-            ) as event_listener:
-                while True:
-                    if self._running.is_set() is False:
-                        # No longer running, break
-                        log.warning("%sNo longer running!", self.log_prefix)
-                        break
-
-                    if time.time() > expire:
-                        # Timeout, break
-                        log.debug(
-                            "%sExpired at %s(was set to %s)", self.log_prefix, time.time(), expire
-                        )
-                        break
-
-                    if not check_events:
-                        if stop_sending_events_file and os.path.exists(stop_sending_events_file):
-                            log.info(
-                                "%sRemoving stop_sending_events_file: %s",
-                                self.log_prefix,
-                                stop_sending_events_file,
-                            )
-                            os.unlink(stop_sending_events_file)
-                        self._connectable.set()
-                        break
-
-                    for tag in set(check_events):
-                        log.info("%s Waiting for event with tag: %s", self.log_prefix, tag)
-                        event = event_listener.get_event(tag=tag, wait=0.5, match_type="startswith")
-                        if event and event["tag"].startswith(tag):
-                            log.info("%sGot event tag: %s", self.log_prefix, tag)
-                            check_events.remove(tag)
-        except KeyboardInterrupt:
-            # self._monitor_events_event.clear()
-            return self._connectable.is_set()
-        if self._connectable.is_set():
-            log.debug("%sAll events checked. Running!", self.log_prefix)
-        # self._monitor_events_event.clear()
-        return self._connectable.is_set()
 
 
 class SaltMaster(SaltDaemonScriptBase):
@@ -932,9 +747,9 @@ class SaltMaster(SaltDaemonScriptBase):
 
     def get_check_events(self):
         """
-        Return a list of event tags to check against to ensure the daemon is running
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
-        return ["pytest/{__role}/{id}/start".format(**self.config)]
+        yield self.config["id"], "salt/event_listen/start"
 
 
 class SaltMinion(SaltDaemonScriptBase):
@@ -950,11 +765,10 @@ class SaltMinion(SaltDaemonScriptBase):
 
     def get_check_events(self):
         """
-        Return a list of event tags to check against to ensure the daemon is running
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
-        # We don't use "salt/{__role}/{id}/start" because those were seen being fired
-        # before we even got our engine running
-        return ["pytest/{__role}/{id}/start".format(**self.config)]
+        pytest_config = self.config["pytest-{}".format(self.config["__role"])]
+        yield pytest_config["master_config"]["id"], "salt/{__role}/{id}/start".format(**self.config)
 
 
 class SaltSyndic(SaltDaemonScriptBase):
@@ -964,9 +778,10 @@ class SaltSyndic(SaltDaemonScriptBase):
 
     def get_check_events(self):
         """
-        Return a list of event tags to check against to ensure the daemon is running
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
-        return ["salt/{__role}/{id}/start".format(**self.config)]
+        pytest_config = self.config["pytest-{}".format(self.config["__role"])]
+        yield pytest_config["master_config"]["id"], "salt/{__role}/{id}/start".format(**self.config)
 
 
 class SaltProxyMinion(SaltDaemonScriptBase):
@@ -983,10 +798,10 @@ class SaltProxyMinion(SaltDaemonScriptBase):
 
     def get_check_events(self):
         """
-        Return a list of event tags to check against to ensure the daemon is running
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
-        return ["pytest/{__role}/{id}/start".format(**self.config)]
-        # return ["salt/{__role}/{id}/start".format(**self.config)]
+        pytest_config = self.config["pytest-{}".format(self.config["__role"])]
+        yield pytest_config["master_config"]["id"], "salt/{__role}/{id}/start".format(**self.config)
 
 
 class SaltCLI(SaltScriptBase):

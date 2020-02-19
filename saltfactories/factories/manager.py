@@ -17,6 +17,7 @@ from saltfactories.factories import minion
 from saltfactories.factories import proxy
 from saltfactories.factories import syndic
 from saltfactories.utils import cli_scripts
+from saltfactories.utils import event_listener
 from saltfactories.utils import processes
 
 
@@ -65,6 +66,8 @@ class SaltFactoriesManager(object):
             "syndics": {},
             "proxy_minions": {},
         }
+        self.event_listener = event_listener.EventListener()
+        self.event_listener.start()
 
     @staticmethod
     def get_running_username():
@@ -90,6 +93,10 @@ class SaltFactoriesManager(object):
     @staticmethod
     def get_salt_engines_path():
         return os.path.join(CODE_ROOT_DIR, "utils", "salt", "engines")
+
+    @staticmethod
+    def get_salt_returner_paths():
+        return os.path.join(CODE_ROOT_DIR, "utils", "salt", "returner")
 
     def final_minion_config_tweaks(self, config):
         self.final_common_config_tweaks(config, "minion")
@@ -117,6 +124,23 @@ class SaltFactoriesManager(object):
             if "log_handlers_dirs" not in config:
                 config["log_handlers_dirs"] = []
             config["log_handlers_dirs"].insert(0, SaltFactoriesManager.get_salt_log_handlers_path())
+
+        if "returner_dirs" not in config:
+            config["returner_dirs"] = []
+        config["returner_dirs"].insert(0, SaltFactoriesManager.get_salt_returner_paths())
+
+        event_return = ["pytest_returner"]
+        if "event_return" in config:
+            _event_return = config.pop("event_return")
+            if not isinstance(_event_return, list):
+                _event_return = [_event_return]
+            event_return.extend([er.strip() for er in _event_return if er.strip()])
+        if len(event_return) == 1:
+            config["event_return"] = event_return[0]
+        else:
+            config["event_return"] = event_return
+
+        config["pytest_returner_address"] = self.event_listener.address
 
         pytest_key = "pytest-{}".format(role)
         if pytest_key not in config:
@@ -175,7 +199,7 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["minions"].pop(minion_id))
         return minion_config
 
-    def spawn_minion(self, request, minion_id, master_id=None, monitor_events=False):
+    def spawn_minion(self, request, minion_id, master_id=None):
         if minion_id in self.cache["minions"]:
             raise RuntimeError("A minion by the ID of '{}' was already spawned".format(minion_id))
 
@@ -202,7 +226,7 @@ class SaltFactoriesManager(object):
             environ=self.environ,
             cwd=self.cwd,
             max_attempts=3,
-            monitor_events=monitor_events,
+            event_listener=self.event_listener,
         )
         self.cache["minions"][minion_id] = proc
         request.addfinalizer(proc.terminate)
@@ -257,12 +281,7 @@ class SaltFactoriesManager(object):
         return master_config
 
     def spawn_master(
-        self,
-        request,
-        master_id,
-        monitor_events=False,
-        order_masters=False,
-        master_of_masters_id=None,
+        self, request, master_id, order_masters=False, master_of_masters_id=None,
     ):
         if master_id in self.cache["masters"]:
             raise RuntimeError("A master by the ID of '{}' was already spawned".format(master_id))
@@ -294,7 +313,7 @@ class SaltFactoriesManager(object):
             environ=self.environ,
             cwd=self.cwd,
             max_attempts=3,
-            monitor_events=monitor_events,
+            event_listener=self.event_listener,
         )
         self.cache["masters"][master_id] = proc
         request.addfinalizer(proc.terminate)
@@ -393,9 +412,7 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["syndics"].pop(syndic_id))
         return syndic_config
 
-    def spawn_syndic(
-        self, request, syndic_id, master_id=None, master_of_masters_id=None, monitor_events=False
-    ):
+    def spawn_syndic(self, request, syndic_id, master_id=None, master_of_masters_id=None):
         if syndic_id in self.cache["syndics"]:
             raise RuntimeError("A syndic by the ID of '{}' was already spawned".format(syndic_id))
 
@@ -407,7 +424,7 @@ class SaltFactoriesManager(object):
 
         # We need the syndic master and minion running
         if syndic_id not in self.cache["masters"]:
-            self.spawn_master(request, syndic_id, monitor_events=monitor_events)
+            self.spawn_master(request, syndic_id)
 
         if syndic_id not in self.cache["minions"]:
             self.spawn_minion(request, syndic_id)
@@ -430,7 +447,7 @@ class SaltFactoriesManager(object):
             environ=self.environ,
             cwd=self.cwd,
             max_attempts=3,
-            monitor_events=monitor_events,
+            event_listener=self.event_listener,
         )
         self.cache["syndics"][syndic_id] = proc
         request.addfinalizer(proc.terminate)
@@ -484,7 +501,7 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["proxy_minions"].pop(proxy_minion_id))
         return proxy_minion_config
 
-    def spawn_proxy_minion(self, request, proxy_minion_id, master_id=None, monitor_events=False):
+    def spawn_proxy_minion(self, request, proxy_minion_id, master_id=None):
         if proxy_minion_id in self.cache["proxy_minions"]:
             raise RuntimeError(
                 "A proxy_minion by the ID of '{}' was already spawned".format(proxy_minion_id)
@@ -515,7 +532,7 @@ class SaltFactoriesManager(object):
             environ=self.environ,
             cwd=self.cwd,
             max_attempts=3,
-            monitor_events=monitor_events,
+            event_listener=self.event_listener,
         )
         self.cache["proxy_minions"][proxy_minion_id] = proc
         request.addfinalizer(proc.terminate)

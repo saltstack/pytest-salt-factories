@@ -97,7 +97,11 @@ def log_server(log_server_port):
 
 @pytest.fixture(scope="session")
 def salt_factories(pytestconfig, tempdir, log_server, log_server_port, log_server_level):
-    return manager.SaltFactoriesManager(pytestconfig, tempdir, log_server_port, log_server_level)
+    _manager = manager.SaltFactoriesManager(
+        pytestconfig, tempdir, log_server_port, log_server_level
+    )
+    yield _manager
+    _manager.event_listener.stop()
 
 
 def pytest_saltfactories_verify_minion_configuration(request, minion_config, username):
