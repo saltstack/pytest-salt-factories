@@ -1089,3 +1089,28 @@ class SaltCpCLI(SaltScriptBase):
             except KeyError:
                 return stdout, stderr, json_out
         return stdout, stderr, json_out
+
+
+class SaltKeyCLI(SaltScriptBase):
+    """
+    Simple subclass to the salt-key CLI script
+    """
+
+    def get_base_script_args(self):
+        script_args = super(SaltKeyCLI, self).get_base_script_args()
+        # As of Neon, salt-key still does not support --log-level
+        # Only when we get the new logging merged in will we get that, so remove that CLI flag
+        for idx, flag in enumerate(script_args):
+            if flag.startswith("--log-level="):
+                script_args.pop(idx)
+                break
+        return script_args
+
+    def get_script_args(self):
+        """
+        Returns any additional arguments to pass to the CLI script
+        """
+        return ["--hard-crash"]
+
+    def get_minion_tgt(self, kwargs):
+        return None

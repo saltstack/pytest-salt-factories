@@ -20,6 +20,11 @@ def minion(request, salt_factories, master):
 
 
 @pytest.fixture
+def minion_3(request, salt_factories, master):
+    return salt_factories.spawn_minion(request, "minion-3", master_id="master-1")
+
+
+@pytest.fixture
 def salt_run(request, salt_factories, master):
     return salt_factories.get_salt_run(request, master.config["id"])
 
@@ -27,6 +32,11 @@ def salt_run(request, salt_factories, master):
 @pytest.fixture
 def salt_cp(request, salt_factories, master):
     return salt_factories.get_salt_cp(request, master.config["id"])
+
+
+@pytest.fixture
+def salt_key(request, salt_factories, master):
+    return salt_factories.get_salt_key(request, master.config["id"])
 
 
 def test_master(master):
@@ -100,3 +110,14 @@ def test_salt_cp_no_match(master, minion, salt_cp, tempfiles):
     finally:
         if os.path.exists(dest):
             os.unlink(dest)
+
+
+def test_salt_key(master, minion, minion_3, salt_key):
+    ret = salt_key.run("--list-all")
+    assert ret.exitcode == 0, ret
+    assert ret.json == {
+        "minions": ["minion-1", "minion-3"],
+        "minions_pre": [],
+        "minions_denied": [],
+        "minions_rejected": [],
+    }, ret
