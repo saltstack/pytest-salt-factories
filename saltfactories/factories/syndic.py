@@ -85,13 +85,7 @@ class SyndicFactory(object):
             "syndic_log_file": "logs/syndic.log",
             "syndic_log_level_logfile": "debug",
             "syndic_dir": "cache/syndics",
-            "pytest-syndic": {
-                "log": {"prefix": "salt-syndic({})".format(syndic_id)},
-                "engine": {
-                    "port": ports.get_unused_localhost_port(),
-                    "stop_sending_events_file": stop_sending_events_file,
-                },
-            },
+            "pytest-syndic": {"log": {"prefix": "salt-syndic({})".format(syndic_id)},},
         }
         # Merge in the initial default options with the internal _default_options
         dictupdate.update(default_options.get("syndic"), _default_options, merge_lists=True)
@@ -147,13 +141,7 @@ class SyndicFactory(object):
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-5s:%(lineno)-4d][%(levelname)-8s] %(message)s",
             "hash_type": "sha256",
             "transport": "zeromq",
-            "pytest-minion": {
-                "log": {"prefix": "salt-minion({})".format(minion_id)},
-                "engine": {
-                    "port": ports.get_unused_localhost_port(),
-                    "stop_sending_events_file": stop_sending_events_file,
-                },
-            },
+            "pytest-minion": {"log": {"prefix": "salt-minion({})".format(minion_id)},},
         }
         # Merge in the initial default options with the internal _default_options
         dictupdate.update(default_options, _default_options, merge_lists=True)
@@ -223,13 +211,7 @@ class SyndicFactory(object):
             "transport": "zeromq",
             "order_masters": False,
             "max_open_files": 10240,
-            "pytest-master": {
-                "log": {"prefix": "salt-master({})".format(master_id)},
-                "engine": {
-                    "port": ports.get_unused_localhost_port(),
-                    "stop_sending_events_file": stop_sending_events_file,
-                },
-            },
+            "pytest-master": {"log": {"prefix": "salt-master({})".format(master_id)},},
         }
         # Merge in the initial default options with the internal _default_options
         dictupdate.update(default_options, _default_options, merge_lists=True)
