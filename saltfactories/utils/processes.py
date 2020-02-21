@@ -459,6 +459,8 @@ class FactoryProcess(object):
         self.environ = environ or os.environ.copy()
         # We really do not want buffered output
         self.environ.setdefault(str("PYTHONUNBUFFERED"), str("1"))
+        # Don't write .pyc files or create them in __pycache__ directories
+        self.environ.setdefault(str("PYTHONDONTWRITEBYTECODE"), str("1"))
         self.cwd = cwd or os.getcwd()
         self.fail_callable = fail_callable or pytest.fail
         self._terminal = None
