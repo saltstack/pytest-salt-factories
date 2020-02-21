@@ -23,17 +23,21 @@ class MasterFactory(object):
 
     @staticmethod
     def default_config(
-        root_dir, master_id, default_options=None, config_overrides=None, order_masters=False
+        factories_root_dir,
+        master_id,
+        default_options=None,
+        config_overrides=None,
+        order_masters=False,
     ):
         if default_options is None:
             default_options = salt.config.DEFAULT_MASTER_OPTS.copy()
 
         counter = 1
-        root_dir = root_dir.join(master_id)
+        root_dir = factories_root_dir.join(master_id)
         while True:
             if not root_dir.check(dir=True):
                 break
-            root_dir = root_dir.join("{}_{}".format(master_id, counter))
+            root_dir = factories_root_dir.join("{}_{}".format(master_id, counter))
             counter += 1
         root_dir.ensure(dir=True)
 
