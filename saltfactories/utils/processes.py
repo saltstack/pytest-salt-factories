@@ -363,6 +363,7 @@ class Popen(subprocess.Popen):
         super(Popen, self).communicate(input)
         stdout = stderr = None
         if self.__stdout:
+            self.__stdout.flush()
             self.__stdout.seek(0)
             stdout = self.__stdout.read()
 
@@ -371,6 +372,7 @@ class Popen(subprocess.Popen):
                 stdout = stdout.decode(__salt_system_encoding__)
                 # pylint: enable=undefined-variable
         if self.__stderr:
+            self.__stderr.flush()
             self.__stderr.seek(0)
             stderr = self.__stderr.read()
 
@@ -514,6 +516,8 @@ class FactoryProcess(object):
         """
         if self._terminal is None:
             return
+        # Allow some time to get all output from process
+        time.sleep(0.25)
         log.info("%sStopping %s", self.log_prefix, self.__class__.__name__)
         # Collect any child processes information before terminating the process
         try:
