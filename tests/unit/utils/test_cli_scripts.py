@@ -53,6 +53,8 @@ def test_generate_script_defaults(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
@@ -99,6 +101,8 @@ def test_generate_script_executable(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """
@@ -145,6 +149,8 @@ def test_generate_script_long_executable(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """
@@ -193,6 +199,8 @@ def test_generate_script_code_dir(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
@@ -255,6 +263,8 @@ def test_generate_script_inject_coverage(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
@@ -334,6 +344,8 @@ def test_generate_script_inject_sitecustomize(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
@@ -391,6 +403,8 @@ def test_generate_script_inject_sitecustomize(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
@@ -425,6 +439,8 @@ def test_generate_script_salt(tmpdir):
                 salt_main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
@@ -463,6 +479,8 @@ def test_generate_script_salt_api(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
@@ -507,6 +525,8 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
@@ -552,6 +572,8 @@ def test_generate_script_only_generates_once(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(

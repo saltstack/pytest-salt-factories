@@ -29,6 +29,8 @@ SCRIPT_TEMPLATES = {
                 salt_main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """
@@ -48,6 +50,8 @@ SCRIPT_TEMPLATES = {
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """
@@ -73,6 +77,8 @@ SCRIPT_TEMPLATES = {
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+            sys.stdout.flush()
+            sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """
