@@ -309,3 +309,26 @@ def lint_tests(session):
     else:
         paths = ["tests/"]
     _lint(session, ".pylintrc", flags, paths)
+
+
+@nox.session(python="3")
+def docs(session):
+    """
+    Build Docs
+    """
+    session.notify("docs-html")
+
+
+@nox.session(name="docs-html", python="3")
+def docs_html(session):
+    """
+    Build Salt's HTML Documentation
+    """
+    _patch_session(session)
+    session.install(
+        "--progress-bar=off", "-r", "requirements-testing.txt", silent=PIP_INSTALL_SILENT
+    )
+    os.chdir("docs/")
+    session.run("make", "clean", external=True)
+    session.run("make", "html", "SPHINXOPTS=-W", external=True)
+    os.chdir("..")
