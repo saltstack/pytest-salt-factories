@@ -17,10 +17,6 @@ from saltfactories.utils import ports
 
 
 class MasterFactory(object):
-    def __init__(self, tempdir, config):
-        self.tempdir = tempdir
-        self.config = config
-
     @staticmethod
     def default_config(
         factories_root_dir,
@@ -90,13 +86,7 @@ class MasterFactory(object):
             "transport": "zeromq",
             "order_masters": order_masters,
             "max_open_files": 10240,
-            "pytest-master": {
-                "log": {"prefix": "salt-master({})".format(master_id)},
-                "engine": {
-                    "port": ports.get_unused_localhost_port(),
-                    "stop_sending_events_file": stop_sending_events_file,
-                },
-            },
+            "pytest-master": {"log": {"prefix": "salt-master({})".format(master_id)},},
         }
         # Merge in the initial default options with the internal _default_options
         dictupdate.update(default_options, _default_options, merge_lists=True)

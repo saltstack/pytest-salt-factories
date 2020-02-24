@@ -755,7 +755,7 @@ class SaltMaster(SaltDaemonScriptBase):
         """
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
-        yield self.config["id"], "salt/event_listen/start"
+        yield self.config["id"], "salt/master/{id}/start".format(**self.config)
 
 
 class SaltMinion(SaltDaemonScriptBase):

@@ -46,14 +46,11 @@ class EventListener(object):
             payload = puller.recv()
             if payload is self.sentinel:
                 break
-            events = msgpack.loads(payload, **msgpack_kwargs)
+            master_id, tag, data = msgpack.loads(payload, **msgpack_kwargs)
             received = time.time()
             expire = received + self.timeout
-            for master_id, tag, data in events:
-                log.info(
-                    "Received event from: MasterID: %r; Tag: %r; Data: %r", master_id, tag, data
-                )
-                self.store.append((received, expire, master_id, tag, data))
+            log.info("Received event from: MasterID: %r; Tag: %r; Data: %r", master_id, tag, data)
+            self.store.append((received, expire, master_id, tag, data))
 
             # Cleanup expired events
             to_remove = []

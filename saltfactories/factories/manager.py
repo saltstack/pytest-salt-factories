@@ -94,14 +94,14 @@ class SaltFactoriesManager(object):
     def get_salt_engines_path():
         return os.path.join(CODE_ROOT_DIR, "utils", "salt", "engines")
 
-    @staticmethod
-    def get_salt_returner_paths():
-        return os.path.join(CODE_ROOT_DIR, "utils", "salt", "returner")
-
     def final_minion_config_tweaks(self, config):
         self.final_common_config_tweaks(config, "minion")
 
     def final_master_config_tweaks(self, config):
+        pytest_key = "pytest-master"
+        if pytest_key not in config:
+            config[pytest_key] = {}
+        config[pytest_key]["returner_address"] = self.event_listener.address
         self.final_common_config_tweaks(config, "master")
 
     def final_syndic_config_tweaks(self, config):
@@ -124,23 +124,6 @@ class SaltFactoriesManager(object):
             if "log_handlers_dirs" not in config:
                 config["log_handlers_dirs"] = []
             config["log_handlers_dirs"].insert(0, SaltFactoriesManager.get_salt_log_handlers_path())
-
-        if "returner_dirs" not in config:
-            config["returner_dirs"] = []
-        config["returner_dirs"].insert(0, SaltFactoriesManager.get_salt_returner_paths())
-
-        event_return = ["pytest_returner"]
-        if "event_return" in config:
-            _event_return = config.pop("event_return")
-            if not isinstance(_event_return, list):
-                _event_return = [_event_return]
-            event_return.extend([er.strip() for er in _event_return if er.strip()])
-        if len(event_return) == 1:
-            config["event_return"] = event_return[0]
-        else:
-            config["event_return"] = event_return
-
-        config["pytest_returner_address"] = self.event_listener.address
 
         pytest_key = "pytest-{}".format(role)
         if pytest_key not in config:

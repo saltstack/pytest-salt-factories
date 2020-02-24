@@ -17,10 +17,6 @@ from saltfactories.utils import ports
 
 
 class MinionFactory(object):
-    def __init__(self, tempdir, config):
-        self.tempdir = tempdir
-        self.config = config
-
     @staticmethod
     def default_config(
         factories_root_dir, minion_id, default_options=None, config_overrides=None, master_port=None
@@ -66,13 +62,7 @@ class MinionFactory(object):
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "hash_type": "sha256",
             "transport": "zeromq",
-            "pytest-minion": {
-                "log": {"prefix": "salt-minion({})".format(minion_id)},
-                "engine": {
-                    "port": ports.get_unused_localhost_port(),
-                    "stop_sending_events_file": stop_sending_events_file,
-                },
-            },
+            "pytest-minion": {"log": {"prefix": "salt-minion({})".format(minion_id)},},
         }
         # Merge in the initial default options with the internal _default_options
         dictupdate.update(default_options, _default_options, merge_lists=True)
