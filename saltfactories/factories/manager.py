@@ -91,6 +91,10 @@ class SaltFactoriesManager(object):
         return os.path.join(CODE_ROOT_DIR, "utils", "salt", "log_handlers")
 
     @staticmethod
+    def get_salt_engines_path():
+        return os.path.join(CODE_ROOT_DIR, "utils", "salt", "engines")
+
+    @staticmethod
     def get_salt_returner_paths():
         return os.path.join(CODE_ROOT_DIR, "utils", "salt", "returner")
 
@@ -107,6 +111,13 @@ class SaltFactoriesManager(object):
         self.final_common_config_tweaks(config, "minion")
 
     def final_common_config_tweaks(self, config, role):
+        config.setdefault("engines", [])
+        if "pytest" not in config["engines"]:
+            config["engines"].append("pytest")
+
+        if "engines_dirs" not in config:
+            config["engines_dirs"] = []
+        config["engines_dirs"].insert(0, SaltFactoriesManager.get_salt_engines_path())
         config["user"] = SaltFactoriesManager.get_running_username()
         if "log_forwarding_consumer" not in config:
             # Still using old logging, let's add our custom log handler

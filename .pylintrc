@@ -115,8 +115,7 @@ disable=R,
   un-indexed-curly-braces-error,
   un-indexed-curly-braces-warning,
   import-outside-toplevel,
-  wrong-import-position,
-  missing-whitespace-after-comma
+  wrong-import-position
 
 # Disabled:
 # R* [refactoring suggestions & reports]

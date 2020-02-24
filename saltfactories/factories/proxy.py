@@ -75,7 +75,13 @@ class ProxyMinionFactory(object):
             "transport": "zeromq",
             "add_proxymodule_to_opts": False,
             "proxy": {"proxytype": "dummy"},
-            "pytest-minion": {"log": {"prefix": "salt-proxy({})".format(proxy_minion_id)},},
+            "pytest-minion": {
+                "log": {"prefix": "salt-proxy({})".format(proxy_minion_id)},
+                "engine": {
+                    "port": ports.get_unused_localhost_port(),
+                    "stop_sending_events_file": stop_sending_events_file,
+                },
+            },
         }
         # Merge in the initial default options with the internal _default_options
         dictupdate.update(default_options, _default_options, merge_lists=True)
