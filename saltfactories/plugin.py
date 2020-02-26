@@ -21,6 +21,7 @@ import salt.loader  # pylint: disable=unused-import
 import salt.utils.verify as salt_verify
 import salt.utils.yaml as yamlserialize
 
+import saltfactories
 from saltfactories import hookspec
 from saltfactories.factories import manager
 from saltfactories.utils import compat
@@ -96,9 +97,26 @@ def log_server(log_server_port):
 
 
 @pytest.fixture(scope="session")
-def salt_factories(pytestconfig, tempdir, log_server, log_server_port, log_server_level):
+def salt_factories_config(pytestconfig, tempdir, log_server, log_server_port, log_server_level):
+    """
+    Return a dictionary with the keyworkd arguments for SaltFactoriesManager
+    """
+    return {
+        "executable": sys.executable,
+        "code_dir": saltfactories.CODE_ROOT_DIR,
+        "inject_coverage": True,
+        "inject_sitecustomize": True,
+    }
+
+
+@pytest.fixture(scope="session")
+def salt_factories(
+    pytestconfig, tempdir, log_server, log_server_port, log_server_level, salt_factories_config
+):
+    if not isinstance(salt_factories_config, dict):
+        raise RuntimeError("The 'salt_factories_config' fixture MUST return a dictionary")
     _manager = manager.SaltFactoriesManager(
-        pytestconfig, tempdir, log_server_port, log_server_level
+        pytestconfig, tempdir, log_server_port, log_server_level, **salt_factories_config
     )
     yield _manager
     _manager.event_listener.stop()

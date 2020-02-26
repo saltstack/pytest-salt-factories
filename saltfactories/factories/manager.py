@@ -12,6 +12,7 @@ from __future__ import unicode_literals
 import os
 import sys
 
+import saltfactories
 from saltfactories.factories import master
 from saltfactories.factories import minion
 from saltfactories.factories import proxy
@@ -19,10 +20,6 @@ from saltfactories.factories import syndic
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import event_listener
 from saltfactories.utils import processes
-
-
-CODE_ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-IS_WINDOWS = sys.platform.startswith("win")
 
 
 class SaltFactoriesManager(object):
@@ -74,7 +71,7 @@ class SaltFactoriesManager(object):
         try:
             return SaltFactoriesManager.get_running_username.__username__
         except AttributeError:
-            if IS_WINDOWS:
+            if saltfactories.IS_WINDOWS:
                 import win32api
 
                 SaltFactoriesManager.get_running_username.__username__ = win32api.GetUserName()
@@ -88,11 +85,11 @@ class SaltFactoriesManager(object):
 
     @staticmethod
     def get_salt_log_handlers_path():
-        return os.path.join(CODE_ROOT_DIR, "utils", "salt", "log_handlers")
+        return os.path.join(saltfactories.CODE_ROOT_DIR, "utils", "salt", "log_handlers")
 
     @staticmethod
     def get_salt_engines_path():
-        return os.path.join(CODE_ROOT_DIR, "utils", "salt", "engines")
+        return os.path.join(saltfactories.CODE_ROOT_DIR, "utils", "salt", "engines")
 
     def final_minion_config_tweaks(self, config):
         self.final_common_config_tweaks(config, "minion")
