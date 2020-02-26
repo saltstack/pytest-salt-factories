@@ -1,5 +1,5 @@
 pytest >=4.6.6,<4.7; python_version < "3.0"   # PyTest 4.6.x are the last Py2 and Py3 releases
-pytest >= 5.3.4; python_version > "3.0"
+pytest >=4.6.6; python_version > "3.0"
 pytest-tempdir >= 2019.9.16
 psutil
 six
