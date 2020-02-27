@@ -34,7 +34,7 @@ from saltfactories.exceptions import ProcessTimeout
 from saltfactories.utils import compat
 from saltfactories.utils import ports
 
-salt_utils_path = lazy_import.lazy_module("salt.utils.path")
+salt_utils_path = lazy_import.lazy_module(str("salt.utils.path"))
 
 log = logging.getLogger(__name__)
 

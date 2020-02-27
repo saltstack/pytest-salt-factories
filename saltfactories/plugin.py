@@ -28,10 +28,10 @@ from saltfactories.utils.log_server import log_server_listener
 log = logging.getLogger(__name__)
 
 
-salt_config = lazy_import.lazy_module("salt.config")
-salt_utils_files = lazy_import.lazy_module("salt.utils.files")
-salt_utils_verify = lazy_import.lazy_module("salt.utils.verify")
-salt_utils_yaml = lazy_import.lazy_module("salt.utils.yaml")
+salt_config = lazy_import.lazy_module(str("salt.config"))
+salt_utils_files = lazy_import.lazy_module(str("salt.utils.files"))
+salt_utils_verify = lazy_import.lazy_module(str("salt.utils.verify"))
+salt_utils_yaml = lazy_import.lazy_module(str("salt.utils.yaml"))
 
 
 def pytest_addhooks(pluginmanager):

@@ -13,9 +13,9 @@ import lazy_import
 
 from saltfactories.utils import ports
 
-salt_config = lazy_import.lazy_module("salt.config")
-salt_utils_files = lazy_import.lazy_module("salt.utils.files")
-salt_utils_dictupdate = lazy_import.lazy_module("salt.utils.dictupdate")
+salt_config = lazy_import.lazy_module(str("salt.config"))
+salt_utils_files = lazy_import.lazy_module(str("salt.utils.files"))
+salt_utils_dictupdate = lazy_import.lazy_module(str("salt.utils.dictupdate"))
 
 
 class MasterFactory(object):

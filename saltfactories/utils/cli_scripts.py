@@ -17,7 +17,7 @@ import textwrap
 
 import lazy_import
 
-salt_utils_files = lazy_import.lazy_module("salt.utils.files")
+salt_utils_files = lazy_import.lazy_module(str("salt.utils.files"))
 
 log = logging.getLogger(__name__)
 
