@@ -116,6 +116,7 @@ disable=R,
   un-indexed-curly-braces-warning,
   import-outside-toplevel,
   wrong-import-position,
+  wrong-import-order,
   missing-whitespace-after-comma
 
 # Disabled:

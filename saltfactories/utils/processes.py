@@ -24,6 +24,7 @@ import weakref
 from collections import namedtuple
 from operator import itemgetter
 
+import lazy_import
 import psutil
 import pytest
 import six
@@ -33,21 +34,9 @@ from saltfactories.exceptions import ProcessTimeout
 from saltfactories.utils import compat
 from saltfactories.utils import ports
 
-
-try:
-    import setproctitle
-
-    HAS_SETPROCTITLE = True
-except ImportError:
-    HAS_SETPROCTITLE = False
+salt_utils_path = lazy_import.lazy_module("salt.utils.path")
 
 log = logging.getLogger(__name__)
-
-
-def set_proc_title(title):
-    if HAS_SETPROCTITLE is False:
-        return
-    setproctitle.setproctitle("[{}] - {}".format(title, setproctitle.getproctitle()))
 
 
 def collect_child_processes(pid):
@@ -469,7 +458,7 @@ class FactoryProcess(object):
         if os.path.isabs(self.cli_script_name):
             script_path = self.cli_script_name
         else:
-            script_path = compat.which(self.cli_script_name)
+            script_path = salt_utils_path.which(self.cli_script_name)
         if not os.path.exists(script_path):
             pytest.fail("The CLI script {!r} does not exist".format(script_path))
         return script_path

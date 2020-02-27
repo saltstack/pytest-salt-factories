@@ -9,11 +9,13 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import salt.config
-import salt.utils.dictupdate as dictupdate
+import lazy_import
 
-from saltfactories.utils import compat
 from saltfactories.utils import ports
+
+salt_config = lazy_import.lazy_module("salt.config")
+salt_utils_files = lazy_import.lazy_module("salt.utils.files")
+salt_utils_dictupdate = lazy_import.lazy_module("salt.utils.dictupdate")
 
 
 class MinionFactory(object):
@@ -22,7 +24,7 @@ class MinionFactory(object):
         factories_root_dir, minion_id, default_options=None, config_overrides=None, master_port=None
     ):
         if default_options is None:
-            default_options = salt.config.DEFAULT_MINION_OPTS.copy()
+            default_options = salt_config.DEFAULT_MINION_OPTS.copy()
 
         counter = 1
         root_dir = factories_root_dir.join(minion_id)
@@ -37,7 +39,7 @@ class MinionFactory(object):
         conf_file = conf_dir.join("minion").strpath
 
         stop_sending_events_file = conf_dir.join("stop-sending-events-{}".format(minion_id)).strpath
-        with compat.fopen(stop_sending_events_file, "w") as wfh:
+        with salt_utils_files.fopen(stop_sending_events_file, "w") as wfh:
             wfh.write("")
 
         _default_options = {
@@ -65,10 +67,10 @@ class MinionFactory(object):
             "pytest-minion": {"log": {"prefix": "salt-minion({})".format(minion_id)},},
         }
         # Merge in the initial default options with the internal _default_options
-        dictupdate.update(default_options, _default_options, merge_lists=True)
+        salt_utils_dictupdate.update(default_options, _default_options, merge_lists=True)
 
         if config_overrides:
             # Merge in the default options with the minion_config_overrides
-            dictupdate.update(default_options, config_overrides, merge_lists=True)
+            salt_utils_dictupdate.update(default_options, config_overrides, merge_lists=True)
 
         return default_options

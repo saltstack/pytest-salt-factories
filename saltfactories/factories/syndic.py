@@ -9,11 +9,13 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import salt.config
-import salt.utils.dictupdate as dictupdate
+import lazy_import
 
-from saltfactories.utils import compat
 from saltfactories.utils import ports
+
+salt_config = lazy_import.lazy_module("salt.config")
+salt_utils_files = lazy_import.lazy_module("salt.utils.files")
+salt_utils_dictupdate = lazy_import.lazy_module("salt.utils.dictupdate")
 
 
 class SyndicFactory(object):
@@ -28,7 +30,7 @@ class SyndicFactory(object):
     ):
 
         if default_options is None:
-            # default_options = {"syndic": salt.config.syndic_config(None, None)}
+            # default_options = {"syndic": salt_config.syndic_config(None, None)}
             # We don't really want the whole default config dictionary
             default_options = {"syndic": {}}
 
@@ -67,7 +69,7 @@ class SyndicFactory(object):
         stop_sending_events_file = conf_dir.join(
             "stop-sending-events-{}-syndic".format(syndic_id)
         ).strpath
-        with compat.fopen(stop_sending_events_file, "w") as wfh:
+        with salt_utils_files.fopen(stop_sending_events_file, "w") as wfh:
             wfh.write("")
 
         _default_options = {
@@ -84,11 +86,13 @@ class SyndicFactory(object):
             "pytest-syndic": {"log": {"prefix": "salt-syndic({})".format(syndic_id)},},
         }
         # Merge in the initial default options with the internal _default_options
-        dictupdate.update(default_options.get("syndic"), _default_options, merge_lists=True)
+        salt_utils_dictupdate.update(
+            default_options.get("syndic"), _default_options, merge_lists=True
+        )
 
         if config_overrides.get("syndic"):
             # Merge in the default options with the syndic_config_overrides
-            dictupdate.update(
+            salt_utils_dictupdate.update(
                 default_options.get("syndic"), config_overrides.get("syndic"), merge_lists=True
             )
 
@@ -103,7 +107,7 @@ class SyndicFactory(object):
         root_dir, conf_dir, minion_id, default_options=None, config_overrides=None, master_port=None
     ):
         if default_options is None:
-            default_options = salt.config.DEFAULT_MINION_OPTS.copy()
+            default_options = salt_config.DEFAULT_MINION_OPTS.copy()
             default_options = {}
 
         conf_file = conf_dir.join("minion").strpath
@@ -111,7 +115,7 @@ class SyndicFactory(object):
         stop_sending_events_file = conf_dir.join(
             "stop-sending-events-{}-minion".format(minion_id)
         ).strpath
-        with compat.fopen(stop_sending_events_file, "w") as wfh:
+        with salt_utils_files.fopen(stop_sending_events_file, "w") as wfh:
             wfh.write("")
 
         _default_options = {
@@ -140,11 +144,11 @@ class SyndicFactory(object):
             "pytest-minion": {"log": {"prefix": "salt-minion({})".format(minion_id)},},
         }
         # Merge in the initial default options with the internal _default_options
-        dictupdate.update(default_options, _default_options, merge_lists=True)
+        salt_utils_dictupdate.update(default_options, _default_options, merge_lists=True)
 
         if config_overrides:
             # Merge in the default options with the minion_config_overrides
-            dictupdate.update(default_options, config_overrides, merge_lists=True)
+            salt_utils_dictupdate.update(default_options, config_overrides, merge_lists=True)
 
         return default_options
 
@@ -153,7 +157,7 @@ class SyndicFactory(object):
         root_dir, conf_dir, master_id, default_options=None, config_overrides=None,
     ):
         if default_options is None:
-            default_options = salt.config.DEFAULT_MASTER_OPTS.copy()
+            default_options = salt_config.DEFAULT_MASTER_OPTS.copy()
             default_options = {}
 
         conf_file = conf_dir.join("master").strpath
@@ -167,7 +171,7 @@ class SyndicFactory(object):
         stop_sending_events_file = conf_dir.join(
             "stop-sending-events-{}-master".format(master_id)
         ).strpath
-        with compat.fopen(stop_sending_events_file, "w") as wfh:
+        with salt_utils_files.fopen(stop_sending_events_file, "w") as wfh:
             wfh.write("")
 
         _default_options = {
@@ -210,11 +214,11 @@ class SyndicFactory(object):
             "pytest-master": {"log": {"prefix": "salt-master({})".format(master_id)},},
         }
         # Merge in the initial default options with the internal _default_options
-        dictupdate.update(default_options, _default_options, merge_lists=True)
+        salt_utils_dictupdate.update(default_options, _default_options, merge_lists=True)
 
         if config_overrides:
             # Merge in the default options with the master_config_overrides
-            dictupdate.update(default_options, config_overrides, merge_lists=True)
+            salt_utils_dictupdate.update(default_options, config_overrides, merge_lists=True)
 
         # Remove syndic related options
         for key in list(default_options):
