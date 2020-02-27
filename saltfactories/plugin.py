@@ -58,6 +58,32 @@ def pytest_tempdir_basename():
     return "saltfactories"
 
 
+def pytest_runtest_logstart(nodeid):
+    """
+    signal the start of running a single test item.
+
+    This hook will be called **before** :func:`pytest_runtest_setup`, :func:`pytest_runtest_call` and
+    :func:`pytest_runtest_teardown` hooks.
+
+    :param str nodeid: full id of the item
+    :param location: a triple of ``(filename, linenum, testname)``
+    """
+    log.debug(">>>>> START >>>>> %s", nodeid)
+
+
+def pytest_runtest_logfinish(nodeid):
+    """
+    signal the complete finish of running a single test item.
+
+    This hook will be called **after** :func:`pytest_runtest_setup`, :func:`pytest_runtest_call` and
+    :func:`pytest_runtest_teardown` hooks.
+
+    :param str nodeid: full id of the item
+    :param location: a triple of ``(filename, linenum, testname)``
+    """
+    log.debug("<<<<< END <<<<<<< %s", nodeid)
+
+
 @pytest.fixture(scope="session")
 def log_server_port(request):
     return ports.get_unused_localhost_port()
