@@ -684,11 +684,24 @@ class FactoryDaemonScriptBase(FactoryProcess):
             return super(FactoryDaemonScriptBase, self).__repr__()
 
 
-class SaltScriptBase(FactoryPythonScriptBase):
+class SaltConfigMixin(object):
+    @property
+    def config_dir(self):
+        if "conf_file" in self.config:
+            return os.path.dirname(self.config["conf_file"])
+
+    @property
+    def config_file(self):
+        if "conf_file" in self.config:
+            return self.config["conf_file"]
+
+
+class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
     def get_base_script_args(self):
         script_args = super(SaltScriptBase, self).get_base_script_args()
-        if "conf_file" in self.config:
-            script_args.extend(["-c", os.path.dirname(self.config["conf_file"])])
+        config_dir = self.config_dir
+        if config_dir:
+            script_args.extend(["-c", config_dir])
         script_args.append("--log-level=quiet")
         script_args.append("--out=json")
         return script_args
@@ -715,11 +728,12 @@ class SaltScriptBase(FactoryPythonScriptBase):
         return proc_args
 
 
-class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase):
+class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase, SaltConfigMixin):
     def get_base_script_args(self):
         script_args = super(SaltDaemonScriptBase, self).get_base_script_args()
-        if "conf_file" in self.config:
-            script_args.extend(["-c", os.path.dirname(self.config["conf_file"])])
+        config_dir = self.config_dir
+        if config_dir:
+            script_args.extend(["-c", config_dir])
         script_args.append("--log-level=quiet")
         return script_args
 
