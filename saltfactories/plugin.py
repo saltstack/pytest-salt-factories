@@ -206,6 +206,7 @@ def pytest_saltfactories_verify_master_configuration(request, master_config, use
         os.path.join(master_config["pki_dir"], "pending"),
         os.path.dirname(master_config["log_file"]),
         os.path.join(master_config["cachedir"], "proc"),
+        os.path.join(master_config["cachedir"], "jobs"),
         # master_config['extension_modules'],
         master_config["sock_dir"],
     ]
@@ -214,10 +215,6 @@ def pytest_saltfactories_verify_master_configuration(request, master_config, use
     verify_env_entries += master_config["pillar_roots"]["base"]
     verify_env_entries += master_config["pillar_roots"]["prod"]
 
-    if master_config.get("transport", None) == "raet":
-        verify_env_entries.extend([os.path.join(master_config["cachedir"], "raet")])
-    else:
-        verify_env_entries.extend([os.path.join(master_config["cachedir"], "jobs")])
     salt_verify.verify_env(verify_env_entries, username, pki_dir=master_config["pki_dir"])
 
 
