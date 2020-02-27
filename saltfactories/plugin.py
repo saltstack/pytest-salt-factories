@@ -16,10 +16,15 @@ import sys
 import tempfile
 
 import pytest
+import salt.config
+import salt.loader  # pylint: disable=unused-import
+import salt.utils.verify as salt_verify
+import salt.utils.yaml as yamlserialize
 
 import saltfactories
 from saltfactories import hookspec
 from saltfactories.factories import manager
+from saltfactories.utils import compat
 from saltfactories.utils import ports
 from saltfactories.utils.log_server import log_server_listener
 
@@ -147,9 +152,6 @@ def pytest_saltfactories_verify_minion_configuration(request, minion_config, use
     """
     This hook is called to vefiry the provided minion configuration
     """
-    # Late import
-    import salt.utils.verify as salt_verify
-
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -171,11 +173,6 @@ def pytest_saltfactories_write_minion_configuration(request, minion_config):
     """
     This hook is called to vefiry the provided minion configuration
     """
-    # Late import
-    import salt.config
-    import salt.utils.yaml as yamlserialize
-    from saltfactories.utils import compat
-
     config_file = minion_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",
@@ -198,9 +195,6 @@ def pytest_saltfactories_verify_master_configuration(request, master_config, use
     """
     This hook is called to vefiry the provided master configuration
     """
-    # Late import
-    import salt.utils.verify as salt_verify
-
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -228,11 +222,6 @@ def pytest_saltfactories_write_master_configuration(request, master_config):
     """
     This hook is called to vefiry the provided master configuration
     """
-    # Late import
-    import salt.config
-    import salt.utils.yaml as yamlserialize
-    from saltfactories.utils import compat
-
     config_file = master_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",
@@ -253,9 +242,6 @@ def pytest_saltfactories_verify_syndic_configuration(request, syndic_config, use
     """
     This hook is called to vefiry the provided syndic configuration
     """
-    # Late import
-    import salt.utils.verify as salt_verify
-
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -270,11 +256,6 @@ def pytest_saltfactories_write_syndic_configuration(request, syndic_config):
     """
     This hook is called to vefiry the provided syndic configuration
     """
-    # Late import
-    import salt.config
-    import salt.utils.yaml as yamlserialize
-    from saltfactories.utils import compat
-
     config_file = syndic_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",
@@ -299,9 +280,6 @@ def pytest_saltfactories_verify_proxy_minion_configuration(request, proxy_minion
     """
     This hook is called to vefiry the provided proxy_minion configuration
     """
-    # Late import
-    import salt.utils.verify as salt_verify
-
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -316,11 +294,6 @@ def pytest_saltfactories_write_proxy_minion_configuration(request, proxy_minion_
     """
     This hook is called to vefiry the provided proxy_minion configuration
     """
-    # Late import
-    import salt.config
-    import salt.utils.yaml as yamlserialize
-    from saltfactories.utils import compat
-
     config_file = proxy_minion_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",

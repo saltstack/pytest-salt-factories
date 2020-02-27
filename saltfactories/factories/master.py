@@ -9,6 +9,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import salt.config
+import salt.utils.dictupdate as dictupdate
+
+from saltfactories.utils import compat
 from saltfactories.utils import ports
 
 
@@ -21,12 +25,6 @@ class MasterFactory(object):
         config_overrides=None,
         order_masters=False,
     ):
-
-        # Late import
-        import salt.config
-        import salt.utils.dictupdate as dictupdate
-        from saltfactories.utils import compat
-
         if default_options is None:
             default_options = salt.config.DEFAULT_MASTER_OPTS.copy()
 

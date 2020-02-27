@@ -9,6 +9,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import salt.config
+import salt.utils.dictupdate as dictupdate
+
+from saltfactories.utils import compat
 from saltfactories.utils import ports
 
 
@@ -17,12 +21,6 @@ class MinionFactory(object):
     def default_config(
         factories_root_dir, minion_id, default_options=None, config_overrides=None, master_port=None
     ):
-
-        # Late import
-        import salt.config
-        import salt.utils.dictupdate as dictupdate
-        from saltfactories.utils import compat
-
         if default_options is None:
             default_options = salt.config.DEFAULT_MINION_OPTS.copy()
 

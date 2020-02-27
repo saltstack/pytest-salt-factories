@@ -30,6 +30,7 @@ import six
 
 from saltfactories.exceptions import ProcessNotStarted
 from saltfactories.exceptions import ProcessTimeout
+from saltfactories.utils import compat
 from saltfactories.utils import ports
 
 
@@ -350,10 +351,6 @@ class Popen(subprocess.Popen):
         super(Popen, self).__init__(*args, **kwargs)
         self.__stdout = stdout
         self.__stderr = stderr
-
-        # Deferred import
-        from saltfactories.utils import compat
-
         compat.weakref.finalize(self, stdout.close)
         compat.weakref.finalize(self, stderr.close)
 
@@ -469,9 +466,6 @@ class FactoryProcess(object):
         """
         Returns the path to the script to run
         """
-        # Deferred import
-        from saltfactories.utils import compat
-
         if os.path.isabs(self.cli_script_name):
             script_path = self.cli_script_name
         else:
