@@ -14,6 +14,7 @@ import sys
 
 import pytest
 
+from saltfactories.exceptions import ProcessTimeout
 from saltfactories.utils.processes import FactoryScriptBase
 
 
@@ -35,10 +36,7 @@ def test_exitcode(exitcode, tempfiles):
 
 
 def test_timeout_defined_on_class_instantiation(tempfiles):
-    def raise_exception(msg):
-        raise RuntimeError(msg)
-
-    shell = FactoryScriptBase(sys.executable, default_timeout=0.5, fail_callable=raise_exception)
+    shell = FactoryScriptBase(sys.executable, default_timeout=0.5)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -47,15 +45,12 @@ def test_timeout_defined_on_class_instantiation(tempfiles):
         exit(0)
         """
     )
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ProcessTimeout):
         shell.run(script)
 
 
 def test_timeout_defined_run(tempfiles):
-    def raise_exception(msg):
-        raise RuntimeError(msg)
-
-    shell = FactoryScriptBase(sys.executable, fail_callable=raise_exception)
+    shell = FactoryScriptBase(sys.executable)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -75,7 +70,7 @@ def test_timeout_defined_run(tempfiles):
         exit(0)
         """
     )
-    with pytest.raises(RuntimeError):
+    with pytest.raises(ProcessTimeout):
         shell.run(script, _timeout=0.1)
 
 

@@ -35,7 +35,6 @@ class SaltFactoriesManager(object):
         inject_sitecustomize=False,
         cwd=None,
         environ=None,
-        fail_callable=None,
         slow_stop=True,
         start_timeout=10,
     ):
@@ -49,7 +48,6 @@ class SaltFactoriesManager(object):
         self.inject_sitecustomize = inject_sitecustomize
         self.cwd = cwd
         self.environ = environ
-        self.fail_callable = fail_callable
         self.slow_stop = slow_stop
         self.start_timeout = start_timeout
         self.scripts_dir = root_dir.join("scripts").ensure(dir=True).strpath
@@ -199,7 +197,6 @@ class SaltFactoriesManager(object):
             minion_config,
             script_path,
             processes.SaltMinion,
-            fail_callable=self.fail_callable,
             # start_timeout=self.start_timeout,
             start_timeout=20,
             slow_stop=self.slow_stop,
@@ -287,7 +284,6 @@ class SaltFactoriesManager(object):
             master_config,
             script_path,
             processes.SaltMaster,
-            fail_callable=self.fail_callable,
             start_timeout=self.start_timeout,
             slow_stop=self.slow_stop,
             environ=self.environ,
@@ -421,7 +417,6 @@ class SaltFactoriesManager(object):
             syndic_config,
             script_path,
             processes.SaltSyndic,
-            fail_callable=self.fail_callable,
             start_timeout=self.start_timeout,
             slow_stop=self.slow_stop,
             environ=self.environ,
@@ -505,7 +500,6 @@ class SaltFactoriesManager(object):
             proxy_minion_config,
             script_path,
             processes.SaltProxyMinion,
-            fail_callable=self.fail_callable,
             # start_timeout=self.start_timeout,
             start_timeout=20,
             slow_stop=self.slow_stop,

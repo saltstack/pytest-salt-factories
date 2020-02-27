@@ -19,7 +19,6 @@ import signal
 import subprocess
 import sys
 import tempfile
-import threading
 import time
 import weakref
 from collections import namedtuple
@@ -29,6 +28,8 @@ import psutil
 import pytest
 import six
 
+from saltfactories.exceptions import ProcessNotStarted
+from saltfactories.exceptions import ProcessTimeout
 from saltfactories.utils import compat
 from saltfactories.utils import ports
 
@@ -225,7 +226,6 @@ def start_daemon(
     config,
     cli_script_name,
     daemon_class,
-    fail_callable=None,
     start_timeout=10,
     slow_stop=True,
     environ=None,
@@ -242,9 +242,6 @@ def start_daemon(
     if sys.platform.startswith("win"):
         # Double the start timeout on windows
         start_timeout = start_timeout * 2
-
-    if fail_callable is None:
-        fail_callable = pytest.fail
 
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
         attempts += 1
@@ -289,12 +286,12 @@ def start_daemon(
                 if connectable is False:
                     result = process.terminate()
                     if attempts >= max_attempts:
-                        fail_callable(
-                            "{}The {!r} has failed to confirm running status after {} attempts.\n"
-                            "Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
-                            ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                                log_prefix, process, attempts, result.stdout, result.stderr,
-                            )
+                        raise ProcessNotStarted(
+                            "{}The {!r} has failed to confirm running status after {} attempts".format(
+                                log_prefix, process, attempts
+                            ),
+                            stdout=result.stdout,
+                            stderr=result.stderr,
                         )
                     continue
             except Exception as exc:  # pylint: disable=broad-except
@@ -303,39 +300,37 @@ def start_daemon(
                 )
                 result = process.terminate()
                 if attempts >= max_attempts:
-                    fail_callable(
+                    raise ProcessNotStarted(
                         "{}The {!r} has failed to confirm running status after {} attempts and raised an "
-                        "exception: {}.\n"
-                        "Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
-                        ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                            log_prefix, process, attempts, str(exc), result.stdout, result.stderr,
-                        )
+                        "exception: {}.".format(log_prefix, process, attempts, str(exc)),
+                        stdout=result.stdout,
+                        stderr=result.stderr,
+                        exc=sys.exc_info(),
                     )
-                    return
                 continue
             # A little breathing before returning the process
-            time.sleep(0.5)
+            time.sleep(0.125)
             log.info("%sThe %r is running after %d attempts", log_prefix, process, attempts)
             break
         else:
             process.terminate()
+            # A little pause before retrying
             time.sleep(1)
             continue
     else:
         if process is not None:
             result = process.terminate()
-            fail_callable(
-                "{}The {!r} has failed to confirm running status after {} attempts.\n"
-                "Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
-                ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                    log_prefix, process, attempts, result.stdout, result.stderr
-                )
+            raise ProcessNotStarted(
+                "{}The {!r} has failed to confirm running status after {} attempts.".format(
+                    log_prefix, process, attempts
+                ),
+                stdout=result.stdout,
+                stderr=result.stderr,
             )
-            return
-        fail_callable(
-            "{}The {!r} has failed to start after {} attempts".format(
-                log_prefix, process, max_attempts
-            )
+        raise ProcessNotStarted(
+            "{}The {!r} has failed to confirm running status after {} attempts.".format(
+                log_prefix, process, attempts
+            ),
         )
     return process
 
@@ -442,7 +437,6 @@ class FactoryProcess(object):
         slow_stop=True,
         environ=None,
         cwd=None,
-        fail_callable=None,
         base_script_args=None,
     ):
         self.cli_script_name = cli_script_name
@@ -464,7 +458,6 @@ class FactoryProcess(object):
         # Don't write .pyc files or create them in __pycache__ directories
         self.environ.setdefault(str("PYTHONDONTWRITEBYTECODE"), str("1"))
         self.cwd = cwd or os.getcwd()
-        self.fail_callable = fail_callable or pytest.fail
         self._terminal = None
         self._children = []
         self._base_script_args = base_script_args
@@ -495,6 +488,14 @@ class FactoryProcess(object):
         """
         return []
 
+    def build_cmdline(self, *args, **kwargs):
+        return (
+            [self.get_script_path()]
+            + self.get_base_script_args()
+            + self.get_script_args()
+            + list(args)
+        )
+
     def init_terminal(self, cmdline, **kwargs):
         """
         Instantiate a terminal with the passed cmdline and kwargs and return it.
@@ -504,6 +505,8 @@ class FactoryProcess(object):
         terminal
         """
         self._terminal = Popen(cmdline, **kwargs)
+        # A little sleep to allow the subprocess to start
+        time.sleep(0.125)
         for child in psutil.Process(self._terminal.pid).children(recursive=True):
             if child not in self._children:
                 self._children.append(child)
@@ -517,7 +520,7 @@ class FactoryProcess(object):
         if self._terminal is None:
             return
         # Allow some time to get all output from process
-        time.sleep(0.25)
+        time.sleep(0.125)
         log.info("%sStopping %s", self.log_prefix, self.__class__.__name__)
         # Collect any child processes information before terminating the process
         try:
@@ -541,12 +544,16 @@ class FactoryProcess(object):
         try:
             log_message = "{}Terminated {}.".format(self.log_prefix, self.__class__.__name__)
             if stdout or stderr:
-                log_message += (
-                    " Process Output:\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
-                    ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                        stdout.strip() if stdout else "", stderr.strip() if stderr else ""
+                log_message += " Process Output:"
+                if stdout:
+                    log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(
+                        stdout.strip()
                     )
-                )
+                if stderr:
+                    log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(
+                        stderr.strip()
+                    )
+                log_message += "\n"
             log.info(log_message)
             return ProcessResult(self._terminal.returncode, stdout, stderr)
         finally:
@@ -574,20 +581,11 @@ class FactoryScriptBase(FactoryProcess):
         super(FactoryScriptBase, self).__init__(*args, **kwargs)
         self.default_timeout = default_timeout
 
-    def build_cmdline(self, *args):
-        return (
-            [self.get_script_path()]
-            + self.get_base_script_args()
-            + self.get_script_args()
-            + list(args)
-        )
-
     def run(self, *args, **kwargs):
         """
         Run the given command synchronously
         """
         timeout = kwargs.pop("_timeout", None) or self.default_timeout
-        fail_callable = kwargs.pop("_fail_callable", None) or self.fail_callable
         timeout_expire = time.time() + timeout
 
         # Build the cmdline to pass to the terminal
@@ -607,12 +605,12 @@ class FactoryScriptBase(FactoryProcess):
 
         result = self.terminate()
         if timmed_out:
-            fail_callable(
-                "{}Failed to run: {}; Error: Timed out after {} seconds!\n"
-                ">>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<\n"
-                ">>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<\n".format(
-                    self.log_prefix, proc_args, timeout, result.stdout, result.stderr,
-                )
+            raise ProcessTimeout(
+                "{}Failed to run: {}; Error: Timed out after {} seconds!".format(
+                    self.log_prefix, proc_args, timeout
+                ),
+                stdout=result.stdout,
+                stderr=result.stderr,
             )
 
         exitcode = result.exitcode
@@ -636,26 +634,27 @@ class FactoryScriptBase(FactoryProcess):
 
 
 class FactoryPythonScriptBase(FactoryScriptBase):
-    def build_cmdline(self, *args):
-        proc_args = super(FactoryPythonScriptBase, self).build_cmdline(*args)
-        if sys.platform.startswith("win") and proc_args[0] != sys.executable:
-            # Windows needs the python executable to come first
-            proc_args.insert(0, sys.executable)
+    def __init__(self, *args, **kwargs):
+        python_executable = kwargs.pop("python_executable", None)
+        super(FactoryPythonScriptBase, self).__init__(*args, **kwargs)
+        self.python_executable = python_executable or sys.executable
+
+    def build_cmdline(self, *args, **kwargs):
+        proc_args = super(FactoryPythonScriptBase, self).build_cmdline(*args, **kwargs)
+        if proc_args[0] != self.python_executable:
+            proc_args.insert(0, self.python_executable)
         return proc_args
 
 
 class FactoryDaemonScriptBase(FactoryProcess):
-    def __init__(self, *args, **kwargs):
-        self._process_cli_output_in_thread = kwargs.pop("process_cli_output_in_thread", True)
-        super(FactoryDaemonScriptBase, self).__init__(*args, **kwargs)
-        self._running = threading.Event()
-        self._connectable = threading.Event()
-
     def is_alive(self):
         """
         Returns true if the process is alive
         """
-        return self._running.is_set()
+        terminal = getattr(self, "_terminal", None)
+        if not terminal:
+            return False
+        return terminal.poll() is None
 
     def get_check_ports(self):  # pylint: disable=no-self-use
         """
@@ -668,30 +667,15 @@ class FactoryDaemonScriptBase(FactoryProcess):
         Start the daemon subprocess
         """
         log.info("%sStarting DAEMON %s in CWD: %s", self.log_prefix, self.cli_script_name, self.cwd)
-        proc_args = [self.get_script_path()] + self.get_base_script_args() + self.get_script_args()
+        cmdline = self.build_cmdline()
 
-        if sys.platform.startswith("win") and proc_args[0] != sys.executable:
-            # Windows needs the python executable to come first
-            proc_args.insert(0, sys.executable)
-
-        log.info("%sRunning %r...", self.log_prefix, proc_args)
+        log.info("%sRunning %r...", self.log_prefix, cmdline)
 
         self.init_terminal(
-            proc_args, env=self.environ, cwd=self.cwd,
+            cmdline, env=self.environ, cwd=self.cwd,
         )
-        self._running.set()
         self._children.extend(psutil.Process(self.pid).children(recursive=True))
         return True
-
-    def terminate(self):
-        """
-        Terminate the started daemon
-        """
-        # Let's get the child processes of the started subprocess
-        self._running.clear()
-        self._connectable.clear()
-        time.sleep(0.0125)
-        return super(FactoryDaemonScriptBase, self).terminate()
 
     def __repr__(self):
         try:
@@ -731,7 +715,7 @@ class SaltScriptBase(FactoryPythonScriptBase):
         return proc_args
 
 
-class SaltDaemonScriptBase(FactoryDaemonScriptBase):
+class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase):
     def get_base_script_args(self):
         script_args = super(SaltDaemonScriptBase, self).get_base_script_args()
         if "conf_file" in self.config:
