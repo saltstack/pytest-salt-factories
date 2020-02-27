@@ -388,7 +388,7 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["syndics"].pop(syndic_id))
         return syndic_config
 
-    def spawn_syndic(self, request, syndic_id, master_id=None, master_of_masters_id=None):
+    def spawn_syndic(self, request, syndic_id, master_of_masters_id=None):
         if syndic_id in self.cache["syndics"]:
             raise RuntimeError("A syndic by the ID of '{}' was already spawned".format(syndic_id))
 
