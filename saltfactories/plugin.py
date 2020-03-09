@@ -17,6 +17,17 @@ import tempfile
 
 import pytest
 
+try:
+    import salt.config
+    import salt.utils.files
+    import salt.utils.verify
+    import salt.utils.yaml
+except ImportError:
+    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
+    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
+    # import error, but its safe to pass
+    pass
+
 import saltfactories
 from saltfactories import hookspec
 from saltfactories.factories import manager
@@ -124,7 +135,7 @@ def salt_factories_config(pytestconfig, tempdir, log_server, log_server_port, lo
     """
     return {
         "executable": sys.executable,
-        "code_dir": saltfactories.CODE_ROOT_DIR,
+        "code_dir": os.path.dirname(saltfactories.CODE_ROOT_DIR),
         "inject_coverage": True,
         "inject_sitecustomize": True,
     }
@@ -147,9 +158,6 @@ def pytest_saltfactories_verify_minion_configuration(request, minion_config, use
     """
     This hook is called to vefiry the provided minion configuration
     """
-    # Late Import
-    import salt.utils.verify
-
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -171,12 +179,6 @@ def pytest_saltfactories_write_minion_configuration(request, minion_config):
     """
     This hook is called to vefiry the provided minion configuration
     """
-    # Late Import
-    import salt.config
-    import salt.utils.files
-    import salt.utils.verify
-    import salt.utils.yaml
-
     config_file = minion_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",
@@ -199,9 +201,6 @@ def pytest_saltfactories_verify_master_configuration(request, master_config, use
     """
     This hook is called to vefiry the provided master configuration
     """
-    # Late Import
-    import salt.utils.verify
-
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -229,12 +228,6 @@ def pytest_saltfactories_write_master_configuration(request, master_config):
     """
     This hook is called to vefiry the provided master configuration
     """
-    # Late Import
-    import salt.config
-    import salt.utils.files
-    import salt.utils.verify
-    import salt.utils.yaml
-
     config_file = master_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",
@@ -255,9 +248,6 @@ def pytest_saltfactories_verify_syndic_configuration(request, syndic_config, use
     """
     This hook is called to vefiry the provided syndic configuration
     """
-    # Late Import
-    import salt.utils.verify
-
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -272,12 +262,6 @@ def pytest_saltfactories_write_syndic_configuration(request, syndic_config):
     """
     This hook is called to vefiry the provided syndic configuration
     """
-    # Late Import
-    import salt.config
-    import salt.utils.files
-    import salt.utils.verify
-    import salt.utils.yaml
-
     config_file = syndic_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",
@@ -302,9 +286,6 @@ def pytest_saltfactories_verify_proxy_minion_configuration(request, proxy_minion
     """
     This hook is called to vefiry the provided proxy_minion configuration
     """
-    # Late Import
-    import salt.utils.verify
-
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -321,12 +302,6 @@ def pytest_saltfactories_write_proxy_minion_configuration(request, proxy_minion_
     """
     This hook is called to vefiry the provided proxy_minion configuration
     """
-    # Late Import
-    import salt.config
-    import salt.utils.files
-    import salt.utils.verify
-    import salt.utils.yaml
-
     config_file = proxy_minion_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",

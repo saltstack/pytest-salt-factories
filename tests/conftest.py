@@ -13,8 +13,6 @@ import textwrap
 import pytest
 import salt.version
 
-from saltfactories.factories.manager import SaltFactoriesManager
-
 log = logging.getLogger(__name__)
 
 pytest_plugins = ["pytester"]
@@ -22,21 +20,6 @@ pytest_plugins = ["pytester"]
 
 def pytest_report_header():
     return "salt-version: {}".format(salt.version.__version__)
-
-
-@pytest.fixture(scope="session")
-def salt_factories(pytestconfig, tempdir, log_server, log_server_port, log_server_level):
-    _manager = SaltFactoriesManager(
-        pytestconfig,
-        tempdir,
-        log_server_port,
-        log_server_level,
-        code_dir=os.path.abspath(os.path.dirname(os.path.dirname(__file__))),
-        inject_coverage=True,
-        inject_sitecustomize=True,
-    )
-    yield _manager
-    _manager.event_listener.stop()
 
 
 class Tempfiles:

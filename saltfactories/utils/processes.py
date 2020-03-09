@@ -28,6 +28,14 @@ import psutil
 import pytest
 import six
 
+try:
+    import salt.utils.path
+except ImportError:
+    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
+    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
+    # import error, but its safe to pass
+    pass
+
 from saltfactories.exceptions import ProcessNotStarted
 from saltfactories.exceptions import ProcessTimeout
 from saltfactories.utils import compat
@@ -76,8 +84,6 @@ def _get_cmdline(proc):
             #   File " c: ... \lib\site-packages\psutil\_pswindows.py", line 745, in cmdline
             #     ret = cext.proc_cmdline(self.pid, use_peb=True)
             #   OSError: [WinError 299] Only part of a ReadProcessMemory or WriteProcessMemory request was completed: 'originated from ReadProcessMemory(ProcessParameters)
-
-            # Late import
             cmdline = None
         if not cmdline:
             try:
@@ -452,9 +458,6 @@ class FactoryProcess(object):
         """
         Returns the path to the script to run
         """
-        # Late Import
-        import salt.utils.path
-
         if os.path.isabs(self.cli_script_name):
             script_path = self.cli_script_name
         else:

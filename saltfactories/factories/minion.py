@@ -9,6 +9,16 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+try:
+    import salt.config
+    import salt.utils.files
+    import salt.utils.dictupdate
+except ImportError:
+    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
+    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
+    # import error, but its safe to pass
+    pass
+
 from saltfactories.utils import ports
 
 
@@ -17,11 +27,6 @@ class MinionFactory(object):
     def default_config(
         factories_root_dir, minion_id, default_options=None, config_overrides=None, master_port=None
     ):
-        # Late Import
-        import salt.config
-        import salt.utils.files
-        import salt.utils.dictupdate
-
         if default_options is None:
             default_options = salt.config.DEFAULT_MINION_OPTS.copy()
 
