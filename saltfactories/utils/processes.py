@@ -24,7 +24,6 @@ import weakref
 from collections import namedtuple
 from operator import itemgetter
 
-import lazy_import
 import psutil
 import pytest
 import six
@@ -33,8 +32,6 @@ from saltfactories.exceptions import ProcessNotStarted
 from saltfactories.exceptions import ProcessTimeout
 from saltfactories.utils import compat
 from saltfactories.utils import ports
-
-salt_utils_path = lazy_import.lazy_module(str("salt.utils.path"))
 
 log = logging.getLogger(__name__)
 
@@ -455,10 +452,13 @@ class FactoryProcess(object):
         """
         Returns the path to the script to run
         """
+        # Late Import
+        import salt.utils.path
+
         if os.path.isabs(self.cli_script_name):
             script_path = self.cli_script_name
         else:
-            script_path = salt_utils_path.which(self.cli_script_name)
+            script_path = salt.utils.path.which(self.cli_script_name)
         if not os.path.exists(script_path):
             pytest.fail("The CLI script {!r} does not exist".format(script_path))
         return script_path

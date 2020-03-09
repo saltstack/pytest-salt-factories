@@ -6,4 +6,3 @@ six
 pyzmq
 msgpack>=0.5,!=0.5.5,<1.0.0
 backports.weakref; python_version < "3.0"
-lazy_import

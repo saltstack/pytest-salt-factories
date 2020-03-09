@@ -9,13 +9,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import lazy_import
-
 from saltfactories.utils import ports
-
-salt_config = lazy_import.lazy_module(str("salt.config"))
-salt_utils_files = lazy_import.lazy_module(str("salt.utils.files"))
-salt_utils_dictupdate = lazy_import.lazy_module(str("salt.utils.dictupdate"))
 
 
 class MasterFactory(object):
@@ -27,8 +21,13 @@ class MasterFactory(object):
         config_overrides=None,
         order_masters=False,
     ):
+        # Late Import
+        import salt.config
+        import salt.utils.files
+        import salt.utils.dictupdate
+
         if default_options is None:
-            default_options = salt_config.DEFAULT_MASTER_OPTS.copy()
+            default_options = salt.config.DEFAULT_MASTER_OPTS.copy()
 
         counter = 1
         root_dir = factories_root_dir.join(master_id)
@@ -49,7 +48,7 @@ class MasterFactory(object):
         pillar_tree_root_prod = pillar_tree_root.join("prod").ensure(dir=True).strpath
 
         stop_sending_events_file = conf_dir.join("stop-sending-events-{}".format(master_id)).strpath
-        with salt_utils_files.fopen(stop_sending_events_file, "w") as wfh:
+        with salt.utils.files.fopen(stop_sending_events_file, "w") as wfh:
             wfh.write("")
 
         _default_options = {
@@ -91,10 +90,10 @@ class MasterFactory(object):
             "pytest-master": {"log": {"prefix": "salt-master({})".format(master_id)},},
         }
         # Merge in the initial default options with the internal _default_options
-        salt_utils_dictupdate.update(default_options, _default_options, merge_lists=True)
+        salt.utils.dictupdate.update(default_options, _default_options, merge_lists=True)
 
         if config_overrides:
             # Merge in the default options with the master_config_overrides
-            salt_utils_dictupdate.update(default_options, config_overrides, merge_lists=True)
+            salt.utils.dictupdate.update(default_options, config_overrides, merge_lists=True)
 
         return default_options

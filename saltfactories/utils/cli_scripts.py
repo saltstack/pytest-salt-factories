@@ -15,10 +15,6 @@ import stat
 import sys
 import textwrap
 
-import lazy_import
-
-salt_utils_files = lazy_import.lazy_module(str("salt.utils.files"))
-
 log = logging.getLogger(__name__)
 
 SCRIPT_TEMPLATES = {
@@ -129,6 +125,9 @@ def generate_script(
     """
     Generate script
     """
+    # Late Import
+    import salt.utils.files
+
     if not os.path.isdir(bin_dir):
         os.makedirs(bin_dir)
 
@@ -138,7 +137,7 @@ def generate_script(
     if not os.path.isfile(script_path):
         log.info("Generating %s", script_path)
 
-        with salt_utils_files.fopen(script_path, "w") as sfh:
+        with salt.utils.files.fopen(script_path, "w") as sfh:
             script_template = SCRIPT_TEMPLATES.get(script_name, None)
             if script_template is None:
                 script_template = SCRIPT_TEMPLATES.get("common", None)

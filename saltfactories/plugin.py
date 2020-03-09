@@ -15,7 +15,6 @@ import pprint
 import sys
 import tempfile
 
-import lazy_import
 import pytest
 
 import saltfactories
@@ -26,12 +25,6 @@ from saltfactories.utils.log_server import log_server_listener
 
 
 log = logging.getLogger(__name__)
-
-
-salt_config = lazy_import.lazy_module(str("salt.config"))
-salt_utils_files = lazy_import.lazy_module(str("salt.utils.files"))
-salt_utils_verify = lazy_import.lazy_module(str("salt.utils.verify"))
-salt_utils_yaml = lazy_import.lazy_module(str("salt.utils.yaml"))
 
 
 def pytest_addhooks(pluginmanager):
@@ -154,6 +147,9 @@ def pytest_saltfactories_verify_minion_configuration(request, minion_config, use
     """
     This hook is called to vefiry the provided minion configuration
     """
+    # Late Import
+    import salt.utils.verify
+
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -168,13 +164,19 @@ def pytest_saltfactories_verify_minion_configuration(request, minion_config, use
         # minion_config['extension_modules'],
         minion_config["sock_dir"],
     ]
-    salt_utils_verify.verify_env(verify_env_entries, username, pki_dir=minion_config["pki_dir"])
+    salt.utils.verify.verify_env(verify_env_entries, username, pki_dir=minion_config["pki_dir"])
 
 
 def pytest_saltfactories_write_minion_configuration(request, minion_config):
     """
     This hook is called to vefiry the provided minion configuration
     """
+    # Late Import
+    import salt.config
+    import salt.utils.files
+    import salt.utils.verify
+    import salt.utils.yaml
+
     config_file = minion_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",
@@ -183,11 +185,11 @@ def pytest_saltfactories_write_minion_configuration(request, minion_config):
     )
 
     # Write down the computed configuration into the config file
-    with salt_utils_files.fopen(config_file, "w") as wfh:
-        salt_utils_yaml.safe_dump(minion_config, wfh, default_flow_style=False)
+    with salt.utils.files.fopen(config_file, "w") as wfh:
+        salt.utils.yaml.safe_dump(minion_config, wfh, default_flow_style=False)
 
     # Make sure to load the config file as a salt-master starting from CLI
-    options = salt_config.minion_config(
+    options = salt.config.minion_config(
         config_file, minion_id=minion_config["id"], cache_minion_id=True
     )
     return options
@@ -197,6 +199,9 @@ def pytest_saltfactories_verify_master_configuration(request, master_config, use
     """
     This hook is called to vefiry the provided master configuration
     """
+    # Late Import
+    import salt.utils.verify
+
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -217,13 +222,19 @@ def pytest_saltfactories_verify_master_configuration(request, master_config, use
     verify_env_entries += master_config["pillar_roots"]["base"]
     verify_env_entries += master_config["pillar_roots"]["prod"]
 
-    salt_utils_verify.verify_env(verify_env_entries, username, pki_dir=master_config["pki_dir"])
+    salt.utils.verify.verify_env(verify_env_entries, username, pki_dir=master_config["pki_dir"])
 
 
 def pytest_saltfactories_write_master_configuration(request, master_config):
     """
     This hook is called to vefiry the provided master configuration
     """
+    # Late Import
+    import salt.config
+    import salt.utils.files
+    import salt.utils.verify
+    import salt.utils.yaml
+
     config_file = master_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",
@@ -232,11 +243,11 @@ def pytest_saltfactories_write_master_configuration(request, master_config):
     )
 
     # Write down the computed configuration into the config file
-    with salt_utils_files.fopen(config_file, "w") as wfh:
-        salt_utils_yaml.safe_dump(master_config, wfh, default_flow_style=False)
+    with salt.utils.files.fopen(config_file, "w") as wfh:
+        salt.utils.yaml.safe_dump(master_config, wfh, default_flow_style=False)
 
     # Make sure to load the config file as a salt-master starting from CLI
-    options = salt_config.master_config(config_file)
+    options = salt.config.master_config(config_file)
     return options
 
 
@@ -244,12 +255,15 @@ def pytest_saltfactories_verify_syndic_configuration(request, syndic_config, use
     """
     This hook is called to vefiry the provided syndic configuration
     """
+    # Late Import
+    import salt.utils.verify
+
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
         os.path.dirname(syndic_config["syndic_log_file"]),
     ]
-    salt_utils_verify.verify_env(
+    salt.utils.verify.verify_env(
         verify_env_entries, username,
     )
 
@@ -258,6 +272,12 @@ def pytest_saltfactories_write_syndic_configuration(request, syndic_config):
     """
     This hook is called to vefiry the provided syndic configuration
     """
+    # Late Import
+    import salt.config
+    import salt.utils.files
+    import salt.utils.verify
+    import salt.utils.yaml
+
     config_file = syndic_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",
@@ -266,15 +286,15 @@ def pytest_saltfactories_write_syndic_configuration(request, syndic_config):
     )
 
     # Write down the computed configuration into the config file
-    with salt_utils_files.fopen(config_file, "w") as wfh:
-        salt_utils_yaml.safe_dump(syndic_config, wfh, default_flow_style=False)
+    with salt.utils.files.fopen(config_file, "w") as wfh:
+        salt.utils.yaml.safe_dump(syndic_config, wfh, default_flow_style=False)
 
     conf_dir = os.path.dirname(os.path.dirname(config_file))
     master_config_file = os.path.join(conf_dir, "master")
     minion_config_file = os.path.join(conf_dir, "minion")
 
     # Make sure to load the config file as a salt-master starting from CLI
-    options = salt_config.syndic_config(master_config_file, minion_config_file)
+    options = salt.config.syndic_config(master_config_file, minion_config_file)
     return options
 
 
@@ -282,6 +302,9 @@ def pytest_saltfactories_verify_proxy_minion_configuration(request, proxy_minion
     """
     This hook is called to vefiry the provided proxy_minion configuration
     """
+    # Late Import
+    import salt.utils.verify
+
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
@@ -289,7 +312,7 @@ def pytest_saltfactories_verify_proxy_minion_configuration(request, proxy_minion
         # proxy_proxy_minion_config['extension_modules'],
         proxy_minion_config["sock_dir"],
     ]
-    salt_utils_verify.verify_env(
+    salt.utils.verify.verify_env(
         verify_env_entries, username, pki_dir=proxy_minion_config["pki_dir"]
     )
 
@@ -298,6 +321,12 @@ def pytest_saltfactories_write_proxy_minion_configuration(request, proxy_minion_
     """
     This hook is called to vefiry the provided proxy_minion configuration
     """
+    # Late Import
+    import salt.config
+    import salt.utils.files
+    import salt.utils.verify
+    import salt.utils.yaml
+
     config_file = proxy_minion_config.pop("conf_file")
     log.debug(
         "Writing to configuration file %s. Configuration:\n%s",
@@ -306,11 +335,11 @@ def pytest_saltfactories_write_proxy_minion_configuration(request, proxy_minion_
     )
 
     # Write down the computed configuration into the config file
-    with salt_utils_files.fopen(config_file, "w") as wfh:
-        salt_utils_yaml.safe_dump(proxy_minion_config, wfh, default_flow_style=False)
+    with salt.utils.files.fopen(config_file, "w") as wfh:
+        salt.utils.yaml.safe_dump(proxy_minion_config, wfh, default_flow_style=False)
 
     # Make sure to load the config file as a salt-master starting from CLI
-    options = salt_config.proxy_config(
+    options = salt.config.proxy_config(
         config_file, minion_id=proxy_minion_config["id"], cache_minion_id=True
     )
     return options
