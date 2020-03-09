@@ -12,6 +12,8 @@ from __future__ import unicode_literals
 import os
 import sys
 
+import psutil
+
 import saltfactories
 from saltfactories.factories import master
 from saltfactories.factories import minion
@@ -26,6 +28,7 @@ class SaltFactoriesManager(object):
     def __init__(
         self,
         pytestconfig,
+        stats_processes,
         root_dir,
         log_server_port,
         log_server_level,
@@ -39,6 +42,7 @@ class SaltFactoriesManager(object):
         start_timeout=10,
     ):
         self.pytestconfig = pytestconfig
+        self.stats_processes = stats_processes
         self.root_dir = root_dir
         self.log_server_port = log_server_port
         self.log_server_level = log_server_level
@@ -206,6 +210,7 @@ class SaltFactoriesManager(object):
             event_listener=self.event_listener,
         )
         self.cache["minions"][minion_id] = proc
+        self.track_process_stats(proc)
         request.addfinalizer(proc.terminate)
         request.addfinalizer(lambda: self.cache["minions"].pop(minion_id))
         return proc
@@ -292,6 +297,7 @@ class SaltFactoriesManager(object):
             event_listener=self.event_listener,
         )
         self.cache["masters"][master_id] = proc
+        self.track_process_stats(proc)
         request.addfinalizer(proc.terminate)
         request.addfinalizer(lambda: self.cache["masters"].pop(master_id))
         return proc
@@ -425,6 +431,7 @@ class SaltFactoriesManager(object):
             event_listener=self.event_listener,
         )
         self.cache["syndics"][syndic_id] = proc
+        self.track_process_stats(proc)
         request.addfinalizer(proc.terminate)
         request.addfinalizer(lambda: self.cache["syndics"].pop(syndic_id))
         return proc
@@ -509,6 +516,7 @@ class SaltFactoriesManager(object):
             event_listener=self.event_listener,
         )
         self.cache["proxy_minions"][proxy_minion_id] = proc
+        self.track_process_stats(proc)
         request.addfinalizer(proc.terminate)
         request.addfinalizer(lambda: self.cache["proxy_minions"].pop(proxy_minion_id))
         return proc
@@ -581,3 +589,8 @@ class SaltFactoriesManager(object):
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return processes.SaltKeyCLI(script_path, config=self.cache["masters"][master_id].config)
+
+    def track_process_stats(self, proc):
+        if self.stats_processes:
+            process_name = proc.log_prefix.strip().lstrip("[").rstrip("]")
+            self.stats_processes[process_name] = psutil.Process(proc.pid)
