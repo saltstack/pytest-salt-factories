@@ -451,6 +451,7 @@ class FactoryProcess(object):
         self.environ.setdefault(str("PYTHONDONTWRITEBYTECODE"), str("1"))
         self.cwd = cwd or os.getcwd()
         self._terminal = None
+        self._terminal_result = None
         self._children = []
         self._base_script_args = base_script_args
 
@@ -510,7 +511,7 @@ class FactoryProcess(object):
         Terminate the started daemon
         """
         if self._terminal is None:
-            return
+            return self._terminal_result
         # Allow some time to get all output from process
         time.sleep(0.125)
         log.info("%sStopping %s", self.log_prefix, self.__class__.__name__)
@@ -547,7 +548,8 @@ class FactoryProcess(object):
                     )
                 log_message += "\n"
             log.info(log_message)
-            return ProcessResult(self._terminal.returncode, stdout, stderr)
+            self._terminal_result = ProcessResult(self._terminal.returncode, stdout, stderr)
+            return self._terminal_result
         finally:
             self._terminal = None
             self._children = []
