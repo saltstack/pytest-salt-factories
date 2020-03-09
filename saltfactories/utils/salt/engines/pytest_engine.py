@@ -99,6 +99,6 @@ class PyTestEngine(object):
     @gen.coroutine
     def handle_event(self, payload):
         tag, data = salt.utils.event.SaltEvent.unpack(payload)
-        log.warning("RECEIVED EVENT TAG %r DATA %r", tag, data)
+        log.debug("Received Event; TAG: %r DATA: %r", tag, data)
         forward = salt.utils.msgpack.dumps((self.id, tag, data), use_bin_type=True)
         yield self.push.send(forward)
