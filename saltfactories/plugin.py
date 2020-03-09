@@ -19,6 +19,7 @@ import pytest
 
 try:
     import salt.config
+    import salt.loader  # pylint: disable=unused-import
     import salt.utils.files
     import salt.utils.verify
     import salt.utils.yaml
