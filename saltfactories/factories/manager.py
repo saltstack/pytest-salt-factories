@@ -189,31 +189,9 @@ class SaltFactoriesManager(object):
         if minion_config is None:
             minion_config = self.configure_minion(request, minion_id, master_id=master_id)
 
-        script_path = cli_scripts.generate_script(
-            self.scripts_dir,
-            "salt-minion",
-            executable=self.executable,
-            code_dir=self.code_dir,
-            inject_coverage=self.inject_coverage,
-            inject_sitecustomize=self.inject_sitecustomize,
+        return self._start_daemon(
+            request, "salt-minion", minion_config, processes.SaltMinion, "minions", minion_id
         )
-        proc = processes.start_daemon(
-            minion_config,
-            script_path,
-            processes.SaltMinion,
-            # start_timeout=self.start_timeout,
-            start_timeout=20,
-            slow_stop=self.slow_stop,
-            environ=self.environ,
-            cwd=self.cwd,
-            max_attempts=3,
-            event_listener=self.event_listener,
-        )
-        self.cache["minions"][minion_id] = proc
-        self.track_process_stats(proc)
-        request.addfinalizer(proc.terminate)
-        request.addfinalizer(lambda: self.cache["minions"].pop(minion_id))
-        return proc
 
     def configure_master(self, request, master_id, order_masters=False, master_of_masters_id=None):
         if master_id in self.cache["configs"]["masters"]:
@@ -277,30 +255,9 @@ class SaltFactoriesManager(object):
                 master_of_masters_id=master_of_masters_id,
             )
 
-        script_path = cli_scripts.generate_script(
-            self.scripts_dir,
-            "salt-master",
-            executable=self.executable,
-            code_dir=self.code_dir,
-            inject_coverage=self.inject_coverage,
-            inject_sitecustomize=self.inject_sitecustomize,
+        return self._start_daemon(
+            request, "salt-master", master_config, processes.SaltMaster, "masters", master_id
         )
-        proc = processes.start_daemon(
-            master_config,
-            script_path,
-            processes.SaltMaster,
-            start_timeout=self.start_timeout,
-            slow_stop=self.slow_stop,
-            environ=self.environ,
-            cwd=self.cwd,
-            max_attempts=3,
-            event_listener=self.event_listener,
-        )
-        self.cache["masters"][master_id] = proc
-        self.track_process_stats(proc)
-        request.addfinalizer(proc.terminate)
-        request.addfinalizer(lambda: self.cache["masters"].pop(master_id))
-        return proc
 
     def configure_syndic(self, request, syndic_id, master_of_masters_id=None):
         """
@@ -411,30 +368,9 @@ class SaltFactoriesManager(object):
         if syndic_id not in self.cache["minions"]:
             self.spawn_minion(request, syndic_id)
 
-        script_path = cli_scripts.generate_script(
-            self.scripts_dir,
-            "salt-syndic",
-            executable=self.executable,
-            code_dir=self.code_dir,
-            inject_coverage=self.inject_coverage,
-            inject_sitecustomize=self.inject_sitecustomize,
+        return self._start_daemon(
+            request, "salt-syndic", syndic_config, processes.SaltSyndic, "syndics", syndic_id
         )
-        proc = processes.start_daemon(
-            syndic_config,
-            script_path,
-            processes.SaltSyndic,
-            start_timeout=self.start_timeout,
-            slow_stop=self.slow_stop,
-            environ=self.environ,
-            cwd=self.cwd,
-            max_attempts=3,
-            event_listener=self.event_listener,
-        )
-        self.cache["syndics"][syndic_id] = proc
-        self.track_process_stats(proc)
-        request.addfinalizer(proc.terminate)
-        request.addfinalizer(lambda: self.cache["syndics"].pop(syndic_id))
-        return proc
 
     def configure_proxy_minion(self, request, proxy_minion_id, master_id=None):
         if proxy_minion_id in self.cache["configs"]["proxy_minions"]:
@@ -495,31 +431,14 @@ class SaltFactoriesManager(object):
                 request, proxy_minion_id, master_id=master_id
             )
 
-        script_path = cli_scripts.generate_script(
-            self.scripts_dir,
+        return self._start_daemon(
+            request,
             "salt-proxy",
-            executable=self.executable,
-            code_dir=self.code_dir,
-            inject_coverage=self.inject_coverage,
-            inject_sitecustomize=self.inject_sitecustomize,
-        )
-        proc = processes.start_daemon(
             proxy_minion_config,
-            script_path,
             processes.SaltProxyMinion,
-            # start_timeout=self.start_timeout,
-            start_timeout=20,
-            slow_stop=self.slow_stop,
-            environ=self.environ,
-            cwd=self.cwd,
-            max_attempts=3,
-            event_listener=self.event_listener,
+            "proxy_minions",
+            proxy_minion_id,
         )
-        self.cache["proxy_minions"][proxy_minion_id] = proc
-        self.track_process_stats(proc)
-        request.addfinalizer(proc.terminate)
-        request.addfinalizer(lambda: self.cache["proxy_minions"].pop(proxy_minion_id))
-        return proc
 
     def get_salt_cli(self, request, master_id):
         script_path = cli_scripts.generate_script(
@@ -590,7 +509,35 @@ class SaltFactoriesManager(object):
         )
         return processes.SaltKeyCLI(script_path, config=self.cache["masters"][master_id].config)
 
-    def track_process_stats(self, proc):
+    def _start_daemon(
+        self, request, script_name, daemon_config, daemon_class, cache_key, daemon_id
+    ):
+        """
+        Helper method to start daemons
+        """
+        script_path = cli_scripts.generate_script(
+            self.scripts_dir,
+            script_name,
+            executable=self.executable,
+            code_dir=self.code_dir,
+            inject_coverage=self.inject_coverage,
+            inject_sitecustomize=self.inject_sitecustomize,
+        )
+        proc = processes.start_daemon(
+            daemon_config,
+            script_path,
+            daemon_class,
+            start_timeout=self.start_timeout,
+            slow_stop=self.slow_stop,
+            environ=self.environ,
+            cwd=self.cwd,
+            max_attempts=3,
+            event_listener=self.event_listener,
+        )
+        self.cache[cache_key][daemon_id] = proc
         if self.stats_processes:
             process_name = proc.log_prefix.strip().lstrip("[").rstrip("]")
             self.stats_processes[process_name] = psutil.Process(proc.pid)
+        request.addfinalizer(proc.terminate)
+        request.addfinalizer(lambda: self.cache[cache_key].pop(daemon_id))
+        return proc
