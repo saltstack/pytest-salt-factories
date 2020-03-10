@@ -25,6 +25,16 @@ from saltfactories.utils import processes
 
 
 class SaltFactoriesManager(object):
+    """
+    The :class:`SaltFactoriesManager` is responsible for configuring and spawning Salt Daemons and
+    making sure that any salt CLI tools are "targetted" to the right daemon.
+
+    It also keeps track of which daemons were started and adds their termination routines to PyTest's
+    request finalization routines.
+
+    If process statistics are enabled, it also adds the started daemons to those statistics.
+    """
+
     def __init__(
         self,
         pytestconfig,
@@ -70,6 +80,9 @@ class SaltFactoriesManager(object):
 
     @staticmethod
     def get_running_username():
+        """
+        Returns the current username
+        """
         try:
             return SaltFactoriesManager.get_running_username.__username__
         except AttributeError:
@@ -87,10 +100,16 @@ class SaltFactoriesManager(object):
 
     @staticmethod
     def get_salt_log_handlers_path():
+        """
+        Returns the path to the Salt log handler this plugin provides
+        """
         return os.path.join(saltfactories.CODE_ROOT_DIR, "utils", "salt", "log_handlers")
 
     @staticmethod
     def get_salt_engines_path():
+        """
+        Returns the path to the Salt engine this plugin provides
+        """
         return os.path.join(saltfactories.CODE_ROOT_DIR, "utils", "salt", "engines")
 
     def final_minion_config_tweaks(self, config):
@@ -138,6 +157,9 @@ class SaltFactoriesManager(object):
         log_config["level"] = self.log_server_level
 
     def configure_minion(self, request, minion_id, master_id=None):
+        """
+        Configure a salt-minion
+        """
         if minion_id in self.cache["configs"]["minions"]:
             return self.cache["configs"]["minions"][minion_id]
 
@@ -182,6 +204,9 @@ class SaltFactoriesManager(object):
         return minion_config
 
     def spawn_minion(self, request, minion_id, master_id=None):
+        """
+        Spawn a salt-minion
+        """
         if minion_id in self.cache["minions"]:
             raise RuntimeError("A minion by the ID of '{}' was already spawned".format(minion_id))
 
@@ -194,6 +219,9 @@ class SaltFactoriesManager(object):
         )
 
     def configure_master(self, request, master_id, order_masters=False, master_of_masters_id=None):
+        """
+        Configure a salt-master
+        """
         if master_id in self.cache["configs"]["masters"]:
             return self.cache["configs"]["masters"][master_id]
 
@@ -243,6 +271,9 @@ class SaltFactoriesManager(object):
     def spawn_master(
         self, request, master_id, order_masters=False, master_of_masters_id=None,
     ):
+        """
+        Spawn a salt-master
+        """
         if master_id in self.cache["masters"]:
             raise RuntimeError("A master by the ID of '{}' was already spawned".format(master_id))
 
@@ -261,6 +292,8 @@ class SaltFactoriesManager(object):
 
     def configure_syndic(self, request, syndic_id, master_of_masters_id=None):
         """
+        Configure a salt-syndic.
+
         In order for the syndic to be reactive, it actually needs three(3) daemons running, `salt-master`,
         `salt-minion` and `salt-syndic`.
 
@@ -352,6 +385,9 @@ class SaltFactoriesManager(object):
         return syndic_config
 
     def spawn_syndic(self, request, syndic_id, master_of_masters_id=None):
+        """
+        Spawn a salt-syndic
+        """
         if syndic_id in self.cache["syndics"]:
             raise RuntimeError("A syndic by the ID of '{}' was already spawned".format(syndic_id))
 
@@ -373,6 +409,9 @@ class SaltFactoriesManager(object):
         )
 
     def configure_proxy_minion(self, request, proxy_minion_id, master_id=None):
+        """
+        Configure a salt-proxy
+        """
         if proxy_minion_id in self.cache["configs"]["proxy_minions"]:
             return self.cache["configs"]["proxy_minions"][proxy_minion_id]
 
@@ -420,6 +459,9 @@ class SaltFactoriesManager(object):
         return proxy_minion_config
 
     def spawn_proxy_minion(self, request, proxy_minion_id, master_id=None):
+        """
+        Spawn a salt-proxy
+        """
         if proxy_minion_id in self.cache["proxy_minions"]:
             raise RuntimeError(
                 "A proxy_minion by the ID of '{}' was already spawned".format(proxy_minion_id)
@@ -441,6 +483,9 @@ class SaltFactoriesManager(object):
         )
 
     def get_salt_cli(self, request, master_id):
+        """
+        Return a `salt` CLI process
+        """
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt",
@@ -452,6 +497,9 @@ class SaltFactoriesManager(object):
         return processes.SaltCLI(script_path, config=self.cache["masters"][master_id].config)
 
     def get_salt_call_cli(self, request, minion_id):
+        """
+        Return a `salt-call` CLI process
+        """
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt-call",
@@ -477,6 +525,9 @@ class SaltFactoriesManager(object):
                 )
 
     def get_salt_run(self, request, master_id):
+        """
+        Return a `salt-run` CLI process
+        """
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt-run",
@@ -488,6 +539,9 @@ class SaltFactoriesManager(object):
         return processes.SaltRunCLI(script_path, config=self.cache["masters"][master_id].config)
 
     def get_salt_cp(self, request, master_id):
+        """
+        Return a `salt-cp` CLI process
+        """
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt-cp",
@@ -499,6 +553,9 @@ class SaltFactoriesManager(object):
         return processes.SaltCpCLI(script_path, config=self.cache["masters"][master_id].config)
 
     def get_salt_key(self, request, master_id):
+        """
+        Return a `salt-key` CLI process
+        """
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt-key",
