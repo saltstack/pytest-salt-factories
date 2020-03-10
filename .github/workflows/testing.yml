@@ -46,6 +46,9 @@ jobs:
         ref: hotfix/requirements
         path: salt-checkout
 
+    - name: Fetch Salt Tags
+      run: cd salt-checkout && git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
     - name: Set up Python 3.7 For Nox
       uses: actions/setup-python@v1
       with:
@@ -140,6 +143,9 @@ jobs:
         repository: s0undt3ch/salt
         ref: hotfix/requirements
         path: salt-checkout
+
+    - name: Fetch Salt Tags
+      run: cd salt-checkout && git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
     - name: Set up Python 3.7 For Nox
       uses: actions/setup-python@v1
@@ -239,6 +245,9 @@ jobs:
         repository: s0undt3ch/salt
         ref: hotfix/requirements
         path: salt-checkout
+
+    - name: Fetch Salt Tags
+      run: cd salt-checkout && git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
     - name: Set up Python 3.7 For Nox
       uses: actions/setup-python@v1
