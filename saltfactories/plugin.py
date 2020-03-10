@@ -78,7 +78,7 @@ def pytest_runtest_logstart(nodeid):
     :param str nodeid: full id of the item
     :param location: a triple of ``(filename, linenum, testname)``
     """
-    log.debug(">>>>> START >>>>> %s", nodeid)
+    log.debug(">>>>>>> START %s >>>>>>>", nodeid)
 
 
 def pytest_runtest_logfinish(nodeid):
@@ -91,7 +91,7 @@ def pytest_runtest_logfinish(nodeid):
     :param str nodeid: full id of the item
     :param location: a triple of ``(filename, linenum, testname)``
     """
-    log.debug("<<<<< END <<<<<<< %s", nodeid)
+    log.debug("<<<<<<< END %s <<<<<<<", nodeid)
 
 
 @pytest.fixture(scope="session")
