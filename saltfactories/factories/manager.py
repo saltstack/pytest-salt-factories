@@ -163,21 +163,28 @@ class SaltFactoriesManager(object):
         if minion_id in self.cache["configs"]["minions"]:
             return self.cache["configs"]["minions"][minion_id]
 
+        root_dir = self._get_root_dir_for_daemon(minion_id)
+
         master_port = None
         if master_id is not None:
             master_config = self.cache["configs"]["masters"][master_id]
             master_port = master_config.get("ret_port")
         default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_minion_configuration(
-            request=request, factories_manager=self, minion_id=minion_id, master_port=master_port
+            request=request,
+            factories_manager=self,
+            root_dir=root_dir,
+            minion_id=minion_id,
+            master_port=master_port,
         )
         config_overrides = self.pytestconfig.hook.pytest_saltfactories_minion_configuration_overrides(
             request=request,
             factories_manager=self,
+            root_dir=root_dir,
             minion_id=minion_id,
             default_options=default_options,
         )
         minion_config = minion.MinionFactory.default_config(
-            self.root_dir,
+            root_dir,
             minion_id=minion_id,
             default_options=default_options,
             config_overrides=config_overrides,
@@ -225,15 +232,19 @@ class SaltFactoriesManager(object):
         if master_id in self.cache["configs"]["masters"]:
             return self.cache["configs"]["masters"][master_id]
 
+        root_dir = self._get_root_dir_for_daemon(master_id)
+
         default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_master_configuration(
             request=request,
             factories_manager=self,
+            root_dir=root_dir,
             master_id=master_id,
             order_masters=order_masters,
         )
         config_overrides = self.pytestconfig.hook.pytest_saltfactories_master_configuration_overrides(
             request=request,
             factories_manager=self,
+            root_dir=root_dir,
             master_id=master_id,
             default_options=default_options,
             order_masters=order_masters,
@@ -249,7 +260,7 @@ class SaltFactoriesManager(object):
             config_overrides["syndic_master_port"] = master_of_masters_config["ret_port"]
 
         master_config = master.MasterFactory.default_config(
-            self.root_dir,
+            root_dir,
             master_id=master_id,
             default_options=default_options,
             config_overrides=config_overrides,
@@ -317,9 +328,12 @@ class SaltFactoriesManager(object):
 
         syndic_master_port = master_of_masters_config["ret_port"]
 
+        root_dir = self._get_root_dir_for_daemon(syndic_id)
+
         default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_syndic_configuration(
             request=request,
             factories_manager=self,
+            root_dir=root_dir,
             syndic_id=syndic_id,
             syndic_master_port=syndic_master_port,
         )
@@ -327,12 +341,13 @@ class SaltFactoriesManager(object):
         config_overrides = self.pytestconfig.hook.pytest_saltfactories_syndic_configuration_overrides(
             request=request,
             factories_manager=self,
+            root_dir=root_dir,
             syndic_id=syndic_id,
             default_options=default_options,
         )
 
         syndic_setup_config = syndic.SyndicFactory.default_config(
-            self.root_dir,
+            root_dir,
             syndic_id=syndic_id,
             default_options=default_options,
             config_overrides=config_overrides,
@@ -419,20 +434,25 @@ class SaltFactoriesManager(object):
         if master_id is not None:
             master_config = self.cache["configs"]["masters"][master_id]
             master_port = master_config.get("ret_port")
+
+        root_dir = self._get_root_dir_for_daemon(proxy_minion_id)
+
         default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_proxy_minion_configuration(
             request=request,
             factories_manager=self,
+            root_dir=root_dir,
             proxy_minion_id=proxy_minion_id,
             master_port=master_port,
         )
         config_overrides = self.pytestconfig.hook.pytest_saltfactories_proxy_minion_configuration_overrides(
             request=request,
             factories_manager=self,
+            root_dir=root_dir,
             proxy_minion_id=proxy_minion_id,
             default_options=default_options,
         )
         proxy_minion_config = proxy.ProxyMinionFactory.default_config(
-            self.root_dir,
+            root_dir,
             proxy_minion_id=proxy_minion_id,
             default_options=default_options,
             config_overrides=config_overrides,
@@ -598,3 +618,14 @@ class SaltFactoriesManager(object):
         request.addfinalizer(proc.terminate)
         request.addfinalizer(lambda: self.cache[cache_key].pop(daemon_id))
         return proc
+
+    def _get_root_dir_for_daemon(self, daemon_id):
+        counter = 1
+        root_dir = self.root_dir.join(daemon_id)
+        while True:
+            if not root_dir.check(dir=True):
+                break
+            root_dir = self.root_dir.join("{}_{}".format(daemon_id, counter))
+            counter += 1
+        root_dir.ensure(dir=True)
+        return root_dir

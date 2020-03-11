@@ -25,23 +25,10 @@ from saltfactories.utils import ports
 class MasterFactory(object):
     @staticmethod
     def default_config(
-        factories_root_dir,
-        master_id,
-        default_options=None,
-        config_overrides=None,
-        order_masters=False,
+        root_dir, master_id, default_options=None, config_overrides=None, order_masters=False,
     ):
         if default_options is None:
             default_options = salt.config.DEFAULT_MASTER_OPTS.copy()
-
-        counter = 1
-        root_dir = factories_root_dir.join(master_id)
-        while True:
-            if not root_dir.check(dir=True):
-                break
-            root_dir = factories_root_dir.join("{}_{}".format(master_id, counter))
-            counter += 1
-        root_dir.ensure(dir=True)
 
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_file = conf_dir.join("master").strpath

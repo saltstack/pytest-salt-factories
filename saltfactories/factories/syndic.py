@@ -25,7 +25,7 @@ from saltfactories.utils import ports
 class SyndicFactory(object):
     @staticmethod
     def default_config(
-        factories_root_dir,
+        root_dir,
         syndic_id,
         default_options=None,
         config_overrides=None,
@@ -39,15 +39,6 @@ class SyndicFactory(object):
 
         if config_overrides is None:
             config_overrides = {}
-
-        counter = 1
-        root_dir = factories_root_dir.join(syndic_id)
-        while True:
-            if not root_dir.check(dir=True):
-                break
-            root_dir = factories_root_dir.join("{}_{}".format(syndic_id, counter))
-            counter += 1
-        root_dir.ensure(dir=True)
 
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_d_dir = conf_dir.join("master.d").ensure(dir=True)

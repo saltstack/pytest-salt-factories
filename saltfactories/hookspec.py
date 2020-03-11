@@ -14,7 +14,7 @@ import pytest
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_generate_default_minion_configuration(
-    request, factories_manager, minion_id, master_port
+    request, factories_manager, root_dir, minion_id, master_port
 ):
     """
     Hook which should return a dictionary tailored for the provided minion_id
@@ -25,7 +25,7 @@ def pytest_saltfactories_generate_default_minion_configuration(
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_minion_configuration_overrides(
-    request, factories_manager, default_options, minion_id
+    request, factories_manager, root_dir, minion_id, default_options
 ):
     """
     Hook which should return a dictionary tailored for the provided minion_id.
@@ -50,7 +50,7 @@ def pytest_saltfactories_write_minion_configuration(request, minion_config):
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_generate_default_master_configuration(
-    request, factories_manager, master_id, order_masters
+    request, factories_manager, root_dir, master_id, order_masters
 ):
     """
     Hook which should return a dictionary tailored for the provided master_id
@@ -61,7 +61,7 @@ def pytest_saltfactories_generate_default_master_configuration(
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_master_configuration_overrides(
-    request, factories_manager, default_options, master_id, order_masters
+    request, factories_manager, root_dir, master_id, default_options, order_masters
 ):
     """
     Hook which should return a dictionary tailored for the provided master_id.
@@ -86,7 +86,7 @@ def pytest_saltfactories_write_master_configuration(request, master_config):
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_generate_default_syndic_configuration(
-    request, factories_manager, syndic_id, syndic_master_port
+    request, factories_manager, root_dir, syndic_id, syndic_master_port
 ):
     """
     Hook which should return a dictionary tailored for the provided syndic_id with 3 keys:
@@ -101,7 +101,7 @@ def pytest_saltfactories_generate_default_syndic_configuration(
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_syndic_configuration_overrides(
-    request, factories_manager, syndic_id, default_options
+    request, factories_manager, root_dir, syndic_id, default_options
 ):
     """
     Hook which should return a dictionary tailored for the provided syndic_id.
@@ -135,7 +135,7 @@ def pytest_saltfactories_write_syndic_configuration(request, syndic_config):
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_generate_default_proxy_minion_configuration(
-    request, factories_manager, proxy_minion_id, master_port
+    request, factories_manager, root_dir, proxy_minion_id, master_port
 ):
     """
     Hook which should return a dictionary tailored for the provided proxy_minion_id
@@ -146,7 +146,7 @@ def pytest_saltfactories_generate_default_proxy_minion_configuration(
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_proxy_minion_configuration_overrides(
-    request, factories_manager, default_options, proxy_minion_id
+    request, factories_manager, root_dir, proxy_minion_id, default_options
 ):
     """
     Hook which should return a dictionary tailored for the provided proxy_minion_id.

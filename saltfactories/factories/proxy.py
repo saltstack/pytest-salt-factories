@@ -25,24 +25,11 @@ from saltfactories.utils import ports
 class ProxyMinionFactory(object):
     @staticmethod
     def default_config(
-        factories_root_dir,
-        proxy_minion_id,
-        default_options=None,
-        config_overrides=None,
-        master_port=None,
+        root_dir, proxy_minion_id, default_options=None, config_overrides=None, master_port=None,
     ):
         if default_options is None:
             default_options = salt.config.DEFAULT_MINION_OPTS.copy()
             default_options.update(salt.config.DEFAULT_PROXY_MINION_OPTS.copy())
-
-        counter = 1
-        root_dir = factories_root_dir.join(proxy_minion_id)
-        while True:
-            if not root_dir.check(dir=True):
-                break
-            root_dir = factories_root_dir.join("{}_{}".format(proxy_minion_id, counter))
-            counter += 1
-        root_dir.ensure(dir=True)
 
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_file = conf_dir.join("proxy").strpath
