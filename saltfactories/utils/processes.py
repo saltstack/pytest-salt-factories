@@ -695,7 +695,7 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         script_args = super(SaltScriptBase, self).get_base_script_args()
         config_dir = self.config_dir
         if config_dir:
-            script_args.extend(["-c", config_dir])
+            script_args.append("--config-dir={}".format(config_dir))
         script_args.append("--log-level=quiet")
         script_args.append("--out=json")
         return script_args
@@ -727,7 +727,7 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase, Sal
         script_args = super(SaltDaemonScriptBase, self).get_base_script_args()
         config_dir = self.config_dir
         if config_dir:
-            script_args.extend(["-c", config_dir])
+            script_args.append("--config-dir={}".format(config_dir))
         script_args.append("--log-level=quiet")
         return script_args
 
