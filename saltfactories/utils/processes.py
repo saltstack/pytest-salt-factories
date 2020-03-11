@@ -224,6 +224,7 @@ def start_daemon(
     cwd=None,
     max_attempts=3,
     event_listener=None,
+    **extra_daemon_class_kwargs
 ):
     """
     Returns a running process daemon
@@ -243,6 +244,7 @@ def start_daemon(
             slow_stop=slow_stop,
             environ=environ,
             cwd=cwd,
+            **extra_daemon_class_kwargs
         )
         log_prefix = process.log_prefix
         log.info("%sStarting %r. Attempt: %s", log_prefix, process, attempts)
@@ -250,8 +252,15 @@ def start_daemon(
         process.start()
         if process.is_alive():
             try:
-                check_ports = process.get_check_ports()
-                check_events = list(process.get_check_events())
+                try:
+                    check_ports = process.get_check_ports()
+                except AttributeError:
+                    check_ports = False
+
+                try:
+                    check_events = list(process.get_check_events())
+                except AttributeError:
+                    check_events = False
 
                 if not check_ports and not check_events:
                     connectable = True
