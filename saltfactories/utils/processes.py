@@ -700,6 +700,11 @@ class SaltConfigMixin(object):
 
 
 class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
+    def __init__(self, *args, **kwargs):
+        hard_crash = kwargs.pop("salt_hard_crash", True)
+        super(SaltScriptBase, self).__init__(*args, **kwargs)
+        self.hard_crash = hard_crash
+
     def get_base_script_args(self):
         script_args = super(SaltScriptBase, self).get_base_script_args()
         config_dir = self.config_dir
@@ -708,6 +713,14 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         script_args.append("--log-level=quiet")
         script_args.append("--out=json")
         return script_args
+
+    def get_script_args(self):
+        """
+        Returns any additional arguments to pass to the CLI script
+        """
+        if not self.hard_crash:
+            return super(SaltScriptBase, self).get_script_args()
+        return ["--hard-crash"]
 
     def get_minion_tgt(self, kwargs):
         minion_tgt = None
@@ -816,12 +829,6 @@ class SaltCLI(SaltScriptBase):
     Simple subclass to the salt CLI script
     """
 
-    def get_script_args(self):
-        """
-        Returns any additional arguments to pass to the CLI script
-        """
-        return ["--hard-crash"]
-
     def process_output(self, stdout, stderr, cli_cmd=None):
         if "No minions matched the target. No command was sent, no jid was assigned.\n" in stdout:
             stdout = stdout.split("\n", 1)[1:][0]
@@ -848,12 +855,6 @@ class SaltCallCLI(SaltScriptBase):
     Simple subclass to the salt-call CLI script
     """
 
-    def get_script_args(self):
-        """
-        Returns any additional arguments to pass to the CLI script
-        """
-        return ["--hard-crash"]
-
     def get_minion_tgt(self, kwargs):
         return None
 
@@ -877,12 +878,6 @@ class SaltRunCLI(SaltScriptBase):
     Simple subclass to the salt-run CLI script
     """
 
-    def get_script_args(self):
-        """
-        Returns any additional arguments to pass to the CLI script
-        """
-        return ["--hard-crash"]
-
     def get_minion_tgt(self, kwargs):
         return None
 
@@ -891,12 +886,6 @@ class SaltCpCLI(SaltScriptBase):
     """
     Simple subclass to the salt-cp CLI script
     """
-
-    def get_script_args(self):
-        """
-        Returns any additional arguments to pass to the CLI script
-        """
-        return ["--hard-crash"]
 
     def process_output(self, stdout, stderr, cli_cmd=None):
         if "No minions matched the target. No command was sent, no jid was assigned.\n" in stdout:
@@ -927,12 +916,6 @@ class SaltKeyCLI(SaltScriptBase):
                 script_args.pop(idx)
                 break
         return script_args
-
-    def get_script_args(self):
-        """
-        Returns any additional arguments to pass to the CLI script
-        """
-        return ["--hard-crash"]
 
     def get_minion_tgt(self, kwargs):
         return None
