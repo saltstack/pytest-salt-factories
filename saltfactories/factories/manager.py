@@ -502,7 +502,7 @@ class SaltFactoriesManager(object):
             proxy_minion_id,
         )
 
-    def get_salt_cli(self, request, master_id):
+    def get_salt_cli(self, request, master_id, **cli_kwargs):
         """
         Return a `salt` CLI process
         """
@@ -514,9 +514,11 @@ class SaltFactoriesManager(object):
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return processes.SaltCLI(script_path, config=self.cache["masters"][master_id].config)
+        return processes.SaltCLI(
+            script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
+        )
 
-    def get_salt_call_cli(self, request, minion_id):
+    def get_salt_call_cli(self, request, minion_id, **cli_kwargs):
         """
         Return a `salt-call` CLI process
         """
@@ -530,7 +532,7 @@ class SaltFactoriesManager(object):
         )
         try:
             return processes.SaltCallCLI(
-                script_path, config=self.cache["minions"][minion_id].config
+                script_path, config=self.cache["minions"][minion_id].config, **cli_kwargs
             )
         except KeyError:
             try:
@@ -538,13 +540,14 @@ class SaltFactoriesManager(object):
                     script_path,
                     base_script_args=["--proxyid={}".format(minion_id)],
                     config=self.cache["proxy_minions"][minion_id].config,
+                    **cli_kwargs
                 )
             except KeyError:
                 raise KeyError(
                     "Could not find {} in the minions or proxy minions caches".format(minion_id)
                 )
 
-    def get_salt_run(self, request, master_id):
+    def get_salt_run(self, request, master_id, **cli_kwargs):
         """
         Return a `salt-run` CLI process
         """
@@ -556,9 +559,11 @@ class SaltFactoriesManager(object):
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return processes.SaltRunCLI(script_path, config=self.cache["masters"][master_id].config)
+        return processes.SaltRunCLI(
+            script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
+        )
 
-    def get_salt_cp(self, request, master_id):
+    def get_salt_cp(self, request, master_id, **cli_kwargs):
         """
         Return a `salt-cp` CLI process
         """
@@ -570,9 +575,11 @@ class SaltFactoriesManager(object):
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return processes.SaltCpCLI(script_path, config=self.cache["masters"][master_id].config)
+        return processes.SaltCpCLI(
+            script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
+        )
 
-    def get_salt_key(self, request, master_id):
+    def get_salt_key(self, request, master_id, **cli_kwargs):
         """
         Return a `salt-key` CLI process
         """
@@ -584,7 +591,9 @@ class SaltFactoriesManager(object):
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return processes.SaltKeyCLI(script_path, config=self.cache["masters"][master_id].config)
+        return processes.SaltKeyCLI(
+            script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
+        )
 
     def _start_daemon(
         self, request, script_name, daemon_config, daemon_class, cache_key, daemon_id
