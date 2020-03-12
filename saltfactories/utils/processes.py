@@ -701,7 +701,7 @@ class SaltConfigMixin(object):
 
 class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
     def __init__(self, *args, **kwargs):
-        hard_crash = kwargs.pop("salt_hard_crash", True)
+        hard_crash = kwargs.pop("salt_hard_crash", False)
         super(SaltScriptBase, self).__init__(*args, **kwargs)
         self.hard_crash = hard_crash
 
