@@ -199,7 +199,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
                 self.in_proxy.close(1500)
             if self.context is not None:
                 self.context.term()
-            if self.proxy_thread is not None:
+            if self.proxy_thread is not None and self.proxy_thread.is_alive():
                 self.proxy_thread.join()
         except Exception as exc:  # pylint: disable=broad-except
             sys.stderr.write(
