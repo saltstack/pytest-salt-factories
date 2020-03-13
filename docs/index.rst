@@ -10,9 +10,10 @@ Welcome to PyTest Salt Factories's documentation!
   :maxdepth: 2
   :caption: Contents:
 
-  saltfactories
-
-
+  ref/saltfactories.rst
+  ref/saltfactories.factories
+  ref/saltfactories.utils
+  ref/modules
 
 Indices and tables
 ==================
