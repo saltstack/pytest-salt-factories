@@ -108,3 +108,6 @@ venv.bak/
 
 # Ignore Nox directory
 .nox/
+
+# Ignore CI salt-checkout directory
+salt-checkout/
