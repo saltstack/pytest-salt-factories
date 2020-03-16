@@ -108,6 +108,7 @@ class SaltFactoriesManager(object):
             "minions": {},
             "syndics": {},
             "proxy_minions": {},
+            "daemons": {},
         }
         self.event_listener = event_listener.EventListener()
         self.event_listener.start()
@@ -628,6 +629,43 @@ class SaltFactoriesManager(object):
         return salt_factories.SaltKeyCLI(
             script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
         )
+
+    def spawn_daemon(
+        self,
+        request,
+        script_name,
+        daemon_class,
+        daemon_id,
+        environ=None,
+        cwd=None,
+        slow_stop=None,
+        **extra_daemon_class_kwargs
+    ):
+        """
+        Start a non-salt daemon
+        """
+        if environ is None:
+            environ = self.environ
+        if cwd is None:
+            cwd = self.cwd
+        if slow_stop is None:
+            slow_stop = False
+        proc = saltfactories.utils.processes.helpers.start_daemon(
+            script_name,
+            daemon_class,
+            start_timeout=self.start_timeout,
+            slow_stop=slow_stop,
+            environ=environ,
+            cwd=cwd,
+            max_attempts=3,
+            **extra_daemon_class_kwargs
+        )
+        self.cache["daemons"][daemon_id] = proc
+        if self.stats_processes:
+            self.stats_processes[proc.get_display_name()] = psutil.Process(proc.pid)
+        request.addfinalizer(proc.terminate)
+        request.addfinalizer(lambda: self.cache["daemons"].pop(daemon_id))
+        return proc
 
     def _start_daemon(
         self, request, script_name, daemon_config, daemon_class, cache_key, daemon_id
