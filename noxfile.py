@@ -325,9 +325,7 @@ def docs_html(session):
     Build Salt's HTML Documentation
     """
     _patch_session(session)
-    session.install(
-        "--progress-bar=off", "-r", "requirements-testing.txt", silent=PIP_INSTALL_SILENT
-    )
+    session.install("--progress-bar=off", "-r", "requirements-docs.txt", silent=PIP_INSTALL_SILENT)
     os.chdir("docs/")
     session.run("make", "clean", external=True)
     session.run("make", "html", "SPHINXOPTS=-W", external=True)
