@@ -18,20 +18,23 @@ class SaltFactoriesException(Exception):
     """
 
 
-class ProcessNotStarted(SaltFactoriesException):
+class ProcessFailed(SaltFactoriesException):
     """
-    Exception raised when a process failed to start
+    Exception raised when a sub-process fails
     """
 
-    def __init__(self, message, stdout=None, stderr=None, exc=None):
-        super(ProcessNotStarted, self).__init__()
+    def __init__(self, message, cmdline=None, stdout=None, stderr=None, exc=None):
+        super(ProcessFailed, self).__init__()
         self.message = message
+        self.cmdline = cmdline
         self.stdout = stdout
         self.stderr = stderr
         self.exc = exc
 
     def __str__(self):
         message = self.message
+        if self.cmdline:
+            message += "\n Command Line: {}".format(self.cmdline)
         if self.stdout or self.stderr:
             message += "\n Process Output:"
         if self.stdout:
@@ -43,6 +46,12 @@ class ProcessNotStarted(SaltFactoriesException):
         if self.stdout or self.stderr or self.exc:
             message += "\n"
         return message
+
+
+class ProcessNotStarted(ProcessFailed):
+    """
+    Exception raised when a process failed to start
+    """
 
 
 class ProcessTimeout(ProcessNotStarted):
