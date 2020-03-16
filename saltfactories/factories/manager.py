@@ -15,7 +15,7 @@ import sys
 import psutil
 
 import saltfactories.utils.processes.helpers
-import saltfactories.utils.processes.salt as salt_factories
+import saltfactories.utils.processes.salts as salt_factories
 from saltfactories.factories import master
 from saltfactories.factories import minion
 from saltfactories.factories import proxy

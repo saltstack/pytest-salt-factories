@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-    saltfactories.utils.processes.salt
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    saltfactories.utils.processes.salts
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Salt related daemon classes and CLI processes implementations
+    Salt's related daemon classes and CLI processes implementations
 """
 from __future__ import absolute_import
 from __future__ import print_function

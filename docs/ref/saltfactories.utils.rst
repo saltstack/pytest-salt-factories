@@ -43,6 +43,14 @@ saltfactories.utils.log\_server module
    :undoc-members:
    :show-inheritance:
 
+saltfactories.utils.markers module
+----------------------------------
+
+.. automodule:: saltfactories.utils.markers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 saltfactories.utils.ports module
 --------------------------------
 

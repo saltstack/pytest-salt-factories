@@ -227,7 +227,7 @@ def start_daemon(
             Raised when a process fails to start or when the code used to confirm that the daemon is up also fails.
         RuntimeError:
             `RuntimeError` is raised when a process defines
-            :py:meth:`~saltfactories.utils.processes.salt.SaltDaemonScriptBase.get_check_events` but no
+            :py:meth:`~saltfactories.utils.processes.salts.SaltDaemonScriptBase.get_check_events` but no
             ``event_listener`` argument was passed.
 
     Returns:

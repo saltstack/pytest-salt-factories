@@ -20,10 +20,18 @@ saltfactories.utils.processes.helpers module
    :undoc-members:
    :show-inheritance:
 
-saltfactories.utils.processes.salt module
+saltfactories.utils.processes.salts module
+------------------------------------------
+
+.. automodule:: saltfactories.utils.processes.salts
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+saltfactories.utils.processes.sshd module
 -----------------------------------------
 
-.. automodule:: saltfactories.utils.processes.salt
+.. automodule:: saltfactories.utils.processes.sshd
    :members:
    :undoc-members:
    :show-inheritance:

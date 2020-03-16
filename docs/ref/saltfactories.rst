@@ -28,10 +28,26 @@ saltfactories.hookspec module
    :undoc-members:
    :show-inheritance:
 
+saltfactories.markers module
+----------------------------
+
+.. automodule:: saltfactories.markers
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 saltfactories.plugin module
 ---------------------------
 
 .. automodule:: saltfactories.plugin
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+saltfactories.stats module
+--------------------------
+
+.. automodule:: saltfactories.stats
    :members:
    :undoc-members:
    :show-inheritance:
