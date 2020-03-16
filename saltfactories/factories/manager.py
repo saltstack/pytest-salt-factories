@@ -656,8 +656,7 @@ class SaltFactoriesManager(object):
         )
         self.cache[cache_key][daemon_id] = proc
         if self.stats_processes:
-            process_name = proc.log_prefix.strip().lstrip("[").rstrip("]")
-            self.stats_processes[process_name] = psutil.Process(proc.pid)
+            self.stats_processes[proc.get_display_name()] = psutil.Process(proc.pid)
         request.addfinalizer(proc.terminate)
         request.addfinalizer(lambda: self.cache[cache_key].pop(daemon_id))
         return proc

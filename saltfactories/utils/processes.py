@@ -246,7 +246,7 @@ def start_daemon(
             cwd=cwd,
             **extra_daemon_class_kwargs
         )
-        log_prefix = process.log_prefix
+        log_prefix = process.get_log_prefix()
         log.info("%sStarting %r. Attempt: %s", log_prefix, process, attempts)
         start_time = time.time()
         process.start()
@@ -444,25 +444,26 @@ class FactoryProcess(object):
         if config is None:
             config = {}
         self.config = config
-        if "__role" in config:
-            pytest_config_key = "pytest-{}".format(config["__role"])
-            log_prefix = config.get(pytest_config_key, {}).get("log", {}).get("prefix") or ""
-            if log_prefix:
-                log_prefix = "[{}] ".format(log_prefix)
-        else:
-            log_prefix = ""
-        self.log_prefix = log_prefix
         self.slow_stop = slow_stop
         self.environ = environ or os.environ.copy()
-        # We really do not want buffered output
-        self.environ.setdefault(str("PYTHONUNBUFFERED"), str("1"))
-        # Don't write .pyc files or create them in __pycache__ directories
-        self.environ.setdefault(str("PYTHONDONTWRITEBYTECODE"), str("1"))
         self.cwd = cwd or os.getcwd()
         self._terminal = None
         self._terminal_result = None
         self._children = []
         self._base_script_args = base_script_args
+
+    def get_display_name(self):
+        """
+        Returns a name to show when process stats reports are enabled
+        """
+        return self.cli_script_name
+
+    def get_log_prefix(self):
+        """
+        Returns the log prefix that shall be used for a salt daemon forwarding log records.
+        It is also used by :py:func:`start_daemon` when starting the daemon subprocess.
+        """
+        return "[{}] ".format(self.cli_script_name)
 
     def get_script_path(self):
         """
@@ -523,7 +524,7 @@ class FactoryProcess(object):
             return self._terminal_result
         # Allow some time to get all output from process
         time.sleep(0.125)
-        log.info("%sStopping %s", self.log_prefix, self.__class__.__name__)
+        log.info("%sStopping %s", self.get_log_prefix(), self.__class__.__name__)
         # Collect any child processes information before terminating the process
         try:
             for child in psutil.Process(self._terminal.pid).children(recursive=True):
@@ -544,7 +545,7 @@ class FactoryProcess(object):
         self._terminal.poll()
         stdout, stderr = self._terminal.communicate()
         try:
-            log_message = "{}Terminated {}.".format(self.log_prefix, self.__class__.__name__)
+            log_message = "{}Terminated {}.".format(self.get_log_prefix(), self.__class__.__name__)
             if stdout or stderr:
                 log_message += " Process Output:"
                 if stdout:
@@ -594,7 +595,7 @@ class FactoryScriptBase(FactoryProcess):
         # Build the cmdline to pass to the terminal
         proc_args = self.build_cmdline(*args, **kwargs)
 
-        log.info("%sRunning %r in CWD: %s ...", self.log_prefix, proc_args, self.cwd)
+        log.info("%sRunning %r in CWD: %s ...", self.get_log_prefix(), proc_args, self.cwd)
 
         terminal = self.init_terminal(proc_args, cwd=self.cwd, env=self.environ,)
         timmed_out = False
@@ -610,7 +611,7 @@ class FactoryScriptBase(FactoryProcess):
         if timmed_out:
             raise ProcessTimeout(
                 "{}Failed to run: {}; Error: Timed out after {} seconds!".format(
-                    self.log_prefix, proc_args, timeout
+                    self.get_log_prefix(), proc_args, timeout
                 ),
                 stdout=result.stdout,
                 stderr=result.stderr,
@@ -628,7 +629,9 @@ class FactoryScriptBase(FactoryProcess):
                 json_out = json.loads(stdout)
             except ValueError:
                 log.debug(
-                    "%sFailed to load JSON from the following output:\n%r", self.log_prefix, stdout
+                    "%sFailed to load JSON from the following output:\n%r",
+                    self.get_log_prefix(),
+                    stdout,
                 )
                 json_out = None
         else:
@@ -641,6 +644,10 @@ class FactoryPythonScriptBase(FactoryScriptBase):
         python_executable = kwargs.pop("python_executable", None)
         super(FactoryPythonScriptBase, self).__init__(*args, **kwargs)
         self.python_executable = python_executable or sys.executable
+        # We really do not want buffered output
+        self.environ.setdefault(str("PYTHONUNBUFFERED"), str("1"))
+        # Don't write .pyc files or create them in __pycache__ directories
+        self.environ.setdefault(str("PYTHONDONTWRITEBYTECODE"), str("1"))
 
     def build_cmdline(self, *args, **kwargs):
         proc_args = super(FactoryPythonScriptBase, self).build_cmdline(*args, **kwargs)
@@ -669,10 +676,12 @@ class FactoryDaemonScriptBase(FactoryProcess):
         """
         Start the daemon subprocess
         """
-        log.info("%sStarting DAEMON %s in CWD: %s", self.log_prefix, self.cli_script_name, self.cwd)
+        log.info(
+            "%sStarting DAEMON %s in CWD: %s", self.get_log_prefix(), self.cli_script_name, self.cwd
+        )
         cmdline = self.build_cmdline()
 
-        log.info("%sRunning %r...", self.log_prefix, cmdline)
+        log.info("%sRunning %r...", self.get_log_prefix(), cmdline)
 
         self.init_terminal(
             cmdline, env=self.environ, cwd=self.cwd,
@@ -758,6 +767,36 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase, Sal
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         raise NotImplementedError
+
+    def get_log_prefix(self):
+        """
+        Returns the log prefix that shall be used for a salt daemon forwarding log records.
+        It is also used by :py:func:`start_daemon` when starting the daemon subprocess.
+        """
+        try:
+            return self._log_prefix
+        except AttributeError:
+            try:
+                pytest_config_key = "pytest-{}".format(self.config["__role"])
+                log_prefix = (
+                    self.config.get(pytest_config_key, {}).get("log", {}).get("prefix") or ""
+                )
+                if log_prefix:
+                    self._log_prefix = "[{}] ".format(log_prefix)
+            except KeyError:
+                # This should really be a salt daemon which always set's `__role` in its config
+                self._log_prefix = super(SaltDaemonScriptBase, self).get_log_prefix()
+        return self._log_prefix
+
+    def get_display_name(self):
+        """
+        Returns a name to show when process stats reports are enabled
+        """
+        try:
+            return self._display_name
+        except AttributeError:
+            self._display_name = self.get_log_prefix().strip().lstrip("[").rstrip("]")
+        return self._display_name
 
 
 class SaltMaster(SaltDaemonScriptBase):
