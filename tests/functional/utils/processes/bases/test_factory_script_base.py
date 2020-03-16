@@ -1,9 +1,9 @@
 # coding=utf-8
 """
-tests.functional.utils.processes.test_factory_script_base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.functional.utils.processes.bases.test_factory_script_base
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Test saltfactories.utils.processes.FactoryScriptBase
+Test saltfactories.utils.processes.bases.FactoryScriptBase
 """
 from __future__ import absolute_import
 from __future__ import print_function
@@ -15,7 +15,7 @@ import sys
 import pytest
 
 from saltfactories.exceptions import ProcessTimeout
-from saltfactories.utils.processes import FactoryScriptBase
+from saltfactories.utils.processes.bases import FactoryScriptBase
 
 
 @pytest.mark.parametrize("exitcode", [0, 1, 3, 9, 40, 120])

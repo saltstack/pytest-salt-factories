@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-saltfactories.utils.process_stats
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+saltfactories.utils.processes.stats
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Utilities to report statistics about the started subprocesses
 """

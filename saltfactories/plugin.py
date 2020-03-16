@@ -36,7 +36,7 @@ from saltfactories import hookspec
 from saltfactories.factories import manager
 from saltfactories.utils import ports
 from saltfactories.utils.log_server import log_server_listener
-from saltfactories.utils.process_stats import SaltTerminalReporter
+from saltfactories.utils.processes.stats import SaltTerminalReporter
 
 
 log = logging.getLogger(__name__)

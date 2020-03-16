@@ -1,9 +1,9 @@
 # coding=utf-8
 """
-tests.functional.utils.processes.test_factory_daemon_script_base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.functional.utils.processes.bases.test_factory_daemon_script_base
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Test saltfactories.utils.processes.FactoryDaemonScriptBase
+Test saltfactories.utils.processes.bases.FactoryDaemonScriptBase
 """
 from __future__ import absolute_import
 from __future__ import print_function
@@ -17,7 +17,7 @@ import time
 import psutil
 import pytest
 
-from saltfactories.utils.processes import FactoryDaemonScriptBase
+from saltfactories.utils.processes.bases import FactoryDaemonScriptBase
 
 
 def kill_children(procs):
