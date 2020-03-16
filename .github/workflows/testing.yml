@@ -19,6 +19,40 @@ jobs:
         key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
     - uses: pre-commit/action@v1.0.1
 
+  Docs:
+    runs-on: ubuntu-latest
+    needs: Pre-Commit
+
+    timeout-minutes: 10
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python 3.7 For Nox
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.7
+
+    - name: Install Nox
+      run: |
+        python -m pip install --upgrade pip
+        pip install nox
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Doc Requirements
+      run: |
+        nox --force-color -e docs --install-only
+
+    - name: Build Docs
+      env:
+        SKIP_REQUIREMENTS_INSTALL: YES
+      run: |
+        nox --force-color -e docs
+
   Linux:
     runs-on: ubuntu-latest
     needs: Pre-Commit
