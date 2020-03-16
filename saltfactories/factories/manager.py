@@ -38,7 +38,6 @@ class SaltFactoriesManager(object):
     def __init__(
         self,
         pytestconfig,
-        stats_processes,
         root_dir,
         log_server_port,
         log_server_level,
@@ -50,7 +49,42 @@ class SaltFactoriesManager(object):
         environ=None,
         slow_stop=True,
         start_timeout=10,
+        stats_processes=None,
     ):
+        """
+
+        Args:
+            pytestconfig (:fixture:`pytestconfig`):
+                PyTest `pytestconfig` fixture
+            root_dir:
+            log_server_port (int):
+            log_server_level (int):
+            executable (str) :
+                The path to the python executable to use to run python CLI scripts.
+                Defaults to :py:attr:`sys.executable`
+            code_dir (str):
+                The path to the code root directory of the project being tested. This is important for proper
+                code-coverage paths.
+            inject_coverage (bool):
+                Inject code-coverage related code in the generated CLI scripts
+            inject_sitecustomize (bool):
+                Inject code in the generated CLI scripts in order for our `sitecustumise.py` to be loaded by
+                subprocesses.
+            cwd (str):
+                The path to the current working directory
+            environ(dict):
+                A dictionary of `key`, `value` pairs to add to the environment.
+            slow_stop(bool):
+                Wether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
+                :py:meth:`~subprocess.Popen.terminate` on the sub-procecess.
+                When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
+                can be written down to disk.
+            start_timeout(int):
+                The amount of time, in seconds, to wait, until a subprocess is considered as not started.
+            stats_processes (:py:class:`~collections.OrderedDict`):
+                This will be an `OrderedDict` instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
+                hook accessible at `stats_processes` on the `session` attribute of the :fixture:`request`.
+        """
         self.pytestconfig = pytestconfig
         self.stats_processes = stats_processes
         self.root_dir = root_dir

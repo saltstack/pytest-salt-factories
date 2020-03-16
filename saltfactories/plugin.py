@@ -159,10 +159,10 @@ def salt_factories(
         raise RuntimeError("The 'salt_factories_config' fixture MUST return a dictionary")
     _manager = manager.SaltFactoriesManager(
         pytestconfig,
-        request.session.stats_processes,
         tempdir,
         log_server_port,
         log_server_level,
+        stats_processes=request.session.stats_processes,
         **salt_factories_config
     )
     yield _manager
