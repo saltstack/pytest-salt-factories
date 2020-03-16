@@ -36,8 +36,10 @@ class SaltConfigMixin(object):
 
 class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
     def __init__(self, *args, **kwargs):
+        config = kwargs.pop("config", None) or {}
         hard_crash = kwargs.pop("salt_hard_crash", False)
         super(SaltScriptBase, self).__init__(*args, **kwargs)
+        self.config = config
         self.hard_crash = hard_crash
 
     def get_base_script_args(self):
@@ -80,6 +82,11 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
 
 
 class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase, SaltConfigMixin):
+    def __init__(self, *args, **kwargs):
+        config = kwargs.pop("config", None) or {}
+        super(SaltDaemonScriptBase, self).__init__(*args, **kwargs)
+        self.config = config
+
     def get_base_script_args(self):
         script_args = super(SaltDaemonScriptBase, self).get_base_script_args()
         config_dir = self.config_dir

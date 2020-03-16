@@ -1,6 +1,13 @@
 saltfactories.utils package
 ===========================
 
+Subpackages
+-----------
+
+.. toctree::
+
+   saltfactories.utils.processes
+
 Submodules
 ----------
 
@@ -40,22 +47,6 @@ saltfactories.utils.ports module
 --------------------------------
 
 .. automodule:: saltfactories.utils.ports
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-saltfactories.utils.process\_stats module
------------------------------------------
-
-.. automodule:: saltfactories.utils.process_stats
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-saltfactories.utils.processes module
-------------------------------------
-
-.. automodule:: saltfactories.utils.processes
    :members:
    :undoc-members:
    :show-inheritance:

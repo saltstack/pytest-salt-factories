@@ -644,9 +644,9 @@ class SaltFactoriesManager(object):
             inject_sitecustomize=self.inject_sitecustomize,
         )
         proc = saltfactories.utils.processes.helpers.start_daemon(
-            daemon_config,
             script_path,
             daemon_class,
+            config=daemon_config,
             start_timeout=self.start_timeout,
             slow_stop=self.slow_stop,
             environ=self.environ,

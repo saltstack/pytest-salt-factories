@@ -135,18 +135,9 @@ class FactoryProcess(object):
     """
 
     def __init__(
-        self,
-        cli_script_name,
-        config=None,
-        slow_stop=True,
-        environ=None,
-        cwd=None,
-        base_script_args=None,
+        self, cli_script_name, slow_stop=True, environ=None, cwd=None, base_script_args=None,
     ):
         self.cli_script_name = cli_script_name
-        if config is None:
-            config = {}
-        self.config = config
         self.slow_stop = slow_stop
         self.environ = environ or os.environ.copy()
         self.cwd = cwd or os.getcwd()

@@ -197,19 +197,42 @@ def terminate_process(pid=None, process=None, children=None, kill_children=None,
 
 
 def start_daemon(
-    config,
     cli_script_name,
     daemon_class,
     start_timeout=10,
-    slow_stop=True,
-    environ=None,
-    cwd=None,
     max_attempts=3,
     event_listener=None,
     **extra_daemon_class_kwargs
 ):
     """
     Returns a running process daemon
+
+    Args:
+        cli_script_name(str):
+            The CLI script which starts the daemon
+        daemon_class(:py:class:`~saltfactories.utils.processes.bases.FactoryDaemonScriptBase`):
+            The class to use to instantiate the process daemon instance.
+        start_timeout(int):
+            The amount of time, in seconds, to wait, until a subprocess is considered as not started.
+        max_attempts(int):
+            How many times to attempt to start the daemon in case of failure
+        event_listener(:py:class:`~saltfactories.utils.event_listener.EventListener`):
+            An instance of :py:class:`~saltfactories.utils.event_listener.EventListener` in case the daemon
+            is a salt daemon.
+        **extra_daemon_class_kwargs(dict):
+            Extra keyword arguments to pass to the ``daemon_class`` when instantiating it.
+
+    Raises:
+        ProcessNotStarted:
+            Raised when a process fails to start or when the code used to confirm that the daemon is up also fails.
+        RuntimeError:
+            `RuntimeError` is raised when a process defines
+            :py:meth:`~saltfactories.utils.processes.salt.SaltDaemonScriptBase.get_check_events` but no
+            ``event_listener`` argument was passed.
+
+    Returns:
+        An instance of the ``daemon_class``, which is a subclass of
+        :py:class:`~saltfactories.utils.processes.bases.FactoryDaemonScriptBase`
     """
     attempts = 0
     log_prefix = ""
@@ -220,14 +243,7 @@ def start_daemon(
 
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
         attempts += 1
-        process = daemon_class(
-            cli_script_name=cli_script_name,
-            config=config,
-            slow_stop=slow_stop,
-            environ=environ,
-            cwd=cwd,
-            **extra_daemon_class_kwargs
-        )
+        process = daemon_class(cli_script_name=cli_script_name, **extra_daemon_class_kwargs)
         log_prefix = process.get_log_prefix()
         log.info("%sStarting %r. Attempt: %s", log_prefix, process, attempts)
         start_time = time.time()
