@@ -204,9 +204,13 @@ class FactoryProcess(object):
         self._terminal = Popen(cmdline, **kwargs)
         # A little sleep to allow the subprocess to start
         time.sleep(0.125)
-        for child in psutil.Process(self._terminal.pid).children(recursive=True):
-            if child not in self._children:
-                self._children.append(child)
+        try:
+            for child in psutil.Process(self._terminal.pid).children(recursive=True):
+                if child not in self._children:
+                    self._children.append(child)
+        except psutil.NoSuchProcess:
+            # The terminal process is gone
+            pass
         atexit.register(self.terminate)
         return self._terminal
 
