@@ -17,7 +17,24 @@ import time
 import psutil
 import pytest
 
-from saltfactories.utils.processes.bases import FactoryDaemonScriptBase
+if sys.platform.startswith("win"):
+    # Because on windows we need the python executable to come before the script,
+    # we recreate FactoryDaemonScriptBase by also subclassing FactoryPythonScriptBase
+    # which adds that functionality
+    from saltfactories.utils.processes.bases import (
+        FactoryDaemonScriptBase as _FactoryDaemonScriptBase,
+    )
+    from saltfactories.utils.processes.bases import FactoryPythonScriptBase
+
+    class FactoryDaemonScriptBase(_FactoryDaemonScriptBase, FactoryPythonScriptBase):
+        pass
+
+    PROCESS_START_TIMEOUT = 2
+
+else:
+    from saltfactories.utils.processes.bases import FactoryDaemonScriptBase
+
+    PROCESS_START_TIMEOUT = 1
 
 
 def kill_children(procs):
@@ -92,7 +109,7 @@ def test_daemon_process_termination(request, tempfiles):
     # Make sure the daemon is terminated no matter what
     request.addfinalizer(daemon.terminate)
     # Allow the script to start
-    time.sleep(1)
+    time.sleep(PROCESS_START_TIMEOUT)
     assert psutil.pid_exists(daemon_pid)
     proc = psutil.Process(daemon_pid)
     children = proc.children(recursive=True)
@@ -178,7 +195,7 @@ def test_daemon_process_termination_parent_killed(request, tempfiles):
     # Make sure the daemon is terminated no matter what
     request.addfinalizer(daemon.terminate)
     # Allow the script to start
-    time.sleep(1)
+    time.sleep(PROCESS_START_TIMEOUT)
     assert psutil.pid_exists(daemon_pid)
     proc = psutil.Process(daemon_pid)
     children = proc.children(recursive=True)
