@@ -25,6 +25,14 @@ saltfactories.plugins.markers module
    :undoc-members:
    :show-inheritance:
 
+saltfactories.plugins.sysinfo module
+------------------------------------
+
+.. automodule:: saltfactories.plugins.sysinfo
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 saltfactories.plugins.sysstats module
 -------------------------------------
 
