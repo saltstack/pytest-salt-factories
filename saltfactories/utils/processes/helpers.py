@@ -286,8 +286,9 @@ def start_daemon(
                     result = process.terminate()
                     if attempts >= max_attempts:
                         raise ProcessNotStarted(
-                            "{}The {!r} has failed to confirm running status after {} attempts".format(
-                                log_prefix, process, attempts
+                            "{}The {!r} has failed to confirm running status after {} attempts, which "
+                            "took {:.2f} seconds".format(
+                                log_prefix, process, attempts, time.time() - start_time
                             ),
                             stdout=result.stdout,
                             stderr=result.stderr,
@@ -301,7 +302,9 @@ def start_daemon(
                 if attempts >= max_attempts:
                     raise ProcessNotStarted(
                         "{}The {!r} has failed to confirm running status after {} attempts and raised an "
-                        "exception: {}.".format(log_prefix, process, attempts, str(exc)),
+                        "exception: {}. Took {:.2f} seconds.".format(
+                            log_prefix, process, attempts, str(exc), time.time() - start_time
+                        ),
                         stdout=result.stdout,
                         stderr=result.stderr,
                         exc=sys.exc_info(),
@@ -309,7 +312,13 @@ def start_daemon(
                 continue
             # A little breathing before returning the process
             time.sleep(0.125)
-            log.info("%sThe %r is running after %d attempts", log_prefix, process, attempts)
+            log.info(
+                "%sThe %r is running after %d attempts. Took %1.2f seconds",
+                log_prefix,
+                process,
+                attempts,
+                time.time() - start_time,
+            )
             break
         else:
             process.terminate()
@@ -317,18 +326,15 @@ def start_daemon(
             time.sleep(1)
             continue
     else:
+        stderr = stdout = None
         if process is not None:
             result = process.terminate()
-            raise ProcessNotStarted(
-                "{}The {!r} has failed to confirm running status after {} attempts.".format(
-                    log_prefix, process, attempts
-                ),
-                stdout=result.stdout,
-                stderr=result.stderr,
-            )
+            stderr = result.stderr
+            stdout = result.stdout
         raise ProcessNotStarted(
-            "{}The {!r} has failed to confirm running status after {} attempts.".format(
-                log_prefix, process, attempts
-            ),
+            "{}The {!r} has failed to confirm running status after {} attempts, which "
+            "took {:.2f} seconds.".format(log_prefix, process, attempts, time.time() - start_time),
+            stdout=stdout,
+            stderr=stderr,
         )
     return process
