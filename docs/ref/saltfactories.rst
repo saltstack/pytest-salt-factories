@@ -1,12 +1,18 @@
 saltfactories package
 =====================
 
+.. automodule:: saltfactories
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
 .. toctree::
 
    saltfactories.factories
+   saltfactories.plugins
    saltfactories.utils
 
 Submodules
@@ -28,35 +34,10 @@ saltfactories.hookspec module
    :undoc-members:
    :show-inheritance:
 
-saltfactories.markers module
-----------------------------
-
-.. automodule:: saltfactories.markers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 saltfactories.plugin module
 ---------------------------
 
 .. automodule:: saltfactories.plugin
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-saltfactories.stats module
---------------------------
-
-.. automodule:: saltfactories.stats
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: saltfactories
    :members:
    :undoc-members:
    :show-inheritance:

@@ -1,6 +1,11 @@
 saltfactories.utils package
 ===========================
 
+.. automodule:: saltfactories.utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Subpackages
 -----------
 
@@ -55,15 +60,6 @@ saltfactories.utils.ports module
 --------------------------------
 
 .. automodule:: saltfactories.utils.ports
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: saltfactories.utils
    :members:
    :undoc-members:
    :show-inheritance:

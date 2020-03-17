@@ -1,6 +1,11 @@
 saltfactories.factories package
 ===============================
 
+.. automodule:: saltfactories.factories
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -40,15 +45,6 @@ saltfactories.factories.syndic module
 -------------------------------------
 
 .. automodule:: saltfactories.factories.syndic
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: saltfactories.factories
    :members:
    :undoc-members:
    :show-inheritance:

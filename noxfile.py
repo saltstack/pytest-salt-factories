@@ -4,6 +4,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 
 import os
+import shutil
 import sys
 import tempfile
 import textwrap
@@ -330,3 +331,14 @@ def docs_html(session):
     session.run("make", "clean", external=True)
     session.run("make", "html", "SPHINXOPTS=-W", external=True)
     os.chdir("..")
+
+
+@nox.session(name="gen-api-docs", python="3")
+def gen_api_docs_(session):
+    """
+    Generate API Docs
+    """
+    _patch_session(session)
+    session.install("--progress-bar=off", "-r", "requirements-docs.txt", silent=PIP_INSTALL_SILENT)
+    shutil.rmtree("docs/ref")
+    session.run("sphinx-apidoc", "--module-first", "-o", "docs/ref/", "saltfactories/")
