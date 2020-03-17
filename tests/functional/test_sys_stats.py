@@ -23,7 +23,7 @@ def test_basic_sys_stats(testdir):
         [
             "* PASSED*",
             "* Processes Statistics *",
-            "* System  -  CPU:  * %   MEM:  * % (Virtual Memory)",
+            "* System  -  CPU:  * %   MEM:  * % (Virtual Memory)*",
             "* Test Suite Run  -  CPU:   * %   MEM:   * % (RSS)",
             "* 1 passed in *",
         ]
@@ -43,7 +43,7 @@ def test_basic_sys_stats_uss(testdir):
         [
             "* PASSED*",
             "* Processes Statistics *",
-            "* System  -  CPU:  * %   MEM:  * % (Virtual Memory)",
+            "* System  -  CPU:  * %   MEM:  * % (Virtual Memory)*",
             "* Test Suite Run  -  CPU:   * %   MEM:   * % (USS)",
             "* 1 passed in *",
         ]
