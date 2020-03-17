@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    saltfactories.stats
-    ~~~~~~~~~~~~~~~~~~~
+    saltfactories.plugins.sysstats
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Process stats PyTest plugin interface
 """

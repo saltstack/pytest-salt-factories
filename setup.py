@@ -77,8 +77,9 @@ setup(
     entry_points={
         "pytest11": [
             "salt-factories = saltfactories.plugin",
-            "salt-factories-stats = saltfactories.stats",
-            "salt-factories-markers = saltfactories.markers",
+            "salt-factories-stats = saltfactories.plugins.sysstats",
+            "salt-factories-markers = saltfactories.plugins.markers",
+            "salt-factories-factories = saltfactories.plugins.factories",
         ]
     },
 )

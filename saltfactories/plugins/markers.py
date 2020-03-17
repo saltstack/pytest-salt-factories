@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    saltfactories.markers
-    ~~~~~~~~~~~~~~~~~~~~~
+    saltfactories.plugins.markers
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Salt Factories Related Markers
 """
