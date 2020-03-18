@@ -238,10 +238,6 @@ def start_daemon(
     attempts = 0
     log_prefix = ""
 
-    if sys.platform.startswith("win"):
-        # Double the start timeout on windows
-        start_timeout = start_timeout * 2
-
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
         attempts += 1
         process = daemon_class(cli_script_name=cli_script_name, **extra_daemon_class_kwargs)
