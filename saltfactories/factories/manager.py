@@ -48,7 +48,7 @@ class SaltFactoriesManager(object):
         cwd=None,
         environ=None,
         slow_stop=True,
-        start_timeout=10,
+        start_timeout=None,
         stats_processes=None,
     ):
         """
@@ -97,6 +97,11 @@ class SaltFactoriesManager(object):
         self.cwd = cwd
         self.environ = environ
         self.slow_stop = slow_stop
+        if start_timeout is None:
+            start_timeout = 30
+            if sys.platform.startswith("win"):
+                # Windows is just slower. Double the start timeout by default
+                start_timeout += start_timeout
         self.start_timeout = start_timeout
         self.scripts_dir = root_dir.join("scripts").ensure(dir=True).strpath
         self.configs = {"minions": {}, "masters": {}}
