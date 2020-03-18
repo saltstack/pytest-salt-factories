@@ -81,10 +81,10 @@ class EventListener(object):
     def wait_for_events(self, patterns, timeout=30, after_time=None):
         start_time = time.time()
         patterns = set(patterns)
-        log.info("Waiting for event patterns: %s", patterns)
+        log.info("Waiting at most %.2f seconds for event patterns: %s", timeout, patterns)
         if after_time is None:
             after_time = time.time()
-        expire = time.time() + timeout
+        expire = start_time + timeout
         while time.time() <= expire:
             if not patterns:
                 break
