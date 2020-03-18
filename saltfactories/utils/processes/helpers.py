@@ -238,6 +238,7 @@ def start_daemon(
     attempts = 0
     log_prefix = ""
 
+    checks_start_time = time.time()
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
         attempts += 1
         process = daemon_class(cli_script_name=cli_script_name, **extra_daemon_class_kwargs)
@@ -285,7 +286,7 @@ def start_daemon(
                         raise ProcessNotStarted(
                             "{}The {!r} has failed to confirm running status after {} attempts, which "
                             "took {:.2f} seconds".format(
-                                log_prefix, process, attempts, time.time() - start_time
+                                log_prefix, process, attempts, time.time() - checks_start_time
                             ),
                             stdout=result.stdout,
                             stderr=result.stderr,
@@ -316,7 +317,7 @@ def start_daemon(
                 log_prefix,
                 process,
                 attempts,
-                time.time() - start_time,
+                time.time() - checks_start_time,
             )
             break
         else:
@@ -332,7 +333,9 @@ def start_daemon(
             stdout = result.stdout
         raise ProcessNotStarted(
             "{}The {!r} has failed to confirm running status after {} attempts, which "
-            "took {:.2f} seconds.".format(log_prefix, process, attempts, time.time() - start_time),
+            "took {:.2f} seconds.".format(
+                log_prefix, process, attempts, time.time() - checks_start_time
+            ),
             stdout=stdout,
             stderr=stderr,
         )
