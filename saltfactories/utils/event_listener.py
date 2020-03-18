@@ -79,7 +79,9 @@ class EventListener(object):
         context.term()
 
     def wait_for_events(self, patterns, timeout=30, after_time=None):
+        start_time = time.time()
         patterns = set(patterns)
+        log.info("Waiting for event patterns: %s", patterns)
         if after_time is None:
             after_time = time.time()
         expire = time.time() + timeout
@@ -98,5 +100,10 @@ class EventListener(object):
                         patterns.remove((_master_id, _pattern))
             time.sleep(0.125)
         else:
+            log.info(
+                "Timmed out after %.2f seconds waiting for event patterns: %s",
+                time.time() - start_time,
+                patterns,
+            )
             return False
         return True
