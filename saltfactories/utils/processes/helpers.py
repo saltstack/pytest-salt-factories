@@ -18,6 +18,7 @@ import time
 import weakref
 
 import psutil
+import six
 
 from saltfactories.exceptions import ProcessNotStarted
 from saltfactories.utils import ports
@@ -294,6 +295,8 @@ def start_daemon(
                             stderr=result.stderr,
                         )
                     continue
+            except ProcessNotStarted:
+                six.reraise(*sys.exc_info())
             except Exception as exc:  # pylint: disable=broad-except
                 log.exception(
                     "%sException caugth on %r: %s", log_prefix, process, exc, exc_info=True
