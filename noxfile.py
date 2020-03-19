@@ -152,7 +152,7 @@ def _tests(session):
     Run tests
     """
     if SKIP_REQUIREMENTS_INSTALL is False:
-        session.install("-r", "requirements-testing.txt", silent=PIP_INSTALL_SILENT)
+        session.install("-r", os.path.join("requirements", "tests.txt"), silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         _check_crypto_lib_installed(session)
@@ -209,7 +209,10 @@ def blacken(session):
     """
     _patch_session(session)
     session.install(
-        "--progress-bar=off", "-r", "requirements-testing.txt", silent=PIP_INSTALL_SILENT
+        "--progress-bar=off",
+        "-r",
+        os.path.join("requirements", "lint.txt"),
+        silent=PIP_INSTALL_SILENT,
     )
     if session.posargs:
         files = session.posargs
@@ -245,7 +248,10 @@ def blacken(session):
 def _lint(session, rcfile, flags, paths):
     _patch_session(session)
     session.install(
-        "--progress-bar=off", "-r", "requirements-testing.txt", silent=PIP_INSTALL_SILENT
+        "--progress-bar=off",
+        "-r",
+        os.path.join("requirements", "lint.txt"),
+        silent=PIP_INSTALL_SILENT,
     )
     session.run("pylint", "--version")
     pylint_report_path = os.environ.get("PYLINT_REPORT")
@@ -326,7 +332,12 @@ def docs_html(session):
     Build Salt's HTML Documentation
     """
     _patch_session(session)
-    session.install("--progress-bar=off", "-r", "requirements-docs.txt", silent=PIP_INSTALL_SILENT)
+    session.install(
+        "--progress-bar=off",
+        "-r",
+        os.path.join("requirements", "docs.txt"),
+        silent=PIP_INSTALL_SILENT,
+    )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
     session.run("make", "html", "SPHINXOPTS=-W", external=True)
@@ -339,6 +350,11 @@ def gen_api_docs_(session):
     Generate API Docs
     """
     _patch_session(session)
-    session.install("--progress-bar=off", "-r", "requirements-docs.txt", silent=PIP_INSTALL_SILENT)
+    session.install(
+        "--progress-bar=off",
+        "-r",
+        os.path.join("requirements", "docs.txt"),
+        silent=PIP_INSTALL_SILENT,
+    )
     shutil.rmtree("docs/ref")
     session.run("sphinx-apidoc", "--module-first", "-o", "docs/ref/", "saltfactories/")

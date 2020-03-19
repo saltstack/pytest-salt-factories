@@ -37,7 +37,7 @@ def read(fname):
 
 def parse_requirements():
     requirements = []
-    requirements_file_path = os.path.join(SETUP_DIRNAME, "requirements.txt")
+    requirements_file_path = os.path.join(SETUP_DIRNAME, "requirements", "base.txt")
     for line in read(requirements_file_path).splitlines():
         if line.startswith("#"):
             continue
