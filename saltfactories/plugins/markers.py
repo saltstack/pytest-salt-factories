@@ -106,6 +106,11 @@ def pytest_configure(config):
         "destructive_test: Run destructive tests. These tests can include adding "
         "or removing users from your system for example.",
     )
+    config.addinivalue_line(
+        "markers",
+        "expensive_test: Run expensive tests. These tests can include starting resources "
+        "which cost money, like VMs, for example.",
+    )
     config.addinivalue_line("markers", "skip_if_not_root: Skip if the current user is not `root`.")
     config.addinivalue_line(
         "markers",
