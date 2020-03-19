@@ -89,9 +89,7 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
                     # If it's still a positive number, add it to the salt command CLI flags
                     args.append("--timeout={}".format(salt_cli_timeout))
 
-        # Double dash flags should always come first. Users should be doing this already when calling run()
-        # but we just double check
-        proc_args += sorted(args, key=lambda x: -1 if x.startswith("--") else 1)
+        proc_args += list(args)
         for key in kwargs:
             proc_args.append("{}={}".format(key, kwargs[key]))
         proc_args = super(SaltScriptBase, self).build_cmdline(*proc_args)
