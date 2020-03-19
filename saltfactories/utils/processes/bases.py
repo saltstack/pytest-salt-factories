@@ -143,6 +143,7 @@ class FactoryProcess(object):
         self.cwd = cwd or os.getcwd()
         self._terminal = None
         self._terminal_result = None
+        self._terminal_timeout = None
         self._children = []
         self._base_script_args = base_script_args
 
@@ -297,7 +298,14 @@ class FactoryScriptBase(FactoryProcess):
         timeout_expire = time.time() + timeout
 
         # Build the cmdline to pass to the terminal
-        proc_args = self.build_cmdline(*args, **kwargs)
+        # We set the _terminal_timeout attribute while calling build_cmdline in case it needs
+        # access to that information to build the command line
+        try:
+            self._terminal_timeout = timeout
+            proc_args = self.build_cmdline(*args, **kwargs)
+        finally:
+            # We now clear the _terminal_timeout attribute
+            self._terminal_timeout = None
 
         log.info("%sRunning %r in CWD: %s ...", self.get_log_prefix(), proc_args, self.cwd)
 

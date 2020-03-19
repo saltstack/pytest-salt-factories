@@ -35,6 +35,9 @@ class SaltConfigMixin(object):
 
 
 class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
+
+    __cli_timeout_supported__ = False
+
     def __init__(self, *args, **kwargs):
         config = kwargs.pop("config", None) or {}
         hard_crash = kwargs.pop("salt_hard_crash", False)
@@ -71,6 +74,21 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         proc_args = []
         if minion_tgt:
             proc_args.append(minion_tgt)
+
+        if self.__cli_timeout_supported__:
+            args = list(args)
+            for arg in args:
+                if arg == "-t" or arg.startswith("--timeout"):
+                    break
+            else:
+                salt_cli_timeout = self._terminal_timeout
+                if salt_cli_timeout:
+                    # Shave off a few seconds so that the salt command times out before the terminal does
+                    salt_cli_timeout -= 5
+                if salt_cli_timeout:
+                    # If it's still a positive number, add it to the salt command CLI flags
+                    args.append("--timeout={}".format(salt_cli_timeout))
+
         # Double dash flags should always come first. Users should be doing this already when calling run()
         # but we just double check
         proc_args += sorted(args, key=lambda x: -1 if x.startswith("--") else 1)
@@ -201,6 +219,8 @@ class SaltCLI(SaltScriptBase):
     Simple subclass to the salt CLI script
     """
 
+    __cli_timeout_supported__ = True
+
     def process_output(self, stdout, stderr, cli_cmd=None):
         if "No minions matched the target. No command was sent, no jid was assigned.\n" in stdout:
             stdout = stdout.split("\n", 1)[1:][0]
@@ -227,6 +247,8 @@ class SaltCallCLI(SaltScriptBase):
     Simple subclass to the salt-call CLI script
     """
 
+    __cli_timeout_supported__ = True
+
     def get_minion_tgt(self, kwargs):
         return None
 
@@ -250,6 +272,8 @@ class SaltRunCLI(SaltScriptBase):
     Simple subclass to the salt-run CLI script
     """
 
+    __cli_timeout_supported__ = True
+
     def get_minion_tgt(self, kwargs):
         return None
 
@@ -258,6 +282,8 @@ class SaltCpCLI(SaltScriptBase):
     """
     Simple subclass to the salt-cp CLI script
     """
+
+    __cli_timeout_supported__ = True
 
     def process_output(self, stdout, stderr, cli_cmd=None):
         if "No minions matched the target. No command was sent, no jid was assigned.\n" in stdout:
