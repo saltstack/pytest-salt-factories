@@ -96,12 +96,12 @@ class ProcessResult(namedtuple("ProcessResult", ("exitcode", "stdout", "stderr")
         return super(ProcessResult, cls).__new__(cls, exitcode, stdout, stderr)
 
     # These are copied from the namedtuple verbose output in order to quiet down PyLint
-    exitcode = property(itemgetter(0), doc="ShellResult exit code property")
-    stdout = property(itemgetter(1), doc="ShellResult stdout property")
-    stderr = property(itemgetter(2), doc="ShellResult stderr property")
+    exitcode = property(itemgetter(0), doc="ProcessResult exit code property")
+    stdout = property(itemgetter(1), doc="ProcessResult stdout property")
+    stderr = property(itemgetter(2), doc="ProcessResult stderr property")
 
 
-class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "json"))):
+class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "json", "cmdline"))):
     """
     This class serves the purpose of having a common result class which will hold the
     resulting data from a subprocess command.
@@ -109,16 +109,19 @@ class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "js
 
     __slots__ = ()
 
-    def __new__(cls, exitcode, stdout, stderr, json):
+    def __new__(cls, exitcode, stdout, stderr, json=None, cmdline=None):
         if not isinstance(exitcode, int):
             raise ValueError("'exitcode' needs to be an integer, not '{}'".format(type(exitcode)))
-        return super(ShellResult, cls).__new__(cls, exitcode, stdout, stderr, json)
+        return super(ShellResult, cls).__new__(
+            cls, exitcode, stdout, stderr, json=json, cmdline=cmdline
+        )
 
     # These are copied from the namedtuple verbose output in order to quiet down PyLint
     exitcode = property(itemgetter(0), doc="ShellResult exit code property")
     stdout = property(itemgetter(1), doc="ShellResult stdout property")
     stderr = property(itemgetter(2), doc="ShellResult stderr property")
     json = property(itemgetter(3), doc="ShellResult stdout JSON decoded, when parseable.")
+    cmdline = property(itemgetter(4), doc="ShellResult cmdline property")
 
     def __eq__(self, other):
         """
@@ -327,13 +330,14 @@ class FactoryScriptBase(FactoryProcess):
                 ),
                 stdout=result.stdout,
                 stderr=result.stderr,
+                cmdline=proc_args,
             )
 
         exitcode = result.exitcode
         stdout, stderr, json_out = self.process_output(
             result.stdout, result.stderr, cli_cmd=proc_args
         )
-        return ShellResult(exitcode, stdout, stderr, json_out)
+        return ShellResult(exitcode, stdout, stderr, json=json_out, cmdline=proc_args)
 
     def process_output(self, stdout, stderr, cli_cmd=None):
         if stdout:
