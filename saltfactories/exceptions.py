@@ -38,12 +38,12 @@ class ProcessFailed(SaltFactoriesException):
         if self.stdout or self.stderr:
             message += "\n Process Output:"
         if self.stdout:
-            message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(self.stdout)
+            message += "\n   >>>>> STDOUT >>>>>\n{}\n   <<<<< STDOUT <<<<<".format(self.stdout)
         if self.stderr:
-            message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(self.stdout)
+            message += "\n   >>>>> STDERR >>>>>\n{}\n   <<<<< STDERR <<<<<".format(self.stderr)
         if self.exc:
-            message += "\n{}".format("".join(traceback.format_exception(*self.exc)))
-        if self.stdout or self.stderr or self.exc:
+            message += "\n{}".format("".join(traceback.format_exception(*self.exc)).rstrip())
+        if self.cmdline or self.stdout or self.stderr or self.exc:
             message += "\n"
         return message
 
