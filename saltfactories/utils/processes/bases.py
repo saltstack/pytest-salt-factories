@@ -341,7 +341,7 @@ class FactoryScriptBase(FactoryProcess):
 
             exitcode = result.exitcode
             stdout, stderr, json_out = self.process_output(
-                result.stdout, result.stderr, cli_cmd=proc_args
+                result.stdout, result.stderr, cmdline=proc_args
             )
             log.info(
                 "%sCompleted %r in CWD: %s after %.2f seconds",
@@ -355,7 +355,7 @@ class FactoryScriptBase(FactoryProcess):
             # We now clear the _terminal_timeout attribute
             self._terminal_timeout = None
 
-    def process_output(self, stdout, stderr, cli_cmd=None):
+    def process_output(self, stdout, stderr, cmdline=None):
         if stdout:
             try:
                 json_out = json.loads(stdout)

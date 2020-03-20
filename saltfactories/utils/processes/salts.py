@@ -13,6 +13,8 @@ import logging
 import os
 import sys
 
+import six
+
 try:
     from salt.utils.parsers import SaltKeyOptionParser
 
@@ -154,6 +156,20 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         log.debug("Built cmdline: %s", proc_args)
         return proc_args
 
+    def process_output(self, stdout, stderr, cmdline=None):
+        stdout, stderr, json_out = super(SaltScriptBase, self).process_output(
+            stdout, stderr, cmdline=cmdline
+        )
+        if json_out and isinstance(json_out, six.string_types) and "--out=json" in cmdline:
+            # Sometimes the parsed JSON is just a string, for example:
+            #  OUTPUT: '"The salt master could not be contacted. Is master running?"\n'
+            #  LOADED JSON: 'The salt master could not be contacted. Is master running?'
+            #
+            # In this case, we assign the loaded JSON to stdout and reset json_out
+            stdout = json_out
+            json_out = None
+        return stdout, stderr, json_out
+
 
 class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase, SaltConfigMixin):
     def __init__(self, *args, **kwargs):
@@ -277,14 +293,14 @@ class SaltCLI(SaltScriptBase):
 
     __cli_timeout_supported__ = True
 
-    def process_output(self, stdout, stderr, cli_cmd=None):
+    def process_output(self, stdout, stderr, cmdline=None):
         if "No minions matched the target. No command was sent, no jid was assigned.\n" in stdout:
             stdout = stdout.split("\n", 1)[1:][0]
         old_stdout = None
-        if "--show-jid" in cli_cmd and stdout.startswith("jid: "):
+        if "--show-jid" in cmdline and stdout.startswith("jid: "):
             old_stdout = stdout
             stdout = stdout.split("\n", 1)[-1].strip()
-        stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cli_cmd)
+        stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cmdline)
         if old_stdout is not None:
             stdout = old_stdout
         if json_out:
@@ -308,10 +324,10 @@ class SaltCallCLI(SaltScriptBase):
     def get_minion_tgt(self, kwargs):
         return None
 
-    def process_output(self, stdout, stderr, cli_cmd=None):
+    def process_output(self, stdout, stderr, cmdline=None):
         # Under salt-call, the minion target is always "local"
         self._minion_tgt = "local"
-        stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cli_cmd)
+        stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cmdline)
         if json_out:
             if not isinstance(json_out, dict):
                 # A string was most likely loaded, not what we want.
@@ -341,10 +357,10 @@ class SaltCpCLI(SaltScriptBase):
 
     __cli_timeout_supported__ = True
 
-    def process_output(self, stdout, stderr, cli_cmd=None):
+    def process_output(self, stdout, stderr, cmdline=None):
         if "No minions matched the target. No command was sent, no jid was assigned.\n" in stdout:
             stdout = stdout.split("\n", 1)[1:][0]
-        stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cli_cmd)
+        stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cmdline)
         if json_out:
             if not isinstance(json_out, dict):
                 # A string was most likely loaded, not what we want.

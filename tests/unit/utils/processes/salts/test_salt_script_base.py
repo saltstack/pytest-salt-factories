@@ -9,6 +9,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import json
 import sys
 
 import pytest
@@ -221,3 +222,14 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
     # Let's confirm that even though we tried to parse the timeout flag value, it was a bad value and the
     # SaltScriptBase _terminal_timeout attribute was not update
     assert proc._terminal_timeout == flag_value
+
+
+def test_process_output(cli_script_name):
+    in_stdout = '"The salt master could not be contacted. Is master running?"\n'
+    in_stderr = ""
+    cmdline = ["--out=json"]
+    proc = SaltScriptBase(cli_script_name)
+    stdout, stderr, json_out = proc.process_output(in_stdout, in_stderr, cmdline=cmdline)
+    assert stdout == json.loads(in_stdout)
+    assert stderr == in_stderr
+    assert json_out is None
