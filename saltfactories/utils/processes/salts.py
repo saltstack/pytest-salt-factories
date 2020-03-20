@@ -13,6 +13,20 @@ import logging
 import os
 import sys
 
+try:
+    from salt.utils.parsers import SaltKeyOptionParser
+
+    try:
+        SALT_KEY_LOG_LEVEL_SUPPORTED = SaltKeyOptionParser._skip_console_logging_config_ is False
+    except AttributeError:
+        # New logging is in place
+        SALT_KEY_LOG_LEVEL_SUPPORTED = True
+except ImportError:
+    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
+    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
+    # import error, but its safe to pass
+    SALT_KEY_LOG_LEVEL_SUPPORTED = False
+
 from saltfactories.utils.processes.bases import FactoryDaemonScriptBase
 from saltfactories.utils.processes.bases import FactoryPythonScriptBase
 
@@ -37,6 +51,7 @@ class SaltConfigMixin(object):
 class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
 
     __cli_timeout_supported__ = False
+    __cli_log_level_supported__ = True
 
     def __init__(self, *args, **kwargs):
         config = kwargs.pop("config", None) or {}
@@ -116,15 +131,16 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
             # No output was passed, the default output is JSON
             proc_args.append("--out=json")
 
-        # Handle the logging flag
-        for arg in args:
-            if arg in ("-l", "--log-level"):
-                break
-            if arg.startswith("--log-level="):
-                break
-        else:
-            # Default to being quiet on console output
-            proc_args.append("--log-level=quiet")
+        if self.__cli_log_level_supported__:
+            # Handle the logging flag
+            for arg in args:
+                if arg in ("-l", "--log-level"):
+                    break
+                if arg.startswith("--log-level="):
+                    break
+            else:
+                # Default to being quiet on console output
+                proc_args.append("--log-level=quiet")
 
         if minion_tgt:
             proc_args.append(minion_tgt)
@@ -345,15 +361,9 @@ class SaltKeyCLI(SaltScriptBase):
     Simple subclass to the salt-key CLI script
     """
 
-    def get_base_script_args(self):
-        script_args = super(SaltKeyCLI, self).get_base_script_args()
-        # As of Neon, salt-key still does not support --log-level
-        # Only when we get the new logging merged in will we get that, so remove that CLI flag
-        for idx, flag in enumerate(script_args):
-            if flag.startswith("--log-level="):
-                script_args.pop(idx)
-                break
-        return script_args
+    # As of Neon, salt-key still does not support --log-level
+    # Only when we get the new logging merged in will we get that, so remove that CLI flag
+    __cli_log_level_supported__ = SALT_KEY_LOG_LEVEL_SUPPORTED
 
     def get_minion_tgt(self, kwargs):
         return None
