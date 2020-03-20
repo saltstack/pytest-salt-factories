@@ -305,6 +305,7 @@ class FactoryScriptBase(FactoryProcess):
         """
         Run the given command synchronously
         """
+        start_time = time.time()
         timeout = kwargs.pop("_timeout", None) or self.default_timeout
 
         # Build the cmdline to pass to the terminal
@@ -341,6 +342,13 @@ class FactoryScriptBase(FactoryProcess):
             exitcode = result.exitcode
             stdout, stderr, json_out = self.process_output(
                 result.stdout, result.stderr, cli_cmd=proc_args
+            )
+            log.info(
+                "%sCompleted %r in CWD: %s after %.2f seconds",
+                self.get_log_prefix(),
+                proc_args,
+                self.cwd,
+                time.time() - start_time,
             )
             return ShellResult(exitcode, stdout, stderr, json=json_out, cmdline=proc_args)
         finally:
