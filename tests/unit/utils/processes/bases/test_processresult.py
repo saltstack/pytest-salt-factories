@@ -18,3 +18,21 @@ from saltfactories.utils.processes.bases import ProcessResult
 def test_non_int_exitcode_raises_exception(exitcode):
     with pytest.raises(ValueError):
         ProcessResult(exitcode, None, None)
+
+
+def test_attributes():
+    exitcode = 0
+    stdout = "STDOUT"
+    stderr = "STDERR"
+    cmdline = None
+    ret = ProcessResult(exitcode, stdout, stderr)
+    assert ret.exitcode == exitcode
+    assert ret.stdout == stdout
+    assert ret.stderr == stderr
+    assert ret.cmdline == cmdline
+    cmdline = [1, 2, 3]
+    ret = ProcessResult(exitcode, stdout, stderr, cmdline)
+    assert ret.exitcode == exitcode
+    assert ret.stdout == stdout
+    assert ret.stderr == stderr
+    assert ret.cmdline == cmdline

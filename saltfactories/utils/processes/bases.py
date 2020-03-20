@@ -57,6 +57,11 @@ class Popen(subprocess.Popen):
         self.__stderr = stderr
         compat.weakref.finalize(self, stdout.close)
         compat.weakref.finalize(self, stderr.close)
+        if six.PY2:
+            # Under Py2, subprocess.Popen doesn't store the command line passed under
+            # it's args attribute.
+            # Let's do it ourselves
+            self.args = args[0]
 
     def communicate(self, input=None):  # pylint: disable=arguments-differ
         super(Popen, self).communicate(input)
@@ -82,7 +87,7 @@ class Popen(subprocess.Popen):
         return stdout, stderr
 
 
-class ProcessResult(namedtuple("ProcessResult", ("exitcode", "stdout", "stderr"))):
+class ProcessResult(namedtuple("ProcessResult", ("exitcode", "stdout", "stderr", "cmdline"))):
     """
     This class serves the purpose of having a common result class which will hold the
     resulting data from a subprocess command.
@@ -90,15 +95,16 @@ class ProcessResult(namedtuple("ProcessResult", ("exitcode", "stdout", "stderr")
 
     __slots__ = ()
 
-    def __new__(cls, exitcode, stdout, stderr):
+    def __new__(cls, exitcode, stdout, stderr, cmdline=None):
         if not isinstance(exitcode, int):
             raise ValueError("'exitcode' needs to be an integer, not '{}'".format(type(exitcode)))
-        return super(ProcessResult, cls).__new__(cls, exitcode, stdout, stderr)
+        return super(ProcessResult, cls).__new__(cls, exitcode, stdout, stderr, cmdline=cmdline)
 
     # These are copied from the namedtuple verbose output in order to quiet down PyLint
     exitcode = property(itemgetter(0), doc="ProcessResult exit code property")
     stdout = property(itemgetter(1), doc="ProcessResult stdout property")
     stderr = property(itemgetter(2), doc="ProcessResult stderr property")
+    cmdline = property(itemgetter(3), doc="ProcessResult cmdline property")
 
 
 class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "json", "cmdline"))):
@@ -260,7 +266,9 @@ class FactoryProcess(object):
                     )
                 log_message += "\n"
             log.info(log_message)
-            self._terminal_result = ProcessResult(self._terminal.returncode, stdout, stderr)
+            self._terminal_result = ProcessResult(
+                self._terminal.returncode, stdout, stderr, cmdline=self._terminal.args
+            )
             return self._terminal_result
         finally:
             self._terminal = None
