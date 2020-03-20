@@ -16,7 +16,7 @@ import sys
 try:
     import salt.utils.path
     import salt.utils.win_functions
-except ImportError:
+except ImportError:  # pragma: no cover
     # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
     # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
     # import error, but its safe to pass
