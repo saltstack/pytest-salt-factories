@@ -50,8 +50,6 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         config_dir = self.config_dir
         if config_dir:
             script_args.append("--config-dir={}".format(config_dir))
-        script_args.append("--log-level=quiet")
-        script_args.append("--out=json")
         return script_args
 
     def get_script_args(self):
@@ -72,14 +70,33 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         log.debug("Building cmdline. Input args: %s; Input kwargs: %s;", args, kwargs)
         minion_tgt = self._minion_tgt = self.get_minion_tgt(kwargs)
         proc_args = []
-        if minion_tgt:
-            proc_args.append(minion_tgt)
 
+        args = list(args)
+
+        # Handle the timeout CLI flag, if supported
         if self.__cli_timeout_supported__:
-            args = list(args)
+            salt_cli_timeout_next = False
             for arg in args:
-                if arg == "-t" or arg.startswith("--timeout"):
+                if arg.startswith("--timeout="):
+                    # Let's actually change the _terminal_timeout value which is used to
+                    # calculate when the run() method should actually timeout
+                    salt_cli_timeout = arg.split("--timeout=")[-1]
+                    try:
+                        self._terminal_timeout = int(salt_cli_timeout) + 5
+                    except ValueError:
+                        # Not a number? Let salt do it's error handling
+                        pass
                     break
+                if salt_cli_timeout_next:
+                    try:
+                        self._terminal_timeout = int(arg) + 5
+                    except ValueError:
+                        # Not a number? Let salt do it's error handling
+                        pass
+                    break
+                if arg == "-t" or arg.startswith("--timeout"):
+                    salt_cli_timeout_next = True
+                    continue
             else:
                 salt_cli_timeout = self._terminal_timeout
                 if salt_cli_timeout:
@@ -89,7 +106,32 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
                     # If it's still a positive number, add it to the salt command CLI flags
                     args.append("--timeout={}".format(salt_cli_timeout))
 
-        proc_args += list(args)
+        # Handle the output flag
+        for arg in args:
+            if arg in ("--out", "--output"):
+                break
+            if arg.startswith(("--out=", "--output=")):
+                break
+        else:
+            # No output was passed, the default output is JSON
+            proc_args.append("--out=json")
+
+        # Handle the logging flag
+        for arg in args:
+            if arg in ("-l", "--log-level"):
+                break
+            if arg.startswith("--log-level="):
+                break
+        else:
+            # Default to being quiet on console output
+            proc_args.append("--log-level=quiet")
+
+        if minion_tgt:
+            proc_args.append(minion_tgt)
+
+        # Add the remaning args
+        proc_args.extend(args)
+
         for key in kwargs:
             proc_args.append("{}={}".format(key, kwargs[key]))
         proc_args = super(SaltScriptBase, self).build_cmdline(*proc_args)
