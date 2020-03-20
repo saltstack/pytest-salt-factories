@@ -160,6 +160,11 @@ def generate_script(
                 from __future__ import absolute_import
                 import os
                 import sys
+
+                # We really do not want buffered output
+                os.environ[str("PYTHONUNBUFFERED")] = str("1")
+                # Don't write .pyc files or create them in __pycache__ directories
+                os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
                 """.format(
                         executable=executable or sys.executable
                     )

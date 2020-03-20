@@ -34,6 +34,11 @@ def test_generate_script_defaults(tmpdir):
         import os
         import sys
 
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
+
         import atexit
         from salt.scripts import salt_foobar
         import salt.utils.platform
@@ -81,6 +86,11 @@ def test_generate_script_executable(tmpdir):
         from __future__ import absolute_import
         import os
         import sys
+
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         import atexit
         from salt.scripts import salt_foobar
@@ -130,6 +140,11 @@ def test_generate_script_long_executable(tmpdir):
         import os
         import sys
 
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
+
         import atexit
         from salt.scripts import salt_foobar
         import salt.utils.platform
@@ -174,6 +189,11 @@ def test_generate_script_code_dir(tmpdir):
         from __future__ import absolute_import
         import os
         import sys
+
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         CODE_DIR = r'{}'
         if CODE_DIR in sys.path:
@@ -232,6 +252,11 @@ def test_generate_script_inject_coverage(tmpdir):
         from __future__ import absolute_import
         import os
         import sys
+
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         CODE_DIR = r'{}'
         if CODE_DIR in sys.path:
@@ -297,6 +322,11 @@ def test_generate_script_inject_sitecustomize(tmpdir):
         from __future__ import absolute_import
         import os
         import sys
+
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         CODE_DIR = r'{}'
         if CODE_DIR in sys.path:
@@ -368,6 +398,11 @@ def test_generate_script_inject_sitecustomize(tmpdir):
         import os
         import sys
 
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
+
         # Allow sitecustomize.py to be importable for test coverage purposes
         SITECUSTOMIZE_DIR = r'{}'
         PYTHONPATH = os.environ.get('PYTHONPATH') or None
@@ -430,6 +465,11 @@ def test_generate_script_salt(tmpdir):
         import os
         import sys
 
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
+
         import atexit
         from salt.scripts import salt_main
 
@@ -465,6 +505,11 @@ def test_generate_script_salt_api(tmpdir):
         from __future__ import absolute_import
         import os
         import sys
+
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         import atexit
         import salt.cli
@@ -505,6 +550,11 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
         from __future__ import absolute_import
         import os
         import sys
+
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         import atexit
         from salt.scripts import salt_foobar
@@ -552,6 +602,11 @@ def test_generate_script_only_generates_once(tmpdir):
         from __future__ import absolute_import
         import os
         import sys
+
+        # We really do not want buffered output
+        os.environ[str("PYTHONUNBUFFERED")] = str("1")
+        # Don't write .pyc files or create them in __pycache__ directories
+        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         import atexit
         from salt.scripts import salt_foobar
