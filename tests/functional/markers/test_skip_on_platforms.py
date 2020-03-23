@@ -13,18 +13,26 @@ import mock
 import pytest
 
 
-def test_skipped(testdir):
+@pytest.mark.parametrize(
+    "platform",
+    ["windows", "linux", "darwin", "sunos", "smartos", "freebsd", "netbsd", "openbsd", "aix"],
+)
+def test_skipped(testdir, platform):
     testdir.makepyfile(
         """
         import pytest
 
-        @pytest.mark.skip_on_platforms(windows=True)
+        @pytest.mark.skip_on_platforms({}=True)
         def test_one():
             assert True
-        """
+        """.format(
+            platform
+        )
     )
     return_value = True
-    with mock.patch("saltfactories.utils.platform.is_windows", return_value=return_value):
+    with mock.patch(
+        "saltfactories.utils.platform.is_{}".format(platform), return_value=return_value
+    ):
         res = testdir.runpytest_inprocess()
         res.assert_outcomes(skipped=1)
     try:
@@ -39,18 +47,26 @@ def test_skipped(testdir):
             )
 
 
-def test_not_skipped(testdir):
+@pytest.mark.parametrize(
+    "platform",
+    ["windows", "linux", "darwin", "sunos", "smartos", "freebsd", "netbsd", "openbsd", "aix"],
+)
+def test_not_skipped(testdir, platform):
     testdir.makepyfile(
         """
         import pytest
 
-        @pytest.mark.skip_on_platforms(windows=True)
+        @pytest.mark.skip_on_platforms({}=True)
         def test_one():
             assert True
-        """
+        """.format(
+            platform
+        )
     )
     return_value = False
-    with mock.patch("saltfactories.utils.platform.is_windows", return_value=return_value):
+    with mock.patch(
+        "saltfactories.utils.platform.is_{}".format(platform), return_value=return_value
+    ):
         res = testdir.runpytest_inprocess()
         res.assert_outcomes(passed=1)
     try:
