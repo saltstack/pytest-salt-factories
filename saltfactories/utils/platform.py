@@ -81,3 +81,47 @@ def is_aix():
     Simple function to return if host is AIX or not
     """
     return salt.utils.platform.is_aix()
+
+
+def on_platforms(
+    windows=False,
+    linux=False,
+    darwin=False,
+    sunos=False,
+    smartos=False,
+    freebsd=False,
+    netbsd=False,
+    openbsd=False,
+    aix=False,
+):
+    """
+    Check to see if we're on one of the provided platforms.
+    """
+    if windows and is_windows():
+        return True
+
+    if linux and is_linux():
+        return True
+
+    if darwin and is_darwin():
+        return True
+
+    if sunos and is_sunos():
+        return True
+
+    if smartos and is_smartos():
+        return True
+
+    if freebsd and is_freebsd():
+        return True
+
+    if netbsd and is_netbsd():
+        return True
+
+    if openbsd and is_openbsd():
+        return True
+
+    if aix and is_aix():
+        return True
+
+    return False

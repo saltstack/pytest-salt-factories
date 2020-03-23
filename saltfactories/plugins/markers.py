@@ -230,6 +230,28 @@ def pytest_runtest_setup(item):
             item._skipped_by_mark = True
             pytest.skip(reason)
 
+    skip_on_platforms_marker = item.get_closest_marker("skip_on_platforms")
+    if skip_on_platforms_marker is not None:
+        if skip_on_platforms_marker.args:
+            raise RuntimeError("The skip_on_platforms marker does not accept any arguments")
+        reason = skip_on_platforms_marker.kwargs.pop("reason", None)
+        if not skip_on_platforms_marker.kwargs:
+            raise RuntimeError(
+                "Pass at least one platform to skip_on_platforms as a keyword argument"
+            )
+        if not any(skip_on_platforms_marker.kwargs.values()):
+            raise RuntimeError(
+                "Pass at least one platform with a True value to skip_on_platforms as a keyword argument"
+            )
+        if reason is None:
+            reason = "Skipped on platform match"
+        try:
+            if saltfactories.utils.platform.on_platforms(**skip_on_platforms_marker.kwargs):
+                item._skipped_by_mark = True
+                pytest.skip(reason)
+        except TypeError as exc:
+            raise RuntimeError("Passed an invalid platform to skip_on_platforms: {}".format(exc))
+
 
 @pytest.mark.trylast
 def pytest_configure(config):
@@ -294,4 +316,10 @@ def pytest_configure(config):
     )
     config.addinivalue_line(
         "markers", "skip_on_aix: Skip test on AIX",
+    )
+    config.addinivalue_line(
+        "markers",
+        "skip_on_platforms(windows=False, linux=False, darwin=False, sunos=False, smartos=False, freebsd=False, "
+        "netbsd=False, openbsd=False, aix=False): Pass True to one or more platform names to get the test skipped "
+        "on those platforms",
     )
