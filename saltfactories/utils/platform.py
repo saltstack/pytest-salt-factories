@@ -1,0 +1,83 @@
+# -*- coding: utf-8 -*-
+"""
+    saltfactories.utils.platform
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    Platform related utilities
+"""
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
+
+
+try:
+    import salt.utils.platform
+except ImportError:  # pragma: no cover
+    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
+    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
+    # import error, but its safe to pass
+    pass
+
+
+def is_windows():
+    """
+    Simple function to return if a host is Windows or not
+    """
+    return salt.utils.platform.is_windows()
+
+
+def is_linux():
+    """
+    Simple function to return if a host is Linux or not.
+    Note for a proxy minion, we need to return something else
+    """
+    return salt.utils.platform.is_linux()
+
+
+def is_darwin():
+    """
+    Simple function to return if a host is Darwin (macOS) or not
+    """
+    return salt.utils.platform.is_darwin()
+
+
+def is_sunos():
+    """
+    Simple function to return if host is SunOS or not
+    """
+    return salt.utils.platform.is_sunos()
+
+
+def is_smartos():
+    """
+    Simple function to return if host is SmartOS (Illumos) or not
+    """
+    return salt.utils.platform.is_smartos()
+
+
+def is_freebsd():
+    """
+    Simple function to return if host is FreeBSD or not
+    """
+    return salt.utils.platform.is_freebsd()
+
+
+def is_netbsd():
+    """
+    Simple function to return if host is NetBSD or not
+    """
+    return salt.utils.platform.is_netbsd()
+
+
+def is_openbsd():
+    """
+    Simple function to return if host is OpenBSD or not
+    """
+    return salt.utils.platform.is_openbsd()
+
+
+def is_aix():
+    """
+    Simple function to return if host is AIX or not
+    """
+    return salt.utils.platform.is_aix()

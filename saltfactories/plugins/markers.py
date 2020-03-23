@@ -13,6 +13,7 @@ import pytest
 import six
 
 import saltfactories.utils.markers
+import saltfactories.utils.platform
 
 
 def pytest_addoption(parser):
@@ -93,6 +94,61 @@ def pytest_runtest_setup(item):
                 item._skipped_by_mark = True
                 pytest.skip(remote_skip_reason)
 
+    # Platform Skip Markers
+    skip_on_windows_marker = item.get_closest_marker("skip_on_windows")
+    if skip_on_windows_marker is not None:
+        if saltfactories.utils.platform.is_windows():
+            item._skipped_by_mark = True
+            pytest.skip("Skipped on Windows")
+
+    skip_on_linux_marker = item.get_closest_marker("skip_on_linux")
+    if skip_on_linux_marker is not None:
+        if saltfactories.utils.platform.is_linux():
+            item._skipped_by_mark = True
+            pytest.skip("Skipped on Linux")
+
+    skip_on_darwin_marker = item.get_closest_marker("skip_on_darwin")
+    if skip_on_darwin_marker is not None:
+        if saltfactories.utils.platform.is_darwin():
+            item._skipped_by_mark = True
+            pytest.skip("Skipped on Darwin")
+
+    skip_on_sunos_marker = item.get_closest_marker("skip_on_sunos")
+    if skip_on_sunos_marker is not None:
+        if saltfactories.utils.platform.is_sunos():
+            item._skipped_by_mark = True
+            pytest.skip("Skipped on SunOS")
+
+    skip_on_smartos_marker = item.get_closest_marker("skip_on_smartos")
+    if skip_on_smartos_marker is not None:
+        if saltfactories.utils.platform.is_smartos():
+            item._skipped_by_mark = True
+            pytest.skip("Skipped on SmartOS")
+
+    skip_on_freebsd_marker = item.get_closest_marker("skip_on_freebsd")
+    if skip_on_freebsd_marker is not None:
+        if saltfactories.utils.platform.is_freebsd():
+            item._skipped_by_mark = True
+            pytest.skip("Skipped on FreeBSD")
+
+    skip_on_netbsd_marker = item.get_closest_marker("skip_on_netbsd")
+    if skip_on_netbsd_marker is not None:
+        if saltfactories.utils.platform.is_netbsd():
+            item._skipped_by_mark = True
+            pytest.skip("Skipped on NetBSD")
+
+    skip_on_openbsd_marker = item.get_closest_marker("skip_on_openbsd")
+    if skip_on_openbsd_marker is not None:
+        if saltfactories.utils.platform.is_openbsd():
+            item._skipped_by_mark = True
+            pytest.skip("Skipped on OpenBSD")
+
+    skip_on_aix_marker = item.get_closest_marker("skip_on_aix")
+    if skip_on_aix_marker is not None:
+        if saltfactories.utils.platform.is_aix():
+            item._skipped_by_mark = True
+            pytest.skip("Skipped on AIX")
+
 
 @pytest.mark.trylast
 def pytest_configure(config):
@@ -129,4 +185,32 @@ def pytest_configure(config):
         "markers",
         "requires_network(only_local_network=False): Skip if no networking is set up. "
         "If 'only_local_network' is 'True', only the local network is checked.",
+    )
+    # Platform Skip Markers
+    config.addinivalue_line(
+        "markers", "skip_on_windows: Skip test on Windows",
+    )
+    config.addinivalue_line(
+        "markers", "skip_on_linux: Skip test on Linux",
+    )
+    config.addinivalue_line(
+        "markers", "skip_on_darwin: Skip test on Darwin",
+    )
+    config.addinivalue_line(
+        "markers", "skip_on_sunos: Skip test on SunOS",
+    )
+    config.addinivalue_line(
+        "markers", "skip_on_smartos: Skip test on SmartOS",
+    )
+    config.addinivalue_line(
+        "markers", "skip_on_freebsd: Skip test on FreeBSD",
+    )
+    config.addinivalue_line(
+        "markers", "skip_on_netbsd: Skip test on NetBSD",
+    )
+    config.addinivalue_line(
+        "markers", "skip_on_openbsd: Skip test on OpenBSD",
+    )
+    config.addinivalue_line(
+        "markers", "skip_on_aix: Skip test on AIX",
     )
