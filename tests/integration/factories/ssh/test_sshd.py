@@ -24,5 +24,6 @@ def sshd(request, sshd_config_dir, salt_factories):
     )
 
 
+@pytest.mark.skip_if_binaries_missing("sshd", "ssh-keygen")
 def test_sshd(sshd):
     assert sshd.is_alive()

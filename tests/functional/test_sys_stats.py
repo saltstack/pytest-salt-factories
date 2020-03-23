@@ -9,6 +9,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import pytest
+
 
 def test_basic_sys_stats(testdir):
     p = testdir.makepyfile(
@@ -50,6 +52,7 @@ def test_basic_sys_stats_uss(testdir):
     )
 
 
+@pytest.mark.skip_if_binaries_missing("sshd", "ssh-keygen")
 def test_proc_sys_stats(testdir):
     p = testdir.makepyfile(
         """
