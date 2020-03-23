@@ -86,7 +86,7 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
     def build_cmdline(self, *args, **kwargs):  # pylint: disable=arguments-differ
         log.debug("Building cmdline. Input args: %s; Input kwargs: %s;", args, kwargs)
         minion_tgt = self._minion_tgt = self.get_minion_tgt(kwargs)
-        proc_args = []
+        cmdline = []
 
         args = list(args)
 
@@ -131,7 +131,7 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
                 break
         else:
             # No output was passed, the default output is JSON
-            proc_args.append("--out=json")
+            cmdline.append("--out=json")
 
         if self.__cli_log_level_supported__:
             # Handle the logging flag
@@ -142,19 +142,19 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
                     break
             else:
                 # Default to being quiet on console output
-                proc_args.append("--log-level=quiet")
+                cmdline.append("--log-level=quiet")
 
         if minion_tgt:
-            proc_args.append(minion_tgt)
+            cmdline.append(minion_tgt)
 
         # Add the remaning args
-        proc_args.extend(args)
+        cmdline.extend(args)
 
         for key in kwargs:
-            proc_args.append("{}={}".format(key, kwargs[key]))
-        proc_args = super(SaltScriptBase, self).build_cmdline(*proc_args)
-        log.debug("Built cmdline: %s", proc_args)
-        return proc_args
+            cmdline.append("{}={}".format(key, kwargs[key]))
+        cmdline = super(SaltScriptBase, self).build_cmdline(*cmdline)
+        log.debug("Built cmdline: %s", cmdline)
+        return cmdline
 
     def process_output(self, stdout, stderr, cmdline=None):
         stdout, stderr, json_out = super(SaltScriptBase, self).process_output(

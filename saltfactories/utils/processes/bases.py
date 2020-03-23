@@ -313,12 +313,12 @@ class FactoryScriptBase(FactoryProcess):
         # access to that information to build the command line
         try:
             self._terminal_timeout = timeout
-            proc_args = self.build_cmdline(*args, **kwargs)
+            cmdline = self.build_cmdline(*args, **kwargs)
             timeout_expire = time.time() + self._terminal_timeout
 
-            log.info("%sRunning %r in CWD: %s ...", self.get_log_prefix(), proc_args, self.cwd)
+            log.info("%sRunning %r in CWD: %s ...", self.get_log_prefix(), cmdline, self.cwd)
 
-            terminal = self.init_terminal(proc_args, cwd=self.cwd, env=self.environ,)
+            terminal = self.init_terminal(cmdline, cwd=self.cwd, env=self.environ,)
             timmed_out = False
             while True:
                 if timeout_expire < time.time():
@@ -332,25 +332,25 @@ class FactoryScriptBase(FactoryProcess):
             if timmed_out:
                 raise ProcessTimeout(
                     "{}Failed to run: {}; Error: Timed out after {} seconds!".format(
-                        self.get_log_prefix(), proc_args, timeout
+                        self.get_log_prefix(), cmdline, timeout
                     ),
                     stdout=result.stdout,
                     stderr=result.stderr,
-                    cmdline=proc_args,
+                    cmdline=cmdline,
                 )
 
             exitcode = result.exitcode
             stdout, stderr, json_out = self.process_output(
-                result.stdout, result.stderr, cmdline=proc_args
+                result.stdout, result.stderr, cmdline=cmdline
             )
             log.info(
                 "%sCompleted %r in CWD: %s after %.2f seconds",
                 self.get_log_prefix(),
-                proc_args,
+                cmdline,
                 self.cwd,
                 time.time() - start_time,
             )
-            return ShellResult(exitcode, stdout, stderr, json=json_out, cmdline=proc_args)
+            return ShellResult(exitcode, stdout, stderr, json=json_out, cmdline=cmdline)
         finally:
             # We now clear the _terminal_timeout attribute
             self._terminal_timeout = None
@@ -382,10 +382,10 @@ class FactoryPythonScriptBase(FactoryScriptBase):
         self.environ.setdefault(str("PYTHONDONTWRITEBYTECODE"), str("1"))
 
     def build_cmdline(self, *args, **kwargs):
-        proc_args = super(FactoryPythonScriptBase, self).build_cmdline(*args, **kwargs)
-        if proc_args[0] != self.python_executable:
-            proc_args.insert(0, self.python_executable)
-        return proc_args
+        cmdline = super(FactoryPythonScriptBase, self).build_cmdline(*args, **kwargs)
+        if cmdline[0] != self.python_executable:
+            cmdline.insert(0, self.python_executable)
+        return cmdline
 
 
 class FactoryDaemonScriptBase(FactoryProcess):
