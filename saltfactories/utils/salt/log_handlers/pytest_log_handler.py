@@ -153,6 +153,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         self.proxy_thread = threading.Thread(
             target=self._proxy_logs_target, args=(socket_bind_event,)
         )
+        self.proxy_thread.daemon = True
         self.proxy_thread.start()
         # Now that we discovered which random port to use, lest's continue with the setup
         if socket_bind_event.wait(5) is not True:
@@ -200,7 +201,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
             if self.context is not None:
                 self.context.term()
             if self.proxy_thread is not None and self.proxy_thread.is_alive():
-                self.proxy_thread.join()
+                self.proxy_thread.join(5)
         except Exception as exc:  # pylint: disable=broad-except
             sys.stderr.write(
                 "Failed to terminate ZMQHandler: {}\n{}\n".format(exc, traceback.format_exc(exc))
