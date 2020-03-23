@@ -9,6 +9,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import contextlib
 import logging
 import socket
 import time
@@ -32,10 +33,9 @@ def get_unused_localhost_port():
     except AttributeError:
         generated_ports = get_unused_localhost_port.__used_ports__ = {}
 
-    usock = socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)
-    usock.bind(("127.0.0.1", 0))
-    port = usock.getsockname()[1]
-    usock.close()
+    with contextlib.closing(socket.socket(family=socket.AF_INET, type=socket.SOCK_STREAM)) as usock:
+        usock.bind(("127.0.0.1", 0))
+        port = usock.getsockname()[1]
     if port not in generated_ports:
         generated_ports[port] = time.time() + 1
         return port
@@ -55,17 +55,15 @@ def check_connectable_ports(ports, timeout=30):
 
         for port in set(ports):
             log.debug("Checking connectable status on port: %s", port)
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            conn = sock.connect_ex(("localhost", port))
-            try:
-                if conn == 0:
-                    log.debug("Port %s is connectable!", port)
-                    ports.remove(port)
-                    sock.shutdown(socket.SHUT_RDWR)
-            except socket.error:
-                continue
-            finally:
-                sock.close()
-                del sock
+
+            with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+                conn = sock.connect_ex(("localhost", port))
+                try:
+                    if conn == 0:
+                        log.debug("Port %s is connectable!", port)
+                        ports.remove(port)
+                        sock.shutdown(socket.SHUT_RDWR)
+                except socket.error:
+                    continue
         time.sleep(0.5)
     return all_ports_connectable

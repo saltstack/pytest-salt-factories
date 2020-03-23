@@ -9,6 +9,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import contextlib
+import logging
 import os
 import socket
 import sys
@@ -86,26 +88,22 @@ def skip_if_no_local_network():
     check_port_2 = ports.get_unused_localhost_port()
     has_local_network = False
     try:
-        pubsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        retsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        pubsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        pubsock.bind(("", check_port_1))
-        pubsock.close()
-        retsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        retsock.bind(("", check_port_2))
-        retsock.close()
+        with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as pubsock:
+            pubsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            pubsock.bind(("", check_port_1))
+        with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as retsock:
+            retsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            retsock.bind(("", check_port_2))
         has_local_network = True
     except socket.error:
         # I wonder if we just have IPV6 support?
         try:
-            pubsock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-            retsock = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-            pubsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            pubsock.bind(("", check_port_1))
-            pubsock.close()
-            retsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            retsock.bind(("", check_port_2))
-            retsock.close()
+            with contextlib.closing(socket.socket(socket.AF_INET6, socket.SOCK_STREAM)) as pubsock:
+                pubsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                pubsock.bind(("", check_port_1))
+            with contextlib.closing(socket.socket(socket.AF_INET6, socket.SOCK_STREAM)) as retsock:
+                retsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                retsock.bind(("", check_port_2))
             has_local_network = True
         except socket.error:
             # Let's continue
