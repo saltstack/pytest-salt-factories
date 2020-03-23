@@ -97,57 +97,138 @@ def pytest_runtest_setup(item):
     # Platform Skip Markers
     skip_on_windows_marker = item.get_closest_marker("skip_on_windows")
     if skip_on_windows_marker is not None:
+        if skip_on_windows_marker.args:
+            raise RuntimeError("The skip_on_windows marker does not accept any arguments")
+        reason = skip_on_windows_marker.kwargs.pop("reason", None)
+        if skip_on_windows_marker.kwargs:
+            raise RuntimeError(
+                "The skip_on_windows marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on Windows"
         if saltfactories.utils.platform.is_windows():
             item._skipped_by_mark = True
-            pytest.skip("Skipped on Windows")
+            pytest.skip(reason)
 
     skip_on_linux_marker = item.get_closest_marker("skip_on_linux")
     if skip_on_linux_marker is not None:
+        if skip_on_linux_marker.args:
+            raise RuntimeError("The skip_on_linux marker does not accept any arguments")
+        reason = skip_on_linux_marker.kwargs.pop("reason", None)
+        if skip_on_linux_marker.kwargs:
+            raise RuntimeError(
+                "The skip_on_linux marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on Linux"
         if saltfactories.utils.platform.is_linux():
             item._skipped_by_mark = True
-            pytest.skip("Skipped on Linux")
+            pytest.skip(reason)
 
     skip_on_darwin_marker = item.get_closest_marker("skip_on_darwin")
     if skip_on_darwin_marker is not None:
+        if skip_on_darwin_marker.args:
+            raise RuntimeError("The skip_on_darwin marker does not accept any arguments")
+        reason = skip_on_darwin_marker.kwargs.pop("reason", None)
+        if skip_on_darwin_marker.kwargs:
+            raise RuntimeError(
+                "The skip_on_darwin marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on Darwin"
         if saltfactories.utils.platform.is_darwin():
             item._skipped_by_mark = True
-            pytest.skip("Skipped on Darwin")
+            pytest.skip(reason)
 
     skip_on_sunos_marker = item.get_closest_marker("skip_on_sunos")
     if skip_on_sunos_marker is not None:
+        if skip_on_sunos_marker.args:
+            raise RuntimeError("The skip_on_sunos marker does not accept any arguments")
+        reason = skip_on_sunos_marker.kwargs.pop("reason", None)
+        if skip_on_sunos_marker.kwargs:
+            raise RuntimeError(
+                "The skip_on_sunos marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on SunOS"
         if saltfactories.utils.platform.is_sunos():
             item._skipped_by_mark = True
-            pytest.skip("Skipped on SunOS")
+            pytest.skip(reason)
 
     skip_on_smartos_marker = item.get_closest_marker("skip_on_smartos")
     if skip_on_smartos_marker is not None:
+        if skip_on_smartos_marker.args:
+            raise RuntimeError("The skip_on_smartos marker does not accept any arguments")
+        reason = skip_on_smartos_marker.kwargs.pop("reason", None)
+        if skip_on_smartos_marker.kwargs:
+            raise RuntimeError(
+                "The skip_on_smartos marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on SmartOS"
         if saltfactories.utils.platform.is_smartos():
             item._skipped_by_mark = True
-            pytest.skip("Skipped on SmartOS")
+            pytest.skip(reason)
 
     skip_on_freebsd_marker = item.get_closest_marker("skip_on_freebsd")
     if skip_on_freebsd_marker is not None:
+        if skip_on_freebsd_marker.args:
+            raise RuntimeError("The skip_on_freebsd marker does not accept any arguments")
+        reason = skip_on_freebsd_marker.kwargs.pop("reason", None)
+        if skip_on_freebsd_marker.kwargs:
+            raise RuntimeError(
+                "The skip_on_freebsd marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on FreeBSD"
         if saltfactories.utils.platform.is_freebsd():
             item._skipped_by_mark = True
-            pytest.skip("Skipped on FreeBSD")
+            pytest.skip(reason)
 
     skip_on_netbsd_marker = item.get_closest_marker("skip_on_netbsd")
     if skip_on_netbsd_marker is not None:
+        if skip_on_netbsd_marker.args:
+            raise RuntimeError("The skip_on_netbsd marker does not accept any arguments")
+        reason = skip_on_netbsd_marker.kwargs.pop("reason", None)
+        if skip_on_netbsd_marker.kwargs:
+            raise RuntimeError(
+                "The skip_on_netbsd marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on NetBSD"
         if saltfactories.utils.platform.is_netbsd():
             item._skipped_by_mark = True
-            pytest.skip("Skipped on NetBSD")
+            pytest.skip(reason)
 
     skip_on_openbsd_marker = item.get_closest_marker("skip_on_openbsd")
     if skip_on_openbsd_marker is not None:
+        if skip_on_openbsd_marker.args:
+            raise RuntimeError("The skip_on_openbsd marker does not accept any arguments")
+        reason = skip_on_openbsd_marker.kwargs.pop("reason", None)
+        if skip_on_openbsd_marker.kwargs:
+            raise RuntimeError(
+                "The skip_on_openbsd marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on OpenBSD"
         if saltfactories.utils.platform.is_openbsd():
             item._skipped_by_mark = True
-            pytest.skip("Skipped on OpenBSD")
+            pytest.skip(reason)
 
     skip_on_aix_marker = item.get_closest_marker("skip_on_aix")
     if skip_on_aix_marker is not None:
+        if skip_on_aix_marker.args:
+            raise RuntimeError("The skip_on_aix marker does not accept any arguments")
+        reason = skip_on_aix_marker.kwargs.pop("reason", None)
+        if skip_on_aix_marker.kwargs:
+            raise RuntimeError(
+                "The skip_on_aix marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on AIX"
         if saltfactories.utils.platform.is_aix():
             item._skipped_by_mark = True
-            pytest.skip("Skipped on AIX")
+            pytest.skip(reason)
 
 
 @pytest.mark.trylast
