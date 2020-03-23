@@ -56,3 +56,10 @@ def test_minion_salt_call(minion, salt_call_cli):
     ret = salt_call_cli.run("--local", "test.ping")
     assert ret.exitcode == 0, ret
     assert ret.json is True
+
+
+def test_salt_call_exception_handling_doesnt_timeout(minion, salt_call_cli):
+    ret = salt_call_cli.run(
+        "test.raise_exception", "OSError", "2", "No such file or directory", "/tmp/foo.txt"
+    )
+    assert ret.exitcode == 1, ret
