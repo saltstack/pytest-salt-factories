@@ -9,6 +9,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import logging
 import os
 import textwrap
 
@@ -16,6 +17,8 @@ from saltfactories.exceptions import ProcessFailed
 from saltfactories.utils import ports
 from saltfactories.utils.processes.bases import FactoryDaemonScriptBase
 from saltfactories.utils.processes.bases import Popen
+
+log = logging.getLogger(__name__)
 
 
 class SshdDaemon(FactoryDaemonScriptBase):
@@ -81,3 +84,9 @@ class SshdDaemon(FactoryDaemonScriptBase):
                 for host_key in host_keys:
                     wfh.write("HostKey {}\n".format(host_key))
             os.chmod(sshd_config_file, 0o0600)
+            with open(sshd_config_file, "r") as wfh:
+                log.debug(
+                    "Wrote to configuration file %s. Configuration:\n%s",
+                    sshd_config_file,
+                    wfh.read(),
+                )
