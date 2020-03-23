@@ -25,12 +25,27 @@ class SshdDaemon(FactoryDaemonScriptBase):
         super(SshdDaemon, self).__init__(*args, **kwargs)
         self.config_dir = config_dir
         self.serve_port = serve_port or ports.get_unused_localhost_port()
-        sshd_config_file = os.path.join(config_dir, "sshd_config")
+        self._write_default_config()
+
+    def get_base_script_args(self):
+        """
+        Returns any additional arguments to pass to the CLI script
+        """
+        return ["-D", "-e", "-f", os.path.join(self.config_dir, "sshd_config")]
+
+    def get_check_ports(self):
+        """
+        Return a list of ports to check against to ensure the daemon is running
+        """
+        return [self.serve_port]
+
+    def _write_default_config(self):
+        sshd_config_file = os.path.join(self.config_dir, "sshd_config")
         if not os.path.isfile(sshd_config_file):
             # Let's generat the host keys
             host_keys = []
             for key_type in ("dsa", "rsa"):
-                key_path = os.path.join(config_dir, "ssh_host_{}_key".format(key_type))
+                key_path = os.path.join(self.config_dir, "ssh_host_{}_key".format(key_type))
                 if not os.path.exists(key_path):
                     cmdline = ["ssh-keygen", "-f", key_path, "-N", "", "-t", key_type]
                     proc = Popen(cmdline)
@@ -57,23 +72,12 @@ class SshdDaemon(FactoryDaemonScriptBase):
                 PasswordAuthentication no
                 PubkeyAuthentication yes
                 PrintMotd no
+                PidFile {}
                 """.format(
-                            self.serve_port,
+                            self.serve_port, os.path.join(self.config_dir, "sshd.pid")
                         )
                     )
                 )
                 for host_key in host_keys:
                     wfh.write("HostKey {}\n".format(host_key))
             os.chmod(sshd_config_file, 0o0600)
-
-    def get_base_script_args(self):
-        """
-        Returns any additional arguments to pass to the CLI script
-        """
-        return ["-D", "-e", "-f", os.path.join(self.config_dir, "sshd_config")]
-
-    def get_serve_ports(self):
-        """
-        Return a list of ports to check against to ensure the daemon is running
-        """
-        return [self.serve_port]
