@@ -111,6 +111,11 @@ def pytest_configure(config):
         "expensive_test: Run expensive tests. These tests can include starting resources "
         "which cost money, like VMs, for example.",
     )
+    config.addinivalue_line(
+        "markers",
+        "skip_if_not_root: Skip if the current user is not root on non windows platforms or not "
+        "Administrator on windows platforms",
+    )
     config.addinivalue_line("markers", "skip_if_not_root: Skip if the current user is not `root`.")
     config.addinivalue_line(
         "markers",
