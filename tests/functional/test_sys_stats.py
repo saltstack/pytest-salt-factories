@@ -52,6 +52,7 @@ def test_basic_sys_stats_uss(testdir):
     )
 
 
+@pytest.mark.skip_on_windows
 @pytest.mark.skip_if_binaries_missing("sshd", "ssh-keygen")
 def test_proc_sys_stats(testdir):
     p = testdir.makepyfile(
