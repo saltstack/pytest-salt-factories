@@ -48,3 +48,43 @@ def test_basic_sys_stats_uss(testdir):
             "* 1 passed in *",
         ]
     )
+
+
+def test_proc_sys_stats(testdir):
+    p = testdir.makepyfile(
+        """
+        import pytest
+        import shutil
+
+        from saltfactories.utils.processes.sshd import SshdDaemon
+
+
+        @pytest.fixture(scope="module")
+        def sshd_config_dir(salt_factories):
+            config_dir = salt_factories.root_dir.join("sshd").ensure(dir=True)
+            yield config_dir.strpath
+            shutil.rmtree(config_dir.strpath, ignore_errors=True)
+
+
+        @pytest.fixture(scope="module")
+        def sshd(request, sshd_config_dir, salt_factories):
+            return salt_factories.spawn_daemon(
+                request, "sshd", SshdDaemon, "test-sshd", config_dir=sshd_config_dir, cwd=sshd_config_dir
+            )
+
+        def test_one(sshd):
+            assert sshd.is_alive()
+        """
+    )
+    res = testdir.runpytest("-vv", "--sys-stats")
+    res.assert_outcomes(passed=1)
+    res.stdout.fnmatch_lines(
+        [
+            "* PASSED*",
+            "* Processes Statistics *",
+            "* System  -  CPU: * %   MEM: * % (Virtual Memory)*",
+            "* Test Suite Run  -  CPU: * %   MEM: * % (RSS) * CHILD PROCS: *",
+            "* sshd  -  CPU: * %   MEM: * % (RSS)",
+            "* 1 passed in *",
+        ]
+    )
