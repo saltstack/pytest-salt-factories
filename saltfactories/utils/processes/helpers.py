@@ -248,10 +248,7 @@ def start_daemon(
         process.start()
         if process.is_alive():
             try:
-                try:
-                    check_ports = process.get_check_ports()
-                except AttributeError:
-                    check_ports = False
+                check_ports = process.get_check_ports()
 
                 try:
                     check_events = list(process.get_check_events())
@@ -261,10 +258,16 @@ def start_daemon(
                 if not check_ports and not check_events:
                     connectable = True
                 else:
+                    if check_ports and check_events:
+                        check_ports_timeout = check_events_timeout = start_timeout / 2
+                    elif check_ports and not check_events:
+                        check_ports_timeout = start_timeout
+                    elif check_events and not check_ports:
+                        check_events_timeout = start_timeout
                     connectable = None
                     if check_ports:
                         connectable = ports.check_connectable_ports(
-                            check_ports, timeout=start_timeout
+                            check_ports, timeout=check_ports_timeout
                         )
 
                     if check_events:
@@ -278,7 +281,7 @@ def start_daemon(
                             connectable = event_listener.wait_for_events(
                                 process.get_check_events(),
                                 after_time=start_time,
-                                timeout=start_timeout,
+                                timeout=check_events_timeout,
                             )
                 if connectable is False:
                     result = process.terminate()
