@@ -32,19 +32,34 @@ def test_multiple_one_missing():
     assert reason == "The 'pip9' binary was not found"
 
 
-def test_multiple_one_missing_with_message():
-    reason = markers.skip_if_binaries_missing(["python", "pip9"], message="Dam!")
+def test_multiple_all_missing():
+    reason = markers.skip_if_binaries_missing(["python9", "pip9"])
     assert reason is not None
-    assert reason == "Dam! The 'pip9' binary was not found"
+    assert reason == "The 'python9' binary was not found"
 
 
-def test_multiple_missing_check_all():
-    reason = markers.skip_if_binaries_missing(["python9", "pip9"], check_all=True)
+def test_multiple_one_missing_check_all_false():
+    reason = markers.skip_if_binaries_missing(["python", "pip9"], check_all=False)
+    # We should get no message back because the python binary is found
+    assert reason is None, reason
+    reason = markers.skip_if_binaries_missing(["python9", "pip"], check_all=False)
+    # We should get no message back because the pip binary is found
+    assert reason is None, reason
+
+
+def test_multiple_one_missing_check_all_false_with_message():
+    reason = markers.skip_if_binaries_missing(["python", "pip9"], message="Dam!", check_all=False)
+    # We should get no message back because the python binary is found
+    assert reason is None
+
+
+def test_multiple_missing_check_all_false():
+    reason = markers.skip_if_binaries_missing(["python9", "pip9"], check_all=False)
     assert reason is not None
     assert reason == "None of the following binaries was found: python9, pip9"
 
 
-def test_multiple_missing_check_all_with_message():
-    reason = markers.skip_if_binaries_missing(["python9", "pip9"], check_all=True, message="Dam!")
+def test_multiple_missing_check_all_false_with_message():
+    reason = markers.skip_if_binaries_missing(["python9", "pip9"], message="Dam!", check_all=False)
     assert reason is not None
     assert reason == "Dam! None of the following binaries was found: python9, pip9"

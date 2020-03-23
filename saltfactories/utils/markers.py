@@ -26,6 +26,8 @@ except ImportError:  # pragma: no cover
 
 from saltfactories.utils import ports
 
+log = logging.getLogger(__name__)
+
 
 def skip_if_not_root():
     """
@@ -44,7 +46,7 @@ def skip_if_not_root():
                 return "You must be logged in as an Administrator to run this test"
 
 
-def skip_if_binaries_missing(binaries, check_all=False, message=None):
+def skip_if_binaries_missing(binaries, check_all=True, message=None):
     """
     Helper function to check for existing binaries
 
@@ -52,8 +54,10 @@ def skip_if_binaries_missing(binaries, check_all=False, message=None):
         binaries (list or tuple):
             Iterator of binaries to check
         check_all (bool):
-            Check all passed binaries. If ``True`` fails the check if at least
-            one binary is not found.
+            If ``check_all`` is ``True``, the default, all binaries must exist.
+            If ``check_all`` is ``False``, then only one the passed binaries needs to be found.
+            Usefull when, for example, passing a list of python interpreter names(python3.5,
+            python3, python), where only one needs to exist.
         message (str):
             Message to include in the skip reason.
 
@@ -65,14 +69,17 @@ def skip_if_binaries_missing(binaries, check_all=False, message=None):
         reason = "{} ".format(message)
     else:
         reason = ""
-    if check_all is True and salt.utils.path.which_bin(binaries) is None:
-        reason += "None of the following binaries was found: {}".format(", ".join(binaries))
-        return reason
-
-    for binary in binaries:
-        if salt.utils.path.which(binary) is None:
-            reason += "The '{}' binary was not found".format(binary)
+    if check_all is False:
+        # We only need one of the passed binaries to exist
+        if salt.utils.path.which_bin(binaries) is None:
+            reason += "None of the following binaries was found: {}".format(", ".join(binaries))
             return reason
+    else:
+        for binary in binaries:
+            if salt.utils.path.which(binary) is None:
+                reason += "The '{}' binary was not found".format(binary)
+                return reason
+    log.debug("All binaries found. Searched for: %s", ", ".join(binaries))
 
 
 def skip_if_no_local_network():

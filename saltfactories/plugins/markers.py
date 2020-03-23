@@ -119,9 +119,11 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "skip_if_not_root: Skip if the current user is not `root`.")
     config.addinivalue_line(
         "markers",
-        "skip_if_binaries_missing(*binaries, check_all=False, message=None): Skip if "
-        "any of the passed binaries are not found in path. If 'check_all' is "
-        "'True', then all binaries must be found.",
+        "skip_if_binaries_missing(*binaries, check_all=True, message=None):"
+        "If 'check_all' is True, all binaries must exist."
+        "If 'check_all' is False, then only one the passed binaries needs to be found. Usefull when, "
+        "for example, passing a list of python interpreter names(python3.5, python3, python), where "
+        "only one needs to exist.",
     )
     config.addinivalue_line(
         "markers",
