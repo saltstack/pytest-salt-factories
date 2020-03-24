@@ -13,7 +13,7 @@ import pytest
 
 
 @pytest.hookspec(firstresult=True)
-def pytest_saltfactories_generate_default_minion_configuration(
+def pytest_saltfactories_minion_configuration_defaults(
     request, factories_manager, root_dir, minion_id, master_port
 ):
     """
@@ -49,7 +49,7 @@ def pytest_saltfactories_write_minion_configuration(request, minion_config):
 
 
 @pytest.hookspec(firstresult=True)
-def pytest_saltfactories_generate_default_master_configuration(
+def pytest_saltfactories_master_configuration_defaults(
     request, factories_manager, root_dir, master_id, order_masters
 ):
     """
@@ -85,7 +85,7 @@ def pytest_saltfactories_write_master_configuration(request, master_config):
 
 
 @pytest.hookspec(firstresult=True)
-def pytest_saltfactories_generate_default_syndic_configuration(
+def pytest_saltfactories_syndic_configuration_defaults(
     request, factories_manager, root_dir, syndic_id, syndic_master_port
 ):
     """
@@ -134,7 +134,7 @@ def pytest_saltfactories_write_syndic_configuration(request, syndic_config):
 
 
 @pytest.hookspec(firstresult=True)
-def pytest_saltfactories_generate_default_proxy_minion_configuration(
+def pytest_saltfactories_proxy_minion_configuration_defaults(
     request, factories_manager, root_dir, proxy_minion_id, master_port
 ):
     """
