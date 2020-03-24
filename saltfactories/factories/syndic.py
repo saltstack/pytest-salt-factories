@@ -27,15 +27,15 @@ class SyndicFactory(object):
     def default_config(
         root_dir,
         syndic_id,
-        default_options=None,
+        config_defaults=None,
         config_overrides=None,
         master_port=None,
         syndic_master_port=None,
     ):
-        if default_options is None:
-            # default_options = {"syndic": salt.config.syndic_config(None, None)}
+        if config_defaults is None:
+            # config_defaults = {"syndic": salt.config.syndic_config(None, None)}
             # We don't really want the whole default config dictionary
-            default_options = {"syndic": {}}
+            config_defaults = {"syndic": {}}
 
         if config_overrides is None:
             config_overrides = {}
@@ -48,14 +48,14 @@ class SyndicFactory(object):
             root_dir,
             conf_dir,
             syndic_id,
-            default_options=default_options.get("master"),
+            config_defaults=config_defaults.get("master"),
             config_overrides=config_overrides.get("master"),
         )
         minion_config = SyndicFactory.default_minion_config(
             root_dir,
             conf_dir,
             syndic_id,
-            default_options=default_options.get("minion"),
+            config_defaults=config_defaults.get("minion"),
             config_overrides=config_overrides.get("minion"),
             master_port=master_config["ret_port"],
         )
@@ -66,7 +66,7 @@ class SyndicFactory(object):
         with salt.utils.files.fopen(stop_sending_events_file, "w") as wfh:
             wfh.write("")
 
-        _default_options = {
+        _config_defaults = {
             "id": syndic_id,
             "master_id": syndic_id,
             "conf_file": conf_file,
@@ -79,30 +79,30 @@ class SyndicFactory(object):
             "syndic_dir": "cache/syndics",
             "pytest-syndic": {"log": {"prefix": "salt-syndic({})".format(syndic_id)},},
         }
-        # Merge in the initial default options with the internal _default_options
+        # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(
-            default_options.get("syndic"), _default_options, merge_lists=True
+            config_defaults.get("syndic"), _config_defaults, merge_lists=True
         )
 
         if config_overrides.get("syndic"):
             # Merge in the default options with the syndic_config_overrides
             salt.utils.dictupdate.update(
-                default_options.get("syndic"), config_overrides.get("syndic"), merge_lists=True
+                config_defaults.get("syndic"), config_overrides.get("syndic"), merge_lists=True
             )
 
         return {
             "master": master_config,
             "minion": minion_config,
-            "syndic": default_options["syndic"],
+            "syndic": config_defaults["syndic"],
         }
 
     @staticmethod
     def default_minion_config(
-        root_dir, conf_dir, minion_id, default_options=None, config_overrides=None, master_port=None
+        root_dir, conf_dir, minion_id, config_defaults=None, config_overrides=None, master_port=None
     ):
-        if default_options is None:
-            default_options = salt.config.DEFAULT_MINION_OPTS.copy()
-            default_options = {}
+        if config_defaults is None:
+            config_defaults = salt.config.DEFAULT_MINION_OPTS.copy()
+            config_defaults = {}
 
         conf_file = conf_dir.join("minion").strpath
 
@@ -112,7 +112,7 @@ class SyndicFactory(object):
         with salt.utils.files.fopen(stop_sending_events_file, "w") as wfh:
             wfh.write("")
 
-        _default_options = {
+        _config_defaults = {
             "id": minion_id,
             "master_id": minion_id,
             "conf_file": conf_file,
@@ -137,22 +137,22 @@ class SyndicFactory(object):
             "transport": "zeromq",
             "pytest-minion": {"log": {"prefix": "salt-minion({})".format(minion_id)},},
         }
-        # Merge in the initial default options with the internal _default_options
-        salt.utils.dictupdate.update(default_options, _default_options, merge_lists=True)
+        # Merge in the initial default options with the internal _config_defaults
+        salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
 
         if config_overrides:
             # Merge in the default options with the minion_config_overrides
-            salt.utils.dictupdate.update(default_options, config_overrides, merge_lists=True)
+            salt.utils.dictupdate.update(config_defaults, config_overrides, merge_lists=True)
 
-        return default_options
+        return config_defaults
 
     @staticmethod
     def default_master_config(
-        root_dir, conf_dir, master_id, default_options=None, config_overrides=None,
+        root_dir, conf_dir, master_id, config_defaults=None, config_overrides=None,
     ):
-        if default_options is None:
-            default_options = salt.config.DEFAULT_MASTER_OPTS.copy()
-            default_options = {}
+        if config_defaults is None:
+            config_defaults = salt.config.DEFAULT_MASTER_OPTS.copy()
+            config_defaults = {}
 
         conf_file = conf_dir.join("master").strpath
         state_tree_root = root_dir.join("state-tree").ensure(dir=True)
@@ -168,7 +168,7 @@ class SyndicFactory(object):
         with salt.utils.files.fopen(stop_sending_events_file, "w") as wfh:
             wfh.write("")
 
-        _default_options = {
+        _config_defaults = {
             "id": master_id,
             "master_id": master_id,
             "conf_file": conf_file,
@@ -207,16 +207,16 @@ class SyndicFactory(object):
             "max_open_files": 10240,
             "pytest-master": {"log": {"prefix": "salt-master({})".format(master_id)},},
         }
-        # Merge in the initial default options with the internal _default_options
-        salt.utils.dictupdate.update(default_options, _default_options, merge_lists=True)
+        # Merge in the initial default options with the internal _config_defaults
+        salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
 
         if config_overrides:
             # Merge in the default options with the master_config_overrides
-            salt.utils.dictupdate.update(default_options, config_overrides, merge_lists=True)
+            salt.utils.dictupdate.update(config_defaults, config_overrides, merge_lists=True)
 
         # Remove syndic related options
-        for key in list(default_options):
+        for key in list(config_defaults):
             if key.startswith("syndic_"):
-                default_options.pop(key)
+                config_defaults.pop(key)
 
-        return default_options
+        return config_defaults

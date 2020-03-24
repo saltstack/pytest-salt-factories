@@ -25,11 +25,11 @@ from saltfactories.utils import ports
 class ProxyMinionFactory(object):
     @staticmethod
     def default_config(
-        root_dir, proxy_minion_id, default_options=None, config_overrides=None, master_port=None,
+        root_dir, proxy_minion_id, config_defaults=None, config_overrides=None, master_port=None,
     ):
-        if default_options is None:
-            default_options = salt.config.DEFAULT_MINION_OPTS.copy()
-            default_options.update(salt.config.DEFAULT_PROXY_MINION_OPTS.copy())
+        if config_defaults is None:
+            config_defaults = salt.config.DEFAULT_MINION_OPTS.copy()
+            config_defaults.update(salt.config.DEFAULT_PROXY_MINION_OPTS.copy())
 
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_file = conf_dir.join("proxy").strpath
@@ -40,7 +40,7 @@ class ProxyMinionFactory(object):
         with salt.utils.files.fopen(stop_sending_events_file, "w") as wfh:
             wfh.write("")
 
-        _default_options = {
+        _config_defaults = {
             "id": proxy_minion_id,
             "conf_file": conf_file,
             "root_dir": root_dir.strpath,
@@ -66,11 +66,11 @@ class ProxyMinionFactory(object):
             "proxy": {"proxytype": "dummy"},
             "pytest-minion": {"log": {"prefix": "salt-proxy({})".format(proxy_minion_id)},},
         }
-        # Merge in the initial default options with the internal _default_options
-        salt.utils.dictupdate.update(default_options, _default_options, merge_lists=True)
+        # Merge in the initial default options with the internal _config_defaults
+        salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
 
         if config_overrides:
             # Merge in the default options with the proxy_config_overrides
-            salt.utils.dictupdate.update(default_options, config_overrides, merge_lists=True)
+            salt.utils.dictupdate.update(config_defaults, config_overrides, merge_lists=True)
 
-        return default_options
+        return config_defaults

@@ -25,11 +25,11 @@ def pytest_saltfactories_generate_default_minion_configuration(
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_minion_configuration_overrides(
-    request, factories_manager, root_dir, minion_id, default_options
+    request, factories_manager, root_dir, minion_id, config_defaults
 ):
     """
     Hook which should return a dictionary tailored for the provided minion_id.
-    This dictionary will override the default_options dictionary.
+    This dictionary will override the config_defaults dictionary.
 
     Stops at the first non None result
     """
@@ -61,11 +61,11 @@ def pytest_saltfactories_generate_default_master_configuration(
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_master_configuration_overrides(
-    request, factories_manager, root_dir, master_id, default_options, order_masters
+    request, factories_manager, root_dir, master_id, config_defaults, order_masters
 ):
     """
     Hook which should return a dictionary tailored for the provided master_id.
-    This dictionary will override the default_options dictionary.
+    This dictionary will override the config_defaults dictionary.
 
     Stops at the first non None result
     """
@@ -101,11 +101,11 @@ def pytest_saltfactories_generate_default_syndic_configuration(
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_syndic_configuration_overrides(
-    request, factories_manager, root_dir, syndic_id, default_options
+    request, factories_manager, root_dir, syndic_id, config_defaults
 ):
     """
     Hook which should return a dictionary tailored for the provided syndic_id.
-    This dictionary will override the default_options dictionary.
+    This dictionary will override the config_defaults dictionary.
 
     The returned dictionary should contain 3 keys:
 
@@ -113,7 +113,7 @@ def pytest_saltfactories_syndic_configuration_overrides(
     * `minion`: The config overrides for the master running along with the syndic
     * `syndic`: The config overridess for the master running along with the syndic
 
-    The `default_options` parameter be None or have 3 keys, `master`, `minion`, `syndic`,
+    The `config_defaults` parameter be None or have 3 keys, `master`, `minion`, `syndic`,
     while will contain the default options for each of the daemons.
 
     Stops at the first non None result
@@ -146,11 +146,11 @@ def pytest_saltfactories_generate_default_proxy_minion_configuration(
 
 @pytest.hookspec(firstresult=True)
 def pytest_saltfactories_proxy_minion_configuration_overrides(
-    request, factories_manager, root_dir, proxy_minion_id, default_options
+    request, factories_manager, root_dir, proxy_minion_id, config_defaults
 ):
     """
     Hook which should return a dictionary tailored for the provided proxy_minion_id.
-    This dictionary will override the default_options dictionary.
+    This dictionary will override the config_defaults dictionary.
 
     Stops at the first non None result
     """

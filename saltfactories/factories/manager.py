@@ -211,7 +211,7 @@ class SaltFactoriesManager(object):
         if master_id is not None:
             master_config = self.cache["configs"]["masters"][master_id]
             master_port = master_config.get("ret_port")
-        default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_minion_configuration(
+        config_defaults = self.pytestconfig.hook.pytest_saltfactories_generate_default_minion_configuration(
             request=request,
             factories_manager=self,
             root_dir=root_dir,
@@ -223,12 +223,12 @@ class SaltFactoriesManager(object):
             factories_manager=self,
             root_dir=root_dir,
             minion_id=minion_id,
-            default_options=default_options,
+            config_defaults=config_defaults,
         )
         minion_config = minion.MinionFactory.default_config(
             root_dir,
             minion_id=minion_id,
-            default_options=default_options,
+            config_defaults=config_defaults,
             config_overrides=config_overrides,
             master_port=master_port,
         )
@@ -276,7 +276,7 @@ class SaltFactoriesManager(object):
 
         root_dir = self._get_root_dir_for_daemon(master_id)
 
-        default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_master_configuration(
+        config_defaults = self.pytestconfig.hook.pytest_saltfactories_generate_default_master_configuration(
             request=request,
             factories_manager=self,
             root_dir=root_dir,
@@ -288,7 +288,7 @@ class SaltFactoriesManager(object):
             factories_manager=self,
             root_dir=root_dir,
             master_id=master_id,
-            default_options=default_options,
+            config_defaults=config_defaults,
             order_masters=order_masters,
         )
 
@@ -304,7 +304,7 @@ class SaltFactoriesManager(object):
         master_config = master.MasterFactory.default_config(
             root_dir,
             master_id=master_id,
-            default_options=default_options,
+            config_defaults=config_defaults,
             config_overrides=config_overrides,
             order_masters=order_masters,
         )
@@ -372,7 +372,7 @@ class SaltFactoriesManager(object):
 
         root_dir = self._get_root_dir_for_daemon(syndic_id)
 
-        default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_syndic_configuration(
+        config_defaults = self.pytestconfig.hook.pytest_saltfactories_generate_default_syndic_configuration(
             request=request,
             factories_manager=self,
             root_dir=root_dir,
@@ -385,13 +385,13 @@ class SaltFactoriesManager(object):
             factories_manager=self,
             root_dir=root_dir,
             syndic_id=syndic_id,
-            default_options=default_options,
+            config_defaults=config_defaults,
         )
 
         syndic_setup_config = syndic.SyndicFactory.default_config(
             root_dir,
             syndic_id=syndic_id,
-            default_options=default_options,
+            config_defaults=config_defaults,
             config_overrides=config_overrides,
             syndic_master_port=syndic_master_port,
         )
@@ -479,7 +479,7 @@ class SaltFactoriesManager(object):
 
         root_dir = self._get_root_dir_for_daemon(proxy_minion_id)
 
-        default_options = self.pytestconfig.hook.pytest_saltfactories_generate_default_proxy_minion_configuration(
+        config_defaults = self.pytestconfig.hook.pytest_saltfactories_generate_default_proxy_minion_configuration(
             request=request,
             factories_manager=self,
             root_dir=root_dir,
@@ -491,12 +491,12 @@ class SaltFactoriesManager(object):
             factories_manager=self,
             root_dir=root_dir,
             proxy_minion_id=proxy_minion_id,
-            default_options=default_options,
+            config_defaults=config_defaults,
         )
         proxy_minion_config = proxy.ProxyMinionFactory.default_config(
             root_dir,
             proxy_minion_id=proxy_minion_id,
-            default_options=default_options,
+            config_defaults=config_defaults,
             config_overrides=config_overrides,
             master_port=master_port,
         )
