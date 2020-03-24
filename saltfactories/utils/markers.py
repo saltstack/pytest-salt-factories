@@ -90,27 +90,19 @@ def skip_if_no_local_network():
         str: The reason for the skip.
         None: Should not be skipped.
     """
-    # First lets try if we have a local network. Inspired in verify_socket
-    check_port_1 = ports.get_unused_localhost_port()
-    check_port_2 = ports.get_unused_localhost_port()
+    check_port = ports.get_unused_localhost_port()
     has_local_network = False
     try:
         with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as pubsock:
             pubsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            pubsock.bind(("", check_port_1))
-        with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as retsock:
-            retsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            retsock.bind(("", check_port_2))
+            pubsock.bind(("", check_port))
         has_local_network = True
     except socket.error:
         # I wonder if we just have IPV6 support?
         try:
             with contextlib.closing(socket.socket(socket.AF_INET6, socket.SOCK_STREAM)) as pubsock:
                 pubsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                pubsock.bind(("", check_port_1))
-            with contextlib.closing(socket.socket(socket.AF_INET6, socket.SOCK_STREAM)) as retsock:
-                retsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                retsock.bind(("", check_port_2))
+                pubsock.bind(("", check_port))
             has_local_network = True
         except socket.error:
             # Let's continue
