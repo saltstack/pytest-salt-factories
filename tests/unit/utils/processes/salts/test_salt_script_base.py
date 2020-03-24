@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 
 import json
 import sys
+from collections import OrderedDict
 
 import mock
 import pytest
@@ -369,3 +370,91 @@ def test_process_output(cli_script_name):
     assert stdout == json.loads(in_stdout)
     assert stderr == in_stderr
     assert json_out is None
+
+
+def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
+    config = {"conf_file": config_file}
+    args = ["test.ping"]
+    # Strings
+    extra_kwargs = OrderedDict((("look", "Ma"), ("no", "Hands!")))
+    kwargs = OrderedDict((("minion_tgt", minion_id),))
+    kwargs.update(extra_kwargs)
+    expected = [
+        sys.executable,
+        cli_script_name,
+        "--config-dir={}".format(config_dir.strpath),
+        "--out=json",
+        "--log-level=quiet",
+        minion_id,
+        "test.ping",
+    ]
+    for key, value in extra_kwargs.items():
+        expected.append("{}={}".format(key, value))
+    proc = SaltScriptBase(cli_script_name, config=config)
+    cmdline = proc.build_cmdline(*args, **kwargs)
+    # Function **kwargs are not orderred dictionaries on some python versions
+    # let's just use sorted to make sure everything is in the output
+    assert sorted(cmdline) == sorted(expected)
+
+    # Numbers
+    extra_kwargs = OrderedDict((("width", 1.27), ("height", 3)))
+    kwargs = OrderedDict((("minion_tgt", minion_id),))
+    kwargs.update(extra_kwargs)
+    expected = [
+        sys.executable,
+        cli_script_name,
+        "--config-dir={}".format(config_dir.strpath),
+        "--out=json",
+        "--log-level=quiet",
+        minion_id,
+        "test.ping",
+    ]
+    for key, value in extra_kwargs.items():
+        value = json.dumps(value)
+        expected.append("{}={}".format(key, value))
+    proc = SaltScriptBase(cli_script_name, config=config)
+    cmdline = proc.build_cmdline(*args, **kwargs)
+    # Function **kwargs are not orderred dictionaries on some python versions
+    # let's just use sorted to make sure everything is in the output
+    assert sorted(cmdline) == sorted(expected)
+
+    # Booleans
+    extra_kwargs = OrderedDict((("short", False), ("tall", True)))
+    kwargs = OrderedDict((("minion_tgt", minion_id),))
+    kwargs.update(extra_kwargs)
+    expected = [
+        sys.executable,
+        cli_script_name,
+        "--config-dir={}".format(config_dir.strpath),
+        "--out=json",
+        "--log-level=quiet",
+        minion_id,
+        "test.ping",
+    ]
+    for key, value in extra_kwargs.items():
+        value = json.dumps(value)
+        expected.append("{}={}".format(key, value))
+    proc = SaltScriptBase(cli_script_name, config=config)
+    cmdline = proc.build_cmdline(*args, **kwargs)
+    # Function **kwargs are not orderred dictionaries on some python versions
+    # let's just use sorted to make sure everything is in the output
+    assert sorted(cmdline) == sorted(expected)
+
+    # JSon structure
+    extra_kwargs = {"look": "Ma", "no": "Hands!"}
+    kwargs = {"minion_tgt": minion_id, "extra": extra_kwargs}
+    expected = [
+        sys.executable,
+        cli_script_name,
+        "--config-dir={}".format(config_dir.strpath),
+        "--out=json",
+        "--log-level=quiet",
+        minion_id,
+        "test.ping",
+        "extra={}".format(json.dumps(extra_kwargs)),
+    ]
+    proc = SaltScriptBase(cli_script_name, config=config)
+    cmdline = proc.build_cmdline(*args, **kwargs)
+    # Function **kwargs are not orderred dictionaries on some python versions
+    # let's just use sorted to make sure everything is in the output
+    assert sorted(cmdline) == sorted(expected)

@@ -9,6 +9,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import json
 import logging
 import os
 import sys
@@ -155,7 +156,10 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         cmdline.extend(args)
 
         for key in kwargs:
-            cmdline.append("{}={}".format(key, kwargs[key]))
+            value = kwargs[key]
+            if not isinstance(value, six.string_types):
+                value = json.dumps(value)
+            cmdline.append("{}={}".format(key, value))
         cmdline = super(SaltScriptBase, self).build_cmdline(*cmdline)
         log.debug("Built cmdline: %s", cmdline)
         return cmdline
