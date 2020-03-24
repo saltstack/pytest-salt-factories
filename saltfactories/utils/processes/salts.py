@@ -306,9 +306,6 @@ class SaltCLI(SaltScriptBase):
         if old_stdout is not None:
             stdout = old_stdout
         if json_out:
-            if not isinstance(json_out, dict):
-                # A string was most likely loaded, not what we want.
-                return stdout, stderr, None
             try:
                 return stdout, stderr, json_out[self._minion_tgt]
             except KeyError:
@@ -331,9 +328,6 @@ class SaltCallCLI(SaltScriptBase):
         self._minion_tgt = "local"
         stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cmdline)
         if json_out:
-            if not isinstance(json_out, dict):
-                # A string was most likely loaded, not what we want.
-                return stdout, stderr, None
             try:
                 return stdout, stderr, json_out[self._minion_tgt]
             except KeyError:
@@ -364,9 +358,6 @@ class SaltCpCLI(SaltScriptBase):
             stdout = stdout.split("\n", 1)[1:][0]
         stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cmdline)
         if json_out:
-            if not isinstance(json_out, dict):
-                # A string was most likely loaded, not what we want.
-                return stdout, stderr, None
             try:
                 return stdout, stderr, json_out[self._minion_tgt]
             except KeyError:
