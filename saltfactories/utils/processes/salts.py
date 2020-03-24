@@ -97,26 +97,28 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
                 if arg.startswith("--timeout="):
                     # Let's actually change the _terminal_timeout value which is used to
                     # calculate when the run() method should actually timeout
-                    salt_cli_timeout = arg.split("--timeout=")[-1]
-                    try:
-                        self._terminal_timeout = int(salt_cli_timeout) + 5
-                    except ValueError:
-                        # Not a number? Let salt do it's error handling
-                        pass
+                    if self._terminal_timeout_set_explicitly is False:
+                        salt_cli_timeout = arg.split("--timeout=")[-1]
+                        try:
+                            self._terminal_timeout = int(salt_cli_timeout) + 5
+                        except ValueError:
+                            # Not a number? Let salt do it's error handling
+                            pass
                     break
                 if salt_cli_timeout_next:
-                    try:
-                        self._terminal_timeout = int(arg) + 5
-                    except ValueError:
-                        # Not a number? Let salt do it's error handling
-                        pass
+                    if self._terminal_timeout_set_explicitly is False:
+                        try:
+                            self._terminal_timeout = int(arg) + 5
+                        except ValueError:
+                            # Not a number? Let salt do it's error handling
+                            pass
                     break
                 if arg == "-t" or arg.startswith("--timeout"):
                     salt_cli_timeout_next = True
                     continue
             else:
                 salt_cli_timeout = self._terminal_timeout
-                if salt_cli_timeout:
+                if salt_cli_timeout and self._terminal_timeout_set_explicitly is False:
                     # Shave off a few seconds so that the salt command times out before the terminal does
                     salt_cli_timeout -= 5
                 if salt_cli_timeout:

@@ -12,8 +12,10 @@ from __future__ import unicode_literals
 import json
 import sys
 
+import mock
 import pytest
 
+from saltfactories.utils.processes.bases import ProcessResult
 from saltfactories.utils.processes.salts import SaltScriptBase
 
 
@@ -146,6 +148,114 @@ def test_default_cli_flags_with_timeout(minion_id, config_dir, config_file, cli_
     proc._terminal_timeout = proc.default_timeout
     cmdline = proc.build_cmdline(*args, **kwargs)
     assert cmdline == expected
+
+
+def test_default_cli_flags_with_timeout_and_timeout_kwargs(
+    minion_id, config_dir, config_file, cli_script_name
+):
+    """
+    This test assures that when _timeout is passed as a keyword argument, that the _terminal_timeout property
+    does not get get updated to the value of --timeout
+    """
+    default_timeout = 10
+    explicit_timeout = 60
+    config = {"conf_file": config_file}
+    args = ["--timeout=6", "test.ping"]
+    kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
+    expected = [
+        sys.executable,
+        cli_script_name,
+        "--config-dir={}".format(config_dir.strpath),
+        "--out=json",
+        "--log-level=quiet",
+        minion_id,
+        "--timeout=6",
+        "test.ping",
+    ]
+
+    popen_mock = mock.MagicMock()
+    popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
+    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", ()))
+    terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", ""))
+
+    proc = SaltScriptBase(cli_script_name, config=config, default_timeout=default_timeout)
+    with mock.patch.object(proc, "init_terminal", popen_mock), mock.patch.object(
+        proc, "terminate", terminate_mock
+    ):
+        # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
+        # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
+        proc.__cli_timeout_supported__ = True
+        ret = proc.run(*args, **kwargs)
+        assert proc._terminal_timeout_set_explicitly is True
+        assert proc._terminal_timeout == explicit_timeout
+        assert ret.cmdline == expected
+
+    # To confirm behavior, let's NOT pass --timeout in args
+    default_timeout = 10
+    explicit_timeout = 60
+    config = {"conf_file": config_file}
+    args = ["test.ping"]
+    kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
+    expected = [
+        sys.executable,
+        cli_script_name,
+        "--config-dir={}".format(config_dir.strpath),
+        "--out=json",
+        "--log-level=quiet",
+        minion_id,
+        "test.ping",
+        "--timeout={}".format(explicit_timeout),
+    ]
+
+    popen_mock = mock.MagicMock()
+    popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
+    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", ()))
+    terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", ""))
+
+    proc = SaltScriptBase(cli_script_name, config=config, default_timeout=default_timeout)
+    with mock.patch.object(proc, "init_terminal", popen_mock), mock.patch.object(
+        proc, "terminate", terminate_mock
+    ):
+        # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
+        # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
+        proc.__cli_timeout_supported__ = True
+        ret = proc.run(*args, **kwargs)
+        assert proc._terminal_timeout_set_explicitly is True
+        assert proc._terminal_timeout == explicit_timeout
+        assert ret.cmdline == expected
+
+    # To confirm behavior, let's NOT pass --timeout in args nor _timeout in kwargs
+    default_timeout = 10
+    config = {"conf_file": config_file}
+    args = ["test.ping"]
+    kwargs = {"minion_tgt": minion_id}
+    expected = [
+        sys.executable,
+        cli_script_name,
+        "--config-dir={}".format(config_dir.strpath),
+        "--out=json",
+        "--log-level=quiet",
+        minion_id,
+        "test.ping",
+        "--timeout={}".format(default_timeout - 5),
+    ]
+
+    popen_mock = mock.MagicMock()
+    popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
+    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", ()))
+    terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", ""))
+
+    proc = SaltScriptBase(cli_script_name, config=config, default_timeout=default_timeout)
+    with mock.patch.object(proc, "init_terminal", popen_mock), mock.patch.object(
+        proc, "terminate", terminate_mock
+    ):
+        # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
+        # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
+        proc.__cli_timeout_supported__ = True
+        ret = proc.run(*args, **kwargs)
+        assert proc._terminal_timeout_set_explicitly is False
+        assert proc._terminal_timeout == default_timeout
+        assert ret.cmdline == expected
 
 
 @pytest.mark.parametrize("flag", ["-t", "--timeout", "--timeout="])

@@ -300,60 +300,58 @@ class FactoryScriptBase(FactoryProcess):
                 # Windows is just slower.
                 default_timeout = 120
         self.default_timeout = default_timeout
+        self._terminal_timeout_set_explicitly = False
 
     def run(self, *args, **kwargs):
         """
         Run the given command synchronously
         """
         start_time = time.time()
-        timeout = kwargs.pop("_timeout", None) or self.default_timeout
+        timeout = kwargs.pop("_timeout", None)
 
         # Build the cmdline to pass to the terminal
         # We set the _terminal_timeout attribute while calling build_cmdline in case it needs
         # access to that information to build the command line
-        try:
-            self._terminal_timeout = timeout
-            cmdline = self.build_cmdline(*args, **kwargs)
-            timeout_expire = time.time() + self._terminal_timeout
+        self._terminal_timeout = timeout or self.default_timeout
+        self._terminal_timeout_set_explicitly = timeout is not None
+        cmdline = self.build_cmdline(*args, **kwargs)
+        timeout_expire = time.time() + self._terminal_timeout
 
-            log.info("%sRunning %r in CWD: %s ...", self.get_log_prefix(), cmdline, self.cwd)
+        log.info("%sRunning %r in CWD: %s ...", self.get_log_prefix(), cmdline, self.cwd)
 
-            terminal = self.init_terminal(cmdline, cwd=self.cwd, env=self.environ,)
-            timmed_out = False
-            while True:
-                if timeout_expire < time.time():
-                    timmed_out = True
-                    break
-                if terminal.poll() is not None:
-                    break
-                time.sleep(0.25)
+        terminal = self.init_terminal(cmdline, cwd=self.cwd, env=self.environ,)
+        timmed_out = False
+        while True:
+            if timeout_expire < time.time():
+                timmed_out = True
+                break
+            if terminal.poll() is not None:
+                break
+            time.sleep(0.25)
 
-            result = self.terminate()
-            if timmed_out:
-                raise ProcessTimeout(
-                    "{}Failed to run: {}; Error: Timed out after {} seconds!".format(
-                        self.get_log_prefix(), cmdline, timeout
-                    ),
-                    stdout=result.stdout,
-                    stderr=result.stderr,
-                    cmdline=cmdline,
-                )
-
-            exitcode = result.exitcode
-            stdout, stderr, json_out = self.process_output(
-                result.stdout, result.stderr, cmdline=cmdline
+        result = self.terminate()
+        if timmed_out:
+            raise ProcessTimeout(
+                "{}Failed to run: {}; Error: Timed out after {:.2f} seconds!".format(
+                    self.get_log_prefix(), cmdline, time.time() - start_time
+                ),
+                stdout=result.stdout,
+                stderr=result.stderr,
+                cmdline=cmdline,
             )
-            log.info(
-                "%sCompleted %r in CWD: %s after %.2f seconds",
-                self.get_log_prefix(),
-                cmdline,
-                self.cwd,
-                time.time() - start_time,
-            )
-            return ShellResult(exitcode, stdout, stderr, json=json_out, cmdline=cmdline)
-        finally:
-            # We now clear the _terminal_timeout attribute
-            self._terminal_timeout = None
+
+        exitcode = result.exitcode
+        stdout, stderr, json_out = self.process_output(
+            result.stdout, result.stderr, cmdline=cmdline
+        )
+        log.info(
+            "%sCompleted %r in CWD: %s after %.2f seconds",
+            self.get_log_prefix(),
+            cmdline,
+            self.cwd,
+            time.time() - start_time,
+        )
+        return ShellResult(exitcode, stdout, stderr, json=json_out, cmdline=cmdline)
 
     def process_output(self, stdout, stderr, cmdline=None):
         if stdout:
