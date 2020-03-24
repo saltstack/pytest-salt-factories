@@ -140,7 +140,7 @@ def pytest_saltfactories_minion_verify_configuration(request, minion_config, use
     salt.utils.verify.verify_env(verify_env_entries, username, pki_dir=minion_config["pki_dir"])
 
 
-def pytest_saltfactories_write_minion_configuration(request, minion_config):
+def pytest_saltfactories_minion_write_configuration(request, minion_config):
     """
     This hook is called to vefiry the provided minion configuration
     """
@@ -189,7 +189,7 @@ def pytest_saltfactories_master_verify_configuration(request, master_config, use
     salt.utils.verify.verify_env(verify_env_entries, username, pki_dir=master_config["pki_dir"])
 
 
-def pytest_saltfactories_write_master_configuration(request, master_config):
+def pytest_saltfactories_master_write_configuration(request, master_config):
     """
     This hook is called to vefiry the provided master configuration
     """
@@ -223,7 +223,7 @@ def pytest_saltfactories_syndic_verify_configuration(request, syndic_config, use
     )
 
 
-def pytest_saltfactories_write_syndic_configuration(request, syndic_config):
+def pytest_saltfactories_syndic_write_configuration(request, syndic_config):
     """
     This hook is called to vefiry the provided syndic configuration
     """
@@ -263,7 +263,7 @@ def pytest_saltfactories_proxy_minion_verify_configuration(request, proxy_minion
     )
 
 
-def pytest_saltfactories_write_proxy_minion_configuration(request, proxy_minion_config):
+def pytest_saltfactories_proxy_minion_write_configuration(request, proxy_minion_config):
     """
     This hook is called to vefiry the provided proxy_minion configuration
     """

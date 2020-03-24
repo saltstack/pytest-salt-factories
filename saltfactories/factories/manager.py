@@ -233,7 +233,7 @@ class SaltFactoriesManager(object):
             master_port=master_port,
         )
         self.final_minion_config_tweaks(minion_config)
-        minion_config = self.pytestconfig.hook.pytest_saltfactories_write_minion_configuration(
+        minion_config = self.pytestconfig.hook.pytest_saltfactories_minion_write_configuration(
             request=request, minion_config=minion_config
         )
         self.pytestconfig.hook.pytest_saltfactories_minion_verify_configuration(
@@ -309,7 +309,7 @@ class SaltFactoriesManager(object):
             order_masters=order_masters,
         )
         self.final_master_config_tweaks(master_config)
-        master_config = self.pytestconfig.hook.pytest_saltfactories_write_master_configuration(
+        master_config = self.pytestconfig.hook.pytest_saltfactories_master_write_configuration(
             request=request, master_config=master_config
         )
         self.pytestconfig.hook.pytest_saltfactories_master_verify_configuration(
@@ -398,7 +398,7 @@ class SaltFactoriesManager(object):
 
         master_config = syndic_setup_config["master"]
         self.final_master_config_tweaks(master_config)
-        master_config = self.pytestconfig.hook.pytest_saltfactories_write_master_configuration(
+        master_config = self.pytestconfig.hook.pytest_saltfactories_master_write_configuration(
             request=request, master_config=master_config
         )
         self.pytestconfig.hook.pytest_saltfactories_master_verify_configuration(
@@ -412,7 +412,7 @@ class SaltFactoriesManager(object):
 
         minion_config = syndic_setup_config["minion"]
         self.final_minion_config_tweaks(minion_config)
-        minion_config = self.pytestconfig.hook.pytest_saltfactories_write_minion_configuration(
+        minion_config = self.pytestconfig.hook.pytest_saltfactories_minion_write_configuration(
             request=request, minion_config=minion_config
         )
         self.pytestconfig.hook.pytest_saltfactories_minion_verify_configuration(
@@ -426,7 +426,7 @@ class SaltFactoriesManager(object):
 
         syndic_config = syndic_setup_config["syndic"]
         self.final_syndic_config_tweaks(syndic_config)
-        syndic_config = self.pytestconfig.hook.pytest_saltfactories_write_syndic_configuration(
+        syndic_config = self.pytestconfig.hook.pytest_saltfactories_syndic_write_configuration(
             request=request, syndic_config=syndic_config
         )
         self.pytestconfig.hook.pytest_saltfactories_syndic_verify_configuration(
@@ -501,7 +501,7 @@ class SaltFactoriesManager(object):
             master_port=master_port,
         )
         self.final_proxy_minion_config_tweaks(proxy_minion_config)
-        proxy_minion_config = self.pytestconfig.hook.pytest_saltfactories_write_proxy_minion_configuration(
+        proxy_minion_config = self.pytestconfig.hook.pytest_saltfactories_proxy_minion_write_configuration(
             request=request, proxy_minion_config=proxy_minion_config
         )
         self.pytestconfig.hook.pytest_saltfactories_proxy_minion_verify_configuration(
