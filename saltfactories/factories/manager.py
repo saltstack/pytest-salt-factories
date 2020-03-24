@@ -236,7 +236,7 @@ class SaltFactoriesManager(object):
         minion_config = self.pytestconfig.hook.pytest_saltfactories_write_minion_configuration(
             request=request, minion_config=minion_config
         )
-        self.pytestconfig.hook.pytest_saltfactories_verify_minion_configuration(
+        self.pytestconfig.hook.pytest_saltfactories_minion_verify_configuration(
             request=request,
             minion_config=minion_config,
             username=SaltFactoriesManager.get_running_username(),
@@ -312,7 +312,7 @@ class SaltFactoriesManager(object):
         master_config = self.pytestconfig.hook.pytest_saltfactories_write_master_configuration(
             request=request, master_config=master_config
         )
-        self.pytestconfig.hook.pytest_saltfactories_verify_master_configuration(
+        self.pytestconfig.hook.pytest_saltfactories_master_verify_configuration(
             request=request,
             master_config=master_config,
             username=SaltFactoriesManager.get_running_username(),
@@ -401,7 +401,7 @@ class SaltFactoriesManager(object):
         master_config = self.pytestconfig.hook.pytest_saltfactories_write_master_configuration(
             request=request, master_config=master_config
         )
-        self.pytestconfig.hook.pytest_saltfactories_verify_master_configuration(
+        self.pytestconfig.hook.pytest_saltfactories_master_verify_configuration(
             request=request,
             master_config=master_config,
             username=SaltFactoriesManager.get_running_username(),
@@ -415,7 +415,7 @@ class SaltFactoriesManager(object):
         minion_config = self.pytestconfig.hook.pytest_saltfactories_write_minion_configuration(
             request=request, minion_config=minion_config
         )
-        self.pytestconfig.hook.pytest_saltfactories_verify_minion_configuration(
+        self.pytestconfig.hook.pytest_saltfactories_minion_verify_configuration(
             request=request,
             minion_config=minion_config,
             username=SaltFactoriesManager.get_running_username(),
@@ -429,7 +429,7 @@ class SaltFactoriesManager(object):
         syndic_config = self.pytestconfig.hook.pytest_saltfactories_write_syndic_configuration(
             request=request, syndic_config=syndic_config
         )
-        self.pytestconfig.hook.pytest_saltfactories_verify_syndic_configuration(
+        self.pytestconfig.hook.pytest_saltfactories_syndic_verify_configuration(
             request=request,
             syndic_config=syndic_config,
             username=SaltFactoriesManager.get_running_username(),
@@ -504,7 +504,7 @@ class SaltFactoriesManager(object):
         proxy_minion_config = self.pytestconfig.hook.pytest_saltfactories_write_proxy_minion_configuration(
             request=request, proxy_minion_config=proxy_minion_config
         )
-        self.pytestconfig.hook.pytest_saltfactories_verify_proxy_minion_configuration(
+        self.pytestconfig.hook.pytest_saltfactories_proxy_minion_verify_configuration(
             request=request,
             proxy_minion_config=proxy_minion_config,
             username=SaltFactoriesManager.get_running_username(),

@@ -35,7 +35,7 @@ def pytest_saltfactories_minion_configuration_overrides(
     """
 
 
-def pytest_saltfactories_verify_minion_configuration(request, minion_config, username):
+def pytest_saltfactories_minion_verify_configuration(request, minion_config, username):
     """
     This hook is called to vefiry the provided minion configuration
     """
@@ -71,7 +71,7 @@ def pytest_saltfactories_master_configuration_overrides(
     """
 
 
-def pytest_saltfactories_verify_master_configuration(request, master_config, username):
+def pytest_saltfactories_master_verify_configuration(request, master_config, username):
     """
     This hook is called to vefiry the provided master configuration
     """
@@ -120,7 +120,7 @@ def pytest_saltfactories_syndic_configuration_overrides(
     """
 
 
-def pytest_saltfactories_verify_syndic_configuration(request, syndic_config, username):
+def pytest_saltfactories_syndic_verify_configuration(request, syndic_config, username):
     """
     This hook is called to vefiry the provided syndic configuration
     """
@@ -156,7 +156,7 @@ def pytest_saltfactories_proxy_minion_configuration_overrides(
     """
 
 
-def pytest_saltfactories_verify_proxy_minion_configuration(request, proxy_minion_config, username):
+def pytest_saltfactories_proxy_minion_verify_configuration(request, proxy_minion_config, username):
     """
     This hook is called to vefiry the provided proxy_minion configuration
     """
