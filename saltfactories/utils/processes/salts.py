@@ -62,13 +62,6 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         self.config = config
         self.hard_crash = hard_crash
 
-    def get_base_script_args(self):
-        script_args = super(SaltScriptBase, self).get_base_script_args()
-        config_dir = self.config_dir
-        if config_dir:
-            script_args.append("--config-dir={}".format(config_dir))
-        return script_args
-
     def get_script_args(self):
         """
         Returns any additional arguments to pass to the CLI script
@@ -89,6 +82,15 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         cmdline = []
 
         args = list(args)
+
+        # Handle the config directory flag
+        for arg in args:
+            if arg.startswith("--config-dir="):
+                break
+            if arg in ("-c", "--config-dir"):
+                break
+        else:
+            cmdline.append("--config-dir={}".format(self.config_dir))
 
         # Handle the timeout CLI flag, if supported
         if self.__cli_timeout_supported__:
@@ -123,7 +125,7 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
                     salt_cli_timeout -= 5
                 if salt_cli_timeout:
                     # If it's still a positive number, add it to the salt command CLI flags
-                    args.append("--timeout={}".format(salt_cli_timeout))
+                    cmdline.append("--timeout={}".format(salt_cli_timeout))
 
         # Handle the output flag
         for arg in args:

@@ -133,11 +133,11 @@ def test_default_cli_flags_with_timeout(minion_id, config_dir, config_file, cli_
         sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
+        "--timeout={}".format(default_timeout - 5),
         "--out=json",
         "--log-level=quiet",
         minion_id,
         "test.ping",
-        "--timeout={}".format(default_timeout - 5),
     ]
     proc = SaltScriptBase(cli_script_name, config=config, default_timeout=default_timeout)
     # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
@@ -200,11 +200,11 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
         sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
+        "--timeout={}".format(explicit_timeout),
         "--out=json",
         "--log-level=quiet",
         minion_id,
         "test.ping",
-        "--timeout={}".format(explicit_timeout),
     ]
 
     popen_mock = mock.MagicMock()
@@ -233,11 +233,11 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
         sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
+        "--timeout={}".format(default_timeout - 5),
         "--out=json",
         "--log-level=quiet",
         minion_id,
         "test.ping",
-        "--timeout={}".format(default_timeout - 5),
     ]
 
     popen_mock = mock.MagicMock()
@@ -332,6 +332,32 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
     # Let's confirm that even though we tried to parse the timeout flag value, it was a bad value and the
     # SaltScriptBase _terminal_timeout attribute was not update
     assert proc._terminal_timeout == flag_value
+
+
+@pytest.mark.parametrize("flag", ["-c", "--config-dir", "--config-dir=", None])
+def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name, flag):
+    passed_config_dir = config_dir.strpath + ".new"
+    if flag is None:
+        flag_overrides_args = ["--config-dir={}".format(config_dir.strpath)]
+    elif flag.endswith("="):
+        flag_overrides_args = [flag + passed_config_dir]
+    else:
+        flag_overrides_args = [flag, passed_config_dir]
+
+    default_timeout = 10
+    config = {"conf_file": config_file}
+    args = flag_overrides_args + ["test.ping"]
+    kwargs = {"minion_tgt": minion_id}
+    expected = (
+        [sys.executable, cli_script_name, "--out=json", "--log-level=quiet", minion_id,]
+        + flag_overrides_args
+        + ["test.ping",]
+    )
+    proc = SaltScriptBase(cli_script_name, config=config)
+    # We set the _terminal_timeout attribute just to test. This attribute would be set when calling
+    # SaltScriptBase.run() but we don't really want to call it
+    cmdline = proc.build_cmdline(*args, **kwargs)
+    assert cmdline == expected
 
 
 def test_process_output(cli_script_name):
