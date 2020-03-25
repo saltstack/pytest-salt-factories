@@ -98,6 +98,7 @@ napoleon_use_rtype = True
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "pytest": ("https://pytest.readthedocs.io/en/stable", None),
+    "salt": ("https://docs.saltstack.com/en/latest", None),
 }
 # <---- Intersphinx Config -----------------------------------------------------------------------------------------
 

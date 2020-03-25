@@ -14,6 +14,14 @@ import sys
 
 import psutil
 
+try:
+    import salt.utils.dictupdate
+except ImportError:  # pragma: no cover
+    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
+    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
+    # import error, but its safe to pass
+    pass
+
 import saltfactories.utils.processes.helpers
 import saltfactories.utils.processes.salts as salt_factories
 from saltfactories.factories import master
@@ -68,7 +76,7 @@ class SaltFactoriesManager(object):
             inject_coverage (bool):
                 Inject code-coverage related code in the generated CLI scripts
             inject_sitecustomize (bool):
-                Inject code in the generated CLI scripts in order for our `sitecustumise.py` to be loaded by
+                Inject code in the generated CLI scripts in order for our `sitecustomise.py` to be loaded by
                 subprocesses.
             cwd (str):
                 The path to the current working directory
@@ -198,9 +206,167 @@ class SaltFactoriesManager(object):
         log_config["port"] = self.log_server_port
         log_config["level"] = self.log_server_level
 
-    def configure_minion(self, request, minion_id, master_id=None):
+    def configure_master(
+        self,
+        request,
+        master_id,
+        order_masters=False,
+        master_of_masters_id=None,
+        config_defaults=None,
+        config_overrides=None,
+    ):
+        """
+        Configure a salt-master
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            master_id(str):
+                The master ID
+            order_masters(bool):
+                Boolean flag to set if this master is going to control other masters(ie, master of masters), like,
+                for example, in a :ref:`Syndic <salt:syndic>` topology scenario
+            master_of_masters_id(str):
+                The master of masters ID, like, for example, in a :ref:`Syndic <salt:syndic>` topology scenario
+            config_defaults(dict):
+                A dictionary of default configuration to use when configuring the master
+            config_overrides(dict):
+                A dictionary of configuration overrides to use when configuring the master
+
+        Returns:
+            dict: The master configuring dictionary
+        """
+        if master_id in self.cache["configs"]["masters"]:
+            return self.cache["configs"]["masters"][master_id]
+
+        root_dir = self._get_root_dir_for_daemon(master_id)
+
+        _config_defaults = self.pytestconfig.hook.pytest_saltfactories_master_configuration_defaults(
+            request=request,
+            factories_manager=self,
+            root_dir=root_dir,
+            master_id=master_id,
+            order_masters=order_masters,
+        )
+        if config_defaults:
+            if _config_defaults:
+                salt.utils.dictupdate.update(_config_defaults, config_defaults)
+            else:
+                _config_defaults = config_defaults.copy()
+
+        _config_overrides = self.pytestconfig.hook.pytest_saltfactories_master_configuration_overrides(
+            request=request,
+            factories_manager=self,
+            root_dir=root_dir,
+            master_id=master_id,
+            config_defaults=_config_defaults,
+            order_masters=order_masters,
+        )
+        if config_overrides:
+            if _config_overrides:
+                salt.utils.dictupdate.update(_config_overrides, config_overrides)
+            else:
+                _config_overrides = config_overrides.copy()
+
+        if master_of_masters_id:
+            master_of_masters_config = self.cache["configs"]["masters"].get(master_of_masters_id)
+            if master_of_masters_config is None:
+                raise RuntimeError("No config found for {}".format(master_of_masters_id))
+            if config_overrides is None:
+                config_overrides = {}
+            config_overrides["syndic_master"] = master_of_masters_config["interface"]
+            config_overrides["syndic_master_port"] = master_of_masters_config["ret_port"]
+
+        master_config = master.MasterFactory.default_config(
+            root_dir,
+            master_id=master_id,
+            config_defaults=_config_defaults,
+            config_overrides=_config_overrides,
+            order_masters=order_masters,
+        )
+        self.final_master_config_tweaks(master_config)
+        master_config = self.pytestconfig.hook.pytest_saltfactories_master_write_configuration(
+            request=request, master_config=master_config
+        )
+        self.pytestconfig.hook.pytest_saltfactories_master_verify_configuration(
+            request=request,
+            master_config=master_config,
+            username=SaltFactoriesManager.get_running_username(),
+        )
+        self.cache["configs"]["masters"][master_id] = master_config
+        request.addfinalizer(lambda: self.cache["configs"]["masters"].pop(master_id))
+        return master_config
+
+    def spawn_master(
+        self,
+        request,
+        master_id,
+        order_masters=False,
+        master_of_masters_id=None,
+        config_defaults=None,
+        config_overrides=None,
+    ):
+        """
+        Spawn a salt-master
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            master_id(str):
+                The master ID
+            order_masters(bool):
+                Boolean flag to set if this master is going to control other masters(ie, master of masters), like,
+                for example, in a :ref:`Syndic <salt:syndic>` topology scenario
+            master_of_masters_id(str):
+                The master of masters ID, like, for example, in a :ref:`Syndic <salt:syndic>` topology scenario
+            config_defaults(dict):
+                A dictionary of default configuration to use when configuring the master
+            config_overrides(dict):
+                A dictionary of configuration overrides to use when configuring the master
+
+        Returns:
+            :py:class:`~saltfactories.utils.processes.salts.SaltMaster`:
+                The master process class instance
+        """
+        if master_id in self.cache["masters"]:
+            raise RuntimeError("A master by the ID of '{}' was already spawned".format(master_id))
+
+        master_config = self.cache["configs"]["masters"].get(master_id)
+        if master_config is None:
+            master_config = self.configure_master(
+                request,
+                master_id,
+                order_masters=order_masters,
+                master_of_masters_id=master_of_masters_id,
+                config_defaults=config_defaults,
+                config_overrides=config_overrides,
+            )
+
+        return self._start_daemon(
+            request, "salt-master", master_config, salt_factories.SaltMaster, "masters", master_id
+        )
+
+    def configure_minion(
+        self, request, minion_id, master_id=None, config_defaults=None, config_overrides=None
+    ):
         """
         Configure a salt-minion
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            minion_id(str):
+                The minion ID
+            master_id(str):
+                The master ID this minion will connect to.
+            config_defaults(dict):
+                A dictionary of default configuration to use when configuring the minion
+            config_overrides(dict):
+                A dictionary of configuration overrides to use when configuring the minion
+
+        Returns:
+            dict: The minion configuration dictionary
+
         """
         if minion_id in self.cache["configs"]["minions"]:
             return self.cache["configs"]["minions"][minion_id]
@@ -211,25 +377,38 @@ class SaltFactoriesManager(object):
         if master_id is not None:
             master_config = self.cache["configs"]["masters"][master_id]
             master_port = master_config.get("ret_port")
-        config_defaults = self.pytestconfig.hook.pytest_saltfactories_minion_configuration_defaults(
+
+        _config_defaults = self.pytestconfig.hook.pytest_saltfactories_minion_configuration_defaults(
             request=request,
             factories_manager=self,
             root_dir=root_dir,
             minion_id=minion_id,
             master_port=master_port,
         )
-        config_overrides = self.pytestconfig.hook.pytest_saltfactories_minion_configuration_overrides(
+        if config_defaults:
+            if _config_defaults:
+                salt.utils.dictupdate.update(_config_defaults, config_defaults)
+            else:
+                _config_defaults = config_defaults.copy()
+
+        _config_overrides = self.pytestconfig.hook.pytest_saltfactories_minion_configuration_overrides(
             request=request,
             factories_manager=self,
             root_dir=root_dir,
             minion_id=minion_id,
-            config_defaults=config_defaults,
+            config_defaults=_config_defaults,
         )
+        if config_overrides:
+            if _config_overrides:
+                salt.utils.dictupdate.update(_config_overrides, config_overrides)
+            else:
+                _config_overrides = config_overrides.copy()
+
         minion_config = minion.MinionFactory.default_config(
             root_dir,
             minion_id=minion_id,
-            config_defaults=config_defaults,
-            config_overrides=config_overrides,
+            config_defaults=_config_defaults,
+            config_overrides=_config_overrides,
             master_port=master_port,
         )
         self.final_minion_config_tweaks(minion_config)
@@ -252,104 +431,79 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["minions"].pop(minion_id))
         return minion_config
 
-    def spawn_minion(self, request, minion_id, master_id=None):
+    def spawn_minion(
+        self, request, minion_id, master_id=None, config_defaults=None, config_overrides=None
+    ):
         """
         Spawn a salt-minion
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            minion_id(str):
+                The minion ID
+            master_id(str):
+                The master ID this minion will connect to.
+            config_defaults(dict):
+                A dictionary of default configuration to use when configuring the minion
+            config_overrides(dict):
+                A dictionary of configuration overrides to use when configuring the minion
+
+        Returns:
+            :py:class:`~saltfactories.utils.processes.salts.SaltMinion`:
+                The minion process class instance
         """
         if minion_id in self.cache["minions"]:
             raise RuntimeError("A minion by the ID of '{}' was already spawned".format(minion_id))
 
         minion_config = self.cache["configs"]["minions"].get(minion_id)
         if minion_config is None:
-            minion_config = self.configure_minion(request, minion_id, master_id=master_id)
+            minion_config = self.configure_minion(
+                request,
+                minion_id,
+                master_id=master_id,
+                config_defaults=config_defaults,
+                config_overrides=config_overrides,
+            )
 
         return self._start_daemon(
             request, "salt-minion", minion_config, salt_factories.SaltMinion, "minions", minion_id
         )
 
-    def configure_master(self, request, master_id, order_masters=False, master_of_masters_id=None):
-        """
-        Configure a salt-master
-        """
-        if master_id in self.cache["configs"]["masters"]:
-            return self.cache["configs"]["masters"][master_id]
-
-        root_dir = self._get_root_dir_for_daemon(master_id)
-
-        config_defaults = self.pytestconfig.hook.pytest_saltfactories_master_configuration_defaults(
-            request=request,
-            factories_manager=self,
-            root_dir=root_dir,
-            master_id=master_id,
-            order_masters=order_masters,
-        )
-        config_overrides = self.pytestconfig.hook.pytest_saltfactories_master_configuration_overrides(
-            request=request,
-            factories_manager=self,
-            root_dir=root_dir,
-            master_id=master_id,
-            config_defaults=config_defaults,
-            order_masters=order_masters,
-        )
-
-        if master_of_masters_id:
-            master_of_masters_config = self.cache["configs"]["masters"].get(master_of_masters_id)
-            if master_of_masters_config is None:
-                raise RuntimeError("No config found for {}".format(master_of_masters_id))
-            if config_overrides is None:
-                config_overrides = {}
-            config_overrides["syndic_master"] = master_of_masters_config["interface"]
-            config_overrides["syndic_master_port"] = master_of_masters_config["ret_port"]
-
-        master_config = master.MasterFactory.default_config(
-            root_dir,
-            master_id=master_id,
-            config_defaults=config_defaults,
-            config_overrides=config_overrides,
-            order_masters=order_masters,
-        )
-        self.final_master_config_tweaks(master_config)
-        master_config = self.pytestconfig.hook.pytest_saltfactories_master_write_configuration(
-            request=request, master_config=master_config
-        )
-        self.pytestconfig.hook.pytest_saltfactories_master_verify_configuration(
-            request=request,
-            master_config=master_config,
-            username=SaltFactoriesManager.get_running_username(),
-        )
-        self.cache["configs"]["masters"][master_id] = master_config
-        request.addfinalizer(lambda: self.cache["configs"]["masters"].pop(master_id))
-        return master_config
-
-    def spawn_master(
-        self, request, master_id, order_masters=False, master_of_masters_id=None,
+    def configure_syndic(
+        self,
+        request,
+        syndic_id,
+        master_of_masters_id=None,
+        config_defaults=None,
+        config_overrides=None,
     ):
-        """
-        Spawn a salt-master
-        """
-        if master_id in self.cache["masters"]:
-            raise RuntimeError("A master by the ID of '{}' was already spawned".format(master_id))
-
-        master_config = self.cache["configs"]["masters"].get(master_id)
-        if master_config is None:
-            master_config = self.configure_master(
-                request,
-                master_id,
-                order_masters=order_masters,
-                master_of_masters_id=master_of_masters_id,
-            )
-
-        return self._start_daemon(
-            request, "salt-master", master_config, salt_factories.SaltMaster, "masters", master_id
-        )
-
-    def configure_syndic(self, request, syndic_id, master_of_masters_id=None):
         """
         Configure a salt-syndic.
 
         In order for the syndic to be reactive, it actually needs three(3) daemons running, `salt-master`,
         `salt-minion` and `salt-syndic`.
 
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            syndic_id(str):
+                The Syndic ID. This ID will be shared by the ``salt-master``, ``salt-minion`` and ``salt-syndic``
+                processes.
+            master_of_masters_id(str):
+                The master of masters ID that the master configured in this :ref:`Syndic <salt:syndic>` topology
+                scenario shall connect to.
+            config_defaults(dict):
+                A dictionary of default configurations with three top level keys, ``master``, ``minion`` and
+                ``syndic``, to use when configuring the  ``salt-master``, ``salt-minion`` and ``salt-syndic``
+                respectively.
+            config_overrides(dict):
+                A dictionary of configuration overrides with three top level keys, ``master``, ``minion`` and
+                ``syndic``, to use when configuring the  ``salt-master``, ``salt-minion`` and ``salt-syndic``
+                respectively.
+
+        Returns:
+            dict: The syndic configuring dictionary
         """
         if syndic_id in self.cache["configs"]["syndics"]:
             return self.cache["configs"]["syndics"][syndic_id]
@@ -372,27 +526,69 @@ class SaltFactoriesManager(object):
 
         root_dir = self._get_root_dir_for_daemon(syndic_id)
 
-        config_defaults = self.pytestconfig.hook.pytest_saltfactories_syndic_configuration_defaults(
+        defaults_and_overrides_top_level_keys = {"master", "minion", "syndic"}
+
+        _config_defaults = self.pytestconfig.hook.pytest_saltfactories_syndic_configuration_defaults(
             request=request,
             factories_manager=self,
             root_dir=root_dir,
             syndic_id=syndic_id,
             syndic_master_port=syndic_master_port,
         )
+        if _config_defaults and not set(_config_defaults).issubset(
+            defaults_and_overrides_top_level_keys
+        ):
+            raise RuntimeError(
+                "The config defaults returned by pytest_saltfactories_syndic_configuration_defaults must "
+                "only contain 3 top level keys: {}".format(
+                    ", ".join(defaults_and_overrides_top_level_keys)
+                )
+            )
+        if config_defaults:
+            if not set(config_defaults).issubset(defaults_and_overrides_top_level_keys):
+                raise RuntimeError(
+                    "The config_defaults keyword argument must only contain 3 top level keys: {}".format(
+                        ", ".join(defaults_and_overrides_top_level_keys)
+                    )
+                )
+            if _config_defaults:
+                salt.utils.dictupdate.update(_config_defaults, config_defaults)
+            else:
+                _config_defaults = config_defaults.copy()
 
-        config_overrides = self.pytestconfig.hook.pytest_saltfactories_syndic_configuration_overrides(
+        _config_overrides = self.pytestconfig.hook.pytest_saltfactories_syndic_configuration_overrides(
             request=request,
             factories_manager=self,
             root_dir=root_dir,
             syndic_id=syndic_id,
-            config_defaults=config_defaults,
+            config_defaults=_config_defaults,
         )
+        if _config_overrides and not set(_config_overrides).issubset(
+            defaults_and_overrides_top_level_keys
+        ):
+            raise RuntimeError(
+                "The config overrides returned by pytest_saltfactories_syndic_configuration_overrides must "
+                "only contain 3 top level keys: {}".format(
+                    ", ".join(defaults_and_overrides_top_level_keys)
+                )
+            )
+        if config_overrides:
+            if not set(config_overrides).issubset(defaults_and_overrides_top_level_keys):
+                raise RuntimeError(
+                    "The config_overrides keyword argument must only contain 3 top level keys: {}".format(
+                        ", ".join(defaults_and_overrides_top_level_keys)
+                    )
+                )
+            if _config_overrides:
+                salt.utils.dictupdate.update(_config_overrides, config_overrides)
+            else:
+                _config_overrides = config_overrides.copy()
 
         syndic_setup_config = syndic.SyndicFactory.default_config(
             root_dir,
             syndic_id=syndic_id,
-            config_defaults=config_defaults,
-            config_overrides=config_overrides,
+            config_defaults=_config_defaults,
+            config_overrides=_config_overrides,
             syndic_master_port=syndic_master_port,
         )
 
@@ -441,9 +637,38 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["syndics"].pop(syndic_id))
         return syndic_config
 
-    def spawn_syndic(self, request, syndic_id, master_of_masters_id=None):
+    def spawn_syndic(
+        self,
+        request,
+        syndic_id,
+        master_of_masters_id=None,
+        config_defaults=None,
+        config_overrides=None,
+    ):
         """
         Spawn a salt-syndic
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            syndic_id(str):
+                The Syndic ID. This ID will be shared by the ``salt-master``, ``salt-minion`` and ``salt-syndic``
+                processes.
+            master_of_masters_id(str):
+                The master of masters ID that the master configured in this :ref:`Syndic <salt:syndic>` topology
+                scenario shall connect to.
+            config_defaults(dict):
+                A dictionary of default configurations with three top level keys, ``master``, ``minion`` and
+                ``syndic``, to use when configuring the  ``salt-master``, ``salt-minion`` and ``salt-syndic``
+                respectively.
+            config_overrides(dict):
+                A dictionary of configuration overrides with three top level keys, ``master``, ``minion`` and
+                ``syndic``, to use when configuring the  ``salt-master``, ``salt-minion`` and ``salt-syndic``
+                respectively.
+
+        Returns:
+            :py:class:`~saltfactories.utils.processes.salts.SaltSyndic`:
+                The syndic process class instance
         """
         if syndic_id in self.cache["syndics"]:
             raise RuntimeError("A syndic by the ID of '{}' was already spawned".format(syndic_id))
@@ -451,7 +676,11 @@ class SaltFactoriesManager(object):
         syndic_config = self.cache["configs"]["syndics"].get(syndic_id)
         if syndic_config is None:
             syndic_config = self.configure_syndic(
-                request, syndic_id, master_of_masters_id=master_of_masters_id
+                request,
+                syndic_id,
+                master_of_masters_id=master_of_masters_id,
+                config_defaults=config_defaults,
+                config_overrides=config_overrides,
             )
 
         # We need the syndic master and minion running
@@ -465,9 +694,26 @@ class SaltFactoriesManager(object):
             request, "salt-syndic", syndic_config, salt_factories.SaltSyndic, "syndics", syndic_id
         )
 
-    def configure_proxy_minion(self, request, proxy_minion_id, master_id=None):
+    def configure_proxy_minion(
+        self, request, proxy_minion_id, master_id=None, config_defaults=None, config_overrides=None
+    ):
         """
         Configure a salt-proxy
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            proxy_minion_id(str):
+                The proxy minion ID
+            master_id(str):
+                The master ID this minion will connect to.
+            config_defaults(dict):
+                A dictionary of default configuration to use when configuring the proxy minion
+            config_overrides(dict):
+                A dictionary of configuration overrides to use when configuring the proxy minion
+
+        Returns:
+            dict: The proxy minion configuration dictionary
         """
         if proxy_minion_id in self.cache["configs"]["proxy_minions"]:
             return self.cache["configs"]["proxy_minions"][proxy_minion_id]
@@ -479,25 +725,37 @@ class SaltFactoriesManager(object):
 
         root_dir = self._get_root_dir_for_daemon(proxy_minion_id)
 
-        config_defaults = self.pytestconfig.hook.pytest_saltfactories_proxy_minion_configuration_defaults(
+        _config_defaults = self.pytestconfig.hook.pytest_saltfactories_proxy_minion_configuration_defaults(
             request=request,
             factories_manager=self,
             root_dir=root_dir,
             proxy_minion_id=proxy_minion_id,
             master_port=master_port,
         )
-        config_overrides = self.pytestconfig.hook.pytest_saltfactories_proxy_minion_configuration_overrides(
+        if config_defaults:
+            if _config_defaults:
+                salt.utils.dictupdate.update(_config_defaults, config_defaults)
+            else:
+                _config_defaults = config_defaults.copy()
+
+        _config_overrides = self.pytestconfig.hook.pytest_saltfactories_proxy_minion_configuration_overrides(
             request=request,
             factories_manager=self,
             root_dir=root_dir,
             proxy_minion_id=proxy_minion_id,
-            config_defaults=config_defaults,
+            config_defaults=_config_defaults,
         )
+        if config_overrides:
+            if _config_overrides:
+                salt.utils.dictupdate.update(_config_overrides, config_overrides)
+            else:
+                _config_overrides = config_overrides.copy()
+
         proxy_minion_config = proxy.ProxyMinionFactory.default_config(
             root_dir,
             proxy_minion_id=proxy_minion_id,
-            config_defaults=config_defaults,
-            config_overrides=config_overrides,
+            config_defaults=_config_defaults,
+            config_overrides=_config_overrides,
             master_port=master_port,
         )
         self.final_proxy_minion_config_tweaks(proxy_minion_config)
@@ -520,9 +778,27 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache["configs"]["proxy_minions"].pop(proxy_minion_id))
         return proxy_minion_config
 
-    def spawn_proxy_minion(self, request, proxy_minion_id, master_id=None):
+    def spawn_proxy_minion(
+        self, request, proxy_minion_id, master_id=None, config_defaults=None, config_overrides=None
+    ):
         """
         Spawn a salt-proxy
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            proxy_minion_id(str):
+                The proxy minion ID
+            master_id(str):
+                The master ID this minion will connect to.
+            config_defaults(dict):
+                A dictionary of default configuration to use when configuring the proxy minion
+            config_overrides(dict):
+                A dictionary of configuration overrides to use when configuring the proxy minion
+
+        Returns:
+            :py:class:`~saltfactories.utils.processes.salts.SaltProxyMinion`:
+                The proxy minion process class instance
         """
         if proxy_minion_id in self.cache["proxy_minions"]:
             raise RuntimeError(
@@ -532,7 +808,11 @@ class SaltFactoriesManager(object):
         proxy_minion_config = self.cache["configs"]["proxy_minions"].get(proxy_minion_id)
         if proxy_minion_config is None:
             proxy_minion_config = self.configure_proxy_minion(
-                request, proxy_minion_id, master_id=master_id
+                request,
+                proxy_minion_id,
+                master_id=master_id,
+                config_defaults=config_defaults,
+                config_overrides=config_overrides,
             )
 
         return self._start_daemon(

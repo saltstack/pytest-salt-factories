@@ -56,6 +56,14 @@ saltfactories.utils.markers module
    :undoc-members:
    :show-inheritance:
 
+saltfactories.utils.platform module
+-----------------------------------
+
+.. automodule:: saltfactories.utils.platform
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 saltfactories.utils.ports module
 --------------------------------
 

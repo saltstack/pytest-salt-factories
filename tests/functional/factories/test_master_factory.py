@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-    tests.functional.factories.test_minion_factory
+    tests.functional.factories.test_master_factory
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Functional tests for the salt minion factory
+    Functional tests for the salt master factory
 """
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
@@ -14,15 +14,15 @@ from __future__ import unicode_literals
 def test_hook_basic_config_defaults(testdir):
     testdir.makeconftest(
         """
-        def pytest_saltfactories_minion_configuration_defaults():
+        def pytest_saltfactories_master_configuration_defaults():
             return {'zzzz': True}
         """
     )
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(request, 'minion-1')
-            assert 'zzzz' in minion_config
+            master_config = salt_factories.configure_master(request, 'master-1')
+            assert 'zzzz' in master_config
         """
     )
     res = testdir.runpytest("-v")
@@ -33,8 +33,8 @@ def test_keyword_basic_config_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(request, 'minion-1', config_defaults={'zzzz': True})
-            assert 'zzzz' in minion_config
+            master_config = salt_factories.configure_master(request, 'master-1', config_defaults={'zzzz': True})
+            assert 'zzzz' in master_config
         """
     )
     res = testdir.runpytest("-v")
@@ -44,15 +44,15 @@ def test_keyword_basic_config_defaults(testdir):
 def test_hook_basic_config_overrides(testdir):
     testdir.makeconftest(
         """
-        def pytest_saltfactories_minion_configuration_overrides():
+        def pytest_saltfactories_master_configuration_overrides():
             return {'zzzz': True}
         """
     )
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(request, 'minion-1')
-            assert 'zzzz' in minion_config
+            master_config = salt_factories.configure_master(request, 'master-1')
+            assert 'zzzz' in master_config
         """
     )
     res = testdir.runpytest("-v")
@@ -63,8 +63,8 @@ def test_keyword_basic_config_overrides(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(request, 'minion-1', config_overrides={'zzzz': True})
-            assert 'zzzz' in minion_config
+            master_config = salt_factories.configure_master(request, 'master-1', config_overrides={'zzzz': True})
+            assert 'zzzz' in master_config
         """
     )
     res = testdir.runpytest("-v")
@@ -74,19 +74,19 @@ def test_keyword_basic_config_overrides(testdir):
 def test_hook_simple_overrides_override_defaults(testdir):
     testdir.makeconftest(
         """
-        def pytest_saltfactories_minion_configuration_defaults():
+        def pytest_saltfactories_master_configuration_defaults():
             return {'zzzz': False}
 
-        def pytest_saltfactories_minion_configuration_overrides():
+        def pytest_saltfactories_master_configuration_overrides():
             return {'zzzz': True}
         """
     )
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(request, 'minion-1')
-            assert 'zzzz' in minion_config
-            assert minion_config['zzzz'] is True
+            master_config = salt_factories.configure_master(request, 'master-1')
+            assert 'zzzz' in master_config
+            assert master_config['zzzz'] is True
         """
     )
     res = testdir.runpytest("-v")
@@ -97,14 +97,14 @@ def test_keyword_simple_overrides_override_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(
+            master_config = salt_factories.configure_master(
                 request,
-                'minion-1',
+                'master-1',
                 config_defaults={'zzzz': False},
                 config_overrides={'zzzz': True}
             )
-            assert 'zzzz' in minion_config
-            assert minion_config['zzzz'] is True
+            assert 'zzzz' in master_config
+            assert master_config['zzzz'] is True
         """
     )
     res = testdir.runpytest("-v")
@@ -114,7 +114,7 @@ def test_keyword_simple_overrides_override_defaults(testdir):
 def test_hook_nested_overrides_override_defaults(testdir):
     testdir.makeconftest(
         """
-        def pytest_saltfactories_minion_configuration_defaults():
+        def pytest_saltfactories_master_configuration_defaults():
             return {
                 'zzzz': False,
                 'user': 'foobar',
@@ -124,7 +124,7 @@ def test_hook_nested_overrides_override_defaults(testdir):
                 }
             }
 
-        def pytest_saltfactories_minion_configuration_overrides():
+        def pytest_saltfactories_master_configuration_overrides():
             return {
                 'colors': {
                     'white': True,
@@ -136,10 +136,10 @@ def test_hook_nested_overrides_override_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(request, 'minion-1')
-            assert 'zzzz' in minion_config
-            assert minion_config['zzzz'] is False
-            assert minion_config['colors'] == {
+            master_config = salt_factories.configure_master(request, 'master-1')
+            assert 'zzzz' in master_config
+            assert master_config['zzzz'] is False
+            assert master_config['colors'] == {
                 'black': True,
                 'white': True,
                 'grey': False
@@ -154,9 +154,9 @@ def test_keyword_nested_overrides_override_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(
+            master_config = salt_factories.configure_master(
                 request,
-                'minion-1',
+                'master-1',
                 config_defaults={
                     'zzzz': False,
                     'user': 'foobar',
@@ -172,9 +172,9 @@ def test_keyword_nested_overrides_override_defaults(testdir):
                     }
                 }
             )
-            assert 'zzzz' in minion_config
-            assert minion_config['zzzz'] is False
-            assert minion_config['colors'] == {
+            assert 'zzzz' in master_config
+            assert master_config['zzzz'] is False
+            assert master_config['colors'] == {
                 'black': True,
                 'white': True,
                 'grey': False
@@ -188,23 +188,23 @@ def test_keyword_nested_overrides_override_defaults(testdir):
 def test_nested_overrides_override_defaults(testdir):
     testdir.makeconftest(
         """
-        def pytest_saltfactories_minion_configuration_defaults():
+        def pytest_saltfactories_master_configuration_defaults():
             return {
                 'zzzz': True,
                 'user': 'foobar',
                 'colors': {
                     'black': False,
                     'white': True,
-                    'blue': False,
+                    'blue': False
                 }
             }
 
-        def pytest_saltfactories_minion_configuration_overrides():
+        def pytest_saltfactories_master_configuration_overrides():
             return {
                 'colors': {
                     'white': False,
                     'grey': True,
-                    'blue': True,
+                    'blue': True
                 }
             }
         """
@@ -212,9 +212,9 @@ def test_nested_overrides_override_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(
+            master_config = salt_factories.configure_master(
                 request,
-                'minion-1',
+                'master-1',
                 config_defaults={
                     'zzzz': False,
                     'user': 'foobar',
@@ -230,9 +230,9 @@ def test_nested_overrides_override_defaults(testdir):
                     }
                 }
             )
-            assert 'zzzz' in minion_config
-            assert minion_config['zzzz'] is False
-            assert minion_config['colors'] == {
+            assert 'zzzz' in master_config
+            assert master_config['zzzz'] is False
+            assert master_config['colors'] == {
                 'black': True,
                 'white': True,
                 'grey': False,
