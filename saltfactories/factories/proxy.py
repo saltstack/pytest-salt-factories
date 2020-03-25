@@ -34,12 +34,6 @@ class ProxyMinionFactory(object):
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_file = conf_dir.join("proxy").strpath
 
-        stop_sending_events_file = conf_dir.join(
-            "stop-sending-events-{}".format(proxy_minion_id)
-        ).strpath
-        with salt.utils.files.fopen(stop_sending_events_file, "w") as wfh:
-            wfh.write("")
-
         _config_defaults = {
             "id": proxy_minion_id,
             "conf_file": conf_file,

@@ -60,12 +60,6 @@ class SyndicFactory(object):
             master_port=master_config["ret_port"],
         )
 
-        stop_sending_events_file = conf_dir.join(
-            "stop-sending-events-{}-syndic".format(syndic_id)
-        ).strpath
-        with salt.utils.files.fopen(stop_sending_events_file, "w") as wfh:
-            wfh.write("")
-
         _config_defaults = {
             "id": syndic_id,
             "master_id": syndic_id,
@@ -105,12 +99,6 @@ class SyndicFactory(object):
             config_defaults = {}
 
         conf_file = conf_dir.join("minion").strpath
-
-        stop_sending_events_file = conf_dir.join(
-            "stop-sending-events-{}-minion".format(minion_id)
-        ).strpath
-        with salt.utils.files.fopen(stop_sending_events_file, "w") as wfh:
-            wfh.write("")
 
         _config_defaults = {
             "id": minion_id,
@@ -161,12 +149,6 @@ class SyndicFactory(object):
         pillar_tree_root = root_dir.join("pillar-tree").ensure(dir=True)
         pillar_tree_root_base = pillar_tree_root.join("base").ensure(dir=True).strpath
         pillar_tree_root_prod = pillar_tree_root.join("prod").ensure(dir=True).strpath
-
-        stop_sending_events_file = conf_dir.join(
-            "stop-sending-events-{}-master".format(master_id)
-        ).strpath
-        with salt.utils.files.fopen(stop_sending_events_file, "w") as wfh:
-            wfh.write("")
 
         _config_defaults = {
             "id": master_id,

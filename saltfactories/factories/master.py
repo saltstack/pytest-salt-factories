@@ -39,10 +39,6 @@ class MasterFactory(object):
         pillar_tree_root_base = pillar_tree_root.join("base").ensure(dir=True).strpath
         pillar_tree_root_prod = pillar_tree_root.join("prod").ensure(dir=True).strpath
 
-        stop_sending_events_file = conf_dir.join("stop-sending-events-{}".format(master_id)).strpath
-        with salt.utils.files.fopen(stop_sending_events_file, "w") as wfh:
-            wfh.write("")
-
         _config_defaults = {
             "id": master_id,
             "conf_file": conf_file,
