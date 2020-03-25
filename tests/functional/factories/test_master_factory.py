@@ -242,3 +242,12 @@ def test_nested_overrides_override_defaults(testdir):
     )
     res = testdir.runpytest("-v")
     res.assert_outcomes(passed=1)
+
+
+def test_provide_root_dir(testdir, request, salt_factories):
+    root_dir = testdir.mkdir("custom-root")
+    config_defaults = {"root_dir": root_dir}
+    master_config = salt_factories.configure_master(
+        request, "master-1", config_defaults=config_defaults
+    )
+    assert master_config["root_dir"] == root_dir

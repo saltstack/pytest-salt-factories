@@ -13,6 +13,7 @@ import os
 import sys
 
 import psutil
+import py
 
 try:
     import salt.utils.dictupdate
@@ -239,7 +240,7 @@ class SaltFactoriesManager(object):
         if master_id in self.cache["configs"]["masters"]:
             return self.cache["configs"]["masters"][master_id]
 
-        root_dir = self._get_root_dir_for_daemon(master_id)
+        root_dir = self._get_root_dir_for_daemon(master_id, config_defaults=config_defaults)
 
         _config_defaults = self.pytestconfig.hook.pytest_saltfactories_master_configuration_defaults(
             request=request,
@@ -371,7 +372,7 @@ class SaltFactoriesManager(object):
         if minion_id in self.cache["configs"]["minions"]:
             return self.cache["configs"]["minions"][minion_id]
 
-        root_dir = self._get_root_dir_for_daemon(minion_id)
+        root_dir = self._get_root_dir_for_daemon(minion_id, config_defaults=config_defaults)
 
         master_port = None
         if master_id is not None:
@@ -524,7 +525,9 @@ class SaltFactoriesManager(object):
 
         syndic_master_port = master_of_masters_config["ret_port"]
 
-        root_dir = self._get_root_dir_for_daemon(syndic_id)
+        root_dir = self._get_root_dir_for_daemon(
+            syndic_id, config_defaults=config_defaults.get("syndic") if config_defaults else None
+        )
 
         defaults_and_overrides_top_level_keys = {"master", "minion", "syndic"}
 
@@ -723,7 +726,7 @@ class SaltFactoriesManager(object):
             master_config = self.cache["configs"]["masters"][master_id]
             master_port = master_config.get("ret_port")
 
-        root_dir = self._get_root_dir_for_daemon(proxy_minion_id)
+        root_dir = self._get_root_dir_for_daemon(proxy_minion_id, config_defaults=config_defaults)
 
         _config_defaults = self.pytestconfig.hook.pytest_saltfactories_proxy_minion_configuration_defaults(
             request=request,
@@ -986,7 +989,9 @@ class SaltFactoriesManager(object):
         request.addfinalizer(lambda: self.cache[cache_key].pop(daemon_id))
         return proc
 
-    def _get_root_dir_for_daemon(self, daemon_id):
+    def _get_root_dir_for_daemon(self, daemon_id, config_defaults=None):
+        if config_defaults and "root_dir" in config_defaults:
+            return py.path.local(config_defaults["root_dir"]).ensure(dir=True)
         counter = 1
         root_dir = self.root_dir.join(daemon_id)
         while True:

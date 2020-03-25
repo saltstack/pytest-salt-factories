@@ -487,3 +487,19 @@ def test_nested_overrides_override_defaults(testdir):
     )
     res = testdir.runpytest("-v")
     res.assert_outcomes(passed=1)
+
+
+def test_provide_root_dir(testdir, request, salt_factories):
+    mom_config = salt_factories.configure_master(request, "mom-1")
+    root_dir = testdir.mkdir("custom-root")
+    config_defaults = {
+        "syndic": {"root_dir": root_dir},
+    }
+    syndic_id = "syndic-1"
+    syndic_config = salt_factories.configure_syndic(
+        request, syndic_id, master_of_masters_id="mom-1", config_defaults=config_defaults
+    )
+    syndic_config = salt_factories.configure_syndic(
+        request, "syndic-1", config_defaults=config_defaults
+    )
+    assert syndic_config["root_dir"] == root_dir
