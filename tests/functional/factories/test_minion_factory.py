@@ -29,16 +29,11 @@ def test_hook_basic_config_defaults(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_basic_config_defaults(testdir):
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(request, 'minion-1', config_defaults={'zzzz': True})
-            assert 'zzzz' in minion_config
-        """
+def test_keyword_basic_config_defaults(request, salt_factories):
+    minion_config = salt_factories.configure_minion(
+        request, "minion-1", config_defaults={"zzzz": True}
     )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
+    assert "zzzz" in minion_config
 
 
 def test_hook_basic_config_overrides(testdir):
@@ -59,16 +54,11 @@ def test_hook_basic_config_overrides(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_basic_config_overrides(testdir):
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(request, 'minion-1', config_overrides={'zzzz': True})
-            assert 'zzzz' in minion_config
-        """
+def test_keyword_basic_config_overrides(request, salt_factories):
+    minion_config = salt_factories.configure_minion(
+        request, "minion-1", config_overrides={"zzzz": True}
     )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
+    assert "zzzz" in minion_config
 
 
 def test_hook_simple_overrides_override_defaults(testdir):
@@ -93,22 +83,12 @@ def test_hook_simple_overrides_override_defaults(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_simple_overrides_override_defaults(testdir):
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(
-                request,
-                'minion-1',
-                config_defaults={'zzzz': False},
-                config_overrides={'zzzz': True}
-            )
-            assert 'zzzz' in minion_config
-            assert minion_config['zzzz'] is True
-        """
+def test_keyword_simple_overrides_override_defaults(request, salt_factories):
+    minion_config = salt_factories.configure_minion(
+        request, "minion-1", config_defaults={"zzzz": False}, config_overrides={"zzzz": True}
     )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
+    assert "zzzz" in minion_config
+    assert minion_config["zzzz"] is True
 
 
 def test_hook_nested_overrides_override_defaults(testdir):
@@ -150,39 +130,20 @@ def test_hook_nested_overrides_override_defaults(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_nested_overrides_override_defaults(testdir):
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(request, salt_factories):
-            minion_config = salt_factories.configure_minion(
-                request,
-                'minion-1',
-                config_defaults={
-                    'zzzz': False,
-                    'user': 'foobar',
-                    'colors': {
-                        'black': True,
-                        'white': False
-                    }
-                },
-                config_overrides={
-                    'colors': {
-                        'white': True,
-                        'grey': False
-                    }
-                }
-            )
-            assert 'zzzz' in minion_config
-            assert minion_config['zzzz'] is False
-            assert minion_config['colors'] == {
-                'black': True,
-                'white': True,
-                'grey': False
-            }
-        """
+def test_keyword_nested_overrides_override_defaults(request, salt_factories):
+    minion_config = salt_factories.configure_minion(
+        request,
+        "minion-1",
+        config_defaults={
+            "zzzz": False,
+            "user": "foobar",
+            "colors": {"black": True, "white": False},
+        },
+        config_overrides={"colors": {"white": True, "grey": False}},
     )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
+    assert "zzzz" in minion_config
+    assert minion_config["zzzz"] is False
+    assert minion_config["colors"] == {"black": True, "white": True, "grey": False}
 
 
 def test_nested_overrides_override_defaults(testdir):

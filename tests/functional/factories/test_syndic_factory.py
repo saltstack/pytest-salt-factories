@@ -10,6 +10,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import re
+
+import pytest
+
 
 def test_hook_basic_config_defaults_top_level_keys(testdir):
     testdir.makeconftest(
@@ -35,21 +39,20 @@ def test_hook_basic_config_defaults_top_level_keys(testdir):
     )
 
 
-def test_keyword_basic_config_defaults_top_level_keys(testdir):
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(request, salt_factories):
-            mom_config = salt_factories.configure_master(request, 'mom-1')
-            syndic_id = 'syndic-1'
-            syndic_config = salt_factories.configure_syndic(request, syndic_id, master_of_masters_id='mom-1', config_defaults={'zzzz': True})
-        """
-    )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(failed=1)
-    res.stdout.fnmatch_lines(
-        [
-            "*RuntimeError: The config_defaults keyword argument must only contain 3 top level keys: *"
-        ]
+def test_keyword_basic_config_defaults_top_level_keys(request, salt_factories):
+    with pytest.raises(RuntimeError) as exc:
+        mom_config = salt_factories.configure_master(request, "mom-1")
+        syndic_id = "syndic-1"
+        syndic_config = salt_factories.configure_syndic(
+            request, syndic_id, master_of_masters_id="mom-1", config_defaults={"zzzz": True}
+        )
+
+    assert (
+        re.match(
+            r"The config_defaults keyword argument must only contain 3 top level keys: .*",
+            str(exc.value),
+        )
+        is not None
     )
 
 
@@ -77,21 +80,17 @@ def test_hook_basic_config_overrides_top_level_keys(testdir):
     )
 
 
-def test_keyword_basic_config_overrides_top_level_keys(testdir):
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(request, salt_factories):
-            mom_config = salt_factories.configure_master(request, 'mom-1')
-            syndic_id = 'syndic-1'
-            syndic_config = salt_factories.configure_syndic(request, syndic_id, master_of_masters_id='mom-1', config_overrides={'zzzz': True})
-        """
-    )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(failed=1)
-    res.stdout.fnmatch_lines(
-        [
-            "*RuntimeError: The config_overrides keyword argument must only contain 3 top level keys: *"
-        ]
+def test_keyword_basic_config_overrides_top_level_keys(request, salt_factories):
+    with pytest.raises(RuntimeError) as exc:
+        mom_config = salt_factories.configure_master(request, "mom-1")
+        syndic_id = "syndic-1"
+        syndic_config = salt_factories.configure_syndic(
+            request, syndic_id, master_of_masters_id="mom-1", config_overrides={"zzzz": True}
+        )
+
+    assert re.match(
+        r"The config_overrides keyword argument must only contain 3 top level keys: .*",
+        str(exc.value),
     )
 
 
@@ -126,30 +125,25 @@ def test_hook_basic_config_defaults(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_basic_config_defaults(testdir):
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(request, salt_factories):
-            mom_config = salt_factories.configure_master(request, 'mom-1')
-            syndic_id = 'syndic-1'
-            config_defaults = {
-                'syndic': {'zzzz': True},
-                'master': {'zzzz': True},
-                'minion': {'zzzz': True},
-            }
-            syndic_config = salt_factories.configure_syndic(request, syndic_id, master_of_masters_id='mom-1', config_defaults=config_defaults)
-            assert 'zzzz' in syndic_config
-            assert syndic_config['zzzz'] is True
-            syndic_master_config = salt_factories.configure_master(request, syndic_id)
-            assert 'zzzz' in syndic_master_config
-            assert syndic_master_config['zzzz'] is True
-            syndic_minion_config = salt_factories.configure_minion(request, syndic_id)
-            assert 'zzzz' in syndic_minion_config
-            assert syndic_minion_config['zzzz'] is True
-        """
+def test_keyword_basic_config_defaults(request, salt_factories):
+    mom_config = salt_factories.configure_master(request, "mom-1")
+    syndic_id = "syndic-1"
+    config_defaults = {
+        "syndic": {"zzzz": True},
+        "master": {"zzzz": True},
+        "minion": {"zzzz": True},
+    }
+    syndic_config = salt_factories.configure_syndic(
+        request, syndic_id, master_of_masters_id="mom-1", config_defaults=config_defaults
     )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
+    assert "zzzz" in syndic_config
+    assert syndic_config["zzzz"] is True
+    syndic_master_config = salt_factories.configure_master(request, syndic_id)
+    assert "zzzz" in syndic_master_config
+    assert syndic_master_config["zzzz"] is True
+    syndic_minion_config = salt_factories.configure_minion(request, syndic_id)
+    assert "zzzz" in syndic_minion_config
+    assert syndic_minion_config["zzzz"] is True
 
 
 def test_hook_basic_config_overrides(testdir):
@@ -183,30 +177,25 @@ def test_hook_basic_config_overrides(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_basic_config_overrides(testdir):
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(request, salt_factories):
-            mom_config = salt_factories.configure_master(request, 'mom-1')
-            syndic_id = 'syndic-1'
-            config_overrides = {
-                'syndic': {'zzzz': True},
-                'master': {'zzzz': True},
-                'minion': {'zzzz': True},
-            }
-            syndic_config = salt_factories.configure_syndic(request, syndic_id, master_of_masters_id='mom-1', config_overrides=config_overrides)
-            assert 'zzzz' in syndic_config
-            assert syndic_config['zzzz'] is True
-            syndic_master_config = salt_factories.configure_master(request, syndic_id)
-            assert 'zzzz' in syndic_master_config
-            assert syndic_master_config['zzzz'] is True
-            syndic_minion_config = salt_factories.configure_minion(request, syndic_id)
-            assert 'zzzz' in syndic_minion_config
-            assert syndic_minion_config['zzzz'] is True
-        """
+def test_keyword_basic_config_overrides(request, salt_factories):
+    mom_config = salt_factories.configure_master(request, "mom-1")
+    syndic_id = "syndic-1"
+    config_overrides = {
+        "syndic": {"zzzz": True},
+        "master": {"zzzz": True},
+        "minion": {"zzzz": True},
+    }
+    syndic_config = salt_factories.configure_syndic(
+        request, syndic_id, master_of_masters_id="mom-1", config_overrides=config_overrides
     )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
+    assert "zzzz" in syndic_config
+    assert syndic_config["zzzz"] is True
+    syndic_master_config = salt_factories.configure_master(request, syndic_id)
+    assert "zzzz" in syndic_master_config
+    assert syndic_master_config["zzzz"] is True
+    syndic_minion_config = salt_factories.configure_minion(request, syndic_id)
+    assert "zzzz" in syndic_minion_config
+    assert syndic_minion_config["zzzz"] is True
 
 
 def test_hook_simple_overrides_override_defaults(testdir):
@@ -247,40 +236,34 @@ def test_hook_simple_overrides_override_defaults(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_simple_overrides_override_defaults(testdir):
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(request, salt_factories):
-            mom_config = salt_factories.configure_master(request, 'mom-1')
-            syndic_id = 'syndic-1'
-            config_defaults = {
-                'syndic': {'zzzz': False},
-                'master': {'zzzz': False},
-                'minion': {'zzzz': False},
-            }
-            config_overrides = {
-                'syndic': {'zzzz': True},
-                'master': {'zzzz': True},
-                'minion': {'zzzz': True},
-            }
-            syndic_config = salt_factories.configure_syndic(
-                request,
-                syndic_id,
-                master_of_masters_id='mom-1',
-                config_defaults=config_defaults,
-                config_overrides=config_overrides)
-            assert 'zzzz' in syndic_config
-            assert syndic_config['zzzz'] is True
-            syndic_master_config = salt_factories.configure_master(request, syndic_id)
-            assert 'zzzz' in syndic_master_config
-            assert syndic_master_config['zzzz'] is True
-            syndic_minion_config = salt_factories.configure_minion(request, syndic_id)
-            assert 'zzzz' in syndic_minion_config
-            assert syndic_minion_config['zzzz'] is True
-        """
+def test_keyword_simple_overrides_override_defaults(request, salt_factories):
+    mom_config = salt_factories.configure_master(request, "mom-1")
+    syndic_id = "syndic-1"
+    config_defaults = {
+        "syndic": {"zzzz": False},
+        "master": {"zzzz": False},
+        "minion": {"zzzz": False},
+    }
+    config_overrides = {
+        "syndic": {"zzzz": True},
+        "master": {"zzzz": True},
+        "minion": {"zzzz": True},
+    }
+    syndic_config = salt_factories.configure_syndic(
+        request,
+        syndic_id,
+        master_of_masters_id="mom-1",
+        config_defaults=config_defaults,
+        config_overrides=config_overrides,
     )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
+    assert "zzzz" in syndic_config
+    assert syndic_config["zzzz"] is True
+    syndic_master_config = salt_factories.configure_master(request, syndic_id)
+    assert "zzzz" in syndic_master_config
+    assert syndic_master_config["zzzz"] is True
+    syndic_minion_config = salt_factories.configure_minion(request, syndic_id)
+    assert "zzzz" in syndic_minion_config
+    assert syndic_minion_config["zzzz"] is True
 
 
 def test_hook_nested_overrides_override_defaults(testdir):
@@ -344,62 +327,38 @@ def test_hook_nested_overrides_override_defaults(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_nested_overrides_override_defaults(testdir):
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(request, salt_factories):
-            defaults = {
-                'zzzz': False,
-                'user': 'foobar',
-                'colors': {
-                    'black': True,
-                    'white': False
-                }
-            }
-            overrides = {
-                'zzzz': True,
-                'colors': {
-                    'white': True,
-                    'grey': False
-                }
-            }
-            expected_colors = {
-                'black': True,
-                'white': True,
-                'grey': False
-            }
-            mom_config = salt_factories.configure_master(request, 'mom-1')
-            syndic_id = 'syndic-1'
-            syndic_config = salt_factories.configure_syndic(
-                request,
-                syndic_id,
-                master_of_masters_id='mom-1',
-                config_defaults={
-                    'syndic': defaults.copy(),
-                    'master': defaults.copy(),
-                    'minion': defaults.copy(),
-                },
-                config_overrides={
-                    'syndic': overrides.copy(),
-                    'master': overrides.copy(),
-                    'minion': overrides.copy(),
-                }
-            )
-            assert 'zzzz' in syndic_config
-            assert syndic_config['zzzz'] is True
-            assert syndic_config['colors'] == expected_colors
-            syndic_master_config = salt_factories.configure_master(request, syndic_id)
-            assert 'zzzz' in syndic_master_config
-            assert syndic_master_config['zzzz'] is True
-            assert syndic_master_config['colors'] == expected_colors
-            syndic_minion_config = salt_factories.configure_minion(request, syndic_id)
-            assert 'zzzz' in syndic_minion_config
-            assert syndic_minion_config['zzzz'] is True
-            assert syndic_minion_config['colors'] == expected_colors
-        """
+def test_keyword_nested_overrides_override_defaults(request, salt_factories):
+    defaults = {"zzzz": False, "user": "foobar", "colors": {"black": True, "white": False}}
+    overrides = {"zzzz": True, "colors": {"white": True, "grey": False}}
+    expected_colors = {"black": True, "white": True, "grey": False}
+    mom_config = salt_factories.configure_master(request, "mom-1")
+    syndic_id = "syndic-1"
+    syndic_config = salt_factories.configure_syndic(
+        request,
+        syndic_id,
+        master_of_masters_id="mom-1",
+        config_defaults={
+            "syndic": defaults.copy(),
+            "master": defaults.copy(),
+            "minion": defaults.copy(),
+        },
+        config_overrides={
+            "syndic": overrides.copy(),
+            "master": overrides.copy(),
+            "minion": overrides.copy(),
+        },
     )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
+    assert "zzzz" in syndic_config
+    assert syndic_config["zzzz"] is True
+    assert syndic_config["colors"] == expected_colors
+    syndic_master_config = salt_factories.configure_master(request, syndic_id)
+    assert "zzzz" in syndic_master_config
+    assert syndic_master_config["zzzz"] is True
+    assert syndic_master_config["colors"] == expected_colors
+    syndic_minion_config = salt_factories.configure_minion(request, syndic_id)
+    assert "zzzz" in syndic_minion_config
+    assert syndic_minion_config["zzzz"] is True
+    assert syndic_minion_config["colors"] == expected_colors
 
 
 def test_nested_overrides_override_defaults(testdir):
