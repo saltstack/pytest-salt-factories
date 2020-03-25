@@ -10,6 +10,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import pytest
+
 
 def test_hook_basic_config_defaults(testdir):
     testdir.makeconftest(
@@ -212,3 +214,26 @@ def test_provide_root_dir(testdir, request, salt_factories):
         request, "proxy_minion-1", config_defaults=config_defaults
     )
     assert proxy_minion_config["root_dir"] == root_dir
+
+
+def configure_kwargs_ids(value):
+    return "configure_kwargs={!r}".format(value)
+
+
+@pytest.mark.parametrize(
+    "configure_kwargs",
+    [{"config_defaults": {"user": "blah"}}, {"config_overrides": {"user": "blah"}}, {}],
+    ids=configure_kwargs_ids,
+)
+def test_provide_user(request, salt_factories, configure_kwargs):
+    proxy_minion_config = salt_factories.configure_proxy_minion(
+        request, "proxy-minion-1", **configure_kwargs
+    )
+    if not configure_kwargs:
+        # salt-factories injects the current username
+        assert proxy_minion_config["user"] is not None
+        assert proxy_minion_config["user"] == salt_factories.get_running_username()
+    else:
+        # salt-factories does not override the passed user value
+        assert proxy_minion_config["user"] != salt_factories.get_running_username()
+        assert proxy_minion_config["user"] == "blah"

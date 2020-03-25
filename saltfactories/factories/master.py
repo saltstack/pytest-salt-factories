@@ -29,6 +29,7 @@ class MasterFactory(object):
     ):
         if config_defaults is None:
             config_defaults = salt.config.DEFAULT_MASTER_OPTS.copy()
+            config_defaults.pop("user", None)
 
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_file = conf_dir.join("master").strpath

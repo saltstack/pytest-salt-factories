@@ -30,6 +30,7 @@ class ProxyMinionFactory(object):
         if config_defaults is None:
             config_defaults = salt.config.DEFAULT_MINION_OPTS.copy()
             config_defaults.update(salt.config.DEFAULT_PROXY_MINION_OPTS.copy())
+            config_defaults.pop("user", None)
 
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_file = conf_dir.join("proxy").strpath

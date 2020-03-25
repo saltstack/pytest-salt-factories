@@ -96,6 +96,7 @@ class SyndicFactory(object):
     ):
         if config_defaults is None:
             config_defaults = salt.config.DEFAULT_MINION_OPTS.copy()
+            config_defaults.pop("user", None)
             config_defaults = {}
 
         conf_file = conf_dir.join("minion").strpath
@@ -140,6 +141,7 @@ class SyndicFactory(object):
     ):
         if config_defaults is None:
             config_defaults = salt.config.DEFAULT_MASTER_OPTS.copy()
+            config_defaults.pop("user", None)
             config_defaults = {}
 
         conf_file = conf_dir.join("master").strpath

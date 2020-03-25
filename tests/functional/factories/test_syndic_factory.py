@@ -462,3 +462,58 @@ def test_provide_root_dir(testdir, request, salt_factories):
         request, "syndic-1", config_defaults=config_defaults
     )
     assert syndic_config["root_dir"] == root_dir
+
+
+def configure_kwargs_ids(value):
+    return "configure_kwargs={!r}".format(value)
+
+
+@pytest.mark.parametrize(
+    "configure_kwargs",
+    [
+        {
+            "config_defaults": {
+                "syndic": {"user": "blah"},
+                "minion": {"user": "blah"},
+                "master": {"user": "blah"},
+            }
+        },
+        {
+            "config_overrides": {
+                "syndic": {"user": "blah"},
+                "minion": {"user": "blah"},
+                "master": {"user": "blah"},
+            }
+        },
+        {},
+    ],
+    ids=configure_kwargs_ids,
+)
+def test_provide_user(request, salt_factories, configure_kwargs):
+    mom_config = salt_factories.configure_master(request, "mom-1")
+    configure_syndic_kwargs = configure_kwargs.copy()
+    configure_syndic_kwargs["master_of_masters_id"] = "mom-1"
+
+    syndic_id = "syndic-1"
+    syndic_config = salt_factories.configure_syndic(request, syndic_id, **configure_syndic_kwargs)
+
+    if not configure_kwargs:
+        # salt-factories injects the current username
+        master_config = salt_factories.cache["configs"]["masters"][syndic_id]
+        assert master_config["user"] is not None
+        assert master_config["user"] == salt_factories.get_running_username()
+        minion_config = salt_factories.cache["configs"]["minions"][syndic_id]
+        assert minion_config["user"] is not None
+        assert minion_config["user"] == salt_factories.get_running_username()
+        assert syndic_config["user"] is not None
+        assert syndic_config["user"] == salt_factories.get_running_username()
+    else:
+        master_config = salt_factories.cache["configs"]["masters"][syndic_id]
+        assert master_config["user"] != salt_factories.get_running_username()
+        assert master_config["user"] == "blah"
+        minion_config = salt_factories.cache["configs"]["minions"][syndic_id]
+        assert minion_config["user"] != salt_factories.get_running_username()
+        assert minion_config["user"] == "blah"
+        # salt-factories does not override the passed user value
+        assert syndic_config["user"] != salt_factories.get_running_username()
+        assert syndic_config["user"] == "blah"
