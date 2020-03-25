@@ -138,7 +138,7 @@ jobs:
         flags: ${{ steps.codecov-flags.outputs.flags }}
         #name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
         name: ${{ runner.os }}-Py${{ matrix.python-version }}
-        fail_ci_if_error: true
+        fail_ci_if_error: false
 
     - name: Upload Logs
       if: always()
@@ -237,7 +237,7 @@ jobs:
         flags: ${{ steps.codecov-flags.outputs.flags }}
         #name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
         name: ${{ runner.os }}-Py${{ matrix.python-version }}
-        fail_ci_if_error: true
+        fail_ci_if_error: false
 
     - name: Upload Logs
       if: always()
@@ -332,7 +332,7 @@ jobs:
         flags: ${{ steps.codecov-flags.outputs.flags }}
         #name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
         name: ${{ runner.os }}-Py${{ matrix.python-version }}
-        fail_ci_if_error: true
+        fail_ci_if_error: false
 
     - name: Upload Logs
       if: always()
