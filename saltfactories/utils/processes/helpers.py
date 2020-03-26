@@ -284,6 +284,8 @@ def start_daemon(
                         check_events -= event_listener.get_events(
                             check_events, after_time=start_time
                         )
+                    # Let's not peg the CPU
+                    time.sleep(0.25)
 
                 if all_checks_passed is False:
                     result = process.terminate()
