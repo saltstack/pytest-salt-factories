@@ -239,12 +239,12 @@ def start_daemon(
     log_prefix = ""
 
     checks_start_time = time.time()
-    checks_expire_time = checks_start_time + start_timeout
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
         process = daemon_class(cli_script_name=cli_script_name, **extra_daemon_class_kwargs)
         log_prefix = process.get_log_prefix()
         log.info("%sStarting %r. Attempt: %s", log_prefix, process, attempts)
         start_time = time.time()
+        checks_expire_time = start_time + start_timeout
         process.start()
         attempts += 1
         if process.is_alive():
