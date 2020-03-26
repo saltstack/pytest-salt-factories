@@ -293,6 +293,7 @@ def start_daemon(
                             ),
                             stdout=result.stdout,
                             stderr=result.stderr,
+                            exitcode=result.exitcode,
                         )
                     continue
             except ProcessNotStarted:
@@ -310,6 +311,7 @@ def start_daemon(
                         ),
                         stdout=result.stdout,
                         stderr=result.stderr,
+                        exitcode=result.exitcode,
                         exc=sys.exc_info(),
                     )
                 continue
@@ -329,11 +331,12 @@ def start_daemon(
             time.sleep(1)
             continue
     else:
-        stderr = stdout = None
+        stderr = stdout = exitcode = None
         if process is not None:
             result = process.terminate()
             stderr = result.stderr
             stdout = result.stdout
+            exitcode = result.exitcode
         raise ProcessNotStarted(
             "{}The {!r} has failed to confirm running status after {} attempts, which "
             "took {:.2f} seconds.".format(
@@ -341,5 +344,6 @@ def start_daemon(
             ),
             stdout=stdout,
             stderr=stderr,
+            exitcode=exitcode,
         )
     return process

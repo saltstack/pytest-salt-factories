@@ -59,6 +59,7 @@ class SshdDaemon(FactoryDaemonScriptBase):
                             cmdline=cmdline,
                             stdout=stdout,
                             stderr=stderr,
+                            exitcode=proc.returncode,
                         )
                 os.chmod(key_path, 0o0400)
                 host_keys.append(key_path)

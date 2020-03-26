@@ -338,6 +338,7 @@ class FactoryScriptBase(FactoryProcess):
                 stdout=result.stdout,
                 stderr=result.stderr,
                 cmdline=cmdline,
+                exitcode=result.exitcode,
             )
 
         exitcode = result.exitcode

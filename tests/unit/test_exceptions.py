@@ -41,6 +41,23 @@ def test_process_failed_cmdline():
     assert output == expected
 
 
+def test_process_failed_exitcode():
+    message = "The message"
+    exitcode = 1
+    expected = textwrap.dedent(
+        """\
+        {}
+         Exitcode: {}
+    """.format(
+            message, exitcode
+        )
+    )
+    with pytest.raises(saltfactories.exceptions.ProcessFailed) as exc:
+        raise saltfactories.exceptions.ProcessFailed(message, exitcode=exitcode)
+    output = str(exc.value)
+    assert output == expected
+
+
 def test_process_failed_stdout():
     message = "The message"
     stdout = "This is the STDOUT"
@@ -128,6 +145,36 @@ def test_process_failed_cmdline_stdout_and_stderr():
     with pytest.raises(saltfactories.exceptions.ProcessFailed) as exc:
         raise saltfactories.exceptions.ProcessFailed(
             message, cmdline=cmdline, stdout=stdout, stderr=stderr
+        )
+    output = str(exc.value)
+    assert output == expected
+
+
+def test_process_failed_cmdline_stdout_stderr_and_exitcode():
+    message = "The message"
+    stdout = "This is the STDOUT"
+    stderr = "This is the STDERR"
+    cmdline = ["python", "--version"]
+    exitcode = 1
+    expected = textwrap.dedent(
+        """\
+        {}
+         Command Line: {!r}
+         Exitcode: {}
+         Process Output:
+           >>>>> STDOUT >>>>>
+        {}
+           <<<<< STDOUT <<<<<
+           >>>>> STDERR >>>>>
+        {}
+           <<<<< STDERR <<<<<
+    """.format(
+            message, cmdline, exitcode, stdout, stderr
+        )
+    )
+    with pytest.raises(saltfactories.exceptions.ProcessFailed) as exc:
+        raise saltfactories.exceptions.ProcessFailed(
+            message, cmdline=cmdline, stdout=stdout, stderr=stderr, exitcode=exitcode
         )
     output = str(exc.value)
     assert output == expected
