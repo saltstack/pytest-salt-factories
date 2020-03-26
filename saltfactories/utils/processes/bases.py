@@ -230,8 +230,6 @@ class FactoryProcess(object):
         """
         if self._terminal is None:
             return self._terminal_result
-        # Allow some time to get all output from process
-        time.sleep(0.125)
         log.info("%sStopping %s", self.get_log_prefix(), self.__class__.__name__)
         # Collect any child processes information before terminating the process
         try:
@@ -242,6 +240,9 @@ class FactoryProcess(object):
             # The terminal process is gone
             pass
 
+        # poll the terminal before trying to terminate it, running or not, so that
+        # the right returncode is set on the popen object
+        self._terminal.poll()
         # Lets log and kill any child processes which salt left behind
         terminate_process(
             pid=self._terminal.pid,
@@ -249,8 +250,6 @@ class FactoryProcess(object):
             children=self._children,
             slow_stop=self.slow_stop,
         )
-        # This last poll is just to be sure the returncode really get's set on the Popen object.
-        self._terminal.poll()
         stdout, stderr = self._terminal.communicate()
         try:
             log_message = "{}Terminated {}.".format(self.get_log_prefix(), self.__class__.__name__)
