@@ -107,7 +107,6 @@ class SaltFactoriesManager(object):
         self.environ = environ
         self.slow_stop = slow_stop
         if start_timeout is None:
-            start_timeout = 30
             if not sys.platform.startswith("win"):
                 start_timeout = 30
             else:

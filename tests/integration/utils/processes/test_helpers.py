@@ -53,15 +53,15 @@ def test_exit_status_unknown_user(request, salt_factories, shell_tests_salt_mast
     )
     proc = SaltMaster(cli_script_name=script_path, config=shell_tests_salt_master_config)
     proc.start()
-    iterations = 20
+    iterations = salt_factories.start_timeout
     while proc.is_alive():
         if not iterations:
             break
         time.sleep(1)
         iterations -= 1
     ret = proc.terminate()
-    assert ret.exitcode == salt.defaults.exitcodes.EX_NOUSER
-    assert "The user is not available." in ret.stderr
+    assert ret.exitcode == salt.defaults.exitcodes.EX_NOUSER, ret
+    assert "The user is not available." in ret.stderr, ret
 
     # Now spawn_<daemon> should behave the same
     with pytest.raises(ProcessNotStarted) as exc:
