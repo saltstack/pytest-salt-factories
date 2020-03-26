@@ -36,6 +36,10 @@ class SyndicFactory(object):
             # config_defaults = {"syndic": salt.config.syndic_config(None, None)}
             # We don't really want the whole default config dictionary
             config_defaults = {"syndic": {}}
+        elif "syndic" in config_defaults and config_defaults["syndic"] is None:
+            config_defaults["syndic"] = {}
+        elif "syndic" not in config_defaults:
+            config_defaults["syndic"] = {}
 
         if config_overrides is None:
             config_overrides = {}
