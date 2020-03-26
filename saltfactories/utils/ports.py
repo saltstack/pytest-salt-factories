@@ -42,28 +42,18 @@ def get_unused_localhost_port():
     return get_unused_localhost_port()
 
 
-def check_connectable_ports(ports, timeout=30):
+def get_connectable_ports(ports):
+    connectable_ports = set()
     ports = set(ports)
-    expire = time.time() + timeout
-    all_ports_connectable = True
-    while True:
-        if not ports:
-            break
-        if time.time() > expire:
-            all_ports_connectable = False
-            break
 
-        for port in set(ports):
-            log.debug("Checking connectable status on port: %s", port)
-
-            with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
-                conn = sock.connect_ex(("localhost", port))
-                try:
-                    if conn == 0:
-                        log.debug("Port %s is connectable!", port)
-                        ports.remove(port)
-                        sock.shutdown(socket.SHUT_RDWR)
-                except socket.error:
-                    continue
-        time.sleep(0.5)
-    return all_ports_connectable
+    for port in set(ports):
+        with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+            conn = sock.connect_ex(("localhost", port))
+            try:
+                if conn == 0:
+                    log.debug("Port %s is connectable!", port)
+                    connectable_ports.add(port)
+                    sock.shutdown(socket.SHUT_RDWR)
+            except socket.error:
+                continue
+    return connectable_ports

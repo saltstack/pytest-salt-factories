@@ -107,3 +107,21 @@ class EventListener(object):
             )
             return False
         return True
+
+    def get_events(self, patterns, after_time=None):
+        found_patterns = set()
+        patterns = set(patterns)
+        if after_time is None:
+            after_time = time.time()
+        for received, expire, master_id, tag, data in self.store:
+            if received < after_time:
+                # Too old, carry on
+                continue
+            for pattern in set(patterns):
+                _master_id, _pattern = pattern
+                if _master_id != master_id:
+                    continue
+                if fnmatch.fnmatch(tag, _pattern):
+                    log.debug("Found matching pattern: %s", pattern)
+                    found_patterns.add(pattern)
+        return found_patterns

@@ -235,55 +235,57 @@ def start_daemon(
         An instance of the ``daemon_class``, which is a subclass of
         :py:class:`~saltfactories.utils.processes.bases.FactoryDaemonScriptBase`
     """
-    attempts = 0
+    attempts = 1
     log_prefix = ""
 
     checks_start_time = time.time()
+    checks_expire_time = checks_start_time + start_timeout
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
-        attempts += 1
         process = daemon_class(cli_script_name=cli_script_name, **extra_daemon_class_kwargs)
         log_prefix = process.get_log_prefix()
         log.info("%sStarting %r. Attempt: %s", log_prefix, process, attempts)
         start_time = time.time()
         process.start()
+        attempts += 1
         if process.is_alive():
             try:
-                check_ports = process.get_check_ports()
+                check_ports = set(process.get_check_ports())
+                if check_ports:
+                    log.debug("Checking for connectable ports: %s", check_ports)
 
                 try:
-                    check_events = list(process.get_check_events())
+                    check_events = set(process.get_check_events())
+                    if not event_listener:
+                        process.terminate()
+                        raise RuntimeError(
+                            "Process {} want's to have events checked but no 'event_listener' was "
+                            "passed to start_daemon()".format(process)
+                        )
+                    log.debug("Checking for event patterns: %s", check_events)
                 except AttributeError:
                     check_events = False
 
-                if not check_ports and not check_events:
-                    connectable = True
-                else:
-                    if check_ports and check_events:
-                        check_ports_timeout = check_events_timeout = start_timeout / 2
-                    elif check_ports and not check_events:
-                        check_ports_timeout = start_timeout
-                    elif check_events and not check_ports:
-                        check_events_timeout = start_timeout
-                    connectable = None
+                all_checks_passed = False
+                while time.time() <= checks_expire_time:
+                    if not process.is_alive():
+                        # If meanwhile the process dies, break the loop
+                        break
+
+                    if not check_ports and not check_events:
+                        # If either there are no ports and no events to check, or,
+                        # they've all been checked, break the loop
+                        all_checks_passed = True
+                        break
+
                     if check_ports:
-                        connectable = ports.check_connectable_ports(
-                            check_ports, timeout=check_ports_timeout
-                        )
+                        check_ports -= ports.get_connectable_ports(check_ports)
 
                     if check_events:
-                        if not event_listener:
-                            process.terminate()
-                            raise RuntimeError(
-                                "Process {} want's to have events checked but no 'event_listener' was "
-                                "passed to start_daemon()".format(process)
-                            )
-                        if connectable or connectable is None:
-                            connectable = event_listener.wait_for_events(
-                                process.get_check_events(),
-                                after_time=start_time,
-                                timeout=check_events_timeout,
-                            )
-                if connectable is False:
+                        check_events -= event_listener.get_events(
+                            check_events, after_time=start_time
+                        )
+
+                if all_checks_passed is False:
                     result = process.terminate()
                     if attempts >= max_attempts:
                         raise ProcessNotStarted(
