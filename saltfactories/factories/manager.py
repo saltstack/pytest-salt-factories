@@ -1029,6 +1029,7 @@ class SaltFactoriesManager(object):
         cache_key,
         daemon_id,
         max_start_attempts=3,
+        **extra_daemon_class_kwargs
     ):
         """
         Helper method to start daemons
@@ -1051,6 +1052,7 @@ class SaltFactoriesManager(object):
             cwd=self.cwd,
             max_attempts=max_start_attempts,
             event_listener=self.event_listener,
+            **extra_daemon_class_kwargs
         )
         self.cache[cache_key][daemon_id] = proc
         if self.stats_processes:
