@@ -279,11 +279,17 @@ class SaltProxyMinion(SaltDaemonScriptBase):
     Simple subclass to define a salt proxy minion daemon
     """
 
+    def __init__(self, *args, **kwargs):
+        include_proxyid_cli_flag = kwargs.pop("include_proxyid_cli_flag", True)
+        super(SaltProxyMinion, self).__init__(*args, **kwargs)
+        self.include_proxyid_cli_flag = include_proxyid_cli_flag
+
     def get_base_script_args(self):
         script_args = super(SaltProxyMinion, self).get_base_script_args()
         if sys.platform.startswith("win") is False:
             script_args.append("--disable-keepalive")
-        script_args.extend(["--proxyid", self.config["id"]])
+        if self.include_proxyid_cli_flag is True:
+            script_args.extend(["--proxyid", self.config["id"]])
         return script_args
 
     def get_check_events(self):
