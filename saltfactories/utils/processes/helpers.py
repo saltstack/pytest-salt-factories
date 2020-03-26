@@ -318,7 +318,11 @@ def start_daemon(
                         exitcode=result.exitcode,
                         exc=sys.exc_info(),
                     )
+
+                # A little pause before retrying
+                time.sleep(1)
                 continue
+
             # A little breathing before returning the process
             time.sleep(0.125)
             log.info(
