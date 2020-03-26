@@ -307,6 +307,7 @@ class SaltFactoriesManager(object):
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        **extra_daemon_class_kwargs,
     ):
         """
         Spawn a salt-master
@@ -327,6 +328,8 @@ class SaltFactoriesManager(object):
                 A dictionary of configuration overrides to use when configuring the master
             max_start_attempts(int):
                 How many attempts should be made to start the master in case of failure to validate that its running
+            extra_daemon_class_kwargs(dict):
+                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltMaster`
 
         Returns:
             :py:class:`~saltfactories.utils.processes.salts.SaltMaster`:
@@ -354,6 +357,7 @@ class SaltFactoriesManager(object):
             "masters",
             master_id,
             max_start_attempts=max_start_attempts,
+            **extra_daemon_class_kwargs,
         )
 
     def configure_minion(
@@ -449,6 +453,7 @@ class SaltFactoriesManager(object):
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        **extra_daemon_class_kwargs,
     ):
         """
         Spawn a salt-minion
@@ -466,6 +471,8 @@ class SaltFactoriesManager(object):
                 A dictionary of configuration overrides to use when configuring the minion
             max_start_attempts(int):
                 How many attempts should be made to start the minion in case of failure to validate that its running
+            extra_daemon_class_kwargs(dict):
+                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltMinion`
 
         Returns:
             :py:class:`~saltfactories.utils.processes.salts.SaltMinion`:
@@ -492,6 +499,7 @@ class SaltFactoriesManager(object):
             "minions",
             minion_id,
             max_start_attempts=max_start_attempts,
+            **extra_daemon_class_kwargs,
         )
 
     def configure_syndic(
@@ -671,6 +679,7 @@ class SaltFactoriesManager(object):
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        **extra_daemon_class_kwargs,
     ):
         """
         Spawn a salt-syndic
@@ -694,6 +703,8 @@ class SaltFactoriesManager(object):
                 respectively.
             max_start_attempts(int):
                 How many attempts should be made to start the syndic in case of failure to validate that its running
+            extra_daemon_class_kwargs(dict):
+                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltSyndic`
 
         Returns:
             :py:class:`~saltfactories.utils.processes.salts.SaltSyndic`:
@@ -731,6 +742,7 @@ class SaltFactoriesManager(object):
             "syndics",
             syndic_id,
             max_start_attempts=max_start_attempts,
+            **extra_daemon_class_kwargs,
         )
 
     def configure_proxy_minion(
@@ -825,6 +837,7 @@ class SaltFactoriesManager(object):
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        **extra_daemon_class_kwargs,
     ):
         """
         Spawn a salt-proxy
@@ -843,6 +856,8 @@ class SaltFactoriesManager(object):
             max_start_attempts(int):
                 How many attempts should be made to start the proxy minion in case of failure to validate that
                 its running
+            extra_daemon_class_kwargs(dict):
+                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltProxyMinion`
 
         Returns:
             :py:class:`~saltfactories.utils.processes.salts.SaltProxyMinion`:
@@ -871,6 +886,7 @@ class SaltFactoriesManager(object):
             "proxy_minions",
             proxy_minion_id,
             max_start_attempts=max_start_attempts,
+            **extra_daemon_class_kwargs,
         )
 
     def get_salt_cli(self, request, master_id, **cli_kwargs):
@@ -911,7 +927,7 @@ class SaltFactoriesManager(object):
                     script_path,
                     base_script_args=["--proxyid={}".format(minion_id)],
                     config=self.cache["proxy_minions"][minion_id].config,
-                    **cli_kwargs
+                    **cli_kwargs,
                 )
             except KeyError:
                 raise KeyError(
@@ -976,7 +992,7 @@ class SaltFactoriesManager(object):
         cwd=None,
         slow_stop=None,
         max_start_attempts=3,
-        **extra_daemon_class_kwargs
+        **extra_daemon_class_kwargs,
     ):
         """
         Start a non-salt daemon
@@ -995,7 +1011,7 @@ class SaltFactoriesManager(object):
             environ=environ,
             cwd=cwd,
             max_attempts=max_start_attempts,
-            **extra_daemon_class_kwargs
+            **extra_daemon_class_kwargs,
         )
         self.cache["daemons"][daemon_id] = proc
         if self.stats_processes:
