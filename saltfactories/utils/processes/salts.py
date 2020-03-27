@@ -358,6 +358,11 @@ class SaltRunCLI(SaltScriptBase):
     def get_minion_tgt(self, kwargs):
         return None
 
+    def process_output(self, stdout, stderr, cmdline=None):
+        if "No minions matched the target. No command was sent, no jid was assigned.\n" in stdout:
+            stdout = stdout.split("\n", 1)[1:][0]
+        return super(SaltRunCLI, self).process_output(stdout, stderr, cmdline=cmdline)
+
 
 class SaltCpCLI(SaltScriptBase):
     """
