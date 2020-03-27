@@ -203,6 +203,7 @@ def start_daemon(
     start_timeout=10,
     max_attempts=3,
     event_listener=None,
+    salt_factories=None,
     **extra_daemon_class_kwargs
 ):
     """
@@ -265,13 +266,20 @@ def start_daemon(
                 except AttributeError:
                     check_events = False
 
+                try:
+                    extra_checks_method = process.run_extra_checks
+                    extra_checks_passed = False
+                except AttributeError:
+                    extra_checks_method = False
+                    extra_checks_passed = False
+
                 all_checks_passed = False
                 while time.time() <= checks_expire_time:
                     if not process.is_alive():
                         # If meanwhile the process dies, break the loop
                         break
 
-                    if not check_ports and not check_events:
+                    if not check_ports and not check_events and extra_checks_passed:
                         # If either there are no ports and no events to check, or,
                         # they've all been checked, break the loop
                         all_checks_passed = True
@@ -284,6 +292,18 @@ def start_daemon(
                         check_events -= event_listener.get_events(
                             check_events, after_time=start_time
                         )
+
+                    if check_ports or check_events:
+                        # Let's not go through the extra checks since those likely
+                        # involve shelling out
+
+                        # Let's not peg the CPU
+                        time.sleep(0.25)
+                        continue
+
+                    if extra_checks_method and salt_factories:
+                        extra_checks_passed = extra_checks_method(salt_factories)
+
                     # Let's not peg the CPU
                     time.sleep(0.25)
 
