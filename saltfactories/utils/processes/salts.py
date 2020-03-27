@@ -12,6 +12,7 @@ from __future__ import unicode_literals
 import json
 import logging
 import os
+import re
 import sys
 
 import six
@@ -382,9 +383,16 @@ class SaltKeyCLI(SaltScriptBase):
     Simple subclass to the salt-key CLI script
     """
 
+    _output_replace_re = re.compile(r"((The following keys are going to be.*:|Key for minion.*)\n)")
+
     # As of Neon, salt-key still does not support --log-level
     # Only when we get the new logging merged in will we get that, so remove that CLI flag
     __cli_log_level_supported__ = SALT_KEY_LOG_LEVEL_SUPPORTED
 
     def get_minion_tgt(self, kwargs):
         return None
+
+    def process_output(self, stdout, stderr, cmdline=None):
+        # salt-key print()s to stdout regardless of output chosen
+        stdout = self._output_replace_re.sub("", stdout)
+        return super(SaltKeyCLI, self).process_output(stdout, stderr, cmdline=cmdline)
