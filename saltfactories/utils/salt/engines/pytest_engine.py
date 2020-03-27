@@ -58,6 +58,7 @@ class PyTestEngine(object):
         self.returner_address = opts["pytest-{}".format(self.role)]["returner_address"]
 
     def start(self):
+        log.info("Starting Pytest Event Forwarder Engine(forwarding to %s)", self.returner_address)
         self.io_loop = ioloop.IOLoop()
         self.io_loop.make_current()
         self.io_loop.add_callback(self._start)
@@ -66,7 +67,6 @@ class PyTestEngine(object):
 
     @gen.coroutine
     def _start(self):
-        log.info("Starting Pytest Event Forwarder Engine(forwarding to %s)", self.returner_address)
         self.context = Context()
         self.push = self.context.socket(zmq.PUSH)
         log.debug("Connecting PUSH socket to %s", self.returner_address)

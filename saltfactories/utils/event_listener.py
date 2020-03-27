@@ -25,10 +25,11 @@ log = logging.getLogger(__name__)
 
 
 class EventListener(object):
-    def __init__(self, timeout=60):
+    def __init__(self, timeout=60, auth_events_callback=None):
         self.store = deque(maxlen=10000)
         self.address = "tcp://127.0.0.1:{}".format(ports.get_unused_localhost_port())
         self.timeout = timeout
+        self.auth_events_callback = auth_events_callback
         self.running_event = threading.Event()
         self.running_thread = threading.Thread(target=self._run)
         self.sentinel = msgpack.dumps(None)
@@ -48,6 +49,8 @@ class EventListener(object):
             if payload is self.sentinel:
                 break
             master_id, tag, data = msgpack.loads(payload, **msgpack_kwargs)
+            if self.auth_events_callback is not None and tag == "salt/auth":
+                self.auth_events_callback(master_id, data)
             received = time.time()
             expire = received + self.timeout
             log.info("Received event from: MasterID: %r; Tag: %r; Data: %r", master_id, tag, data)

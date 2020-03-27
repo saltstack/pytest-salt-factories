@@ -57,7 +57,6 @@ class MasterFactory(object):
             "cachedir": "cache",
             "timeout": 3,
             "sock_dir": "run/master",
-            "open_mode": True,
             "fileserver_list_cache_time": 0,
             "fileserver_backend": ["roots"],
             "pillar_opts": False,

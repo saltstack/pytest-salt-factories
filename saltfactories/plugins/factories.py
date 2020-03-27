@@ -283,3 +283,15 @@ def pytest_saltfactories_proxy_minion_write_configuration(request, proxy_minion_
         config_file, minion_id=proxy_minion_config["id"], cache_minion_id=True
     )
     return options
+
+
+def pytest_saltfactories_handle_key_auth_event(
+    factories_manager, master_id, minion_id, keystate, payload
+):
+    """
+    This hook is called for every auth event on the masters
+    """
+    salt_key_cli = factories_manager.get_salt_key_cli(master_id)
+    if keystate == "pend":
+        ret = salt_key_cli.run("--yes", "--accept", minion_id)
+        assert ret.exitcode == 0

@@ -125,7 +125,9 @@ class SaltFactoriesManager(object):
             "proxy_minions": {},
             "daemons": {},
         }
-        self.event_listener = event_listener.EventListener()
+        self.event_listener = event_listener.EventListener(
+            auth_events_callback=self._handle_auth_event
+        )
         self.event_listener.start()
 
     @staticmethod
@@ -1072,3 +1074,12 @@ class SaltFactoriesManager(object):
             counter += 1
         root_dir.ensure(dir=True)
         return root_dir
+
+    def _handle_auth_event(self, master_id, payload):
+        self.pytestconfig.hook.pytest_saltfactories_handle_key_auth_event(
+            factories_manager=self,
+            master_id=master_id,
+            minion_id=payload["id"],
+            keystate=payload["act"],
+            payload=payload,
+        )
