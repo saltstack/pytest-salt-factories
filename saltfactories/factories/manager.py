@@ -903,7 +903,7 @@ class SaltFactoriesManager(object):
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return salt_factories.SaltCLI(
-            script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
+            script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
         )
 
     def get_salt_call_cli(self, minion_id, **cli_kwargs):
@@ -920,7 +920,7 @@ class SaltFactoriesManager(object):
         )
         try:
             return salt_factories.SaltCallCLI(
-                script_path, config=self.cache["minions"][minion_id].config, **cli_kwargs
+                script_path, config=self.cache["configs"]["minions"][minion_id], **cli_kwargs
             )
         except KeyError:
             try:
@@ -948,7 +948,7 @@ class SaltFactoriesManager(object):
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return salt_factories.SaltRunCLI(
-            script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
+            script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
         )
 
     def get_salt_cp_cli(self, master_id, **cli_kwargs):
@@ -964,7 +964,7 @@ class SaltFactoriesManager(object):
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return salt_factories.SaltCpCLI(
-            script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
+            script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
         )
 
     def get_salt_key_cli(self, master_id, **cli_kwargs):
@@ -980,7 +980,7 @@ class SaltFactoriesManager(object):
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return salt_factories.SaltKeyCLI(
-            script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
+            script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
         )
 
     def spawn_daemon(
