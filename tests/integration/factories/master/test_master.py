@@ -26,17 +26,17 @@ def minion_3(request, salt_factories, master):
 
 @pytest.fixture
 def salt_run(salt_factories, master):
-    return salt_factories.get_salt_run(master.config["id"])
+    return salt_factories.get_salt_run_cli(master.config["id"])
 
 
 @pytest.fixture
 def salt_cp(salt_factories, master):
-    return salt_factories.get_salt_cp(master.config["id"])
+    return salt_factories.get_salt_cp_cli(master.config["id"])
 
 
 @pytest.fixture
 def salt_key(salt_factories, master):
-    return salt_factories.get_salt_key(master.config["id"])
+    return salt_factories.get_salt_key_cli(master.config["id"])
 
 
 def test_master(master):
