@@ -249,7 +249,8 @@ class SaltMaster(SaltDaemonScriptBase):
         """
         try:
             salt_run_cli = salt_factories.get_salt_run_cli(self.config["id"])
-            ret = salt_run_cli.run("--timeout=15", "manage.status")
+            # We this call doesn't timeout, the master is responsive
+            salt_run_cli.run("manage.status")
             return True
         except KeyError:
             # No config for the master was found
