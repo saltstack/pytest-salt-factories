@@ -39,6 +39,7 @@ def shell_tests_salt_master_config(request, salt_factories, daemons_id):
     )
 
 
+@pytest.mark.skip_on_windows
 def test_exit_status_unknown_user(request, salt_factories, shell_tests_salt_master_config):
     """
     Ensure correct exit status when the master is configured to run as an unknown user.
