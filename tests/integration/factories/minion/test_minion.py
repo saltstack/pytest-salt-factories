@@ -17,13 +17,13 @@ def minion(request, salt_factories, master):
 
 
 @pytest.fixture
-def salt_cli(request, salt_factories, minion, master):
-    return salt_factories.get_salt_cli(request, master.config["id"])
+def salt_cli(salt_factories, minion, master):
+    return salt_factories.get_salt_cli(master.config["id"])
 
 
 @pytest.fixture
-def salt_call_cli(request, salt_factories, minion, master):
-    return salt_factories.get_salt_call_cli(request, minion.config["id"])
+def salt_call_cli(salt_factories, minion, master):
+    return salt_factories.get_salt_call_cli(minion.config["id"])
 
 
 def test_minion(minion, salt_cli):

@@ -24,13 +24,13 @@ def proxy_minion(request, salt_factories, master):
 
 
 @pytest.fixture
-def salt_cli(request, salt_factories, proxy_minion, master):
-    return salt_factories.get_salt_cli(request, master.config["id"])
+def salt_cli(salt_factories, proxy_minion, master):
+    return salt_factories.get_salt_cli(master.config["id"])
 
 
 @pytest.fixture
-def salt_call_cli(request, salt_factories, proxy_minion, master):
-    return salt_factories.get_salt_call_cli(request, proxy_minion.config["id"])
+def salt_call_cli(salt_factories, proxy_minion, master):
+    return salt_factories.get_salt_call_cli(proxy_minion.config["id"])
 
 
 def test_proxy_minion(proxy_minion, salt_cli):

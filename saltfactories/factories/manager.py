@@ -888,7 +888,7 @@ class SaltFactoriesManager(object):
             **extra_daemon_class_kwargs
         )
 
-    def get_salt_cli(self, request, master_id, **cli_kwargs):
+    def get_salt_cli(self, master_id, **cli_kwargs):
         """
         Return a `salt` CLI process
         """
@@ -904,7 +904,7 @@ class SaltFactoriesManager(object):
             script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
         )
 
-    def get_salt_call_cli(self, request, minion_id, **cli_kwargs):
+    def get_salt_call_cli(self, minion_id, **cli_kwargs):
         """
         Return a `salt-call` CLI process
         """
@@ -933,7 +933,7 @@ class SaltFactoriesManager(object):
                     "Could not find {} in the minions or proxy minions caches".format(minion_id)
                 )
 
-    def get_salt_run(self, request, master_id, **cli_kwargs):
+    def get_salt_run(self, master_id, **cli_kwargs):
         """
         Return a `salt-run` CLI process
         """
@@ -949,7 +949,7 @@ class SaltFactoriesManager(object):
             script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
         )
 
-    def get_salt_cp(self, request, master_id, **cli_kwargs):
+    def get_salt_cp(self, master_id, **cli_kwargs):
         """
         Return a `salt-cp` CLI process
         """
@@ -965,7 +965,7 @@ class SaltFactoriesManager(object):
             script_path, config=self.cache["masters"][master_id].config, **cli_kwargs
         )
 
-    def get_salt_key(self, request, master_id, **cli_kwargs):
+    def get_salt_key(self, master_id, **cli_kwargs):
         """
         Return a `salt-key` CLI process
         """

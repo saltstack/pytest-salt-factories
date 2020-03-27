@@ -69,18 +69,18 @@ def minion_2(request, salt_factories, syndic_master):
 
 
 @pytest.fixture(scope="module")
-def master_of_masters_salt_cli(request, salt_factories, master_of_masters, minion_1):
+def master_of_masters_salt_cli(salt_factories, master_of_masters, minion_1):
     """
     This is the 'salt' CLI tool, connected to master-of-masters.
     Should be able to ping minion-1 directly connected to it and minion-2 through the syndic
     """
     assert master_of_masters.is_alive()
     assert minion_1.is_alive()
-    return salt_factories.get_salt_cli(request, master_of_masters.config["id"])
+    return salt_factories.get_salt_cli(master_of_masters.config["id"])
 
 
 @pytest.fixture(scope="module")
-def syndic_master_salt_cli(request, salt_factories, syndic_master, syndic_minion, minion_2):
+def syndic_master_salt_cli(salt_factories, syndic_master, syndic_minion, minion_2):
     """
     This is the 'salt' CLI tool, connected to master-of-masters.
     Should be able to ping minion-1 directly connected to it and minion-2 through the syndic
@@ -88,7 +88,7 @@ def syndic_master_salt_cli(request, salt_factories, syndic_master, syndic_minion
     assert syndic_master.is_alive()
     assert syndic_minion.is_alive()
     assert minion_2.is_alive()
-    return salt_factories.get_salt_cli(request, syndic_master.config["id"])
+    return salt_factories.get_salt_cli(syndic_master.config["id"])
 
 
 @pytest.fixture(scope="module")
