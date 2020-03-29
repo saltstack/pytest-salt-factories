@@ -75,7 +75,7 @@ class MasterFactory(object):
             "transport": "zeromq",
             "order_masters": order_masters,
             "max_open_files": 10240,
-            "pytest-master": {"log": {"prefix": "salt-master({})".format(master_id)},},
+            "pytest-master": {"log": {"prefix": "{{cli_name}}({})".format(master_id)},},
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)

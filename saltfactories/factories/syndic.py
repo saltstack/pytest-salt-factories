@@ -75,7 +75,7 @@ class SyndicFactory(object):
             "syndic_log_file": "logs/syndic.log",
             "syndic_log_level_logfile": "debug",
             "syndic_dir": "cache/syndics",
-            "pytest-syndic": {"log": {"prefix": "salt-syndic({})".format(syndic_id)},},
+            "pytest-syndic": {"log": {"prefix": "{{cli_name}}({})".format(syndic_id)},},
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(
@@ -127,7 +127,7 @@ class SyndicFactory(object):
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "hash_type": "sha256",
             "transport": "zeromq",
-            "pytest-minion": {"log": {"prefix": "salt-minion({})".format(minion_id)},},
+            "pytest-minion": {"log": {"prefix": "{{cli_name}}({})".format(minion_id)},},
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
@@ -192,7 +192,7 @@ class SyndicFactory(object):
             "transport": "zeromq",
             "order_masters": False,
             "max_open_files": 10240,
-            "pytest-master": {"log": {"prefix": "salt-master({})".format(master_id)},},
+            "pytest-master": {"log": {"prefix": "{{cli_name}}({})".format(master_id)},},
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)

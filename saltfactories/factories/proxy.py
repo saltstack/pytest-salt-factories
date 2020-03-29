@@ -58,7 +58,7 @@ class ProxyMinionFactory(object):
             "transport": "zeromq",
             "add_proxymodule_to_opts": False,
             "proxy": {"proxytype": "dummy"},
-            "pytest-minion": {"log": {"prefix": "salt-proxy({})".format(proxy_minion_id)},},
+            "pytest-minion": {"log": {"prefix": "{{cli_name}}({})".format(proxy_minion_id)},},
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)

@@ -55,7 +55,7 @@ class MinionFactory(object):
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "hash_type": "sha256",
             "transport": "zeromq",
-            "pytest-minion": {"log": {"prefix": "salt-minion({})".format(minion_id)},},
+            "pytest-minion": {"log": {"prefix": "{{cli_name}}({})".format(minion_id)},},
             "acceptance_wait_time": 0.5,
             "acceptance_wait_time_max": 5,
         }

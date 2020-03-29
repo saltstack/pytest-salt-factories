@@ -122,9 +122,19 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         super(ZMQHandler, self).__init__(level=level)
         self.pid = os.getpid()
         self.push_address = "tcp://{}:{}".format(host, port)
-        self.log_prefix = log_prefix
+        self.log_prefix = self._get_log_prefix(log_prefix)
         self.context = self.proxy_address = self.in_proxy = self.proxy_thread = None
         self._exiting = False
+
+    def _get_log_prefix(self, log_prefix):
+        if log_prefix is None:
+            return
+        if sys.argv[0] == sys.executable:
+            cli_arg_idx = 1
+        else:
+            cli_arg_idx = 0
+        cli_name = os.path.basename(sys.argv[cli_arg_idx])
+        return log_prefix.format(cli_name=cli_name)
 
     def start(self):
         if self.pid != os.getpid():
