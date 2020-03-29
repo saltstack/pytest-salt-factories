@@ -31,7 +31,6 @@ except ImportError:  # pragma: no cover
     # import error, but its safe to pass
     SALT_KEY_LOG_LEVEL_SUPPORTED = False
 
-from saltfactories.exceptions import ProcessTimeout
 from saltfactories.utils.processes.bases import FactoryDaemonScriptBase
 from saltfactories.utils.processes.bases import FactoryPythonScriptBase
 
@@ -242,21 +241,6 @@ class SaltMaster(SaltDaemonScriptBase):
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         yield self.config["id"], "salt/master/{id}/start".format(**self.config)
-
-    def run_extra_checks(self, salt_factories):
-        """
-        This extra check is here so that we confirm the master is up as soon as it get's responsive
-        """
-        try:
-            salt_run_cli = salt_factories.get_salt_run_cli(self.config["id"])
-            # We this call doesn't timeout, the master is responsive
-            salt_run_cli.run("manage.status")
-            return True
-        except KeyError:
-            # No config for the master was found
-            return False
-        except ProcessTimeout:
-            return False
 
 
 class SaltMinion(SaltDaemonScriptBase):
