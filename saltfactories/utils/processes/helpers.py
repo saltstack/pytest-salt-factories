@@ -271,7 +271,7 @@ def start_daemon(
                     extra_checks_passed = False
                 except AttributeError:
                     extra_checks_method = False
-                    extra_checks_passed = False
+                    extra_checks_passed = True
 
                 all_checks_passed = False
                 while time.time() <= checks_expire_time:
