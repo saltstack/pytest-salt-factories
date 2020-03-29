@@ -214,7 +214,9 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase, Sal
                     self.config.get(pytest_config_key, {}).get("log", {}).get("prefix") or ""
                 )
                 if log_prefix:
-                    self._log_prefix = "[{}] ".format(log_prefix)
+                    self._log_prefix = "[{}] ".format(
+                        log_prefix.format(cli_name=self.cli_script_name)
+                    )
             except KeyError:
                 # This should really be a salt daemon which always set's `__role` in its config
                 self._log_prefix = super(SaltDaemonScriptBase, self).get_log_prefix()
