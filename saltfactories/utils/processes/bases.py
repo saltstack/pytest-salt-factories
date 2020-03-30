@@ -256,13 +256,22 @@ class FactoryProcess(object):
             if stdout or stderr:
                 log_message += " Process Output:"
                 if stdout:
-                    log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(
-                        stdout.strip()
-                    )
+                    # Try to force UnicodeErrors before formatting happens
+                    log.warning("STDOUT Type: %s", type(stdout))
+                    try:
+                        _stdout = "{}".format(stdout.strip())
+                    except UnicodeDecodeError:
+                        _stdout = "{!r}".format(stdout.strip())
+
+                    log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(_stdout)
                 if stderr:
-                    log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(
-                        stderr.strip()
-                    )
+                    # Try to force UnicodeErrors before formatting happens
+                    log.warning("STDERR Type: %s", type(stdout))
+                    try:
+                        _stderr = "{}".format(stderr.strip())
+                    except UnicodeDecodeError:
+                        _stderr = "{!r}".format(stderr.strip())
+                    log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(_stderr)
                 log_message += "\n"
             log.info(log_message)
             self._terminal_result = ProcessResult(
