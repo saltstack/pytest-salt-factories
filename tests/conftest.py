@@ -12,6 +12,7 @@ import textwrap
 
 import pytest
 import salt.version
+import six
 
 log = logging.getLogger(__name__)
 
@@ -35,7 +36,11 @@ class Tempfiles:
         Creates a python file and returns it's path
         """
         tfile = tempfile.NamedTemporaryFile("w", prefix=prefix or "tmp", suffix=".py", delete=False)
-        tfile.write(textwrap.dedent(contents.lstrip("\n")).strip())
+        contents = textwrap.dedent(contents.lstrip("\n")).strip()
+        if six.PY2:
+            # We need to write bytestrings, str in Py2
+            contents = contents.encode(__salt_system_encoding__)
+        tfile.write(contents)
         tfile.close()
         if executable is True:
             st = os.stat(tfile.name)
@@ -58,7 +63,11 @@ class Tempfiles:
             tfile = tempfile.NamedTemporaryFile("w", suffix=".sls", delete=False)
             name = tfile.name
         with open(name, "w") as wfh:
-            wfh.write(textwrap.dedent(contents.lstrip("\n")).strip())
+            contents = textwrap.dedent(contents.lstrip("\n")).strip()
+            if six.PY2:
+                # We need to write bytestrings, str in Py2
+                contents = contents.encode(__salt_system_encoding__)
+            wfh.write(contents)
         self.request.addfinalizer(functools.partial(self._delete_temp_file, name))
         with open(name, "r") as rfh:
             log.debug(

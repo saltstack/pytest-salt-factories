@@ -71,19 +71,19 @@ class Popen(subprocess.Popen):
             self.__stdout.seek(0)
             stdout = self.__stdout.read()
 
-            if six.PY3:
-                # pylint: disable=undefined-variable
-                stdout = stdout.decode(__salt_system_encoding__)
-                # pylint: enable=undefined-variable
+            # We want str type on Py3 and Unicode type on Py2
+            # pylint: disable=undefined-variable
+            stdout = stdout.decode(__salt_system_encoding__)
+            # pylint: enable=undefined-variable
         if self.__stderr:
             self.__stderr.flush()
             self.__stderr.seek(0)
             stderr = self.__stderr.read()
 
-            if six.PY3:
-                # pylint: disable=undefined-variable
-                stderr = stderr.decode(__salt_system_encoding__)
-                # pylint: enable=undefined-variable
+            # We want str type on Py3 and Unicode type on Py2
+            # pylint: disable=undefined-variable
+            stderr = stderr.decode(__salt_system_encoding__)
+            # pylint: enable=undefined-variable
         return stdout, stderr
 
 

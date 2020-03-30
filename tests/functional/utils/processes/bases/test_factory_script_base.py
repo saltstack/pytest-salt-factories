@@ -116,3 +116,42 @@ def test_stderr_output(tempfiles):
     result = shell.run(script)
     assert result.exitcode == 1
     assert result.stderr.replace(os.linesep, "\n") == input_str + "\n"
+
+
+def test_unicode_output(tempfiles):
+    expected_output = "Fátima"
+    shell = FactoryScriptBase(sys.executable)
+    script = tempfiles.makepyfile(
+        """
+        # coding=utf-8
+        from __future__ import absolute_import
+        from __future__ import print_function
+        from __future__ import unicode_literals
+        import sys
+        sys.stdout.write('{}')
+        exit(0)
+        """.format(
+            expected_output
+        )
+    )
+    result = shell.run(script)
+    assert result.exitcode == 0
+    assert result.stdout == expected_output
+
+    shell = FactoryScriptBase(sys.executable)
+    script = tempfiles.makepyfile(
+        """
+        # coding=utf-8
+        from __future__ import absolute_import
+        from __future__ import print_function
+        from __future__ import unicode_literals
+        import sys
+        sys.stderr.write('{}')
+        exit(0)
+        """.format(
+            expected_output
+        )
+    )
+    result = shell.run(script)
+    assert result.exitcode == 0
+    assert result.stderr == expected_output
