@@ -339,14 +339,7 @@ def docs_html(session):
     )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
-    session.run("make", "html", "SPHINXOPTS=-W -b coverage", external=True)
-    docs_coverage_file = os.path.join("_build", "html", "python.txt")
-    if os.path.exists(docs_coverage_file):
-        with open(docs_coverage_file) as rfh:
-            contents = rfh.readlines()[2:]
-            if contents:
-                session.error("\n" + "".join(contents))
-    os.chdir("..")
+    session.run("make", "html", "SPHINXOPTS=-W", external=True)
     session.notify("docs-coverage")
 
 
@@ -355,7 +348,16 @@ def docs_coverage(session):
     """
     Report Docs Coverage
     """
-    docs_coverage_file = os.path.join("docs", "_build", "html", "python.txt")
+    _patch_session(session)
+    session.install(
+        "--progress-bar=off",
+        "-r",
+        os.path.join("requirements", "docs.txt"),
+        silent=PIP_INSTALL_SILENT,
+    )
+    os.chdir("docs/")
+    session.run("make", "html", "SPHINXOPTS=-W -b coverage", external=True)
+    docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
         with open(docs_coverage_file) as rfh:
             contents = rfh.readlines()[2:]
@@ -363,6 +365,7 @@ def docs_coverage(session):
                 session.error("\n" + "".join(contents))
         return
     session.log("Docs coverage file, {}, does not exit.".format(docs_coverage_file))
+    os.chdir("..")
 
 
 @nox.session(name="gen-api-docs", python="3")
