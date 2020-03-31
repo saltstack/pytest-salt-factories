@@ -269,6 +269,11 @@ def start_daemon(
                 try:
                     extra_checks_method = process.run_extra_checks
                     extra_checks_passed = False
+                    if not salt_factories:
+                        raise RuntimeError(
+                            "Process {} defines the run_extra_checks method but no 'salt_factories' was "
+                            "passed to start_daemon()".format(process)
+                        )
                 except AttributeError:
                     extra_checks_method = False
                     extra_checks_passed = True
@@ -293,19 +298,13 @@ def start_daemon(
                             check_events, after_time=start_time
                         )
 
-                    if check_ports or check_events:
-                        # Let's not go through the extra checks since those likely
-                        # involve shelling out
-
-                        # Let's not peg the CPU
-                        time.sleep(0.25)
-                        continue
-
-                    if extra_checks_method and salt_factories:
+                    if extra_checks_method and not check_events and not check_events:
+                        # Only run the extra checks after check_events and check_ports are
+                        # checked since those likely involve shelling out
                         extra_checks_passed = extra_checks_method(salt_factories)
 
                     # Let's not peg the CPU
-                    time.sleep(0.25)
+                    time.sleep(0.5)
 
                 if all_checks_passed is False:
                     result = process.terminate()
@@ -344,7 +343,7 @@ def start_daemon(
                 continue
 
             # A little breathing before returning the process
-            time.sleep(0.125)
+            time.sleep(0.25)
             log.info(
                 "%sThe %r is running after %d attempts. Took %1.2f seconds",
                 log_prefix,

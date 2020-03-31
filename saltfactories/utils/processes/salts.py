@@ -183,8 +183,10 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
 class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase, SaltConfigMixin):
     def __init__(self, *args, **kwargs):
         config = kwargs.pop("config", None) or {}
+        extra_checks_callback = kwargs.pop("extra_checks_callback", None)
         super(SaltDaemonScriptBase, self).__init__(*args, **kwargs)
         self.config = config
+        self.extra_checks_callback = extra_checks_callback
 
     def get_base_script_args(self):
         script_args = super(SaltDaemonScriptBase, self).get_base_script_args()
@@ -231,6 +233,14 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase, Sal
         except AttributeError:
             self._display_name = self.get_log_prefix().strip().lstrip("[").rstrip("]")
         return self._display_name
+
+    def run_extra_checks(self, salt_factories):
+        """
+        This extra check is here so that we confirm the daemon is up as soon as it get's responsive
+        """
+        if self.extra_checks_callback is None:
+            return True
+        return self.extra_checks_callback(salt_factories, self.config)
 
 
 class SaltMaster(SaltDaemonScriptBase):
