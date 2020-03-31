@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import json
 import os
 import shutil
 import sys
@@ -366,6 +367,48 @@ def docs_linkcheck(session):
     )
     os.chdir("docs/")
     session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
+    os.chdir("..")
+
+
+@nox.session(name="docs-crosslink-info", python="3")
+def docs_crosslink_info(session):
+    """
+    Report intersphinx cross links information
+    """
+    _patch_session(session)
+    session.install(
+        "--progress-bar=off",
+        "-r",
+        os.path.join("requirements", "docs.txt"),
+        silent=PIP_INSTALL_SILENT,
+    )
+    os.chdir("docs/")
+    intersphinx_mapping = json.loads(
+        session.run(
+            "python",
+            "-c",
+            "import json; import conf; print(json.dumps(conf.intersphinx_mapping))",
+            silent=True,
+            log=False,
+        )
+    )
+    try:
+        mapping_entry = intersphinx_mapping[session.posargs[0]]
+    except IndexError:
+        session.error(
+            "You need to pass at least one argument whose value must be one of: {}".format(
+                ", ".join(list(intersphinx_mapping))
+            )
+        )
+    except KeyError:
+        session.error(
+            "Only acceptable values for first argument are: {}".format(
+                ", ".join(list(intersphinx_mapping))
+            )
+        )
+    session.run(
+        "python", "-m", "sphinx.ext.intersphinx", mapping_entry[0].rstrip("/") + "/objects.inv"
+    )
     os.chdir("..")
 
 
