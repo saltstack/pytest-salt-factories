@@ -173,7 +173,7 @@ def _tests(session):
     session.notify("coverage")
 
 
-@nox.session(python=("2", "2.7", "3.5", "3.6", "3.7"))
+@nox.session(python=("3.5", "3.6", "3.7"))
 def tests(session):
     """
     Run tests
