@@ -9,6 +9,9 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import pprint
+import textwrap
+
 import pytest
 
 from saltfactories.utils.processes.bases import ShellResult
@@ -46,3 +49,73 @@ def test_attributes():
     assert ret.stderr == stderr
     assert ret.json == json
     assert ret.cmdline == cmdline
+
+
+def test_str_formatting():
+    exitcode = 0
+    stdout = "STDOUT"
+    stderr = "STDERR"
+    json = None
+    cmdline = None
+    ret = ShellResult(exitcode, stdout, stderr)
+    expected = textwrap.dedent(
+        """\
+        ShellResult
+         Exitcode: {}
+         Process Output:
+           >>>>> STDOUT >>>>>
+        {}
+           <<<<< STDOUT <<<<<
+           >>>>> STDERR >>>>>
+        {}
+           <<<<< STDERR <<<<<
+    """.format(
+            exitcode, stdout, stderr
+        )
+    )
+    assert str(ret) == expected
+    json = {1: 1}
+    ret = ShellResult(exitcode, stdout, stderr, json)
+    expected = textwrap.dedent(
+        """\
+        ShellResult
+         Exitcode: {}
+         Process Output:
+           >>>>> STDOUT >>>>>
+        {}
+           <<<<< STDOUT <<<<<
+           >>>>> STDERR >>>>>
+        {}
+           <<<<< STDERR <<<<<
+         JSON Object:
+        {}
+    """.format(
+            exitcode, stdout, stderr, "".join("  {}".format(line) for line in pprint.pformat(json))
+        )
+    )
+    assert str(ret) == expected
+    cmdline = [1, 2, 3]
+    ret = ShellResult(exitcode, stdout, stderr, json, cmdline)
+    expected = textwrap.dedent(
+        """\
+        ShellResult
+         Command Line: {!r}
+         Exitcode: {}
+         Process Output:
+           >>>>> STDOUT >>>>>
+        {}
+           <<<<< STDOUT <<<<<
+           >>>>> STDERR >>>>>
+        {}
+           <<<<< STDERR <<<<<
+         JSON Object:
+        {}
+    """.format(
+            cmdline,
+            exitcode,
+            stdout,
+            stderr,
+            "".join("  {}".format(line) for line in pprint.pformat(json)),
+        )
+    )
+    assert str(ret) == expected

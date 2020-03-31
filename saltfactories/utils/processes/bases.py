@@ -13,6 +13,7 @@ import atexit
 import json
 import logging
 import os
+import pprint
 import subprocess
 import sys
 import tempfile
@@ -106,6 +107,20 @@ class ProcessResult(namedtuple("ProcessResult", ("exitcode", "stdout", "stderr",
     stderr = property(itemgetter(2), doc="ProcessResult stderr property")
     cmdline = property(itemgetter(3), doc="ProcessResult cmdline property")
 
+    def __str__(self):
+        message = self.__class__.__name__
+        if self.cmdline:
+            message += "\n Command Line: {}".format(self.cmdline)
+        if self.exitcode is not None:
+            message += "\n Exitcode: {}".format(self.exitcode)
+        if self.stdout or self.stderr:
+            message += "\n Process Output:"
+        if self.stdout:
+            message += "\n   >>>>> STDOUT >>>>>\n{}\n   <<<<< STDOUT <<<<<".format(self.stdout)
+        if self.stderr:
+            message += "\n   >>>>> STDERR >>>>>\n{}\n   <<<<< STDERR <<<<<".format(self.stderr)
+        return message + "\n"
+
 
 class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "json", "cmdline"))):
     """
@@ -128,6 +143,23 @@ class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "js
     stderr = property(itemgetter(2), doc="ShellResult stderr property")
     json = property(itemgetter(3), doc="ShellResult stdout JSON decoded, when parseable.")
     cmdline = property(itemgetter(4), doc="ShellResult cmdline property")
+
+    def __str__(self):
+        message = self.__class__.__name__
+        if self.cmdline:
+            message += "\n Command Line: {}".format(self.cmdline)
+        if self.exitcode is not None:
+            message += "\n Exitcode: {}".format(self.exitcode)
+        if self.stdout or self.stderr:
+            message += "\n Process Output:"
+        if self.stdout:
+            message += "\n   >>>>> STDOUT >>>>>\n{}\n   <<<<< STDOUT <<<<<".format(self.stdout)
+        if self.stderr:
+            message += "\n   >>>>> STDERR >>>>>\n{}\n   <<<<< STDERR <<<<<".format(self.stderr)
+        if self.json:
+            message += "\n JSON Object:\n"
+            message += "".join("  {}".format(line) for line in pprint.pformat(self.json))
+        return message + "\n"
 
     def __eq__(self, other):
         """

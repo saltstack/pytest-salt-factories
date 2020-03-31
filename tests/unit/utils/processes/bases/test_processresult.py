@@ -9,6 +9,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import textwrap
+
 import pytest
 
 from saltfactories.utils.processes.bases import ProcessResult
@@ -36,3 +38,46 @@ def test_attributes():
     assert ret.stdout == stdout
     assert ret.stderr == stderr
     assert ret.cmdline == cmdline
+
+
+def test_str_formatting():
+    exitcode = 0
+    stdout = "STDOUT"
+    stderr = "STDERR"
+    cmdline = None
+    ret = ProcessResult(exitcode, stdout, stderr)
+    expected = textwrap.dedent(
+        """\
+        ProcessResult
+         Exitcode: {}
+         Process Output:
+           >>>>> STDOUT >>>>>
+        {}
+           <<<<< STDOUT <<<<<
+           >>>>> STDERR >>>>>
+        {}
+           <<<<< STDERR <<<<<
+    """.format(
+            exitcode, stdout, stderr
+        )
+    )
+    assert str(ret) == expected
+    cmdline = [1, 2, 3]
+    ret = ProcessResult(exitcode, stdout, stderr, cmdline)
+    expected = textwrap.dedent(
+        """\
+        ProcessResult
+         Command Line: {!r}
+         Exitcode: {}
+         Process Output:
+           >>>>> STDOUT >>>>>
+        {}
+           <<<<< STDOUT <<<<<
+           >>>>> STDERR >>>>>
+        {}
+           <<<<< STDERR <<<<<
+    """.format(
+            cmdline, exitcode, stdout, stderr,
+        )
+    )
+    assert str(ret) == expected

@@ -136,6 +136,6 @@ def test_unicode_output(tempfiles):
         """
     )
     result = shell.run(script)
-    assert result.exitcode == 0, result
+    assert result.exitcode == 0, str(result)
     assert result.stdout == "STDOUT Fátima"
     assert result.stderr == "STDERR Fátima"
