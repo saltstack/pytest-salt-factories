@@ -322,6 +322,17 @@ def docs(session):
     """
     Build Docs
     """
+    _patch_session(session)
+    session.install(
+        "--progress-bar=off",
+        "-r",
+        os.path.join("requirements", "docs.txt"),
+        silent=PIP_INSTALL_SILENT,
+    )
+    os.chdir("docs/")
+    session.run("make", "clean", external=True)
+    session.notify("docs-linkcheck")
+    session.notify("docs-coverage")
     session.notify("docs-html")
 
 
@@ -338,9 +349,24 @@ def docs_html(session):
         silent=PIP_INSTALL_SILENT,
     )
     os.chdir("docs/")
-    session.run("make", "clean", external=True)
     session.run("make", "html", "SPHINXOPTS=-W", external=True)
-    session.notify("docs-coverage")
+
+
+@nox.session(name="docs-linkcheck", python="3")
+def docs_linkcheck(session):
+    """
+    Report Docs Link Check
+    """
+    _patch_session(session)
+    session.install(
+        "--progress-bar=off",
+        "-r",
+        os.path.join("requirements", "docs.txt"),
+        silent=PIP_INSTALL_SILENT,
+    )
+    os.chdir("docs/")
+    session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
+    os.chdir("..")
 
 
 @nox.session(name="docs-coverage", python="3")
@@ -356,7 +382,7 @@ def docs_coverage(session):
         silent=PIP_INSTALL_SILENT,
     )
     os.chdir("docs/")
-    session.run("make", "html", "SPHINXOPTS=-W -b coverage", external=True)
+    session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
     docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
         with open(docs_coverage_file) as rfh:
