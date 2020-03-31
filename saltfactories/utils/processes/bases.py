@@ -146,6 +146,26 @@ class FactoryProcess(object):
     def __init__(
         self, cli_script_name, slow_stop=True, environ=None, cwd=None, base_script_args=None,
     ):
+        """
+
+        Args:
+            cli_script_name(str):
+                This is the string containing the name of the binary to call on the subprocess, either the
+                full path to it, or the basename. In case of the basename, the directory containing the
+                basename must be in your ``$PATH`` variable.
+            slow_stop(bool):
+                Wether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
+                :py:meth:`~subprocess.Popen.terminate` on the sub-procecess.
+                When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
+                can be written down to disk.
+            environ(dict):
+                A dictionary of `key`, `value` pairs to add to the environment.
+            cwd (str):
+                The path to the current working directory
+            base_script_args(list or tuple):
+                An list or tuple iterable of the base arguments to use when building the command line to
+                launch the process
+        """
         self.cli_script_name = cli_script_name
         self.slow_stop = slow_stop
         self.environ = environ or os.environ.copy()
@@ -290,6 +310,15 @@ class FactoryScriptBase(FactoryProcess):
     """
 
     def __init__(self, *args, **kwargs):
+        """
+        Base class for non daemonic CLI processes
+
+        Check base class(es) for additional supported parameters
+
+        Args:
+            default_timeout(int):
+                The maximum ammount of seconds that a script should run
+        """
         default_timeout = kwargs.pop("default_timeout", None)
         super(FactoryScriptBase, self).__init__(*args, **kwargs)
         if default_timeout is None:
@@ -371,6 +400,15 @@ class FactoryScriptBase(FactoryProcess):
 
 class FactoryPythonScriptBase(FactoryScriptBase):
     def __init__(self, *args, **kwargs):
+        """
+        Base class for python scripts based CLI processes
+
+        Check base class(es) for additional supported parameters
+
+        Args:
+            python_executable(str):
+                The path to the python executable to use
+        """
         python_executable = kwargs.pop("python_executable", None)
         super(FactoryPythonScriptBase, self).__init__(*args, **kwargs)
         self.python_executable = python_executable or sys.executable
