@@ -67,17 +67,16 @@ jobs:
           - 3.5
           - 3.6
           - 3.7
-        #salt-version:
-        #  - salt==2019.2.3
-        #  - salt==3000.0rc2
+        salt-version:
+          - salt==3000.1
 
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/checkout@v2
-      with:
-        repository: s0undt3ch/salt
-        ref: hotfix/version-parsing
-        path: salt-checkout
+#    - uses: actions/checkout@v2
+#      with:
+#        repository: s0undt3ch/salt
+#        ref: hotfix/version-parsing
+#        path: salt-checkout
 
     - name: Set up Python 3.7 For Nox
       uses: actions/setup-python@v1
@@ -97,16 +96,16 @@ jobs:
     - name: Install Test Requirements
       env:
         USE_SYSTEM_PYTHON: YES
-        #SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        SALT_REQUIREMENT: ./salt-checkout
+        SALT_REQUIREMENT: ${{ matrix.salt-version }}
+        #SALT_REQUIREMENT: ./salt-checkout
       run: |
         nox --force-color -e tests-system-python --install-only
 
     - name: Test
       env:
         USE_SYSTEM_PYTHON: YES
-        #SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        SALT_REQUIREMENT: ./salt-checkout
+        SALT_REQUIREMENT: ${{ matrix.salt-version }}
+        #SALT_REQUIREMENT: ./salt-checkout
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         nox --force-color -e tests-system-python -- -s -vv -ra --log-cli-level=debug --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
@@ -127,24 +126,23 @@ jobs:
     - name: Create CodeCov Flags
       id: codecov-flags
       run: |
-        echo ::set-output name=flags::$(python -c "import sys; print('{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info)))")
-        #echo ::set-output name=flags::$(python -c "import sys; print('{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info) ,'_'.join(str(v) for v in '${{ matrix.salt-version }}'.split('.')))")
+        echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Code Coverage
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }}
-        #name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
+        #name: ${{ runner.os }}-Py${{ matrix.python-version }}
         fail_ci_if_error: false
 
     - name: Upload Logs
       if: always()
       uses: actions/upload-artifact@master
       with:
-        #name: runtests-ubuntu-py${{ matrix.python-version }}-salt-${{ matrix.salt-version }}.log
-        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
+        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-salt-${{ matrix.salt-version }}.log
+        #name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
         path: runtests.log
 
   Windows:
@@ -161,17 +159,16 @@ jobs:
           - 3.5
           - 3.6
 #          - 3.7
-        #salt-version:
-        #  - salt==2019.2.3
-        #  - salt==3000.0rc2
+        salt-version:
+          - salt==3000.1
 
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/checkout@v2
-      with:
-        repository: s0undt3ch/salt
-        ref: hotfix/version-parsing
-        path: salt-checkout
+#    - uses: actions/checkout@v2
+#      with:
+#        repository: s0undt3ch/salt
+#        ref: hotfix/version-parsing
+#        path: salt-checkout
 
     - name: Set up Python 3.7 For Nox
       uses: actions/setup-python@v1
@@ -192,8 +189,8 @@ jobs:
       shell: bash
       env:
         USE_SYSTEM_PYTHON: YES
-        #SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        SALT_REQUIREMENT: ./salt-checkout
+        SALT_REQUIREMENT: ${{ matrix.salt-version }}
+        #SALT_REQUIREMENT: ./salt-checkout
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox --force-color -e tests-system-python --install-only
@@ -202,8 +199,8 @@ jobs:
       shell: bash
       env:
         USE_SYSTEM_PYTHON: YES
-        #SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        SALT_REQUIREMENT: ./salt-checkout
+        SALT_REQUIREMENT: ${{ matrix.salt-version }}
+        #SALT_REQUIREMENT: ./salt-checkout
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
@@ -225,24 +222,23 @@ jobs:
     - name: Create CodeCov Flags
       id: codecov-flags
       run: |
-        echo ::set-output name=flags::$(python -c "import sys; print('{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info)))")
-        #echo ::set-output name=flags::$(python -c "import sys; print('{},{},salt_{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info) ,'_'.join(str(v) for v in '${{ matrix.salt-version }}'.split('.')))")
+        echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Code Coverage
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }}
-        #name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
+        #name: ${{ runner.os }}-Py${{ matrix.python-version }}
         fail_ci_if_error: false
 
     - name: Upload Logs
       if: always()
       uses: actions/upload-artifact@master
       with:
-        #name: runtests-windows-py${{ matrix.python-version }}-salt-${{ matrix.salt-version }}.log
-        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
+        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-salt-${{ matrix.salt-version }}.log
+        #name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
         path: runtests.log
 
   macOS:
@@ -259,17 +255,16 @@ jobs:
           - 3.5
           - 3.6
           - 3.7
-        #salt-version:
-        #  - salt==2019.2.3
-        #  - salt==3000.0rc2
+        salt-version:
+          - salt==3000.1
 
     steps:
     - uses: actions/checkout@v2
-    - uses: actions/checkout@v2
-      with:
-        repository: s0undt3ch/salt
-        ref: hotfix/version-parsing
-        path: salt-checkout
+#    - uses: actions/checkout@v2
+#      with:
+#        repository: s0undt3ch/salt
+#        ref: hotfix/version-parsing
+#        path: salt-checkout
 
     - name: Set up Python 3.7 For Nox
       uses: actions/setup-python@v1
@@ -289,16 +284,16 @@ jobs:
     - name: Install Test Requirements
       env:
         USE_SYSTEM_PYTHON: YES
-        #SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        SALT_REQUIREMENT: ./salt-checkout
+        SALT_REQUIREMENT: ${{ matrix.salt-version }}
+        #SALT_REQUIREMENT: ./salt-checkout
       run: |
         nox --force-color -e tests-system-python --install-only
 
     - name: Test
       env:
         USE_SYSTEM_PYTHON: YES
-        #SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        SALT_REQUIREMENT: ./salt-checkout
+        SALT_REQUIREMENT: ${{ matrix.salt-version }}
+        #SALT_REQUIREMENT: ./salt-checkout
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         nox --force-color -e tests-system-python -- -s -vv -ra --log-cli-level=debug --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
@@ -319,22 +314,21 @@ jobs:
     - name: Create CodeCov Flags
       id: codecov-flags
       run: |
-        echo ::set-output name=flags::$(python -c "import sys; print('{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info)))")
-        #echo ::set-output name=flags::$(python -c "import sys; print('{},{},salt_{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info) ,'_'.join(str(v) for v in '${{ matrix.salt-version }}'.split('.')))")
+        echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Code Coverage
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }}
-        #name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
+        #name: ${{ runner.os }}-Py${{ matrix.python-version }}
         fail_ci_if_error: false
 
     - name: Upload Logs
       if: always()
       uses: actions/upload-artifact@master
       with:
-        #name: runtests-macos-py${{ matrix.python-version }}-salt-${{ matrix.salt-version }}.log
-        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
+        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-salt-${{ matrix.salt-version }}.log
+        #name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
         path: runtests.log
