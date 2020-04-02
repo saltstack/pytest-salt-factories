@@ -69,6 +69,7 @@ jobs:
           - 3.7
         salt-version:
           - salt==3000.1
+          - salt==master
 
     steps:
     - uses: actions/checkout@v2
@@ -97,7 +98,6 @@ jobs:
       env:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        #SALT_REQUIREMENT: ./salt-checkout
       run: |
         nox --force-color -e tests-system-python --install-only
 
@@ -105,7 +105,6 @@ jobs:
       env:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        #SALT_REQUIREMENT: ./salt-checkout
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         nox --force-color -e tests-system-python -- -s -vv -ra --log-cli-level=debug --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
@@ -161,6 +160,7 @@ jobs:
 #          - 3.7
         salt-version:
           - salt==3000.1
+          - salt==master
 
     steps:
     - uses: actions/checkout@v2
@@ -190,7 +190,6 @@ jobs:
       env:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        #SALT_REQUIREMENT: ./salt-checkout
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox --force-color -e tests-system-python --install-only
@@ -200,7 +199,6 @@ jobs:
       env:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        #SALT_REQUIREMENT: ./salt-checkout
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
@@ -257,6 +255,7 @@ jobs:
           - 3.7
         salt-version:
           - salt==3000.1
+          - salt==master
 
     steps:
     - uses: actions/checkout@v2
@@ -285,7 +284,6 @@ jobs:
       env:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        #SALT_REQUIREMENT: ./salt-checkout
       run: |
         nox --force-color -e tests-system-python --install-only
 
@@ -293,7 +291,6 @@ jobs:
       env:
         USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        #SALT_REQUIREMENT: ./salt-checkout
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         nox --force-color -e tests-system-python -- -s -vv -ra --log-cli-level=debug --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/

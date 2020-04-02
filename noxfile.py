@@ -17,6 +17,8 @@ from nox.virtualenv import VirtualEnv
 IS_PY3 = sys.version_info > (2,)
 COVERAGE_VERSION_REQUIREMENT = "coverage==5.0.3"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000.1"
+if SALT_REQUIREMENT == "salt==master":
+    SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
 USE_SYSTEM_PYTHON = "USE_SYSTEM_PYTHON" in os.environ
 
 # Be verbose when runing under a CI context
