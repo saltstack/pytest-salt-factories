@@ -120,7 +120,7 @@ jobs:
           --include='junit-report.xml' \
           --framework=pytest \
           --merge ".*" \
-          --name="${{ runner.os }} Py${{ matrix.python-version }}"
+          --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
 
     - name: Create CodeCov Flags
       id: codecov-flags
@@ -215,7 +215,7 @@ jobs:
           --include='junit-report.xml' \
           --framework=pytest \
           --merge ".*" \
-          --name="${{ runner.os }} Py${{ matrix.python-version }}"
+          --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
 
     - name: Create CodeCov Flags
       id: codecov-flags
@@ -306,7 +306,7 @@ jobs:
           --include='junit-report.xml' \
           --framework=pytest \
           --merge ".*" \
-          --name="${{ runner.os }} Py${{ matrix.python-version }}"
+          --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
 
     - name: Create CodeCov Flags
       id: codecov-flags
