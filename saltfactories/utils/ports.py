@@ -13,7 +13,7 @@ import time
 log = logging.getLogger(__name__)
 
 
-def get_unused_localhost_port(cached_seconds=1):
+def get_unused_localhost_port(cached_seconds=10):
     """
     Return a random unused port on localhost
     """
@@ -47,7 +47,7 @@ def get_unused_localhost_port(cached_seconds=1):
     if port not in generated_ports:
         generated_ports[port] = time.time() + cached_seconds
         return port
-    return get_unused_localhost_port()
+    return get_unused_localhost_port(cached_seconds=cached_seconds)
 
 
 def get_connectable_ports(ports):

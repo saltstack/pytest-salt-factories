@@ -71,7 +71,7 @@ def test_get_unused_localhost_port_unique():
         "socket.socket", new_callable=functools.partial(MockedCreateSocket, ports)
     ) as mocked_socket:
         for _ in range(num_calls):
-            got_ports.append(ports_utils.get_unused_localhost_port())
+            got_ports.append(ports_utils.get_unused_localhost_port(cached_seconds=1))
         assert len(got_ports) == num_calls
         assert set(got_ports) == unique
 
@@ -82,7 +82,7 @@ def test_get_unused_localhost_port_unique():
         for _ in range(num_calls):
             with pytest.raises(IndexError):
                 # we won't have enough ports
-                got_ports.append(ports_utils.get_unused_localhost_port())
+                got_ports.append(ports_utils.get_unused_localhost_port(cached_seconds=1))
         # Since we couldn't get repeated ports, got_ports remains as it was
         assert len(got_ports) == num_calls
         assert set(got_ports) == unique
@@ -93,7 +93,7 @@ def test_get_unused_localhost_port_unique():
         "socket.socket", new_callable=functools.partial(MockedCreateSocket, ports)
     ) as mocked_socket:
         for _ in range(num_calls):
-            got_ports.append(ports_utils.get_unused_localhost_port())
+            got_ports.append(ports_utils.get_unused_localhost_port(cached_seconds=1))
 
         assert len(got_ports) == 2 * len(unique)
         assert set(got_ports) == unique
