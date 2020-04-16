@@ -886,6 +886,15 @@ class SaltFactoriesManager(object):
             **extra_daemon_class_kwargs
         )
 
+    def get_salt_client(self, master_id, functions_known_to_return_none=None):
+        """
+        Return a local salt client object
+        """
+        return salt_factories.SaltClient(
+            master_config=self.cache["configs"]["masters"][master_id].copy(),
+            functions_known_to_return_none=functions_known_to_return_none,
+        )
+
     def get_salt_cli(self, master_id, **cli_kwargs):
         """
         Return a `salt` CLI process

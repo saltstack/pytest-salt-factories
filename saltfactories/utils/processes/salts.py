@@ -11,9 +11,11 @@ import os
 import re
 import sys
 
+import pytest
 import six
 
 try:
+    import salt.client
     from salt.utils.parsers import SaltKeyOptionParser
 
     try:
@@ -409,3 +411,84 @@ class SaltKeyCLI(SaltScriptBase):
         # salt-key print()s to stdout regardless of output chosen
         stdout = self._output_replace_re.sub("", stdout)
         return super(SaltKeyCLI, self).process_output(stdout, stderr, cmdline=cmdline)
+
+
+class SaltClient:
+    """
+    Wrapper class around Salt's local client
+    """
+
+    STATE_FUNCTION_RUNNING_RE = re.compile(
+        r"""The function (?:"|')(?P<state_func>.*)(?:"|') is running as PID """
+        r"(?P<pid>[\d]+) and was started at (?P<date>.*) with jid (?P<jid>[\d]+)"
+    )
+
+    def __init__(self, master_config, functions_known_to_return_none=None):
+        self.__client = salt.client.get_local_client(mops=master_config)
+        if functions_known_to_return_none is None:
+            functions_known_to_return_none = (
+                "data.get",
+                "file.chown",
+                "file.chgrp",
+                "pkg.refresh_db",
+                "ssh.recv_known_host_entries",
+                "time.sleep",
+            )
+        self.__functions_known_to_return_none = functions_known_to_return_none
+
+    def run(self, function, *args, minion_tgt="minion", timeout=300, **kwargs):
+        """
+        Run a single salt function and condition the return down to match the
+        behavior of the raw function call
+        """
+        if "f_arg" in kwargs:
+            kwargs["arg"] = kwargs.pop("f_arg")
+        if "f_timeout" in kwargs:
+            kwargs["timeout"] = kwargs.pop("f_timeout")
+        ret = self.__client.cmd(minion_tgt, function, args, timeout=timeout, kwarg=kwargs)
+        if minion_tgt not in ret:
+            pytest.fail(
+                "WARNING(SHOULD NOT HAPPEN #1935): Failed to get a reply "
+                "from the minion '{}'. Command output: {}".format(minion_tgt, ret)
+            )
+        elif ret[minion_tgt] is None and function not in self.__functions_known_to_return_none:
+            pytest.fail(
+                "WARNING(SHOULD NOT HAPPEN #1935): Failed to get '{}' from "
+                "the minion '{}'. Command output: {}".format(function, minion_tgt, ret)
+            )
+
+        # Try to match stalled state functions
+        ret[minion_tgt] = self._check_state_return(ret[minion_tgt])
+
+        return ret[minion_tgt]
+
+    def _check_state_return(self, ret):
+        if isinstance(ret, dict):
+            # This is the supposed return format for state calls
+            return ret
+
+        if isinstance(ret, list):
+            jids = []
+            # These are usually errors
+            for item in ret[:]:
+                if not isinstance(item, str):
+                    # We don't know how to handle this
+                    continue
+                match = self.STATE_FUNCTION_RUNNING_RE.match(item)
+                if not match:
+                    # We don't know how to handle this
+                    continue
+                jid = match.group("jid")
+                if jid in jids:
+                    continue
+
+                jids.append(jid)
+                job_data = self.run("saltutil.find_job", jid)
+                job_kill = self.run("saltutil.kill_job", jid)
+
+                msg = (
+                    "A running state.single was found causing a state lock. "
+                    "Job details: '{}'  Killing Job Returned: '{}'".format(job_data, job_kill)
+                )
+                ret.append("[TEST SUITE ENFORCED]{}[/TEST SUITE ENFORCED]".format(msg))
+        return ret
