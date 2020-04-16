@@ -5,10 +5,6 @@ tests.functional.utils.processes.bases.test_factory_daemon_script_base
 
 Test saltfactories.utils.processes.bases.FactoryDaemonScriptBase
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import functools
 import pprint
 import sys

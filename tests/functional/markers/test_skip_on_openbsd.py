@@ -5,10 +5,6 @@
 
     Test the ``@pytest.mark.skip_on_openbsd`` marker
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import mock
 import pytest
 

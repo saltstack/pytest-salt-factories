@@ -5,10 +5,6 @@ tests.utils.test_ports
 
 Test the port related utilities
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import functools
 import time
 

@@ -5,10 +5,6 @@
 
     Test the "skip_if_no_remote_network" marker helper
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import socket
 
 import mock

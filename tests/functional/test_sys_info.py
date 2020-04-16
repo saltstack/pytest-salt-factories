@@ -5,10 +5,6 @@
 
     Tests related to system information reports enabled by the `--sys-info` flag.
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import pytest
 
 

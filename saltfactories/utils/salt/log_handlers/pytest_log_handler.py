@@ -5,10 +5,6 @@ pytestsalt.salt.log_handlers.pytest_log_handler
 
 Salt External Logging Handler
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import atexit
 import copy
 import logging

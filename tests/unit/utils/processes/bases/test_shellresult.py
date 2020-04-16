@@ -5,10 +5,6 @@ tests.unit.utils.processes.bases.test_shellresult
 
 Test saltfactories.utils.processes.bases.ShellResult
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import pprint
 import textwrap
 

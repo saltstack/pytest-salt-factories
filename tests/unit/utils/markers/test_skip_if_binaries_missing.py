@@ -5,10 +5,6 @@
 
     Test the "skip_if_binaries_missing" marker helper
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import saltfactories.utils.markers as markers
 
 

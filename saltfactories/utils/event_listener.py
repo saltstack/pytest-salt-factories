@@ -5,10 +5,6 @@ saltfactories.utils.event_listener
 
 A "pseudo" event listener for salt factories pytest plugin
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import copy
 import fnmatch
 import logging

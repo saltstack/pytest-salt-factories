@@ -5,10 +5,6 @@ tests.functional.utils.processes.bases.test_factory_script_base
 
 Test saltfactories.utils.processes.bases.FactoryScriptBase
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import os
 import sys
 

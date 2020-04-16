@@ -6,10 +6,6 @@ pytestsalt.engines.pytest_engine
 Simple salt engine which will setup a socket to accept connections allowing us to know
 when a daemon is up and running
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import atexit
 import logging
 

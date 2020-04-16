@@ -5,10 +5,6 @@ saltfactories.plugin
 
 Salt Factories PyTest plugin interface
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import logging
 import os
 import sys

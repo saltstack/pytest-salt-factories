@@ -5,10 +5,6 @@
 
     Test the ``@pytest.mark.expensive_test`` marker
 """
-from __future__ import absolute_import
-from __future__ import print_function
-from __future__ import unicode_literals
-
 import pytest
 
 
