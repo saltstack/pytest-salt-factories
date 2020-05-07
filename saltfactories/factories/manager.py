@@ -46,6 +46,7 @@ class SaltFactoriesManager(object):
         root_dir,
         log_server_port,
         log_server_level,
+        log_server_host=None,
         executable=None,
         code_dir=None,
         inject_coverage=False,
@@ -64,7 +65,9 @@ class SaltFactoriesManager(object):
             root_dir:
             log_server_port (int):
             log_server_level (int):
-            executable (str) :
+            log_server_host (str):
+                The hostname/ip address of the host running the logs server. Defaults to "localhost".
+            executable (str):
                 The path to the python executable to use to run python CLI scripts.
                 Defaults to :py:attr:`sys.executable`
             code_dir (str):
@@ -95,6 +98,7 @@ class SaltFactoriesManager(object):
         self.root_dir = root_dir
         self.log_server_port = log_server_port
         self.log_server_level = log_server_level
+        self.log_server_host = log_server_host or "localhost"
         self.executable = executable or sys.executable
         self.code_dir = code_dir
         self.inject_coverage = inject_coverage
@@ -200,7 +204,7 @@ class SaltFactoriesManager(object):
             pytest_config["log"] = {}
 
         log_config = pytest_config["log"]
-        log_config["host"] = "localhost"
+        log_config["host"] = self.log_server_host
         log_config["port"] = self.log_server_port
         log_config["level"] = self.log_server_level
 
