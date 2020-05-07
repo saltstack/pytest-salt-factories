@@ -44,6 +44,7 @@ class SaltFactoriesManager(object):
         self,
         pytestconfig,
         root_dir,
+        *,
         log_server_port,
         log_server_level,
         log_server_host=None,
@@ -309,7 +310,7 @@ class SaltFactoriesManager(object):
         config_overrides=None,
         max_start_attempts=3,
         daemon_class=salt_factories.SaltMaster,
-        **extra_daemon_class_kwargs
+        **extra_daemon_class_kwargs,
     ):
         """
         Spawn a salt-master
@@ -359,7 +360,7 @@ class SaltFactoriesManager(object):
             "masters",
             master_id,
             max_start_attempts=max_start_attempts,
-            **extra_daemon_class_kwargs
+            **extra_daemon_class_kwargs,
         )
 
     def configure_minion(
@@ -456,7 +457,7 @@ class SaltFactoriesManager(object):
         config_overrides=None,
         max_start_attempts=3,
         daemon_class=salt_factories.SaltMinion,
-        **extra_daemon_class_kwargs
+        **extra_daemon_class_kwargs,
     ):
         """
         Spawn a salt-minion
@@ -502,7 +503,7 @@ class SaltFactoriesManager(object):
             "minions",
             minion_id,
             max_start_attempts=max_start_attempts,
-            **extra_daemon_class_kwargs
+            **extra_daemon_class_kwargs,
         )
 
     def configure_syndic(
@@ -683,7 +684,7 @@ class SaltFactoriesManager(object):
         config_overrides=None,
         max_start_attempts=3,
         daemon_class=salt_factories.SaltSyndic,
-        **extra_daemon_class_kwargs
+        **extra_daemon_class_kwargs,
     ):
         """
         Spawn a salt-syndic
@@ -746,7 +747,7 @@ class SaltFactoriesManager(object):
             "syndics",
             syndic_id,
             max_start_attempts=max_start_attempts,
-            **extra_daemon_class_kwargs
+            **extra_daemon_class_kwargs,
         )
 
     def configure_proxy_minion(
@@ -842,7 +843,7 @@ class SaltFactoriesManager(object):
         config_overrides=None,
         max_start_attempts=3,
         daemon_class=salt_factories.SaltProxyMinion,
-        **extra_daemon_class_kwargs
+        **extra_daemon_class_kwargs,
     ):
         """
         Spawn a salt-proxy
@@ -891,7 +892,7 @@ class SaltFactoriesManager(object):
             "proxy_minions",
             proxy_minion_id,
             max_start_attempts=max_start_attempts,
-            **extra_daemon_class_kwargs
+            **extra_daemon_class_kwargs,
         )
 
     def get_salt_client(
@@ -943,7 +944,7 @@ class SaltFactoriesManager(object):
                     script_path,
                     base_script_args=["--proxyid={}".format(minion_id)],
                     config=self.cache["proxy_minions"][minion_id].config,
-                    **cli_kwargs
+                    **cli_kwargs,
                 )
             except KeyError:
                 raise KeyError(
@@ -1008,7 +1009,7 @@ class SaltFactoriesManager(object):
         cwd=None,
         slow_stop=None,
         max_start_attempts=3,
-        **extra_daemon_class_kwargs
+        **extra_daemon_class_kwargs,
     ):
         """
         Start a non-salt daemon
@@ -1027,7 +1028,7 @@ class SaltFactoriesManager(object):
             environ=environ,
             cwd=cwd,
             max_attempts=max_start_attempts,
-            **extra_daemon_class_kwargs
+            **extra_daemon_class_kwargs,
         )
         self.cache["daemons"][daemon_id] = proc
         if self.stats_processes:
@@ -1045,7 +1046,7 @@ class SaltFactoriesManager(object):
         cache_key,
         daemon_id,
         max_start_attempts=3,
-        **extra_daemon_class_kwargs
+        **extra_daemon_class_kwargs,
     ):
         """
         Helper method to start daemons
@@ -1069,7 +1070,7 @@ class SaltFactoriesManager(object):
             max_attempts=max_start_attempts,
             event_listener=self.event_listener,
             salt_factories=self,
-            **extra_daemon_class_kwargs
+            **extra_daemon_class_kwargs,
         )
         self.cache[cache_key][daemon_id] = proc
         if self.stats_processes:

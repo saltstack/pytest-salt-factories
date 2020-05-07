@@ -41,6 +41,11 @@ def pytest_addhooks(pluginmanager):
 
 
 @pytest.fixture(scope="session")
+def log_server_host(request):
+    return "localhost"
+
+
+@pytest.fixture(scope="session")
 def log_server_port(request):
     return ports.get_unused_localhost_port()
 
@@ -70,16 +75,18 @@ def log_server_level(request):
 
 
 @pytest.fixture(scope="session")
-def log_server(log_server_port):
+def log_server(log_server_host, log_server_port):
     log.info("Starting log server")
-    with log_server_listener(log_server_port):
+    with log_server_listener(log_server_host, log_server_port):
         log.info("Log Server Started")
         # Run tests
         yield
 
 
 @pytest.fixture(scope="session")
-def salt_factories_config(pytestconfig, tempdir, log_server, log_server_port, log_server_level):
+def salt_factories_config(
+    pytestconfig, tempdir, log_server_host, log_server_port, log_server_level
+):
     """
     Return a dictionary with the keyworkd arguments for SaltFactoriesManager
     """
@@ -88,26 +95,21 @@ def salt_factories_config(pytestconfig, tempdir, log_server, log_server_port, lo
         "code_dir": os.path.dirname(saltfactories.CODE_ROOT_DIR),
         "inject_coverage": True,
         "inject_sitecustomize": True,
+        "log_server_host": log_server_host,
+        "log_server_port": log_server_port,
+        "log_server_level": log_server_level,
     }
 
 
 @pytest.fixture(scope="session")
 def salt_factories(
-    request,
-    pytestconfig,
-    tempdir,
-    log_server,
-    log_server_port,
-    log_server_level,
-    salt_factories_config,
+    request, pytestconfig, tempdir, log_server, salt_factories_config,
 ):
     if not isinstance(salt_factories_config, dict):
         raise RuntimeError("The 'salt_factories_config' fixture MUST return a dictionary")
     _manager = manager.SaltFactoriesManager(
         pytestconfig,
         tempdir,
-        log_server_port,
-        log_server_level,
         stats_processes=request.session.stats_processes,
         **salt_factories_config
     )
