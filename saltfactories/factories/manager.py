@@ -308,6 +308,7 @@ class SaltFactoriesManager(object):
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        daemon_class=salt_factories.SaltMaster,
         **extra_daemon_class_kwargs
     ):
         """
@@ -354,7 +355,7 @@ class SaltFactoriesManager(object):
             request,
             "salt-master",
             master_config,
-            salt_factories.SaltMaster,
+            daemon_class,
             "masters",
             master_id,
             max_start_attempts=max_start_attempts,
@@ -454,6 +455,7 @@ class SaltFactoriesManager(object):
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        daemon_class=salt_factories.SaltMinion,
         **extra_daemon_class_kwargs
     ):
         """
@@ -496,7 +498,7 @@ class SaltFactoriesManager(object):
             request,
             "salt-minion",
             minion_config,
-            salt_factories.SaltMinion,
+            daemon_class,
             "minions",
             minion_id,
             max_start_attempts=max_start_attempts,
@@ -680,6 +682,7 @@ class SaltFactoriesManager(object):
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        daemon_class=salt_factories.SaltSyndic,
         **extra_daemon_class_kwargs
     ):
         """
@@ -739,7 +742,7 @@ class SaltFactoriesManager(object):
             request,
             "salt-syndic",
             syndic_config,
-            salt_factories.SaltSyndic,
+            daemon_class,
             "syndics",
             syndic_id,
             max_start_attempts=max_start_attempts,
@@ -838,6 +841,7 @@ class SaltFactoriesManager(object):
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        daemon_class=salt_factories.SaltProxyMinion,
         **extra_daemon_class_kwargs
     ):
         """
@@ -883,23 +887,25 @@ class SaltFactoriesManager(object):
             request,
             "salt-proxy",
             proxy_minion_config,
-            salt_factories.SaltProxyMinion,
+            daemon_class,
             "proxy_minions",
             proxy_minion_id,
             max_start_attempts=max_start_attempts,
             **extra_daemon_class_kwargs
         )
 
-    def get_salt_client(self, master_id, functions_known_to_return_none=None):
+    def get_salt_client(
+        self, master_id, functions_known_to_return_none=None, cli_class=salt_factories.SaltClient
+    ):
         """
         Return a local salt client object
         """
-        return salt_factories.SaltClient(
+        return cli_class(
             master_config=self.cache["configs"]["masters"][master_id].copy(),
             functions_known_to_return_none=functions_known_to_return_none,
         )
 
-    def get_salt_cli(self, master_id, **cli_kwargs):
+    def get_salt_cli(self, master_id, cli_class=salt_factories.SaltCLI, **cli_kwargs):
         """
         Return a `salt` CLI process
         """
@@ -911,11 +917,11 @@ class SaltFactoriesManager(object):
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return salt_factories.SaltCLI(
+        return cli_class(
             script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
         )
 
-    def get_salt_call_cli(self, minion_id, **cli_kwargs):
+    def get_salt_call_cli(self, minion_id, cli_class=salt_factories.SaltCallCLI, **cli_kwargs):
         """
         Return a `salt-call` CLI process
         """
@@ -928,12 +934,12 @@ class SaltFactoriesManager(object):
             inject_sitecustomize=self.inject_sitecustomize,
         )
         try:
-            return salt_factories.SaltCallCLI(
+            return cli_class(
                 script_path, config=self.cache["configs"]["minions"][minion_id], **cli_kwargs
             )
         except KeyError:
             try:
-                return salt_factories.SaltCallCLI(
+                return cli_class(
                     script_path,
                     base_script_args=["--proxyid={}".format(minion_id)],
                     config=self.cache["proxy_minions"][minion_id].config,
@@ -944,7 +950,7 @@ class SaltFactoriesManager(object):
                     "Could not find {} in the minions or proxy minions caches".format(minion_id)
                 )
 
-    def get_salt_run_cli(self, master_id, **cli_kwargs):
+    def get_salt_run_cli(self, master_id, cli_class=salt_factories.SaltRunCLI, **cli_kwargs):
         """
         Return a `salt-run` CLI process
         """
@@ -956,11 +962,11 @@ class SaltFactoriesManager(object):
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return salt_factories.SaltRunCLI(
+        return cli_class(
             script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
         )
 
-    def get_salt_cp_cli(self, master_id, **cli_kwargs):
+    def get_salt_cp_cli(self, master_id, cli_class=salt_factories.SaltCpCLI, **cli_kwargs):
         """
         Return a `salt-cp` CLI process
         """
@@ -972,11 +978,11 @@ class SaltFactoriesManager(object):
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return salt_factories.SaltCpCLI(
+        return cli_class(
             script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
         )
 
-    def get_salt_key_cli(self, master_id, **cli_kwargs):
+    def get_salt_key_cli(self, master_id, cli_class=salt_factories.SaltKeyCLI, **cli_kwargs):
         """
         Return a `salt-key` CLI process
         """
@@ -988,7 +994,7 @@ class SaltFactoriesManager(object):
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return salt_factories.SaltKeyCLI(
+        return cli_class(
             script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
         )
 
