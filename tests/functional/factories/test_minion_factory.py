@@ -5,7 +5,6 @@
 
     Functional tests for the salt minion factory
 """
-# -*- coding: utf-8 -*-
 import pytest
 
 
@@ -34,6 +33,24 @@ def test_keyword_basic_config_defaults(request, salt_factories):
     assert "zzzz" in minion_config
 
 
+def test_interface_config_defaults(request, salt_factories):
+    interface = "172.17.0.1"
+    master_config = salt_factories.configure_master(
+        request, "master-1", config_defaults={"interface": interface}
+    )
+    assert master_config["interface"] != interface
+    assert master_config["interface"] == "127.0.0.1"
+
+
+def test_master_config_defaults(request, salt_factories):
+    master = "172.17.0.1"
+    minion_config = salt_factories.configure_minion(
+        request, "minion-1", config_defaults={"master": master}
+    )
+    assert minion_config["master"] != master
+    assert minion_config["master"] == "127.0.0.1"
+
+
 def test_hook_basic_config_overrides(testdir):
     testdir.makeconftest(
         """
@@ -57,6 +74,24 @@ def test_keyword_basic_config_overrides(request, salt_factories):
         request, "minion-1", config_overrides={"zzzz": True}
     )
     assert "zzzz" in minion_config
+
+
+def test_interface_config_overrides(request, salt_factories):
+    interface = "172.17.0.1"
+    master_config = salt_factories.configure_master(
+        request, "master-1", config_overrides={"interface": interface}
+    )
+    assert master_config["interface"] == interface
+    assert master_config["interface"] != "127.0.0.1"
+
+
+def test_master_config_overrides(request, salt_factories):
+    master = "172.17.0.1"
+    minion_config = salt_factories.configure_minion(
+        request, "minion-1", config_overrides={"master": master}
+    )
+    assert minion_config["master"] == master
+    assert minion_config["master"] != "127.0.0.1"
 
 
 def test_hook_simple_overrides_override_defaults(testdir):

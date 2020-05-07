@@ -5,7 +5,6 @@
 
     Functional tests for the salt syndic factory
 """
-# -*- coding: utf-8 -*-
 import re
 
 import pytest

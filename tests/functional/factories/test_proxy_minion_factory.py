@@ -5,7 +5,6 @@
 
     Functional tests for the salt proxy minion factory
 """
-# -*- coding: utf-8 -*-
 import pytest
 
 
