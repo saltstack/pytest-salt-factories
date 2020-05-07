@@ -27,6 +27,7 @@ from saltfactories.factories import proxy
 from saltfactories.factories import syndic
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import event_listener
+from saltfactories.utils.ports import get_unused_localhost_port
 
 
 class SaltFactoriesManager(object):
@@ -44,9 +45,8 @@ class SaltFactoriesManager(object):
         self,
         pytestconfig,
         root_dir,
-        *,
-        log_server_port,
-        log_server_level,
+        log_server_port=None,
+        log_server_level=None,
         log_server_host=None,
         executable=None,
         code_dir=None,
@@ -97,8 +97,8 @@ class SaltFactoriesManager(object):
         self.pytestconfig = pytestconfig
         self.stats_processes = stats_processes
         self.root_dir = root_dir
-        self.log_server_port = log_server_port
-        self.log_server_level = log_server_level
+        self.log_server_port = log_server_port or get_unused_localhost_port()
+        self.log_server_level = log_server_level or "error"
         self.log_server_host = log_server_host or "localhost"
         self.executable = executable or sys.executable
         self.code_dir = code_dir
@@ -310,7 +310,7 @@ class SaltFactoriesManager(object):
         config_overrides=None,
         max_start_attempts=3,
         daemon_class=salt_factories.SaltMaster,
-        **extra_daemon_class_kwargs,
+        **extra_daemon_class_kwargs
     ):
         """
         Spawn a salt-master
@@ -457,7 +457,7 @@ class SaltFactoriesManager(object):
         config_overrides=None,
         max_start_attempts=3,
         daemon_class=salt_factories.SaltMinion,
-        **extra_daemon_class_kwargs,
+        **extra_daemon_class_kwargs
     ):
         """
         Spawn a salt-minion
@@ -684,7 +684,7 @@ class SaltFactoriesManager(object):
         config_overrides=None,
         max_start_attempts=3,
         daemon_class=salt_factories.SaltSyndic,
-        **extra_daemon_class_kwargs,
+        **extra_daemon_class_kwargs
     ):
         """
         Spawn a salt-syndic
@@ -843,7 +843,7 @@ class SaltFactoriesManager(object):
         config_overrides=None,
         max_start_attempts=3,
         daemon_class=salt_factories.SaltProxyMinion,
-        **extra_daemon_class_kwargs,
+        **extra_daemon_class_kwargs
     ):
         """
         Spawn a salt-proxy
@@ -1009,7 +1009,7 @@ class SaltFactoriesManager(object):
         cwd=None,
         slow_stop=None,
         max_start_attempts=3,
-        **extra_daemon_class_kwargs,
+        **extra_daemon_class_kwargs
     ):
         """
         Start a non-salt daemon
@@ -1046,7 +1046,7 @@ class SaltFactoriesManager(object):
         cache_key,
         daemon_id,
         max_start_attempts=3,
-        **extra_daemon_class_kwargs,
+        **extra_daemon_class_kwargs
     ):
         """
         Helper method to start daemons
