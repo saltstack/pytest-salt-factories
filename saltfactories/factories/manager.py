@@ -190,6 +190,9 @@ class SaltFactoriesManager(object):
             config["engines_dirs"] = []
         config["engines_dirs"].insert(0, SaltFactoriesManager.get_salt_engines_path())
         config.setdefault("user", SaltFactoriesManager.get_running_username())
+        if not config["user"]:
+            # If this value is empty, None, False, just remove it
+            config.pop("user")
         if "log_forwarding_consumer" not in config:
             # Still using old logging, let's add our custom log handler
             if "log_handlers_dirs" not in config:
