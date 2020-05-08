@@ -8,6 +8,7 @@
 import pytest
 import six
 
+import saltfactories.utils.compat
 import saltfactories.utils.markers
 import saltfactories.utils.platform
 
@@ -41,26 +42,34 @@ def pytest_runtest_setup(item):
     Fixtures injection based on markers or test skips based on CLI arguments
     """
     destructive_tests_marker = item.get_closest_marker("destructive_test")
-    if destructive_tests_marker is not None:
+    if destructive_tests_marker is not None or saltfactories.utils.compat.has_unittest_attr(
+        item, "__destructive_test__"
+    ):
         if item.config.getoption("--run-destructive") is False:
             item._skipped_by_mark = True
             pytest.skip("Destructive tests are disabled")
 
     expensive_tests_marker = item.get_closest_marker("expensive_test")
-    if expensive_tests_marker is not None:
+    if expensive_tests_marker is not None or saltfactories.utils.compat.has_unittest_attr(
+        item, "__expensive_test__"
+    ):
         if item.config.getoption("--run-expensive") is False:
             item._skipped_by_mark = True
             pytest.skip("Expensive tests are disabled")
 
     skip_if_not_root_marker = item.get_closest_marker("skip_if_not_root")
-    if skip_if_not_root_marker is not None:
+    if skip_if_not_root_marker is not None or saltfactories.utils.compat.has_unittest_attr(
+        item, "__skip_if_not_root__"
+    ):
         skip_reason = saltfactories.utils.markers.skip_if_not_root()
         if skip_reason:
             item._skipped_by_mark = True
             pytest.skip(skip_reason)
 
     skip_if_binaries_missing_marker = item.get_closest_marker("skip_if_binaries_missing")
-    if skip_if_binaries_missing_marker is not None:
+    if skip_if_binaries_missing_marker is not None or saltfactories.utils.compat.has_unittest_attr(
+        item, "__skip_if_binaries_missing__"
+    ):
         binaries = skip_if_binaries_missing_marker.args
         if len(binaries) == 1 and not isinstance(binaries[0], six.string_types):
             raise RuntimeError(
@@ -75,7 +84,9 @@ def pytest_runtest_setup(item):
             pytest.skip(skip_reason)
 
     requires_network_marker = item.get_closest_marker("requires_network")
-    if requires_network_marker is not None:
+    if requires_network_marker is not None or saltfactories.utils.compat.has_unittest_attr(
+        item, "__requires_network__"
+    ):
         only_local_network = requires_network_marker.kwargs.get("only_local_network", False)
         local_skip_reason = saltfactories.utils.markers.skip_if_no_local_network()
         if local_skip_reason:
