@@ -19,10 +19,11 @@ log = logging.getLogger(__name__)
 @contextmanager
 def log_server_listener(log_server_host, log_server_port):
     def stop(host, port):
-        log.debug("Stopping the multiprocessing logging queue listener")
+        address = "tcp://{}:{}".format(host, port)
+        log.debug("Stopping the multiprocessing logging queue listener at %s", address)
         context = zmq.Context()
         sender = context.socket(zmq.PUSH)
-        sender.connect("tcp://{}:{}".format(host, port))
+        sender.connect(address)
         try:
             sender.send(msgpack.dumps(None))
             log.info("Sent sentinel to trigger log server shutdown")
@@ -32,12 +33,14 @@ def log_server_listener(log_server_host, log_server_port):
         log.debug("Stopped the multiprocessing logging queue listener")
 
     def process_logs(host, port):
+        address = "tcp://{}:{}".format(host, port)
+        log.info("Processing logs at %s", address)
         context = zmq.Context()
         puller = context.socket(zmq.PULL)
         try:
-            puller.bind("tcp://{}:{}".format(host, port))
+            puller.bind(address)
         except zmq.ZMQError as exc:
-            log.exception("Unable to bind to puller port: %s", port)
+            log.exception("Unable to bind to puller at %s", address)
             return
         try:
             while True:
@@ -75,6 +78,8 @@ def log_server_listener(log_server_host, log_server_port):
 
     yield
 
+    log.info("Stopping the logging server process thread")
     stop(log_server_host, log_server_port)
     log.info("Joining the logging server process thread")
     process_queue_thread.join()
+    log.debug("The logging server process thread was successfully joined")

@@ -42,7 +42,7 @@ def pytest_addhooks(pluginmanager):
 
 @pytest.fixture(scope="session")
 def log_server_host(request):
-    return "localhost"
+    return "127.0.0.1"
 
 
 @pytest.fixture(scope="session")
