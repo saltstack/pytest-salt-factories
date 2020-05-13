@@ -27,7 +27,7 @@ def test_has_local_network(testdir):
     res.assert_outcomes(passed=1)
     try:
         res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
-    except AttributeError:
+    except AttributeError:  # pragma: no cover
         # PyTest 4.6.x
         from _pytest.outcomes import Failed
 
@@ -58,7 +58,7 @@ def test_no_local_network(testdir):
             res.assert_outcomes(skipped=1)
     try:
         res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
-    except AttributeError:
+    except AttributeError:  # pragma: no cover
         # PyTest 4.6.x
         from _pytest.outcomes import Failed
 

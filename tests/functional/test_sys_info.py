@@ -42,7 +42,7 @@ def test_no_sysinfo(testdir):
     res.assert_outcomes(passed=1)
     try:
         res.stdout.no_fnmatch_line("*>> System Information >>*")
-    except AttributeError:
+    except AttributeError:  # pragma: no cover
         # PyTest 4.6.x
         from _pytest.outcomes import Failed
 
