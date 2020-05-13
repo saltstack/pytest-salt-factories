@@ -9,7 +9,6 @@ import os
 import sys
 
 import pytest
-import six
 
 from saltfactories.exceptions import ProcessTimeout
 from saltfactories.utils.processes.bases import FactoryScriptBase
@@ -115,14 +114,15 @@ def test_stderr_output(tempfiles):
     assert result.stderr.replace(os.linesep, "\n") == input_str + "\n"
 
 
-@pytest.mark.skipif(six.PY2, reason="This test will fail on Py2 and we do not support Py2")
+@pytest.mark.skipif(
+    sys.version_info < (3,), reason="This test will fail on Py2 and we do not support Py2"
+)
 def test_unicode_output(tempfiles):
     shell = FactoryScriptBase(sys.executable)
     script = tempfiles.makepyfile(
         r"""
         # coding=utf-8
         from __future__ import print_function
-        import six
         import sys
         sys.stdout.write(u'STDOUT F\xe1tima')
         sys.stdout.flush()

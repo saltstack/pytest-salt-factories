@@ -19,7 +19,6 @@ from operator import itemgetter
 
 import psutil
 import pytest
-import six
 
 try:
     import salt.utils.path
@@ -54,11 +53,6 @@ class Popen(subprocess.Popen):
         self.__stderr = stderr
         compat.weakref.finalize(self, stdout.close)
         compat.weakref.finalize(self, stderr.close)
-        if six.PY2:
-            # Under Py2, subprocess.Popen doesn't store the command line passed under
-            # it's args attribute.
-            # Let's do it ourselves
-            self.args = args[0]
 
     def communicate(self, input=None):  # pylint: disable=arguments-differ
         super(Popen, self).communicate(input)

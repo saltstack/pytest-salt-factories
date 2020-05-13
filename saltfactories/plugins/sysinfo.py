@@ -10,7 +10,6 @@ import os
 import tempfile
 
 import pytest
-import six
 
 try:
     import salt.config
@@ -78,10 +77,7 @@ def pytest_sessionstart(session):
         )
         minion_config = salt.config.minion_config(None, defaults=minion_config_defaults)
         grains = salt.loader.grains(minion_config)
-        if six.PY2:
-            grains_output_file = io.BytesIO()
-        else:
-            grains_output_file = io.StringIO()
+        grains_output_file = io.StringIO()
         salt.utils.yaml.safe_dump(grains, grains_output_file, default_flow_style=False)
         grains_output_file.seek(0)
         terminal_reporter.section("System Grains Report", sep="-")

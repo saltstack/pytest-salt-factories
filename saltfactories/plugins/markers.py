@@ -6,7 +6,6 @@
     Salt Factories Related Markers
 """
 import pytest
-import six
 
 import saltfactories.utils.compat
 import saltfactories.utils.markers
@@ -71,7 +70,7 @@ def pytest_runtest_setup(item):
         item, "__skip_if_binaries_missing__"
     ):
         binaries = skip_if_binaries_missing_marker.args
-        if len(binaries) == 1 and not isinstance(binaries[0], six.string_types):
+        if len(binaries) == 1 and not isinstance(binaries[0], str):
             raise RuntimeError(
                 "Do not pass a list as binaries to the skip_if_binaries_missing() marker. "
                 "Instead, pass each binary as an argument to skip_if_binaries_missing()."

@@ -15,7 +15,6 @@ import sys
 import threading
 import traceback
 
-import salt.ext.six as six
 import salt.utils.msgpack
 import salt.utils.stringutils
 from salt._logging.impl import LOG_LEVELS
@@ -213,7 +212,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
                 "Failed to terminate ZMQHandler: {}\n{}\n".format(exc, traceback.format_exc(exc))
             )
             sys.stderr.flush()
-            six.reraise(*sys.exc_info())
+            raise
         finally:
             self.context = self.in_proxy = self.proxy_address = self.proxy_thread = None
 
@@ -222,11 +221,9 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         if self.log_prefix:
             import salt.utils.stringutils
 
-            msg = six.text_type(
-                "[{}] {}".format(
-                    salt.utils.stringutils.to_unicode(self.log_prefix),
-                    salt.utils.stringutils.to_unicode(msg),
-                )
+            msg = "[{}] {}".format(
+                salt.utils.stringutils.to_unicode(self.log_prefix),
+                salt.utils.stringutils.to_unicode(msg),
             )
         return msg
 

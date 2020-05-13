@@ -12,7 +12,6 @@ import re
 import sys
 
 import pytest
-import six
 
 try:
     import salt.client
@@ -156,7 +155,7 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
 
         for key in kwargs:
             value = kwargs[key]
-            if not isinstance(value, six.string_types):
+            if not isinstance(value, str):
                 value = json.dumps(value)
             cmdline.append("{}={}".format(key, value))
         cmdline = super(SaltScriptBase, self).build_cmdline(*cmdline)
@@ -167,7 +166,7 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         stdout, stderr, json_out = super(SaltScriptBase, self).process_output(
             stdout, stderr, cmdline=cmdline
         )
-        if json_out and isinstance(json_out, six.string_types) and "--out=json" in cmdline:
+        if json_out and isinstance(json_out, str) and "--out=json" in cmdline:
             # Sometimes the parsed JSON is just a string, for example:
             #  OUTPUT: '"The salt master could not be contacted. Is master running?"\n'
             #  LOADED JSON: 'The salt master could not be contacted. Is master running?'
