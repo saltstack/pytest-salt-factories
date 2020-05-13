@@ -132,7 +132,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},factories
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-factories
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
         file: ./saltfactories.xml
         fail_ci_if_error: false
 
@@ -141,7 +141,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},tests
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-tests
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
         file: ./tests.xml
         fail_ci_if_error: false
 
@@ -149,7 +149,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@master
       with:
-        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-salt-${{ matrix.salt-version }}.log
+        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         #name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
         path: runtests.log
 
@@ -236,7 +236,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},factories
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-factories
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
         file: ./saltfactories.xml
         fail_ci_if_error: false
 
@@ -245,7 +245,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},tests
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-tests
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
         file: ./tests.xml
         fail_ci_if_error: false
 
@@ -253,7 +253,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@master
       with:
-        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-salt-${{ matrix.salt-version }}.log
+        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         #name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
         path: runtests.log
 
@@ -336,7 +336,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},factories
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-factories
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
         file: ./saltfactories.xml
         fail_ci_if_error: false
 
@@ -345,7 +345,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},tests
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-tests
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
         file: ./tests.xml
         fail_ci_if_error: false
 
@@ -353,6 +353,6 @@ jobs:
       if: always()
       uses: actions/upload-artifact@master
       with:
-        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-salt-${{ matrix.salt-version }}.log
+        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         #name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
         path: runtests.log
