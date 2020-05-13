@@ -127,13 +127,22 @@ jobs:
       run: |
         echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
-    - name: Upload Code Coverage
+    - name: Upload Salt Factories Code Coverage
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ steps.codecov-flags.outputs.flags }}
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
-        #name: ${{ runner.os }}-Py${{ matrix.python-version }}
+        flags: ${{ steps.codecov-flags.outputs.flags }},factories
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-factories
+        file: ./saltfactories.xml
+        fail_ci_if_error: false
+
+    - name: Upload Salt Factories Tests Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: ${{ steps.codecov-flags.outputs.flags }},tests
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-tests
+        file: ./tests.xml
         fail_ci_if_error: false
 
     - name: Upload Logs
@@ -222,13 +231,22 @@ jobs:
       run: |
         echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
-    - name: Upload Code Coverage
+    - name: Upload Salt Factories Code Coverage
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ steps.codecov-flags.outputs.flags }}
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
-        #name: ${{ runner.os }}-Py${{ matrix.python-version }}
+        flags: ${{ steps.codecov-flags.outputs.flags }},factories
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-factories
+        file: ./saltfactories.xml
+        fail_ci_if_error: false
+
+    - name: Upload Salt Factories Tests Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: ${{ steps.codecov-flags.outputs.flags }},tests
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-tests
+        file: ./tests.xml
         fail_ci_if_error: false
 
     - name: Upload Logs
@@ -313,13 +331,22 @@ jobs:
       run: |
         echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
-    - name: Upload Code Coverage
+    - name: Upload Salt Factories Code Coverage
       uses: codecov/codecov-action@v1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ steps.codecov-flags.outputs.flags }}
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}
-        #name: ${{ runner.os }}-Py${{ matrix.python-version }}
+        flags: ${{ steps.codecov-flags.outputs.flags }},factories
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-factories
+        file: ./saltfactories.xml
+        fail_ci_if_error: false
+
+    - name: Upload Salt Factories Tests Code Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        flags: ${{ steps.codecov-flags.outputs.flags }},tests
+        name: ${{ runner.os }}-Py${{ matrix.python-version }}-Salt${{ matrix.salt-version }}-tests
+        file: ./tests.xml
         fail_ci_if_error: false
 
     - name: Upload Logs

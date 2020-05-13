@@ -111,7 +111,14 @@ def coverage(session):
     """
     _patch_session(session)
     session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
-    session.run("coverage", "xml", "-o", "coverage.xml")
+    # Generate report for saltfactories code coverage
+    session.run(
+        "coverage", "xml", "-o", "saltfactories.xml", "--omit=tests/*", "--include=saltfactories/*",
+    )
+    # Generate report for tests code coverage
+    session.run(
+        "coverage", "xml", "-o", "tests.xml", "--omit=saltfactories/*", "--include=tests/*",
+    )
     session.run("coverage", "report", "--fail-under=80", "--show-missing")
     session.run("coverage", "erase")
 

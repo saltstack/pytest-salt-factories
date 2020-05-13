@@ -1,0 +1,82 @@
+codecov:
+  require_ci_to_pass: yes           # Less spammy. Only notify on passing builds.
+
+
+ignore:
+  - ^*.py$                          # python files at the repo root, ie, setup.py
+  - docs/.*                         # ignore any code under doc/
+
+coverage:
+  round: up
+  range: 70..100
+  precision: 2
+
+  status:
+      project:                      # measuring the overall project coverage
+        default:
+          target: auto              # will use the coverage from the base commit (pull request base or parent commit) coverage to compare against.
+          base: auto                # will use the pull request base if the commit is on a pull request. If not, the parent commit will be used.
+          flags:
+            - factories
+            - tests
+        factories                   # declare a new status context "salt"
+          paths: "!tests/"          # remove all files in "tests/"
+          target: auto              # will use the coverage from the base commit (pull request base or parent commit) coverage to compare against.
+          base: auto                # will use the pull request base if the commit is on a pull request. If not, the parent commit will be used.
+          if_no_uploads: error      # will post commit status of "error" if no coverage reports were uploaded
+                                    # options: success, error, failure
+          if_not_found: success     # if parent is not found report status as success, error, or failure
+          if_ci_failed: error       # if ci fails report status as success, error, or failure
+          flags:
+            - factories
+        tests:                      # declare a new status context "tests"
+#          #target: 100%            # we always want 100% coverage here
+          target: auto              # auto while we get this going
+          base: auto                # will use the pull request base if the commit is on a pull request. If not, the parent commit will be used.
+          paths: "!saltfactories/"  # only include coverage in "tests/" folder
+          if_no_uploads: error      # will post commit status of "error" if no coverage reports were uploaded
+                                    # options: success, error, failure
+          if_not_found: success     # if parent is not found report status as success, error, or failure
+          if_ci_failed: error       # if ci fails report status as success, error, or failure
+          flags:
+            - tests
+
+      patch:                        # pull requests only: this commit status will measure the
+                                    # entire pull requests Coverage Diff. Checking if the lines
+                                    # adjusted are covered at least X%.
+        default:
+          target: 100%              # Newly added lines must have 100% coverage
+          if_no_uploads: error      # will post commit status of "error" if no coverage reports were uploaded
+                                    # options: success, error, failure
+          if_not_found: success
+          if_ci_failed: error
+          flags:
+            - factories
+            - tests
+
+      changes:                      # if there are any unexpected changes in coverage
+        default:
+          if_no_uploads: error
+          if_not_found: success
+          if_ci_failed: error
+          flags:
+            - factories
+            - tests
+
+flags:
+  factories:
+    paths:
+      - saltfactories/
+    carryforward: true              # https://docs.codecov.io/docs/carryforward-flags
+  tests:
+    paths:
+      - tests/
+    carryforward: true
+
+comment:
+  layout: "reach, diff, flags, files"
+  behavior: new                     # Comment posting behaviour
+                                    #   default: update, if exists. Otherwise post new.
+                                    #   once: update, if exists. Otherwise post new. Skip if deleted.
+                                    #   new: delete old and post new.
+                                    #   spammy: post new (do not delete old comments).
