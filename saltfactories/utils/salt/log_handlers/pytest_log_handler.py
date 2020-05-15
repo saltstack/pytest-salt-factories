@@ -114,7 +114,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
     # reconnect the ZMQ machinery.
 
     def __init__(self, host="127.0.0.1", port=3330, log_prefix=None, level=logging.NOTSET):
-        super(ZMQHandler, self).__init__(level=level)
+        super().__init__(level=level)
         self.pid = os.getpid()
         self.push_address = "tcp://{}:{}".format(host, port)
         self.log_prefix = self._get_log_prefix(log_prefix)
@@ -217,7 +217,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
             self.context = self.in_proxy = self.proxy_address = self.proxy_thread = None
 
     def format(self, record):
-        msg = super(ZMQHandler, self).format(record)
+        msg = super().format(record)
         if self.log_prefix:
             import salt.utils.stringutils
 

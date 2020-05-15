@@ -57,7 +57,7 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
     def __init__(self, *args, **kwargs):
         config = kwargs.pop("config", None) or {}
         hard_crash = kwargs.pop("salt_hard_crash", False)
-        super(SaltScriptBase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.config = config
         self.hard_crash = hard_crash
 
@@ -66,7 +66,7 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
         Returns any additional arguments to pass to the CLI script
         """
         if not self.hard_crash:
-            return super(SaltScriptBase, self).get_script_args()
+            return super().get_script_args()
         return ["--hard-crash"]
 
     def get_minion_tgt(self, kwargs):
@@ -158,14 +158,12 @@ class SaltScriptBase(FactoryPythonScriptBase, SaltConfigMixin):
             if not isinstance(value, str):
                 value = json.dumps(value)
             cmdline.append("{}={}".format(key, value))
-        cmdline = super(SaltScriptBase, self).build_cmdline(*cmdline)
+        cmdline = super().build_cmdline(*cmdline)
         log.debug("Built cmdline: %s", cmdline)
         return cmdline
 
     def process_output(self, stdout, stderr, cmdline=None):
-        stdout, stderr, json_out = super(SaltScriptBase, self).process_output(
-            stdout, stderr, cmdline=cmdline
-        )
+        stdout, stderr, json_out = super().process_output(stdout, stderr, cmdline=cmdline)
         if json_out and isinstance(json_out, str) and "--out=json" in cmdline:
             # Sometimes the parsed JSON is just a string, for example:
             #  OUTPUT: '"The salt master could not be contacted. Is master running?"\n'
@@ -181,12 +179,12 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase, Sal
     def __init__(self, *args, **kwargs):
         config = kwargs.pop("config", None) or {}
         extra_checks_callback = kwargs.pop("extra_checks_callback", None)
-        super(SaltDaemonScriptBase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.config = config
         self.extra_checks_callback = extra_checks_callback
 
     def get_base_script_args(self):
-        script_args = super(SaltDaemonScriptBase, self).get_base_script_args()
+        script_args = super().get_base_script_args()
         config_dir = self.config_dir
         if config_dir:
             script_args.append("--config-dir={}".format(config_dir))
@@ -218,7 +216,7 @@ class SaltDaemonScriptBase(FactoryDaemonScriptBase, FactoryPythonScriptBase, Sal
                     )
             except KeyError:
                 # This should really be a salt daemon which always set's `__role` in its config
-                self._log_prefix = super(SaltDaemonScriptBase, self).get_log_prefix()
+                self._log_prefix = super().get_log_prefix()
         return self._log_prefix
 
     def get_display_name(self):
@@ -258,7 +256,7 @@ class SaltMinion(SaltDaemonScriptBase):
     """
 
     def get_base_script_args(self):
-        script_args = super(SaltMinion, self).get_base_script_args()
+        script_args = super().get_base_script_args()
         if sys.platform.startswith("win") is False:
             script_args.append("--disable-keepalive")
         return script_args
@@ -291,11 +289,11 @@ class SaltProxyMinion(SaltDaemonScriptBase):
 
     def __init__(self, *args, **kwargs):
         include_proxyid_cli_flag = kwargs.pop("include_proxyid_cli_flag", True)
-        super(SaltProxyMinion, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.include_proxyid_cli_flag = include_proxyid_cli_flag
 
     def get_base_script_args(self):
-        script_args = super(SaltProxyMinion, self).get_base_script_args()
+        script_args = super().get_base_script_args()
         if sys.platform.startswith("win") is False:
             script_args.append("--disable-keepalive")
         if self.include_proxyid_cli_flag is True:
@@ -370,7 +368,7 @@ class SaltRunCLI(SaltScriptBase):
     def process_output(self, stdout, stderr, cmdline=None):
         if "No minions matched the target. No command was sent, no jid was assigned.\n" in stdout:
             stdout = stdout.split("\n", 1)[1:][0]
-        return super(SaltRunCLI, self).process_output(stdout, stderr, cmdline=cmdline)
+        return super().process_output(stdout, stderr, cmdline=cmdline)
 
 
 class SaltCpCLI(SaltScriptBase):
@@ -409,7 +407,7 @@ class SaltKeyCLI(SaltScriptBase):
     def process_output(self, stdout, stderr, cmdline=None):
         # salt-key print()s to stdout regardless of output chosen
         stdout = self._output_replace_re.sub("", stdout)
-        return super(SaltKeyCLI, self).process_output(stdout, stderr, cmdline=cmdline)
+        return super().process_output(stdout, stderr, cmdline=cmdline)
 
 
 class SaltClient:
