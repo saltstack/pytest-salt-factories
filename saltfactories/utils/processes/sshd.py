@@ -21,7 +21,7 @@ class SshdDaemon(FactoryDaemonScriptBase):
     def __init__(self, *args, **kwargs):
         config_dir = kwargs.pop("config_dir")
         serve_port = kwargs.pop("serve_port", None)
-        super(SshdDaemon, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.config_dir = config_dir
         self.serve_port = serve_port or ports.get_unused_localhost_port()
         self._write_default_config()

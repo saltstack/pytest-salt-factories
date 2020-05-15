@@ -48,14 +48,14 @@ class Popen(subprocess.Popen):
         kwargs["stdout"] = stdout
         stderr = tempfile.SpooledTemporaryFile(512000)
         kwargs["stderr"] = stderr
-        super(Popen, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__stdout = stdout
         self.__stderr = stderr
         compat.weakref.finalize(self, stdout.close)
         compat.weakref.finalize(self, stderr.close)
 
     def communicate(self, input=None):  # pylint: disable=arguments-differ
-        super(Popen, self).communicate(input)
+        super().communicate(input)
         stdout = stderr = None
         if self.__stdout:
             self.__stdout.flush()
@@ -89,7 +89,7 @@ class ProcessResult(namedtuple("ProcessResult", ("exitcode", "stdout", "stderr",
     def __new__(cls, exitcode, stdout, stderr, cmdline=None):
         if not isinstance(exitcode, int):
             raise ValueError("'exitcode' needs to be an integer, not '{}'".format(type(exitcode)))
-        return super(ProcessResult, cls).__new__(cls, exitcode, stdout, stderr, cmdline=cmdline)
+        return super().__new__(cls, exitcode, stdout, stderr, cmdline=cmdline)
 
     # These are copied from the namedtuple verbose output in order to quiet down PyLint
     exitcode = property(itemgetter(0), doc="ProcessResult exit code property")
@@ -123,9 +123,7 @@ class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "js
     def __new__(cls, exitcode, stdout, stderr, json=None, cmdline=None):
         if not isinstance(exitcode, int):
             raise ValueError("'exitcode' needs to be an integer, not '{}'".format(type(exitcode)))
-        return super(ShellResult, cls).__new__(
-            cls, exitcode, stdout, stderr, json=json, cmdline=cmdline
-        )
+        return super().__new__(cls, exitcode, stdout, stderr, json=json, cmdline=cmdline)
 
     # These are copied from the namedtuple verbose output in order to quiet down PyLint
     exitcode = property(itemgetter(0), doc="ShellResult exit code property")
@@ -342,7 +340,7 @@ class FactoryScriptBase(FactoryProcess):
                 The maximum ammount of seconds that a script should run
         """
         default_timeout = kwargs.pop("default_timeout", None)
-        super(FactoryScriptBase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         if default_timeout is None:
             if not sys.platform.startswith("win"):
                 default_timeout = 30
@@ -432,7 +430,7 @@ class FactoryPythonScriptBase(FactoryScriptBase):
                 The path to the python executable to use
         """
         python_executable = kwargs.pop("python_executable", None)
-        super(FactoryPythonScriptBase, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.python_executable = python_executable or sys.executable
         # We really do not want buffered output
         self.environ.setdefault(str("PYTHONUNBUFFERED"), str("1"))
@@ -440,7 +438,7 @@ class FactoryPythonScriptBase(FactoryScriptBase):
         self.environ.setdefault(str("PYTHONDONTWRITEBYTECODE"), str("1"))
 
     def build_cmdline(self, *args, **kwargs):
-        cmdline = super(FactoryPythonScriptBase, self).build_cmdline(*args, **kwargs)
+        cmdline = super().build_cmdline(*args, **kwargs)
         if cmdline[0] != self.python_executable:
             cmdline.insert(0, self.python_executable)
         return cmdline

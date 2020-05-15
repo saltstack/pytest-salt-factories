@@ -20,7 +20,7 @@ class ProcessFailed(SaltFactoriesException):
     """
 
     def __init__(self, message, cmdline=None, stdout=None, stderr=None, exitcode=None, exc=None):
-        super(ProcessFailed, self).__init__()
+        super().__init__()
         self.message = message
         self.cmdline = cmdline
         self.stdout = stdout
