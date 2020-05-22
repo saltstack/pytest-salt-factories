@@ -5,6 +5,8 @@
 
     Salt Factories Related Markers
 """
+import os
+
 import pytest
 
 import saltfactories.utils.compat
@@ -523,3 +525,8 @@ def pytest_configure(config):
         "netbsd=False, openbsd=False, aix=False): Pass True to one or more platform names to get the test skipped "
         "unless the chosen platforms match",
     )
+
+    # Add keys to environ in order to support Salt's helper decorators while it does not migrate to pytest markers
+    env2cli = (("DESTRUCTIVE_TESTS", "--run-destructive"), ("EXPENSIVE_TESTS", "--run-expensive"))
+    for envkey, cliflag in env2cli:
+        os.environ[str(envkey)] = str(config.getoption(cliflag)).lower()
