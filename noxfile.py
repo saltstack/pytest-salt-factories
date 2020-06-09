@@ -68,9 +68,9 @@ def _tests(session):
     Run tests
     """
     if SKIP_REQUIREMENTS_INSTALL is False:
-        session.install("-r", os.path.join("requirements", "tests.txt"), silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+        session.install("-r", os.path.join("requirements", "tests.txt"), silent=PIP_INSTALL_SILENT)
         session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     session.run("coverage", "erase")
     args = []
