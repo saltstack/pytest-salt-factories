@@ -63,6 +63,29 @@ def _get_cmdline(proc):
             #     ret = cext.proc_cmdline(self.pid, use_peb=True)
             #   OSError: [WinError 299] Only part of a ReadProcessMemory or WriteProcessMemory request was completed: 'originated from ReadProcessMemory(ProcessParameters)
             cmdline = None
+        except RuntimeError:
+            # Also on windows
+            # saltfactories\utils\processes\helpers.py:68: in _get_cmdline
+            #     cmdline = proc.as_dict()
+            # c: ... \lib\site-packages\psutil\__init__.py:634: in as_dict
+            #     ret = meth()
+            # c: ... \lib\site-packages\psutil\__init__.py:1186: in memory_full_info
+            #     return self._proc.memory_full_info()
+            # c: ... \lib\site-packages\psutil\_pswindows.py:667: in wrapper
+            #     return fun(self, *args, **kwargs)
+            # _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+            #
+            # self = <psutil._pswindows.Process object at 0x0000029B7FDA5558>
+            #
+            #     @wrap_exceptions
+            #     def memory_full_info(self):
+            #         basic_mem = self.memory_info()
+            # >       uss = cext.proc_memory_uss(self.pid)
+            # E       RuntimeError: NtQueryVirtualMemory failed
+            #
+            # c: ... \lib\site-packages\psutil\_pswindows.py:806: RuntimeError
+            cmdline = None
+
         if not cmdline:
             try:
                 cmdline = proc.as_dict()

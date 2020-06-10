@@ -2,6 +2,14 @@
 import sys
 
 import pytest
+import salt.version
+
+import saltfactories.utils.platform
+
+try:
+    from packaging.version import parse as parse_version
+except ImportError:
+    from pkg_resources import parse_version
 
 pytestmark = pytest.mark.skipif(
     sys.platform.lower().startswith("win"),
@@ -16,6 +24,11 @@ def master(request, salt_factories):
 
 @pytest.fixture(scope="module")
 def proxy_minion(request, salt_factories, master):
+    if saltfactories.utils.platform.is_darwin():
+        if parse_version(salt.version.__version__) >= parse_version("3001rc1"):
+            pytest.skip(
+                "Skipping until we know what the issues with salt-proxy are for Salt >= 3001rc1"
+            )
     return salt_factories.spawn_proxy_minion(request, "proxy-minion-1", master_id="master-1")
 
 

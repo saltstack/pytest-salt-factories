@@ -7,6 +7,7 @@ import tempfile
 
 import nox
 from nox.command import CommandFailed
+from nox.logger import logger
 from nox.virtualenv import VirtualEnv
 
 
@@ -63,14 +64,44 @@ def _patch_session(session):
         session._runner.global_config.install_only = old_install_only_value
 
 
+def session_run_always(session, *command, **kwargs):
+    try:
+        # Guess we weren't the only ones wanting this
+        # https://github.com/theacodes/nox/pull/331
+        return session.run_always(*command, **kwargs)
+    except AttributeError:
+        old_install_only_value = session._runner.global_config.install_only
+        try:
+            # Force install only to be false for the following chunk of code
+            # For additional information as to why see:
+            #   https://github.com/theacodes/nox/pull/181
+            session._runner.global_config.install_only = False
+            return session.run(*command, **kwargs)
+        finally:
+            session._runner.global_config.install_only = old_install_only_value
+
+
 def _tests(session):
     """
     Run tests
     """
     if SKIP_REQUIREMENTS_INSTALL is False:
-        session.install("-r", os.path.join("requirements", "tests.txt"), silent=PIP_INSTALL_SILENT)
+        # Always have the wheel package installed
+        session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+        pip_list = session_run_always(
+            session, "pip", "list", "--format=json", silent=True, log=False
+        )
+        if pip_list:
+            for requirement in json.loads(pip_list.splitlines()[0]):
+                if requirement["name"] == "msgpack-python":
+                    logger.warning(
+                        "Found msgpack-python installed. Installing msgpack to override it"
+                    )
+                    session.install("msgpack=={}".format(requirement["version"]))
+                    break
+        session.install("-r", os.path.join("requirements", "tests.txt"), silent=PIP_INSTALL_SILENT)
         session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     session.run("coverage", "erase")
     args = []
