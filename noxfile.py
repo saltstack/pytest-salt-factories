@@ -86,6 +86,8 @@ def _tests(session):
     Run tests
     """
     if SKIP_REQUIREMENTS_INSTALL is False:
+        # Always have the wheel package installed
+        session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
