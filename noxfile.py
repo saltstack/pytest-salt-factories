@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
+import datetime
 import json
 import os
+import pathlib
 import shutil
 import sys
 import tempfile
@@ -27,14 +29,26 @@ PIP_INSTALL_SILENT = (
 ) is None
 SKIP_REQUIREMENTS_INSTALL = "SKIP_REQUIREMENTS_INSTALL" in os.environ
 
+# Paths
+REPO_ROOT = pathlib.Path(__file__).resolve().parent
+ARTEFACTS_DIR = REPO_ROOT / "artefacts"
+# Make sure the artefacts directory exists
+ARTEFACTS_DIR.mkdir(parents=True, exist_ok=True)
+RUNTESTS_LOGFILE = ARTEFACTS_DIR / "runtests-{}.log".format(
+    datetime.datetime.now().strftime("%Y%m%d%H%M%S.%f")
+)
+COVERAGE_REPORT_SALTFACTORIES = ARTEFACTS_DIR / "coverage-saltfactories.xml"
+COVERAGE_REPORT_TESTS = ARTEFACTS_DIR / "coverage-tests.xml"
+JUNIT_REPORT = ARTEFACTS_DIR / "junit-report.xml"
+
 # Nox options
 #  Reuse existing virtualenvs
 nox.options.reuse_existing_virtualenvs = True
 #  Don't fail on missing interpreters
 nox.options.error_on_missing_interpreters = False
 
-# Change to current directory
-os.chdir(os.path.dirname(__file__))
+# Change current directory to REPO_ROOT
+os.chdir(str(REPO_ROOT))
 
 
 def _patch_session(session):
@@ -104,7 +118,16 @@ def _tests(session):
         session.install("-r", os.path.join("requirements", "tests.txt"), silent=PIP_INSTALL_SILENT)
         session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     session.run("coverage", "erase")
-    args = []
+    args = [
+        "--rootdir",
+        str(REPO_ROOT),
+        "--log-file={}".format(RUNTESTS_LOGFILE),
+        "--log-file-level=debug",
+        "--show-capture=no",
+        "--junitxml={}".format(JUNIT_REPORT),
+        "-ra",
+        "-s",
+    ]
     if session._runner.global_config.forcecolor:
         args.append("--color=yes")
     if not session.posargs:
@@ -114,7 +137,7 @@ def _tests(session):
             if arg.startswith("--color") and args[0].startswith("--color"):
                 args.pop(0)
             args.append(arg)
-    session.run("coverage", "run", "-m", "pytest", "-ra", *args)
+    session.run("coverage", "run", "-m", "pytest", *args)
     session.notify("coverage")
 
 
@@ -144,11 +167,21 @@ def coverage(session):
     session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
     # Generate report for saltfactories code coverage
     session.run(
-        "coverage", "xml", "-o", "saltfactories.xml", "--omit=tests/*", "--include=saltfactories/*",
+        "coverage",
+        "xml",
+        "-o",
+        str(COVERAGE_REPORT_SALTFACTORIES),
+        "--omit=tests/*",
+        "--include=saltfactories/*",
     )
     # Generate report for tests code coverage
     session.run(
-        "coverage", "xml", "-o", "tests.xml", "--omit=saltfactories/*", "--include=tests/*",
+        "coverage",
+        "xml",
+        "-o",
+        str(COVERAGE_REPORT_TESTS),
+        "--omit=saltfactories/*",
+        "--include=tests/*",
     )
     session.run("coverage", "report", "--fail-under=80", "--show-missing")
     session.run("coverage", "erase")

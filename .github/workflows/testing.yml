@@ -107,7 +107,7 @@ jobs:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
-        nox --force-color -e tests-system-python -- -s -vv -ra --log-cli-level=debug --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
+        nox --force-color -e tests-system-python -- -vv tests/
 
     - name: Upload Test Results
       if: always()
@@ -117,7 +117,7 @@ jobs:
       run: |
         curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
           python - \
-          --include='junit-report.xml' \
+          --include='artefacts/junit-report.xml' \
           --framework=pytest \
           --merge ".*" \
           --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
@@ -133,7 +133,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},factories
         name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
-        file: ./saltfactories.xml
+        file: artefacts/coverage-saltfactories.xml
         fail_ci_if_error: false
 
     - name: Upload Salt Factories Tests Code Coverage
@@ -142,7 +142,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},tests
         name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
-        file: ./tests.xml
+        file: artefacts/coverage-tests.xml
         fail_ci_if_error: false
 
     - name: Upload Logs
@@ -150,8 +150,7 @@ jobs:
       uses: actions/upload-artifact@master
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
-        #name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
-        path: runtests.log
+        path: artefacts/runtests-*.log
 
   Windows:
     runs-on: windows-latest
@@ -211,7 +210,7 @@ jobs:
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
-        nox --force-color -e tests-system-python -- -s -vv -ra --log-cli-level=debug --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
+        nox --force-color -e tests-system-python -- -vv tests/
 
     - name: Upload Test Results
       if: always()
@@ -221,7 +220,7 @@ jobs:
       run: |
         curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
           python - \
-          --include='junit-report.xml' \
+          --include='artefacts/junit-report.xml' \
           --framework=pytest \
           --merge ".*" \
           --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
@@ -237,7 +236,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},factories
         name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
-        file: ./saltfactories.xml
+        file: artefacts/coverage-saltfactories.xml
         fail_ci_if_error: false
 
     - name: Upload Salt Factories Tests Code Coverage
@@ -246,7 +245,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},tests
         name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
-        file: ./tests.xml
+        file: artefacts/coverage-tests.xml
         fail_ci_if_error: false
 
     - name: Upload Logs
@@ -254,8 +253,7 @@ jobs:
       uses: actions/upload-artifact@master
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
-        #name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
-        path: runtests.log
+        path: artefacts/runtests-*.log
 
   macOS:
     runs-on: macOS-latest
@@ -311,7 +309,7 @@ jobs:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
-        nox --force-color -e tests-system-python -- -s -vv -ra --log-cli-level=debug --log-file-level=debug --log-file=runtests.log --junitxml=junit-report.xml tests/
+        nox --force-color -e tests-system-python -- -vv tests/
 
     - name: Upload Test Results
       if: always()
@@ -321,7 +319,7 @@ jobs:
       run: |
         curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
           python - \
-          --include='junit-report.xml' \
+          --include='artefacts/junit-report.xml' \
           --framework=pytest \
           --merge ".*" \
           --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
@@ -337,7 +335,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},factories
         name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
-        file: ./saltfactories.xml
+        file: artefacts/coverage-saltfactories.xml
         fail_ci_if_error: false
 
     - name: Upload Salt Factories Tests Code Coverage
@@ -346,7 +344,7 @@ jobs:
         token: ${{ secrets.CODECOV_TOKEN }}
         flags: ${{ steps.codecov-flags.outputs.flags }},tests
         name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
-        file: ./tests.xml
+        file: artefacts/coverage-tests.xml
         fail_ci_if_error: false
 
     - name: Upload Logs
@@ -354,5 +352,4 @@ jobs:
       uses: actions/upload-artifact@master
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
-        #name: runtests-${{ runner.os }}-py${{ matrix.python-version }}.log
-        path: runtests.log
+        path: artefacts/runtests-*.log
