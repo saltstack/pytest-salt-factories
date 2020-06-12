@@ -329,8 +329,12 @@ def start_daemon(
                     if attempts >= max_attempts:
                         raise ProcessNotStarted(
                             "{}The {!r} has failed to confirm running status after {} attempts, which "
-                            "took {:.2f} seconds".format(
-                                log_prefix, process, attempts, time.time() - checks_start_time
+                            "took {:.2f} seconds({:.2f} seconds each)".format(
+                                log_prefix,
+                                process,
+                                attempts,
+                                time.time() - checks_start_time,
+                                start_timeout,
                             ),
                             stdout=result.stdout,
                             stderr=result.stderr,
@@ -347,8 +351,13 @@ def start_daemon(
                 if attempts >= max_attempts:
                     raise ProcessNotStarted(
                         "{}The {!r} has failed to confirm running status after {} attempts and raised an "
-                        "exception: {}. Took {:.2f} seconds.".format(
-                            log_prefix, process, attempts, str(exc), time.time() - start_time
+                        "exception: {}. Took {:.2f} seconds({:.2f} seconds each attempt).".format(
+                            log_prefix,
+                            process,
+                            attempts,
+                            str(exc),
+                            time.time() - start_time,
+                            start_timeout,
                         ),
                         stdout=result.stdout,
                         stderr=result.stderr,
