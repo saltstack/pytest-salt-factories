@@ -5,7 +5,8 @@
 
     Test the ``@pytest.mark.skip_unless_on_sunos`` marker
 """
-import mock
+from unittest import mock
+
 import pytest
 
 

@@ -6,8 +6,8 @@
     Test the ``@pytest.mark.requires_network`` marker
 """
 import socket
+from unittest import mock
 
-import mock
 import pytest
 
 from saltfactories.utils import ports

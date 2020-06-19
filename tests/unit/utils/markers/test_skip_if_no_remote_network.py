@@ -6,8 +6,7 @@
     Test the "skip_if_no_remote_network" marker helper
 """
 import socket
-
-import mock
+from unittest import mock
 
 import saltfactories.utils.markers as markers
 

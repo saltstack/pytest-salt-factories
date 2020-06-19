@@ -8,8 +8,8 @@
 import json
 import sys
 from collections import OrderedDict
+from unittest import mock
 
-import mock
 import pytest
 
 from saltfactories.utils.processes.bases import ProcessResult

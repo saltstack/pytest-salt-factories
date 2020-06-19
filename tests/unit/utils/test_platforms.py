@@ -5,7 +5,7 @@
 
     Tests for saltfactories.utils.platforms
 """
-import mock
+from unittest import mock
 
 import saltfactories.utils.platform
 
