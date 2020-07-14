@@ -13,7 +13,6 @@ from nox.logger import logger
 from nox.virtualenv import VirtualEnv
 
 
-IS_PY3 = sys.version_info > (2,)
 COVERAGE_VERSION_REQUIREMENT = "coverage==5.0.3"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000.1"
 if SALT_REQUIREMENT == "salt==master":
@@ -27,6 +26,7 @@ PIP_INSTALL_SILENT = (
     or os.environ.get("DRONE")
     or os.environ.get("GITHUB_ACTIONS")
 ) is None
+CI_RUN = PIP_INSTALL_SILENT is False
 SKIP_REQUIREMENTS_INSTALL = "SKIP_REQUIREMENTS_INSTALL" in os.environ
 
 # Paths
@@ -99,11 +99,17 @@ def _tests(session):
     """
     Run tests
     """
+    if CI_RUN:
+        env = None
+    else:
+        env = {"PYTHONPATH": str(REPO_ROOT)}
     if SKIP_REQUIREMENTS_INSTALL is False:
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+        if CI_RUN:
+            session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
             session, "pip", "list", "--format=json", silent=True, log=False
         )
@@ -116,7 +122,6 @@ def _tests(session):
                     session.install("msgpack=={}".format(requirement["version"]))
                     break
         session.install("-r", os.path.join("requirements", "tests.txt"), silent=PIP_INSTALL_SILENT)
-        session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     session.run("coverage", "erase")
     args = [
         "--rootdir",
@@ -137,7 +142,7 @@ def _tests(session):
             if arg.startswith("--color") and args[0].startswith("--color"):
                 args.pop(0)
             args.append(arg)
-    session.run("coverage", "run", "-m", "pytest", *args)
+    session.run("coverage", "run", "-m", "pytest", *args, env=env)
     session.notify("coverage")
 
 
@@ -254,10 +259,7 @@ def _lint(session, rcfile, flags, paths):
         stdout.seek(0)
         contents = stdout.read()
         if contents:
-            if IS_PY3:
-                contents = contents.decode("utf-8")
-            else:
-                contents = contents.encode("utf-8")
+            contents = contents.decode("utf-8")
             sys.stdout.write(contents)
             sys.stdout.flush()
             if pylint_report_path:
