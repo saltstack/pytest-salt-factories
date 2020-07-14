@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 tests.utils.test_ports
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -7,14 +6,14 @@ Test the port related utilities
 """
 import functools
 import time
+from unittest import mock
 
 import pytest
 
 import saltfactories.utils.ports as ports_utils
-from saltfactories.utils.compat import mock
 
 
-class MockedCreateSocket(object):
+class MockedCreateSocket:
     """
     This class just mocks the `socket.socket(...)` call so that we return
     the ports we want
@@ -29,7 +28,7 @@ class MockedCreateSocket(object):
         return MockedSocket(port)
 
 
-class MockedSocket(object):
+class MockedSocket:
     """
     This class is used so that we can return the known port in the getsockname call
     """

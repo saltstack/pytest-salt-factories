@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+"""
+tests.integration.factories.master.conftest
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+"""
 
 
 def pytest_saltfactories_master_configuration_overrides(

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     tests.functional.test_sys_info
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,6 +1,7 @@
-# -*- coding: utf-8 -*-
+import datetime
 import json
 import os
+import pathlib
 import shutil
 import sys
 import tempfile
@@ -11,8 +12,7 @@ from nox.logger import logger
 from nox.virtualenv import VirtualEnv
 
 
-IS_PY3 = sys.version_info > (2,)
-COVERAGE_VERSION_REQUIREMENT = "coverage==5.0.3"
+COVERAGE_VERSION_REQUIREMENT = "coverage==5.2"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000.1"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
@@ -25,7 +25,21 @@ PIP_INSTALL_SILENT = (
     or os.environ.get("DRONE")
     or os.environ.get("GITHUB_ACTIONS")
 ) is None
+CI_RUN = PIP_INSTALL_SILENT is False
 SKIP_REQUIREMENTS_INSTALL = "SKIP_REQUIREMENTS_INSTALL" in os.environ
+
+# Paths
+REPO_ROOT = pathlib.Path(__file__).resolve().parent
+ARTEFACTS_DIR = REPO_ROOT / "artefacts"
+# Make sure the artefacts directory exists
+ARTEFACTS_DIR.mkdir(parents=True, exist_ok=True)
+RUNTESTS_LOGFILE = ARTEFACTS_DIR / "runtests-{}.log".format(
+    datetime.datetime.now().strftime("%Y%m%d%H%M%S.%f")
+)
+COVERAGE_REPORT_DB = ARTEFACTS_DIR / ".coverage"
+COVERAGE_REPORT_SALTFACTORIES = ARTEFACTS_DIR / "coverage-saltfactories.xml"
+COVERAGE_REPORT_TESTS = ARTEFACTS_DIR / "coverage-tests.xml"
+JUNIT_REPORT = ARTEFACTS_DIR / "junit-report.xml"
 
 # Nox options
 #  Reuse existing virtualenvs
@@ -33,8 +47,8 @@ nox.options.reuse_existing_virtualenvs = True
 #  Don't fail on missing interpreters
 nox.options.error_on_missing_interpreters = False
 
-# Change to current directory
-os.chdir(os.path.dirname(__file__))
+# Change current directory to REPO_ROOT
+os.chdir(str(REPO_ROOT))
 
 
 def _patch_session(session):
@@ -85,11 +99,17 @@ def _tests(session):
     """
     Run tests
     """
+    if CI_RUN:
+        env = None
+    else:
+        env = {"PYTHONPATH": str(REPO_ROOT)}
     if SKIP_REQUIREMENTS_INSTALL is False:
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+        if CI_RUN:
+            session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
             session, "pip", "list", "--format=json", silent=True, log=False
         )
@@ -102,9 +122,17 @@ def _tests(session):
                     session.install("msgpack=={}".format(requirement["version"]))
                     break
         session.install("-r", os.path.join("requirements", "tests.txt"), silent=PIP_INSTALL_SILENT)
-        session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     session.run("coverage", "erase")
-    args = []
+    args = [
+        "--rootdir",
+        str(REPO_ROOT),
+        "--log-file={}".format(RUNTESTS_LOGFILE),
+        "--log-file-level=debug",
+        "--show-capture=no",
+        "--junitxml={}".format(JUNIT_REPORT),
+        "-ra",
+        "-s",
+    ]
     if session._runner.global_config.forcecolor:
         args.append("--color=yes")
     if not session.posargs:
@@ -114,7 +142,7 @@ def _tests(session):
             if arg.startswith("--color") and args[0].startswith("--color"):
                 args.pop(0)
             args.append(arg)
-    session.run("coverage", "run", "-m", "pytest", "-ra", *args)
+    session.run("coverage", "run", "-m", "pytest", *args, env=env)
     session.notify("coverage")
 
 
@@ -144,14 +172,27 @@ def coverage(session):
     session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
     # Generate report for saltfactories code coverage
     session.run(
-        "coverage", "xml", "-o", "saltfactories.xml", "--omit=tests/*", "--include=saltfactories/*",
+        "coverage",
+        "xml",
+        "-o",
+        str(COVERAGE_REPORT_SALTFACTORIES),
+        "--omit=tests/*",
+        "--include=saltfactories/*",
     )
     # Generate report for tests code coverage
     session.run(
-        "coverage", "xml", "-o", "tests.xml", "--omit=saltfactories/*", "--include=tests/*",
+        "coverage",
+        "xml",
+        "-o",
+        str(COVERAGE_REPORT_TESTS),
+        "--omit=saltfactories/*",
+        "--include=tests/*",
     )
-    session.run("coverage", "report", "--fail-under=80", "--show-missing")
-    session.run("coverage", "erase")
+    try:
+        session.run("coverage", "report", "--fail-under=80", "--show-missing")
+    finally:
+        if os.path.exists(".coverage"):
+            shutil.copyfile(".coverage", str(COVERAGE_REPORT_DB))
 
 
 @nox.session(python="3.7")
@@ -184,17 +225,7 @@ def blacken(session):
                     if filename == "_version.py":
                         continue
                     files.append(os.path.join(dirpath, filename))
-    session.run(
-        "reorder-python-imports",
-        "--py26-plus",
-        "--add-import",
-        "from __future__ import absolute_import",
-        "--add-import",
-        "from __future__ import print_function",
-        "--add-import",
-        "from __future__ import unicode_literals",
-        *files
-    )
+    session.run("reorder-python-imports", "--py3-plus", *files)
 
 
 def _lint(session, rcfile, flags, paths):
@@ -221,10 +252,7 @@ def _lint(session, rcfile, flags, paths):
         stdout.seek(0)
         contents = stdout.read()
         if contents:
-            if IS_PY3:
-                contents = contents.decode("utf-8")
-            else:
-                contents = contents.encode("utf-8")
+            contents = contents.decode("utf-8")
             sys.stdout.write(contents)
             sys.stdout.flush()
             if pylint_report_path:

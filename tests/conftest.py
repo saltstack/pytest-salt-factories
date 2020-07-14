@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import functools
 import logging
 import os
@@ -38,7 +37,7 @@ class Tempfiles:
             st = os.stat(tfile.name)
             os.chmod(tfile.name, st.st_mode | stat.S_IEXEC)
         self.request.addfinalizer(functools.partial(self._delete_temp_file, tfile.name))
-        with open(tfile.name, "r") as rfh:
+        with open(tfile.name) as rfh:
             log.debug(
                 "Created python file with contents:\n>>>>> %s >>>>>\n%s\n<<<<< %s <<<<<\n",
                 tfile.name,
@@ -58,7 +57,7 @@ class Tempfiles:
             contents = textwrap.dedent(contents.lstrip("\n")).strip()
             wfh.write(contents)
         self.request.addfinalizer(functools.partial(self._delete_temp_file, name))
-        with open(name, "r") as rfh:
+        with open(name) as rfh:
             log.debug(
                 "Created SLS file with contents:\n>>>>> %s >>>>>\n%s\n<<<<< %s <<<<<\n",
                 name,

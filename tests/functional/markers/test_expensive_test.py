@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     tests.functional.markers.test_expensive_test
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

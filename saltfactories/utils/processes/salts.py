@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     saltfactories.utils.processes.salts
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -34,7 +33,7 @@ from saltfactories.utils.processes.bases import FactoryPythonScriptBase
 log = logging.getLogger(__name__)
 
 
-class SaltConfigMixin(object):
+class SaltConfigMixin:
     @property
     def config_dir(self):
         if "conf_file" in self.config:

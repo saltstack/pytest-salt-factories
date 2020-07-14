@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 pytestsalt.engines.pytest_engine
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -46,7 +45,7 @@ def start():
     pytest_engine.start()
 
 
-class PyTestEngine(object):
+class PyTestEngine:
     def __init__(self, opts):
         self.opts = opts
         self.id = opts["id"]

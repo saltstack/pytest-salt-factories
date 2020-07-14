@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 saltfactories.factories.minion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -19,7 +18,7 @@ except ImportError:  # pragma: no cover
 from saltfactories.utils import ports
 
 
-class SyndicFactory(object):
+class SyndicFactory:
     @staticmethod
     def default_config(
         root_dir,

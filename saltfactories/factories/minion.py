@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 saltfactories.factories.minion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -19,7 +18,7 @@ except ImportError:  # pragma: no cover
 from saltfactories.utils import ports
 
 
-class MinionFactory(object):
+class MinionFactory:
     @staticmethod
     def default_config(
         root_dir, minion_id, config_defaults=None, config_overrides=None, master_port=None

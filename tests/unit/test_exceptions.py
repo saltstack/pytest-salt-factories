@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     tests.unit.test_exceptions
     ~~~~~~~~~~~~~~~~~~~~~~~~~~

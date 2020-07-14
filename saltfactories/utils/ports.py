@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 saltfactories.utils.ports
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -62,6 +61,6 @@ def get_connectable_ports(ports):
                     log.debug("Port %s is connectable!", port)
                     connectable_ports.add(port)
                     sock.shutdown(socket.SHUT_RDWR)
-            except socket.error:
+            except OSError:
                 continue
     return connectable_ports
