@@ -12,7 +12,7 @@ from nox.logger import logger
 from nox.virtualenv import VirtualEnv
 
 
-COVERAGE_VERSION_REQUIREMENT = "coverage==5.0.3"
+COVERAGE_VERSION_REQUIREMENT = "coverage==5.2"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000.1"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
@@ -36,6 +36,7 @@ ARTEFACTS_DIR.mkdir(parents=True, exist_ok=True)
 RUNTESTS_LOGFILE = ARTEFACTS_DIR / "runtests-{}.log".format(
     datetime.datetime.now().strftime("%Y%m%d%H%M%S.%f")
 )
+COVERAGE_REPORT_DB = ARTEFACTS_DIR / ".coverage"
 COVERAGE_REPORT_SALTFACTORIES = ARTEFACTS_DIR / "coverage-saltfactories.xml"
 COVERAGE_REPORT_TESTS = ARTEFACTS_DIR / "coverage-tests.xml"
 JUNIT_REPORT = ARTEFACTS_DIR / "junit-report.xml"
@@ -187,8 +188,11 @@ def coverage(session):
         "--omit=saltfactories/*",
         "--include=tests/*",
     )
-    session.run("coverage", "report", "--fail-under=80", "--show-missing")
-    session.run("coverage", "erase")
+    try:
+        session.run("coverage", "report", "--fail-under=80", "--show-missing")
+    finally:
+        if os.path.exists(".coverage"):
+            shutil.copyfile(".coverage", str(COVERAGE_REPORT_DB))
 
 
 @nox.session(python="3.7")

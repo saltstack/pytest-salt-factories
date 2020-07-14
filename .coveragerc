@@ -1,11 +1,10 @@
 [run]
 branch = True
 cover_pylib = False
-source =
-  saltfactories/
-  tests/
+relative_files = True
 
 omit =
+  .nox/*
   setup.py
   saltfactories/__init__.py
   saltfactories/_version.py
@@ -30,6 +29,7 @@ exclude_lines =
     if __name__ == .__main__.:
 
 omit =
+  .nox/*
   setup.py
   saltfactories/__init__.py
   saltfactories/_version.py
@@ -41,4 +41,5 @@ ignore_errors = True
 [paths]
 source =
   saltfactories/
+testsuite =
   tests/
