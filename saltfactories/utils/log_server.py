@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     pytestsalt.fixtures.log_server_tornado
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

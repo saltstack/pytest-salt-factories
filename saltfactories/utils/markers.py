@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     saltfactories.utils.markers
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -93,14 +92,14 @@ def skip_if_no_local_network():
             pubsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             pubsock.bind(("", check_port))
         has_local_network = True
-    except socket.error:
+    except OSError:
         # I wonder if we just have IPV6 support?
         try:
             with contextlib.closing(socket.socket(socket.AF_INET6, socket.SOCK_STREAM)) as pubsock:
                 pubsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
                 pubsock.bind(("", check_port))
             has_local_network = True
-        except socket.error:
+        except OSError:
             # Let's continue
             pass
     if has_local_network is False:
@@ -143,7 +142,7 @@ def skip_if_no_remote_network():
             # We connected? Stop the loop
             has_remote_network = True
             break
-        except socket.error:
+        except OSError:
             # Let's check the next IP
             continue
 

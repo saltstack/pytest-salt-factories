@@ -1,4 +1,3 @@
-# coding=utf-8
 """
 tests.functional.utils.processes.bases.test_factory_daemon_script_base
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 saltfactories.factories.manager
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,7 +31,7 @@ from saltfactories.utils import event_listener
 from saltfactories.utils.ports import get_unused_localhost_port
 
 
-class SaltFactoriesManager(object):
+class SaltFactoriesManager:
     """
     The :class:`SaltFactoriesManager` is responsible for configuring and spawning Salt Daemons and
     making sure that any salt CLI tools are "targetted" to the right daemon.

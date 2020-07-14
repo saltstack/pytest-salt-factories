@@ -20,7 +20,6 @@ persistent=yes
 # List of plugins (as comma separated values of python modules names) to load,
 # usually to register additional checkers.
 load-plugins=saltpylint.pep8,
-  saltpylint.pep263,
   saltpylint.strings,
   saltpylint.fileperms,
   saltpylint.smartup,

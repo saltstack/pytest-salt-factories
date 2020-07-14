@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     tests.unit.utils.test_random_string
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

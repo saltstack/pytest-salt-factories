@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 saltfactories.utils.event_listener
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -20,7 +19,7 @@ from saltfactories.utils import ports
 log = logging.getLogger(__name__)
 
 
-class EventListener(object):
+class EventListener:
     def __init__(self, timeout=60, auth_events_callback=None):
         self.store = deque(maxlen=10000)
         self.address = "tcp://127.0.0.1:{}".format(ports.get_unused_localhost_port())

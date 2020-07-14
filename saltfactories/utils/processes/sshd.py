@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     saltfactories.utils.processes.sshd
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -80,7 +79,7 @@ class SshdDaemon(FactoryDaemonScriptBase):
                 for host_key in host_keys:
                     wfh.write("HostKey {}\n".format(host_key))
             sshd_config_file.chmod(0o0600)
-            with open(str(sshd_config_file), "r") as wfh:
+            with open(str(sshd_config_file)) as wfh:
                 log.debug(
                     "Wrote to configuration file %s. Configuration:\n%s",
                     sshd_config_file,

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     saltfactories.utils.processes.bases
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -14,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import weakref
 from collections import namedtuple
 from operator import itemgetter
 
@@ -28,7 +28,6 @@ except ImportError:  # pragma: no cover
     # import error, but its safe to pass
     pass
 
-from saltfactories.utils import compat
 from saltfactories.utils.processes.helpers import terminate_process
 from saltfactories.exceptions import ProcessTimeout
 
@@ -51,8 +50,8 @@ class Popen(subprocess.Popen):
         super().__init__(*args, **kwargs)
         self.__stdout = stdout
         self.__stderr = stderr
-        compat.weakref.finalize(self, stdout.close)
-        compat.weakref.finalize(self, stderr.close)
+        weakref.finalize(self, stdout.close)
+        weakref.finalize(self, stderr.close)
 
     def communicate(self, input=None):  # pylint: disable=arguments-differ
         super().communicate(input)
@@ -158,7 +157,7 @@ class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "js
         return self.stdout == other
 
 
-class FactoryProcess(object):
+class FactoryProcess:
     """
     Base class for subprocesses
     """
@@ -433,9 +432,9 @@ class FactoryPythonScriptBase(FactoryScriptBase):
         super().__init__(*args, **kwargs)
         self.python_executable = python_executable or sys.executable
         # We really do not want buffered output
-        self.environ.setdefault(str("PYTHONUNBUFFERED"), str("1"))
+        self.environ.setdefault("PYTHONUNBUFFERED", "1")
         # Don't write .pyc files or create them in __pycache__ directories
-        self.environ.setdefault(str("PYTHONDONTWRITEBYTECODE"), str("1"))
+        self.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")
 
     def build_cmdline(self, *args, **kwargs):
         cmdline = super().build_cmdline(*args, **kwargs)

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 saltfactories.factories.master
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -19,7 +18,7 @@ except ImportError:  # pragma: no cover
 from saltfactories.utils import ports
 
 
-class MasterFactory(object):
+class MasterFactory:
     @staticmethod
     def default_config(
         root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,

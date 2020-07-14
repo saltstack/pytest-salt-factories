@@ -13,6 +13,13 @@ repos:
       - id: check-merge-conflict  # Check for files that contain merge conflict strings.
       - id: check-ast             # Simply check whether files parse as valid python.
 
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.7.0
+    hooks:
+      - id: pyupgrade
+        name: Rewrite Code to be Py3.5+
+        args: [--py3-plus]
+
   - repo: https://github.com/asottile/reorder_python_imports
     rev: v1.9.0
     hooks:

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     tests.unit.utils.processes.salts.test_salt_script_base
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     tests.functional.markers.test_skip_if_not_root
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

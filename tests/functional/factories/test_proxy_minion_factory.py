@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
     tests.functional.factories.test_proxy_minion_factory
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

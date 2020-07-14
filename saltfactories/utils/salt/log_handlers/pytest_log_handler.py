@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 pytestsalt.salt.log_handlers.pytest_log_handler
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -78,7 +77,7 @@ def setup_handlers():
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         sock.connect((host_addr, host_port))
-    except socket.error as exc:
+    except OSError as exc:
         # Don't even bother if we can't connect
         log.warning("Cannot connect back to log server: %s", exc)
         return

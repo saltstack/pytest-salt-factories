@@ -10,7 +10,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v1
       with:
-        python-version: 3.5
+        python-version: 3.7
     - name: Set Cache Key
       run: echo "::set-env name=PY::$(python --version --version | sha256sum | cut -d' ' -f1)"
     - uses: actions/cache@v1
