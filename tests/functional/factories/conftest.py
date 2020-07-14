@@ -3,7 +3,8 @@
 tests.functional.factories.conftest
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 """
-import mock
+from unittest import mock
+
 import pytest
 
 from saltfactories.factories import manager

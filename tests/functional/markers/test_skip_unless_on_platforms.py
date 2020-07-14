@@ -5,7 +5,8 @@
 
     Test the ``@pytest.mark.skip_unless_on_platforms`` marker
 """
-import mock
+from unittest import mock
+
 import pytest
 
 

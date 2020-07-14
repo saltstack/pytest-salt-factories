@@ -6,8 +6,7 @@
     Test the "skip_if_not_root" marker helper
 """
 import sys
-
-import mock
+from unittest import mock
 
 import saltfactories.utils.markers
 

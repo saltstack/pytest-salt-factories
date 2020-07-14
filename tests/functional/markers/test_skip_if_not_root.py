@@ -6,8 +6,8 @@
     Test the ``@pytest.mark.skip_if_not_root`` marker
 """
 import sys
+from unittest import mock
 
-import mock
 import pytest
 
 

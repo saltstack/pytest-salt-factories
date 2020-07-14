@@ -5,7 +5,8 @@
 
     Test the ``@pytest.mark.skip_on_linux`` marker
 """
-import mock
+from unittest import mock
+
 import pytest
 
 

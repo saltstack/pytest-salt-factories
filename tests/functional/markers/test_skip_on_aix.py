@@ -5,7 +5,8 @@
 
     Test the ``@pytest.mark.skip_on_aix`` marker
 """
-import mock
+from unittest import mock
+
 import pytest
 
 
