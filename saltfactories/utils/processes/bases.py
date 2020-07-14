@@ -341,10 +341,10 @@ class FactoryScriptBase(FactoryProcess):
         default_timeout = kwargs.pop("default_timeout", None)
         super().__init__(*args, **kwargs)
         if default_timeout is None:
-            if not sys.platform.startswith("win"):
+            if not sys.platform.startswith(("win", "darwin")):
                 default_timeout = 30
             else:
-                # Windows is just slower.
+                # Windows and macOS are just slower.
                 default_timeout = 120
         self.default_timeout = default_timeout
         self._terminal_timeout_set_explicitly = False

@@ -109,10 +109,10 @@ class SaltFactoriesManager:
         self.environ = environ
         self.slow_stop = slow_stop
         if start_timeout is None:
-            if not sys.platform.startswith("win"):
+            if not sys.platform.startswith(("win", "darwin")):
                 start_timeout = 30
             else:
-                # Windows is just slower
+                # Windows and macOS are just slower
                 start_timeout = 120
         self.start_timeout = start_timeout
         self.scripts_dir = root_dir.join("scripts").ensure(dir=True).strpath
