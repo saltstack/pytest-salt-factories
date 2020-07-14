@@ -128,22 +128,40 @@ jobs:
         echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Salt Factories Code Coverage
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ steps.codecov-flags.outputs.flags }},factories
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
-        file: artefacts/coverage-saltfactories.xml
-        fail_ci_if_error: false
+      shell: bash
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
+        REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
+        REPORT_PATH: artefacts/coverage-saltfactories.xml
+      run: |
+        n=0
+        until [ "$n" -ge 5 ]
+        do
+          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+              break
+          fi
+          n=$((n+1))
+          sleep 15
+        done
 
     - name: Upload Salt Factories Tests Code Coverage
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ steps.codecov-flags.outputs.flags }},tests
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
-        file: artefacts/coverage-tests.xml
-        fail_ci_if_error: false
+      shell: bash
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
+        REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
+        REPORT_PATH: artefacts/coverage-tests.xml
+      run: |
+        n=0
+        until [ "$n" -ge 5 ]
+        do
+          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+              break
+          fi
+          n=$((n+1))
+          sleep 15
+        done
 
     - name: Upload Logs
       if: always()
@@ -230,22 +248,40 @@ jobs:
         echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Salt Factories Code Coverage
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ steps.codecov-flags.outputs.flags }},factories
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
-        file: artefacts/coverage-saltfactories.xml
-        fail_ci_if_error: false
+      shell: bash
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
+        REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
+        REPORT_PATH: artefacts/coverage-saltfactories.xml
+      run: |
+        n=0
+        until [ "$n" -ge 5 ]
+        do
+          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+              break
+          fi
+          n=$((n+1))
+          sleep 15
+        done
 
     - name: Upload Salt Factories Tests Code Coverage
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ steps.codecov-flags.outputs.flags }},tests
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
-        file: artefacts/coverage-tests.xml
-        fail_ci_if_error: false
+      shell: bash
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
+        REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
+        REPORT_PATH: artefacts/coverage-tests.xml
+      run: |
+        n=0
+        until [ "$n" -ge 5 ]
+        do
+          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+              break
+          fi
+          n=$((n+1))
+          sleep 15
+        done
 
     - name: Upload Logs
       if: always()
@@ -328,22 +364,40 @@ jobs:
         echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Salt Factories Code Coverage
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ steps.codecov-flags.outputs.flags }},factories
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
-        file: artefacts/coverage-saltfactories.xml
-        fail_ci_if_error: false
+      shell: bash
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
+        REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
+        REPORT_PATH: artefacts/coverage-saltfactories.xml
+      run: |
+        n=0
+        until [ "$n" -ge 5 ]
+        do
+          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+              break
+          fi
+          n=$((n+1))
+          sleep 15
+        done
 
     - name: Upload Salt Factories Tests Code Coverage
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        flags: ${{ steps.codecov-flags.outputs.flags }},tests
-        name: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
-        file: artefacts/coverage-tests.xml
-        fail_ci_if_error: false
+      shell: bash
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
+        REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
+        REPORT_PATH: artefacts/coverage-tests.xml
+      run: |
+        n=0
+        until [ "$n" -ge 5 ]
+        do
+          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+              break
+          fi
+          n=$((n+1))
+          sleep 15
+        done
 
     - name: Upload Logs
       if: always()
