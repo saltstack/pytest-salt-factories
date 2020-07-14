@@ -26,9 +26,6 @@ repos:
       - id: reorder-python-imports
         args: [
           --py3-plus,
-          --add-import, from __future__ import absolute_import,
-          --add-import, from __future__ import print_function,
-          --add-import, from __future__ import unicode_literals
         ]
         exclude: (versioneer.py|saltfactories/_version.py)
 

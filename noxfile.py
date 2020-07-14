@@ -221,17 +221,7 @@ def blacken(session):
                     if filename == "_version.py":
                         continue
                     files.append(os.path.join(dirpath, filename))
-    session.run(
-        "reorder-python-imports",
-        "--py26-plus",
-        "--add-import",
-        "from __future__ import absolute_import",
-        "--add-import",
-        "from __future__ import print_function",
-        "--add-import",
-        "from __future__ import unicode_literals",
-        *files
-    )
+    session.run("reorder-python-imports", "--py3-plus", *files)
 
 
 def _lint(session, rcfile, flags, paths):
