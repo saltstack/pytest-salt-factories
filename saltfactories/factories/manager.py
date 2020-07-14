@@ -6,6 +6,7 @@ saltfactories.factories.manager
 Salt Factories Manager
 """
 import os
+import pathlib
 import sys
 
 import psutil
@@ -21,6 +22,7 @@ except ImportError:  # pragma: no cover
 
 import saltfactories.utils.processes.helpers
 import saltfactories.utils.processes.salts as salt_factories
+from saltfactories.utils.processes.sshd import SshdDaemon
 from saltfactories.factories import master
 from saltfactories.factories import minion
 from saltfactories.factories import proxy
@@ -1000,6 +1002,55 @@ class SaltFactoriesManager(object):
         )
         return cli_class(
             script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
+        )
+
+    def spawn_sshd_server(
+        self,
+        request,
+        daemon_id,
+        daemon_class=SshdDaemon,
+        max_start_attempts=3,
+        config_dir=None,
+        serve_port=None,
+        sshd_config_dict=None,
+        **extra_daemon_class_kwargs
+    ):
+        """
+        Start an sshd daemon
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            daemon_id(str):
+                An ID so we know about the sshd server by ID
+            max_start_attempts(int):
+                How many attempts should be made to start the proxy minion in case of failure to validate that
+                its running
+            config_dir(pathlib.Path):
+                The path to the sshd config directory
+            serve_port(int):
+                The port where the sshd server will listen to connections
+            sshd_config_dict(dict):
+                A dictionary of key-value pairs to construct the sshd config file
+            extra_daemon_class_kwargs(dict):
+                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltProxyMinion`
+
+        Returns:
+            :py:class:`~saltfactories.utils.processes.sshd.SshdDaemon`:
+                The sshd process class instance
+        """
+        if config_dir is None:
+            config_dir = self._get_root_dir_for_daemon(daemon_id)
+        elif isinstance(config_dir, str):
+            config_dir = pathlib.Path(config_dir).resolve()
+        return self.spawn_daemon(
+            request,
+            "sshd",
+            SshdDaemon,
+            daemon_id,
+            config_dir=config_dir,
+            serve_port=serve_port,
+            sshd_config_dict=sshd_config_dict,
         )
 
     def spawn_daemon(
