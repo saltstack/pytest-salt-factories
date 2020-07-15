@@ -135,15 +135,28 @@ jobs:
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
         REPORT_PATH: artefacts/coverage-saltfactories.xml
       run: |
-        n=0
-        until [ "$n" -ge 5 ]
-        do
-          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+        if [ ! -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
               break
           fi
-          n=$((n+1))
-          sleep 15
-        done
+            n=$((n+1))
+            sleep 15
+          done
+        fi
+        if [ -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                break
+            fi
+            n=$((n+1))
+            sleep 15
+          done
+        fi
 
     - name: Upload Salt Factories Tests Code Coverage
       shell: bash
@@ -153,15 +166,28 @@ jobs:
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
         REPORT_PATH: artefacts/coverage-tests.xml
       run: |
-        n=0
-        until [ "$n" -ge 5 ]
-        do
-          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+        if [ ! -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
               break
           fi
-          n=$((n+1))
-          sleep 15
-        done
+            n=$((n+1))
+            sleep 15
+          done
+        fi
+        if [ -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                break
+            fi
+            n=$((n+1))
+            sleep 15
+          done
+        fi
 
     - name: Upload Logs
       if: always()
@@ -255,15 +281,28 @@ jobs:
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
         REPORT_PATH: artefacts/coverage-saltfactories.xml
       run: |
-        n=0
-        until [ "$n" -ge 5 ]
-        do
-          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+        if [ ! -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
               break
           fi
-          n=$((n+1))
-          sleep 15
-        done
+            n=$((n+1))
+            sleep 15
+          done
+        fi
+        if [ -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                break
+            fi
+            n=$((n+1))
+            sleep 15
+          done
+        fi
 
     - name: Upload Salt Factories Tests Code Coverage
       shell: bash
@@ -273,15 +312,28 @@ jobs:
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
         REPORT_PATH: artefacts/coverage-tests.xml
       run: |
-        n=0
-        until [ "$n" -ge 5 ]
-        do
-          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+        if [ ! -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
               break
           fi
-          n=$((n+1))
-          sleep 15
-        done
+            n=$((n+1))
+            sleep 15
+          done
+        fi
+        if [ -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                break
+            fi
+            n=$((n+1))
+            sleep 15
+          done
+        fi
 
     - name: Upload Logs
       if: always()
@@ -371,15 +423,28 @@ jobs:
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
         REPORT_PATH: artefacts/coverage-saltfactories.xml
       run: |
-        n=0
-        until [ "$n" -ge 5 ]
-        do
-          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+        if [ ! -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
               break
           fi
-          n=$((n+1))
-          sleep 15
-        done
+            n=$((n+1))
+            sleep 15
+          done
+        fi
+        if [ -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                break
+            fi
+            n=$((n+1))
+            sleep 15
+          done
+        fi
 
     - name: Upload Salt Factories Tests Code Coverage
       shell: bash
@@ -389,15 +454,28 @@ jobs:
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
         REPORT_PATH: artefacts/coverage-tests.xml
       run: |
-        n=0
-        until [ "$n" -ge 5 ]
-        do
-          if curl -L https://codecov.io/bash | /bin/bash -s -- -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+        if [ ! -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
               break
           fi
-          n=$((n+1))
-          sleep 15
-        done
+            n=$((n+1))
+            sleep 15
+          done
+        fi
+        if [ -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                break
+            fi
+            n=$((n+1))
+            sleep 15
+          done
+        fi
 
     - name: Upload Logs
       if: always()
