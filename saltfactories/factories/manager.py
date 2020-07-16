@@ -28,6 +28,7 @@ from saltfactories.factories import proxy
 from saltfactories.factories import syndic
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import event_listener
+from saltfactories.utils import running_username
 from saltfactories.utils.ports import get_unused_localhost_port
 
 
@@ -133,26 +134,6 @@ class SaltFactoriesManager:
         self.event_listener.start()
 
     @staticmethod
-    def get_running_username():
-        """
-        Returns the current username
-        """
-        try:
-            return SaltFactoriesManager.get_running_username.__username__
-        except AttributeError:
-            if saltfactories.IS_WINDOWS:
-                import win32api
-
-                SaltFactoriesManager.get_running_username.__username__ = win32api.GetUserName()
-            else:
-                import pwd
-
-                SaltFactoriesManager.get_running_username.__username__ = pwd.getpwuid(
-                    os.getuid()
-                ).pw_name
-        return SaltFactoriesManager.get_running_username.__username__
-
-    @staticmethod
     def get_salt_log_handlers_path():
         """
         Returns the path to the Salt log handler this plugin provides
@@ -190,7 +171,7 @@ class SaltFactoriesManager:
         if "engines_dirs" not in config:
             config["engines_dirs"] = []
         config["engines_dirs"].insert(0, SaltFactoriesManager.get_salt_engines_path())
-        config.setdefault("user", SaltFactoriesManager.get_running_username())
+        config.setdefault("user", running_username())
         if not config["user"]:
             # If this value is empty, None, False, just remove it
             config.pop("user")
@@ -296,9 +277,7 @@ class SaltFactoriesManager:
             request=request, master_config=master_config
         )
         self.pytestconfig.hook.pytest_saltfactories_master_verify_configuration(
-            request=request,
-            master_config=master_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, master_config=master_config, username=running_username(),
         )
         self.cache["configs"]["masters"][master_id] = master_config
         request.addfinalizer(lambda: self.cache["configs"]["masters"].pop(master_id))
@@ -437,9 +416,7 @@ class SaltFactoriesManager:
             request=request, minion_config=minion_config
         )
         self.pytestconfig.hook.pytest_saltfactories_minion_verify_configuration(
-            request=request,
-            minion_config=minion_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, minion_config=minion_config, username=running_username(),
         )
         if master_id:
             # The in-memory minion config dictionary will hold a copy of the master config
@@ -640,9 +617,7 @@ class SaltFactoriesManager:
             request=request, master_config=master_config
         )
         self.pytestconfig.hook.pytest_saltfactories_master_verify_configuration(
-            request=request,
-            master_config=master_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, master_config=master_config, username=running_username(),
         )
         master_config["pytest-master"]["master_config"] = master_of_masters_config
         self.cache["configs"]["masters"][syndic_id] = master_config
@@ -654,9 +629,7 @@ class SaltFactoriesManager:
             request=request, minion_config=minion_config
         )
         self.pytestconfig.hook.pytest_saltfactories_minion_verify_configuration(
-            request=request,
-            minion_config=minion_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, minion_config=minion_config, username=running_username(),
         )
         minion_config["pytest-minion"]["master_config"] = master_config
         self.cache["configs"]["minions"][syndic_id] = minion_config
@@ -668,9 +641,7 @@ class SaltFactoriesManager:
             request=request, syndic_config=syndic_config
         )
         self.pytestconfig.hook.pytest_saltfactories_syndic_verify_configuration(
-            request=request,
-            syndic_config=syndic_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, syndic_config=syndic_config, username=running_username(),
         )
         syndic_config["pytest-syndic"]["master_config"] = master_of_masters_config
         # Just to get info about the master running along with the syndic
@@ -823,9 +794,7 @@ class SaltFactoriesManager:
             request=request, proxy_minion_config=proxy_minion_config
         )
         self.pytestconfig.hook.pytest_saltfactories_proxy_minion_verify_configuration(
-            request=request,
-            proxy_minion_config=proxy_minion_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, proxy_minion_config=proxy_minion_config, username=running_username(),
         )
         if master_id:
             # The in-memory proxy_minion config dictionary will hold a copy of the master config

@@ -8,6 +8,8 @@ import re
 
 import pytest
 
+from saltfactories.utils import running_username
+
 
 def test_hook_basic_config_defaults_top_level_keys(testdir):
     testdir.makeconftest(
@@ -495,19 +497,19 @@ def test_provide_user(request, salt_factories, configure_kwargs):
         # salt-factories injects the current username
         master_config = salt_factories.cache["configs"]["masters"][syndic_id]
         assert master_config["user"] is not None
-        assert master_config["user"] == salt_factories.get_running_username()
+        assert master_config["user"] == running_username()
         minion_config = salt_factories.cache["configs"]["minions"][syndic_id]
         assert minion_config["user"] is not None
-        assert minion_config["user"] == salt_factories.get_running_username()
+        assert minion_config["user"] == running_username()
         assert syndic_config["user"] is not None
-        assert syndic_config["user"] == salt_factories.get_running_username()
+        assert syndic_config["user"] == running_username()
     else:
         master_config = salt_factories.cache["configs"]["masters"][syndic_id]
-        assert master_config["user"] != salt_factories.get_running_username()
+        assert master_config["user"] != running_username()
         assert master_config["user"] == "blah"
         minion_config = salt_factories.cache["configs"]["minions"][syndic_id]
-        assert minion_config["user"] != salt_factories.get_running_username()
+        assert minion_config["user"] != running_username()
         assert minion_config["user"] == "blah"
         # salt-factories does not override the passed user value
-        assert syndic_config["user"] != salt_factories.get_running_username()
+        assert syndic_config["user"] != running_username()
         assert syndic_config["user"] == "blah"

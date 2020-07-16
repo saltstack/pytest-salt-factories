@@ -6,6 +6,8 @@
 """
 import pytest
 
+from saltfactories.utils import running_username
+
 
 def test_hook_basic_config_defaults(testdir):
     testdir.makeconftest(
@@ -260,8 +262,8 @@ def test_provide_user(request, salt_factories, configure_kwargs):
     if not configure_kwargs:
         # salt-factories injects the current username
         assert minion_config["user"] is not None
-        assert minion_config["user"] == salt_factories.get_running_username()
+        assert minion_config["user"] == running_username()
     else:
         # salt-factories does not override the passed user value
-        assert minion_config["user"] != salt_factories.get_running_username()
+        assert minion_config["user"] != running_username()
         assert minion_config["user"] == "blah"
