@@ -409,6 +409,53 @@ class SaltKeyCLI(SaltScriptBase):
         return super().process_output(stdout, stderr, cmdline=cmdline)
 
 
+class SaltSshCLI(SaltScriptBase):
+    """
+    Simple subclass to the salt-ssh CLI script
+    """
+
+    __cli_timeout_supported__ = False
+
+    def __init__(self, *args, **kwargs):
+        roster_file = kwargs.pop("roster_file", None)
+        client_key = kwargs.pop("client_key", None)
+        target_host = kwargs.pop("target_host", None) or "127.0.0.1"
+        ssh_user = kwargs.pop("ssh_user", None)
+        kwargs.setdefault("default_timeout", 120)
+        super().__init__(*args, **kwargs)
+        self.roster_file = roster_file
+        self.client_key = client_key
+        self.target_host = target_host
+        self.ssh_user = ssh_user
+
+    def get_script_args(self):
+        script_args = super().get_script_args()
+        if self.roster_file:
+            script_args.extend(["--roster-file", self.roster_file])
+        if self.client_key:
+            script_args.extend(["--priv", self.client_key])
+        if self.ssh_user:
+            script_args.extend(["--user", self.ssh_user])
+        return script_args
+
+    def get_minion_tgt(self, kwargs):
+        minion_tgt = None
+        if "minion_tgt" in kwargs:
+            minion_tgt = kwargs.pop("minion_tgt")
+        if minion_tgt is None and self.target_host:
+            minion_tgt = self.target_host
+        return minion_tgt
+
+    def process_output(self, stdout, stderr, cmdline=None):
+        stdout, stderr, json_out = SaltScriptBase.process_output(self, stdout, stderr, cmdline)
+        if json_out:
+            try:
+                return stdout, stderr, json_out[self._minion_tgt]
+            except KeyError:
+                return stdout, stderr, json_out
+        return stdout, stderr, json_out
+
+
 class SaltClient:
     """
     Wrapper class around Salt's local client

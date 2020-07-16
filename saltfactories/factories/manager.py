@@ -28,6 +28,7 @@ from saltfactories.factories import proxy
 from saltfactories.factories import syndic
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import event_listener
+from saltfactories.utils import running_username
 from saltfactories.utils.ports import get_unused_localhost_port
 
 
@@ -133,26 +134,6 @@ class SaltFactoriesManager:
         self.event_listener.start()
 
     @staticmethod
-    def get_running_username():
-        """
-        Returns the current username
-        """
-        try:
-            return SaltFactoriesManager.get_running_username.__username__
-        except AttributeError:
-            if saltfactories.IS_WINDOWS:
-                import win32api
-
-                SaltFactoriesManager.get_running_username.__username__ = win32api.GetUserName()
-            else:
-                import pwd
-
-                SaltFactoriesManager.get_running_username.__username__ = pwd.getpwuid(
-                    os.getuid()
-                ).pw_name
-        return SaltFactoriesManager.get_running_username.__username__
-
-    @staticmethod
     def get_salt_log_handlers_path():
         """
         Returns the path to the Salt log handler this plugin provides
@@ -190,7 +171,7 @@ class SaltFactoriesManager:
         if "engines_dirs" not in config:
             config["engines_dirs"] = []
         config["engines_dirs"].insert(0, SaltFactoriesManager.get_salt_engines_path())
-        config.setdefault("user", SaltFactoriesManager.get_running_username())
+        config.setdefault("user", running_username())
         if not config["user"]:
             # If this value is empty, None, False, just remove it
             config.pop("user")
@@ -296,9 +277,7 @@ class SaltFactoriesManager:
             request=request, master_config=master_config
         )
         self.pytestconfig.hook.pytest_saltfactories_master_verify_configuration(
-            request=request,
-            master_config=master_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, master_config=master_config, username=running_username(),
         )
         self.cache["configs"]["masters"][master_id] = master_config
         request.addfinalizer(lambda: self.cache["configs"]["masters"].pop(master_id))
@@ -437,9 +416,7 @@ class SaltFactoriesManager:
             request=request, minion_config=minion_config
         )
         self.pytestconfig.hook.pytest_saltfactories_minion_verify_configuration(
-            request=request,
-            minion_config=minion_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, minion_config=minion_config, username=running_username(),
         )
         if master_id:
             # The in-memory minion config dictionary will hold a copy of the master config
@@ -640,9 +617,7 @@ class SaltFactoriesManager:
             request=request, master_config=master_config
         )
         self.pytestconfig.hook.pytest_saltfactories_master_verify_configuration(
-            request=request,
-            master_config=master_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, master_config=master_config, username=running_username(),
         )
         master_config["pytest-master"]["master_config"] = master_of_masters_config
         self.cache["configs"]["masters"][syndic_id] = master_config
@@ -654,9 +629,7 @@ class SaltFactoriesManager:
             request=request, minion_config=minion_config
         )
         self.pytestconfig.hook.pytest_saltfactories_minion_verify_configuration(
-            request=request,
-            minion_config=minion_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, minion_config=minion_config, username=running_username(),
         )
         minion_config["pytest-minion"]["master_config"] = master_config
         self.cache["configs"]["minions"][syndic_id] = minion_config
@@ -668,9 +641,7 @@ class SaltFactoriesManager:
             request=request, syndic_config=syndic_config
         )
         self.pytestconfig.hook.pytest_saltfactories_syndic_verify_configuration(
-            request=request,
-            syndic_config=syndic_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, syndic_config=syndic_config, username=running_username(),
         )
         syndic_config["pytest-syndic"]["master_config"] = master_of_masters_config
         # Just to get info about the master running along with the syndic
@@ -823,9 +794,7 @@ class SaltFactoriesManager:
             request=request, proxy_minion_config=proxy_minion_config
         )
         self.pytestconfig.hook.pytest_saltfactories_proxy_minion_verify_configuration(
-            request=request,
-            proxy_minion_config=proxy_minion_config,
-            username=SaltFactoriesManager.get_running_username(),
+            request=request, proxy_minion_config=proxy_minion_config, username=running_username(),
         )
         if master_id:
             # The in-memory proxy_minion config dictionary will hold a copy of the master config
@@ -1003,6 +972,47 @@ class SaltFactoriesManager:
             script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
         )
 
+    def get_salt_ssh_cli(
+        self,
+        master_id,
+        cli_class=salt_factories.SaltSshCLI,
+        roster_file=None,
+        target_host=None,
+        client_key=None,
+        ssh_user=None,
+        **cli_kwargs
+    ):
+        """
+        Return a `salt-ssh` CLI process
+
+        Args:
+            roster_file(str):
+                The roster file to use
+            target_host(str):
+                The target host address to connect to
+            client_key(str):
+                The path to the private ssh key to use to connect
+            ssh_user(str):
+                The remote username to connect as
+        """
+        script_path = cli_scripts.generate_script(
+            self.scripts_dir,
+            "salt-ssh",
+            executable=self.executable,
+            code_dir=self.code_dir,
+            inject_coverage=self.inject_coverage,
+            inject_sitecustomize=self.inject_sitecustomize,
+        )
+        return cli_class(
+            script_path,
+            config=self.cache["configs"]["masters"][master_id],
+            roster_file=roster_file,
+            target_host=target_host,
+            client_key=client_key,
+            ssh_user=ssh_user or running_username(),
+            **cli_kwargs,
+        )
+
     def spawn_sshd_server(
         self,
         request,
@@ -1010,7 +1020,8 @@ class SaltFactoriesManager:
         daemon_class=SshdDaemon,
         max_start_attempts=3,
         config_dir=None,
-        serve_port=None,
+        listen_address=None,
+        listen_port=None,
         sshd_config_dict=None,
         **extra_daemon_class_kwargs
     ):
@@ -1027,7 +1038,9 @@ class SaltFactoriesManager:
                 its running
             config_dir(pathlib.Path):
                 The path to the sshd config directory
-            serve_port(int):
+            listen_address(str):
+                The address where the sshd server will listen to connections. Defaults to 127.0.0.1
+            listen_port(int):
                 The port where the sshd server will listen to connections
             sshd_config_dict(dict):
                 A dictionary of key-value pairs to construct the sshd config file
@@ -1040,7 +1053,7 @@ class SaltFactoriesManager:
         """
         if config_dir is None:
             config_dir = self._get_root_dir_for_daemon(daemon_id)
-        elif isinstance(config_dir, str):
+        if isinstance(config_dir, str):
             config_dir = pathlib.Path(config_dir).resolve()
         return self.spawn_daemon(
             request,
@@ -1048,8 +1061,10 @@ class SaltFactoriesManager:
             SshdDaemon,
             daemon_id,
             config_dir=config_dir,
-            serve_port=serve_port,
+            listen_address=listen_address,
+            listen_port=listen_port,
             sshd_config_dict=sshd_config_dict,
+            **extra_daemon_class_kwargs,
         )
 
     def spawn_daemon(

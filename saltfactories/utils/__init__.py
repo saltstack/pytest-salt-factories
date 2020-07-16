@@ -4,8 +4,11 @@ saltfactories.utils
 
 Utility functions
 """
+import os
 import random
 import string
+import sys
+from functools import lru_cache
 
 
 def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
@@ -32,3 +35,15 @@ def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
         choices.extend(string.digits)
 
     return prefix + "".join(random.choice(choices) for _ in range(size))
+
+
+@lru_cache(maxsize=1)
+def running_username():
+    if sys.platform.startswith("win32"):
+        import win32api
+
+        return win32api.GetUserName()
+    else:
+        import pwd
+
+        return pwd.getpwuid(os.getuid()).pw_name
