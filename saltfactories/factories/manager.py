@@ -972,6 +972,47 @@ class SaltFactoriesManager:
             script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
         )
 
+    def get_salt_ssh_cli(
+        self,
+        master_id,
+        cli_class=salt_factories.SaltSshCLI,
+        roster_file=None,
+        target_host=None,
+        client_key=None,
+        ssh_user=None,
+        **cli_kwargs
+    ):
+        """
+        Return a `salt-ssh` CLI process
+
+        Args:
+            roster_file(str):
+                The roster file to use
+            target_host(str):
+                The target host address to connect to
+            client_key(str):
+                The path to the private ssh key to use to connect
+            ssh_user(str):
+                The remote username to connect as
+        """
+        script_path = cli_scripts.generate_script(
+            self.scripts_dir,
+            "salt-ssh",
+            executable=self.executable,
+            code_dir=self.code_dir,
+            inject_coverage=self.inject_coverage,
+            inject_sitecustomize=self.inject_sitecustomize,
+        )
+        return cli_class(
+            script_path,
+            config=self.cache["configs"]["masters"][master_id],
+            roster_file=roster_file,
+            target_host=target_host,
+            client_key=client_key,
+            ssh_user=ssh_user or running_username(),
+            **cli_kwargs,
+        )
+
     def spawn_sshd_server(
         self,
         request,
