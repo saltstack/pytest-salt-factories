@@ -979,7 +979,8 @@ class SaltFactoriesManager:
         daemon_class=SshdDaemon,
         max_start_attempts=3,
         config_dir=None,
-        serve_port=None,
+        listen_address=None,
+        listen_port=None,
         sshd_config_dict=None,
         **extra_daemon_class_kwargs
     ):
@@ -996,7 +997,9 @@ class SaltFactoriesManager:
                 its running
             config_dir(pathlib.Path):
                 The path to the sshd config directory
-            serve_port(int):
+            listen_address(str):
+                The address where the sshd server will listen to connections. Defaults to 127.0.0.1
+            listen_port(int):
                 The port where the sshd server will listen to connections
             sshd_config_dict(dict):
                 A dictionary of key-value pairs to construct the sshd config file
@@ -1009,7 +1012,7 @@ class SaltFactoriesManager:
         """
         if config_dir is None:
             config_dir = self._get_root_dir_for_daemon(daemon_id)
-        elif isinstance(config_dir, str):
+        if isinstance(config_dir, str):
             config_dir = pathlib.Path(config_dir).resolve()
         return self.spawn_daemon(
             request,
@@ -1017,8 +1020,10 @@ class SaltFactoriesManager:
             SshdDaemon,
             daemon_id,
             config_dir=config_dir,
-            serve_port=serve_port,
+            listen_address=listen_address,
+            listen_port=listen_port,
             sshd_config_dict=sshd_config_dict,
+            **extra_daemon_class_kwargs,
         )
 
     def spawn_daemon(
