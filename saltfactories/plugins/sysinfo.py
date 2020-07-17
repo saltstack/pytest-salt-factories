@@ -6,6 +6,7 @@
 """
 import io
 import os
+import pathlib
 import tempfile
 
 import pytest
@@ -59,15 +60,15 @@ def pytest_sessionstart(session):
         )
         terminal_reporter.ensure_newline()
         # System Grains
-        root_dir = tempfile.mkdtemp()
-        conf_dir = os.path.join(root_dir, "conf")
-        conf_file = os.path.join(conf_dir, "minion")
+        root_dir = pathlib.Path(tempfile.mkdtemp())
+        conf_file = root_dir / "conf" / "minion"
+        conf_file.parent.mkdir()
         minion_config_defaults = salt.config.DEFAULT_MINION_OPTS.copy()
         minion_config_defaults.update(
             {
                 "id": "saltfactories-reports-minion",
-                "root_dir": root_dir,
-                "conf_file": conf_file,
+                "root_dir": str(root_dir),
+                "conf_file": str(conf_file),
                 "cachedir": "cache",
                 "pki_dir": "pki",
                 "file_client": "local",

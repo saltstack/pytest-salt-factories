@@ -5,18 +5,10 @@ saltfactories.utils.cli_scripts
 Code to generate Salt CLI scripts for test runs
 """
 import logging
-import os
+import pathlib
 import stat
 import sys
 import textwrap
-
-try:
-    import salt.utils.files
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
 
 log = logging.getLogger(__name__)
 
@@ -128,16 +120,17 @@ def generate_script(
     """
     Generate script
     """
-    if not os.path.isdir(bin_dir):
-        os.makedirs(bin_dir)
+    if isinstance(bin_dir, str):
+        bin_dir = pathlib.Path(bin_dir)
+    bin_dir.mkdir(exist_ok=True)
 
     cli_script_name = "cli_{}.py".format(script_name.replace("-", "_"))
-    script_path = os.path.join(bin_dir, cli_script_name)
+    script_path = bin_dir / cli_script_name
 
-    if not os.path.isfile(script_path):
+    if not script_path.is_file():
         log.info("Generating %s", script_path)
 
-        with salt.utils.files.fopen(script_path, "w") as sfh:
+        with script_path.open("w") as sfh:
             script_template = SCRIPT_TEMPLATES.get(script_name, None)
             if script_template is None:
                 script_template = SCRIPT_TEMPLATES.get("common", None)
@@ -192,7 +185,9 @@ def generate_script(
             if inject_sitecustomize:
                 script_contents += (
                     SCRIPT_TEMPLATES["sitecustomize"]
-                    .format(sitecustomize_dir=os.path.join(os.path.dirname(__file__), "coverage"))
+                    .format(
+                        sitecustomize_dir=str(pathlib.Path(__file__).resolve().parent / "coverage")
+                    )
                     .strip()
                     + "\n\n"
                 )
@@ -205,8 +200,8 @@ def generate_script(
             log.debug(
                 "Wrote the following contents to temp script %s:\n%s", script_path, script_contents
             )
-        fst = os.stat(script_path)
-        os.chmod(script_path, fst.st_mode | stat.S_IEXEC)
+        fst = script_path.stat()
+        script_path.chmod(fst.st_mode | stat.S_IEXEC)
 
     log.info("Returning script path %r", script_path)
-    return script_path
+    return str(script_path)

@@ -5,6 +5,7 @@ tests.utils.test_cli_scripts
 Test saltfactories.utils.cli_scripts
 """
 import os
+import pathlib
 import sys
 import textwrap
 
@@ -298,7 +299,7 @@ def test_generate_script_inject_sitecustomize(tmpdir):
     """
     Test sitecustomize injection related code included in script generation
     """
-    sitecustomize_path = os.path.join(os.path.dirname(cli_scripts.__file__), "coverage")
+    sitecustomize_path = pathlib.Path(cli_scripts.__file__).resolve().parent / "coverage"
     code_dir = tmpdir.mkdir("code-dir").strpath
     script_path = cli_scripts.generate_script(
         tmpdir.strpath,
@@ -374,7 +375,7 @@ def test_generate_script_inject_sitecustomize(tmpdir):
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
-            sys.executable, code_dir, sitecustomize_path
+            sys.executable, code_dir, str(sitecustomize_path)
         )
     )
     assert contents == expected

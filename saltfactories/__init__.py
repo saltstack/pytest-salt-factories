@@ -3,6 +3,7 @@ NG PyTest Salt Plugin
 """
 # pragma: no cover
 import os
+import pathlib
 import re
 import sys
 
@@ -27,6 +28,6 @@ finally:
 
 
 # Define some constants
-CODE_ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+CODE_ROOT_DIR = pathlib.Path(__file__).resolve().parent
 IS_WINDOWS = sys.platform.startswith("win")
 IS_DARWIN = IS_OSX = sys.platform.startswith("darwin")

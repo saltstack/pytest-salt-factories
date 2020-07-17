@@ -5,7 +5,7 @@
     Salt Daemon Factories PyTest Plugin
 """
 import logging
-import os
+import pathlib
 import pprint
 import sys
 
@@ -91,7 +91,7 @@ def salt_factories_config(
     """
     return {
         "executable": sys.executable,
-        "code_dir": os.path.dirname(saltfactories.CODE_ROOT_DIR),
+        "code_dir": saltfactories.CODE_ROOT_DIR.parent,
         "inject_coverage": True,
         "inject_sitecustomize": True,
         "log_server_host": log_server_host,
@@ -123,14 +123,14 @@ def pytest_saltfactories_minion_verify_configuration(request, minion_config, use
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
-        os.path.join(minion_config["pki_dir"], "minions"),
-        os.path.join(minion_config["pki_dir"], "minions_pre"),
-        os.path.join(minion_config["pki_dir"], "minions_rejected"),
-        os.path.join(minion_config["pki_dir"], "accepted"),
-        os.path.join(minion_config["pki_dir"], "rejected"),
-        os.path.join(minion_config["pki_dir"], "pending"),
-        os.path.dirname(minion_config["log_file"]),
-        os.path.join(minion_config["cachedir"], "proc"),
+        str(pathlib.Path(minion_config["pki_dir"]) / "minions"),
+        str(pathlib.Path(minion_config["pki_dir"]) / "minions_pre"),
+        str(pathlib.Path(minion_config["pki_dir"]) / "minions_rejected"),
+        str(pathlib.Path(minion_config["pki_dir"]) / "accepted"),
+        str(pathlib.Path(minion_config["pki_dir"]) / "rejected"),
+        str(pathlib.Path(minion_config["pki_dir"]) / "pending"),
+        str(pathlib.Path(minion_config["log_file"]).parent),
+        str(pathlib.Path(minion_config["cachedir"]) / "proc"),
         # minion_config['extension_modules'],
         minion_config["sock_dir"],
     ]
@@ -166,15 +166,15 @@ def pytest_saltfactories_master_verify_configuration(request, master_config, use
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
-        os.path.join(master_config["pki_dir"], "minions"),
-        os.path.join(master_config["pki_dir"], "minions_pre"),
-        os.path.join(master_config["pki_dir"], "minions_rejected"),
-        os.path.join(master_config["pki_dir"], "accepted"),
-        os.path.join(master_config["pki_dir"], "rejected"),
-        os.path.join(master_config["pki_dir"], "pending"),
-        os.path.dirname(master_config["log_file"]),
-        os.path.join(master_config["cachedir"], "proc"),
-        os.path.join(master_config["cachedir"], "jobs"),
+        str(pathlib.Path(master_config["pki_dir"]) / "minions"),
+        str(pathlib.Path(master_config["pki_dir"]) / "minions_pre"),
+        str(pathlib.Path(master_config["pki_dir"]) / "minions_rejected"),
+        str(pathlib.Path(master_config["pki_dir"]) / "accepted"),
+        str(pathlib.Path(master_config["pki_dir"]) / "rejected"),
+        str(pathlib.Path(master_config["pki_dir"]) / "pending"),
+        str(pathlib.Path(master_config["log_file"]).parent),
+        str(pathlib.Path(master_config["cachedir"]) / "proc"),
+        str(pathlib.Path(master_config["cachedir"]) / "jobs"),
         # master_config['extension_modules'],
         master_config["sock_dir"],
     ]
@@ -213,7 +213,7 @@ def pytest_saltfactories_syndic_verify_configuration(request, syndic_config, use
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
-        os.path.dirname(syndic_config["syndic_log_file"]),
+        str(pathlib.Path(syndic_config["syndic_log_file"]).parent),
     ]
     salt.utils.verify.verify_env(
         verify_env_entries, username,
@@ -235,9 +235,9 @@ def pytest_saltfactories_syndic_write_configuration(request, syndic_config):
     with salt.utils.files.fopen(config_file, "w") as wfh:
         salt.utils.yaml.safe_dump(syndic_config, wfh, default_flow_style=False)
 
-    conf_dir = os.path.dirname(os.path.dirname(config_file))
-    master_config_file = os.path.join(conf_dir, "master")
-    minion_config_file = os.path.join(conf_dir, "minion")
+    conf_dir = pathlib.Path(config_file).parent.parent
+    master_config_file = str(conf_dir / "master")
+    minion_config_file = str(conf_dir / "minion")
 
     # Make sure to load the config file as a salt-master starting from CLI
     options = salt.config.syndic_config(master_config_file, minion_config_file)
@@ -251,7 +251,7 @@ def pytest_saltfactories_proxy_minion_verify_configuration(request, proxy_minion
     # verify env to make sure all required directories are created and have the
     # right permissions
     verify_env_entries = [
-        os.path.dirname(proxy_minion_config["log_file"]),
+        str(pathlib.Path(proxy_minion_config["log_file"]).parent),
         # proxy_proxy_minion_config['extension_modules'],
         proxy_minion_config["sock_dir"],
     ]
