@@ -4,12 +4,10 @@ saltfactories.factories.manager
 
 Salt Factories Manager
 """
-import os
 import pathlib
 import sys
 
 import psutil
-import py
 
 try:
     import salt.utils.dictupdate
@@ -98,7 +96,8 @@ class SaltFactoriesManager:
         """
         self.pytestconfig = pytestconfig
         self.stats_processes = stats_processes
-        self.root_dir = root_dir
+        self.root_dir = pathlib.Path(root_dir.strpath)
+        self.root_dir.mkdir(exist_ok=True)
         self.log_server_port = log_server_port or get_unused_localhost_port()
         self.log_server_level = log_server_level or "error"
         self.log_server_host = log_server_host or "localhost"
@@ -116,7 +115,8 @@ class SaltFactoriesManager:
                 # Windows and macOS are just slower
                 start_timeout = 120
         self.start_timeout = start_timeout
-        self.scripts_dir = root_dir.join("scripts").ensure(dir=True).strpath
+        self.scripts_dir = self.root_dir / "scripts"
+        self.scripts_dir.mkdir(exist_ok=True)
         self.configs = {"minions": {}, "masters": {}}
         self.masters = {}
         self.minions = {}
@@ -138,14 +138,14 @@ class SaltFactoriesManager:
         """
         Returns the path to the Salt log handler this plugin provides
         """
-        return os.path.join(saltfactories.CODE_ROOT_DIR, "utils", "salt", "log_handlers")
+        return saltfactories.CODE_ROOT_DIR / "utils" / "salt" / "log_handlers"
 
     @staticmethod
     def get_salt_engines_path():
         """
         Returns the path to the Salt engine this plugin provides
         """
-        return os.path.join(saltfactories.CODE_ROOT_DIR, "utils", "salt", "engines")
+        return saltfactories.CODE_ROOT_DIR / "utils" / "salt" / "engines"
 
     def final_minion_config_tweaks(self, config):
         self.final_common_config_tweaks(config, "minion")
@@ -170,7 +170,7 @@ class SaltFactoriesManager:
 
         if "engines_dirs" not in config:
             config["engines_dirs"] = []
-        config["engines_dirs"].insert(0, SaltFactoriesManager.get_salt_engines_path())
+        config["engines_dirs"].insert(0, str(SaltFactoriesManager.get_salt_engines_path()))
         config.setdefault("user", running_username())
         if not config["user"]:
             # If this value is empty, None, False, just remove it
@@ -179,7 +179,9 @@ class SaltFactoriesManager:
             # Still using old logging, let's add our custom log handler
             if "log_handlers_dirs" not in config:
                 config["log_handlers_dirs"] = []
-            config["log_handlers_dirs"].insert(0, SaltFactoriesManager.get_salt_log_handlers_path())
+            config["log_handlers_dirs"].insert(
+                0, str(SaltFactoriesManager.get_salt_log_handlers_path())
+            )
 
         pytest_key = "pytest-{}".format(role)
         if pytest_key not in config:
@@ -1053,7 +1055,9 @@ class SaltFactoriesManager:
         """
         if config_dir is None:
             config_dir = self._get_root_dir_for_daemon(daemon_id)
-        if isinstance(config_dir, str):
+        try:
+            config_dir = pathlib.Path(config_dir.strpath).resolve()
+        except AttributeError:
             config_dir = pathlib.Path(config_dir).resolve()
         return self.spawn_daemon(
             request,
@@ -1149,15 +1153,20 @@ class SaltFactoriesManager:
 
     def _get_root_dir_for_daemon(self, daemon_id, config_defaults=None):
         if config_defaults and "root_dir" in config_defaults:
-            return py.path.local(config_defaults["root_dir"]).ensure(dir=True)
+            try:
+                root_dir = pathlib.Path(config_defaults["root_dir"].strpath).resolve()
+            except AttributeError:
+                root_dir = pathlib.Path(config_defaults["root_dir"]).resolve()
+            root_dir.mkdir(parents=True, exist_ok=True)
+            return root_dir
         counter = 1
-        root_dir = self.root_dir.join(daemon_id)
+        root_dir = self.root_dir / daemon_id
         while True:
-            if not root_dir.check(dir=True):
+            if not root_dir.is_dir():
                 break
-            root_dir = self.root_dir.join("{}_{}".format(daemon_id, counter))
+            root_dir = self.root_dir / "{}_{}".format(daemon_id, counter)
             counter += 1
-        root_dir.ensure(dir=True)
+        root_dir.mkdir(parents=True, exist_ok=True)
         return root_dir
 
     def _handle_auth_event(self, master_id, payload):

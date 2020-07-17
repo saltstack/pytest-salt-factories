@@ -92,7 +92,7 @@ class SshdDaemon(FactoryDaemonScriptBase):
             self._generate_server_dsa_key()
             self._generate_server_ecdsa_key()
             self._generate_server_ed25519_key()
-            for host_key in pathlib.Path(self.config_dir.strpath).glob("ssh_host_*_key"):
+            for host_key in pathlib.Path(self.config_dir).glob("ssh_host_*_key"):
                 config_lines.append("HostKey {}\n".format(host_key))
 
             with open(str(sshd_config_file), "w") as wfh:

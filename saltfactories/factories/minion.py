@@ -27,13 +27,14 @@ class MinionFactory:
             config_defaults = salt.config.DEFAULT_MINION_OPTS.copy()
             config_defaults.pop("user", None)
 
-        conf_dir = root_dir.join("conf").ensure(dir=True)
-        conf_file = conf_dir.join("minion").strpath
+        conf_dir = root_dir / "conf"
+        conf_dir.mkdir(parents=True, exist_ok=True)
+        conf_file = str(conf_dir / "minion")
 
         _config_defaults = {
             "id": minion_id,
             "conf_file": conf_file,
-            "root_dir": root_dir.strpath,
+            "root_dir": str(root_dir),
             "interface": "127.0.0.1",
             "master": "127.0.0.1",
             "master_port": master_port or ports.get_unused_localhost_port(),

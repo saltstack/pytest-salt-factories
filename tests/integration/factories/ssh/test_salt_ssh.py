@@ -1,4 +1,3 @@
-import pathlib
 import textwrap
 
 import pytest
@@ -20,7 +19,7 @@ def master(request, salt_factories):
 
 @pytest.fixture(scope="module")
 def salt_ssh_cli(sshd, salt_factories, master):
-    roster_file_path = pathlib.Path(salt_factories.root_dir.strpath) / "salt_ssh_roster"
+    roster_file_path = salt_factories.root_dir / "salt_ssh_roster"
     with open(str(roster_file_path), "w") as wfh:
         wfh.write(
             textwrap.dedent(
