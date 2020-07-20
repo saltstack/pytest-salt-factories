@@ -171,7 +171,7 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
 
     popen_mock = mock.MagicMock()
     popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
-    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", ()))
+    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
     terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", ""))
 
     proc = SaltScriptBase(cli_script_name, config=config, default_timeout=default_timeout)
@@ -205,7 +205,7 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
 
     popen_mock = mock.MagicMock()
     popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
-    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", ()))
+    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
     terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", ""))
 
     proc = SaltScriptBase(cli_script_name, config=config, default_timeout=default_timeout)
@@ -238,7 +238,7 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
 
     popen_mock = mock.MagicMock()
     popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
-    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", ()))
+    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
     terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", ""))
 
     proc = SaltScriptBase(cli_script_name, config=config, default_timeout=default_timeout)

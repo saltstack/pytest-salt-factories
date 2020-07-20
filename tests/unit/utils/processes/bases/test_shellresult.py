@@ -15,7 +15,7 @@ from saltfactories.utils.processes.bases import ShellResult
 @pytest.mark.parametrize("exitcode", [None, 1.0, -1.0, "0"])
 def test_non_int_exitcode_raises_exception(exitcode):
     with pytest.raises(ValueError):
-        ShellResult(exitcode, None, None, None)
+        ShellResult(exitcode, None, None)
 
 
 def test_attributes():
@@ -31,14 +31,14 @@ def test_attributes():
     assert ret.json == json
     assert ret.cmdline == cmdline
     json = {1: 1}
-    ret = ShellResult(exitcode, stdout, stderr, json)
+    ret = ShellResult(exitcode, stdout, stderr, json=json)
     assert ret.exitcode == exitcode
     assert ret.stdout == stdout
     assert ret.stderr == stderr
     assert ret.json == json
     assert ret.cmdline == cmdline
     cmdline = [1, 2, 3]
-    ret = ShellResult(exitcode, stdout, stderr, json, cmdline)
+    ret = ShellResult(exitcode, stdout, stderr, json=json, cmdline=cmdline)
     assert ret.exitcode == exitcode
     assert ret.stdout == stdout
     assert ret.stderr == stderr
@@ -70,7 +70,7 @@ def test_str_formatting():
     )
     assert str(ret) == expected
     json = {1: 1}
-    ret = ShellResult(exitcode, stdout, stderr, json)
+    ret = ShellResult(exitcode, stdout, stderr, json=json)
     expected = textwrap.dedent(
         """\
         ShellResult
@@ -90,7 +90,7 @@ def test_str_formatting():
     )
     assert str(ret) == expected
     cmdline = [1, 2, 3]
-    ret = ShellResult(exitcode, stdout, stderr, json, cmdline)
+    ret = ShellResult(exitcode, stdout, stderr, json=json, cmdline=cmdline)
     expected = textwrap.dedent(
         """\
         ShellResult

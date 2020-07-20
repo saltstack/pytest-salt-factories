@@ -28,7 +28,7 @@ def test_attributes():
     assert ret.stderr == stderr
     assert ret.cmdline == cmdline
     cmdline = [1, 2, 3]
-    ret = ProcessResult(exitcode, stdout, stderr, cmdline)
+    ret = ProcessResult(exitcode, stdout, stderr, cmdline=cmdline)
     assert ret.exitcode == exitcode
     assert ret.stdout == stdout
     assert ret.stderr == stderr
@@ -58,7 +58,7 @@ def test_str_formatting():
     )
     assert str(ret) == expected
     cmdline = [1, 2, 3]
-    ret = ProcessResult(exitcode, stdout, stderr, cmdline)
+    ret = ProcessResult(exitcode, stdout, stderr, cmdline=cmdline)
     expected = textwrap.dedent(
         """\
         ProcessResult

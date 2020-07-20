@@ -14,9 +14,8 @@ import sys
 import tempfile
 import time
 import weakref
-from collections import namedtuple
-from operator import itemgetter
 
+import attr
 import psutil
 import pytest
 
@@ -77,24 +76,22 @@ class Popen(subprocess.Popen):
         return stdout, stderr
 
 
-class ProcessResult(namedtuple("ProcessResult", ("exitcode", "stdout", "stderr", "cmdline"))):
+@attr.s(frozen=True)
+class ProcessResult:
     """
     This class serves the purpose of having a common result class which will hold the
     resulting data from a subprocess command.
     """
 
-    __slots__ = ()
+    exitcode = attr.ib()
+    stdout = attr.ib()
+    stderr = attr.ib()
+    cmdline = attr.ib(default=None, kw_only=True)
 
-    def __new__(cls, exitcode, stdout, stderr, cmdline=None):
-        if not isinstance(exitcode, int):
-            raise ValueError("'exitcode' needs to be an integer, not '{}'".format(type(exitcode)))
-        return super().__new__(cls, exitcode, stdout, stderr, cmdline=cmdline)
-
-    # These are copied from the namedtuple verbose output in order to quiet down PyLint
-    exitcode = property(itemgetter(0), doc="ProcessResult exit code property")
-    stdout = property(itemgetter(1), doc="ProcessResult stdout property")
-    stderr = property(itemgetter(2), doc="ProcessResult stderr property")
-    cmdline = property(itemgetter(3), doc="ProcessResult cmdline property")
+    @exitcode.validator
+    def _validate_exitcode(self, attribute, value):
+        if not isinstance(value, int):
+            raise ValueError("'exitcode' needs to be an integer, not '{}'".format(type(value)))
 
     def __str__(self):
         message = self.__class__.__name__
@@ -111,38 +108,17 @@ class ProcessResult(namedtuple("ProcessResult", ("exitcode", "stdout", "stderr",
         return message + "\n"
 
 
-class ShellResult(namedtuple("ShellResult", ("exitcode", "stdout", "stderr", "json", "cmdline"))):
+@attr.s(frozen=True)
+class ShellResult(ProcessResult):
     """
     This class serves the purpose of having a common result class which will hold the
     resulting data from a subprocess command.
     """
 
-    __slots__ = ()
-
-    def __new__(cls, exitcode, stdout, stderr, json=None, cmdline=None):
-        if not isinstance(exitcode, int):
-            raise ValueError("'exitcode' needs to be an integer, not '{}'".format(type(exitcode)))
-        return super().__new__(cls, exitcode, stdout, stderr, json=json, cmdline=cmdline)
-
-    # These are copied from the namedtuple verbose output in order to quiet down PyLint
-    exitcode = property(itemgetter(0), doc="ShellResult exit code property")
-    stdout = property(itemgetter(1), doc="ShellResult stdout property")
-    stderr = property(itemgetter(2), doc="ShellResult stderr property")
-    json = property(itemgetter(3), doc="ShellResult stdout JSON decoded, when parseable.")
-    cmdline = property(itemgetter(4), doc="ShellResult cmdline property")
+    json = attr.ib(default=None, kw_only=True)
 
     def __str__(self):
-        message = self.__class__.__name__
-        if self.cmdline:
-            message += "\n Command Line: {}".format(self.cmdline)
-        if self.exitcode is not None:
-            message += "\n Exitcode: {}".format(self.exitcode)
-        if self.stdout or self.stderr:
-            message += "\n Process Output:"
-        if self.stdout:
-            message += "\n   >>>>> STDOUT >>>>>\n{}\n   <<<<< STDOUT <<<<<".format(self.stdout)
-        if self.stderr:
-            message += "\n   >>>>> STDERR >>>>>\n{}\n   <<<<< STDERR <<<<<".format(self.stderr)
+        message = super().__str__().rstrip()
         if self.json:
             message += "\n JSON Object:\n"
             message += "".join("  {}".format(line) for line in pprint.pformat(self.json))
