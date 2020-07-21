@@ -150,7 +150,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -181,7 +181,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -296,7 +296,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -327,7 +327,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -438,7 +438,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -469,7 +469,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
