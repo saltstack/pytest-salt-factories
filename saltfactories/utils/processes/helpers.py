@@ -258,6 +258,7 @@ def start_daemon(
 
     checks_start_time = time.time()
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
+        log.warning("KLASS: %s // EXtra: %s", daemon_class, extra_daemon_class_kwargs.keys())
         process = daemon_class(cli_script_name=cli_script_name, **extra_daemon_class_kwargs)
         log_prefix = process.get_log_prefix()
         log.info("%sStarting %r. Attempt: %s", log_prefix, process, attempts)

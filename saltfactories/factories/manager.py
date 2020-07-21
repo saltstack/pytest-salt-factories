@@ -9,6 +9,14 @@ import sys
 
 import psutil
 
+import saltfactories.utils.processes.helpers
+from saltfactories.factories import cli
+from saltfactories.factories import daemons
+from saltfactories.utils import cli_scripts
+from saltfactories.utils import event_listener
+from saltfactories.utils import running_username
+from saltfactories.utils.ports import get_unused_localhost_port
+
 try:
     import salt.utils.dictupdate
 except ImportError:  # pragma: no cover
@@ -16,18 +24,6 @@ except ImportError:  # pragma: no cover
     # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
     # import error, but its safe to pass
     pass
-
-import saltfactories.utils.processes.helpers
-import saltfactories.utils.processes.salts as salt_factories
-from saltfactories.utils.processes.sshd import SshdDaemon
-from saltfactories.factories import master
-from saltfactories.factories import minion
-from saltfactories.factories import proxy
-from saltfactories.factories import syndic
-from saltfactories.utils import cli_scripts
-from saltfactories.utils import event_listener
-from saltfactories.utils import running_username
-from saltfactories.utils.ports import get_unused_localhost_port
 
 
 class SaltFactoriesManager:
@@ -267,7 +263,7 @@ class SaltFactoriesManager:
             config_overrides["syndic_master"] = master_of_masters_config["interface"]
             config_overrides["syndic_master_port"] = master_of_masters_config["ret_port"]
 
-        master_config = master.MasterFactory.default_config(
+        master_config = daemons.master.MasterFactory.default_config(
             root_dir,
             master_id=master_id,
             config_defaults=_config_defaults,
@@ -294,7 +290,7 @@ class SaltFactoriesManager:
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
-        daemon_class=salt_factories.SaltMaster,
+        daemon_class=daemons.master.MasterFactory,
         **extra_daemon_class_kwargs
     ):
         """
@@ -406,7 +402,7 @@ class SaltFactoriesManager:
             else:
                 _config_overrides = config_overrides.copy()
 
-        minion_config = minion.MinionFactory.default_config(
+        minion_config = daemons.minion.MinionFactory.default_config(
             root_dir,
             minion_id=minion_id,
             config_defaults=_config_defaults,
@@ -439,7 +435,7 @@ class SaltFactoriesManager:
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
-        daemon_class=salt_factories.SaltMinion,
+        daemon_class=daemons.minion.MinionFactory,
         **extra_daemon_class_kwargs
     ):
         """
@@ -605,7 +601,7 @@ class SaltFactoriesManager:
             else:
                 _config_overrides = config_overrides.copy()
 
-        syndic_setup_config = syndic.SyndicFactory.default_config(
+        syndic_setup_config = daemons.syndic.SyndicFactory.default_config(
             root_dir,
             syndic_id=syndic_id,
             config_defaults=_config_defaults,
@@ -660,7 +656,7 @@ class SaltFactoriesManager:
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
-        daemon_class=salt_factories.SaltSyndic,
+        daemon_class=daemons.syndic.SyndicFactory,
         **extra_daemon_class_kwargs
     ):
         """
@@ -784,7 +780,7 @@ class SaltFactoriesManager:
             else:
                 _config_overrides = config_overrides.copy()
 
-        proxy_minion_config = proxy.ProxyMinionFactory.default_config(
+        proxy_minion_config = daemons.proxy.ProxyMinionFactory.default_config(
             root_dir,
             proxy_minion_id=proxy_minion_id,
             config_defaults=_config_defaults,
@@ -817,7 +813,7 @@ class SaltFactoriesManager:
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
-        daemon_class=salt_factories.SaltProxyMinion,
+        daemon_class=daemons.proxy.ProxyMinionFactory,
         **extra_daemon_class_kwargs
     ):
         """
@@ -871,7 +867,7 @@ class SaltFactoriesManager:
         )
 
     def get_salt_client(
-        self, master_id, functions_known_to_return_none=None, cli_class=salt_factories.SaltClient
+        self, master_id, functions_known_to_return_none=None, cli_class=cli.client.SaltClientFactory
     ):
         """
         Return a local salt client object
@@ -881,7 +877,7 @@ class SaltFactoriesManager:
             functions_known_to_return_none=functions_known_to_return_none,
         )
 
-    def get_salt_cli(self, master_id, cli_class=salt_factories.SaltCLI, **cli_kwargs):
+    def get_salt_cli(self, master_id, cli_class=cli.salt.SaltCliFactory, **cli_kwargs):
         """
         Return a `salt` CLI process
         """
@@ -894,10 +890,12 @@ class SaltFactoriesManager:
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return cli_class(
-            script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
+            cli_script_name=script_path,
+            config=self.cache["configs"]["masters"][master_id],
+            **cli_kwargs,
         )
 
-    def get_salt_call_cli(self, minion_id, cli_class=salt_factories.SaltCallCLI, **cli_kwargs):
+    def get_salt_call_cli(self, minion_id, cli_class=cli.call.SaltCallCliFactory, **cli_kwargs):
         """
         Return a `salt-call` CLI process
         """
@@ -911,12 +909,14 @@ class SaltFactoriesManager:
         )
         try:
             return cli_class(
-                script_path, config=self.cache["configs"]["minions"][minion_id], **cli_kwargs
+                cli_script_name=script_path,
+                config=self.cache["configs"]["minions"][minion_id],
+                **cli_kwargs,
             )
         except KeyError:
             try:
                 return cli_class(
-                    script_path,
+                    cli_script_name=script_path,
                     base_script_args=["--proxyid={}".format(minion_id)],
                     config=self.cache["proxy_minions"][minion_id].config,
                     **cli_kwargs,
@@ -926,7 +926,7 @@ class SaltFactoriesManager:
                     "Could not find {} in the minions or proxy minions caches".format(minion_id)
                 )
 
-    def get_salt_run_cli(self, master_id, cli_class=salt_factories.SaltRunCLI, **cli_kwargs):
+    def get_salt_run_cli(self, master_id, cli_class=cli.run.SaltRunCliFactory, **cli_kwargs):
         """
         Return a `salt-run` CLI process
         """
@@ -939,10 +939,12 @@ class SaltFactoriesManager:
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return cli_class(
-            script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
+            cli_script_name=script_path,
+            config=self.cache["configs"]["masters"][master_id],
+            **cli_kwargs,
         )
 
-    def get_salt_cp_cli(self, master_id, cli_class=salt_factories.SaltCpCLI, **cli_kwargs):
+    def get_salt_cp_cli(self, master_id, cli_class=cli.cp.SaltCpCliFactory, **cli_kwargs):
         """
         Return a `salt-cp` CLI process
         """
@@ -955,10 +957,12 @@ class SaltFactoriesManager:
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return cli_class(
-            script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
+            cli_script_name=script_path,
+            config=self.cache["configs"]["masters"][master_id],
+            **cli_kwargs,
         )
 
-    def get_salt_key_cli(self, master_id, cli_class=salt_factories.SaltKeyCLI, **cli_kwargs):
+    def get_salt_key_cli(self, master_id, cli_class=cli.key.SaltKeyCliFactory, **cli_kwargs):
         """
         Return a `salt-key` CLI process
         """
@@ -971,13 +975,15 @@ class SaltFactoriesManager:
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return cli_class(
-            script_path, config=self.cache["configs"]["masters"][master_id], **cli_kwargs
+            cli_script_name=script_path,
+            config=self.cache["configs"]["masters"][master_id],
+            **cli_kwargs,
         )
 
     def get_salt_ssh_cli(
         self,
         master_id,
-        cli_class=salt_factories.SaltSshCLI,
+        cli_class=cli.ssh.SaltSshCliFactory,
         roster_file=None,
         target_host=None,
         client_key=None,
@@ -1006,7 +1012,7 @@ class SaltFactoriesManager:
             inject_sitecustomize=self.inject_sitecustomize,
         )
         return cli_class(
-            script_path,
+            cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
             roster_file=roster_file,
             target_host=target_host,
@@ -1019,12 +1025,14 @@ class SaltFactoriesManager:
         self,
         request,
         daemon_id,
-        daemon_class=SshdDaemon,
+        daemon_class=daemons.sshd.SshdDaemonFactory,
         max_start_attempts=3,
         config_dir=None,
         listen_address=None,
         listen_port=None,
         sshd_config_dict=None,
+        display_name=None,
+        log_prefix=None,
         **extra_daemon_class_kwargs
     ):
         """
@@ -1062,8 +1070,10 @@ class SaltFactoriesManager:
         return self.spawn_daemon(
             request,
             "sshd",
-            SshdDaemon,
+            daemon_class,
             daemon_id,
+            log_prefix=log_prefix or "SSHD",
+            display_name=display_name or "SSHD",
             config_dir=config_dir,
             listen_address=listen_address,
             listen_port=listen_port,

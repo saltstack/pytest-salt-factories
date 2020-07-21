@@ -1,15 +1,15 @@
 """
-tests.unit.utils.processes.bases.test_shellresult
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+tests.unit.utils.processes.test_shellresult
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Test saltfactories.utils.processes.bases.ShellResult
+Test saltfactories.utils.processes.ShellResult
 """
 import pprint
 import textwrap
 
 import pytest
 
-from saltfactories.utils.processes.bases import ShellResult
+from saltfactories.utils.processes import ShellResult
 
 
 @pytest.mark.parametrize("exitcode", [None, 1.0, -1.0, "0"])

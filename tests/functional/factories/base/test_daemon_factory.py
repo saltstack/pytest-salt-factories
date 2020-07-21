@@ -1,9 +1,3 @@
-"""
-tests.functional.utils.processes.bases.test_factory_daemon_script_base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Test saltfactories.utils.processes.bases.FactoryDaemonScriptBase
-"""
 import functools
 import pprint
 import sys
@@ -12,24 +6,10 @@ import time
 import psutil
 import pytest
 
-if sys.platform.startswith("win"):
-    # Because on windows we need the python executable to come before the script,
-    # we recreate FactoryDaemonScriptBase by also subclassing FactoryPythonScriptBase
-    # which adds that functionality
-    from saltfactories.utils.processes.bases import (
-        FactoryDaemonScriptBase as _FactoryDaemonScriptBase,
-    )
-    from saltfactories.utils.processes.bases import FactoryPythonScriptBase
+from saltfactories.factories.base import DaemonFactory
+from saltfactories.utils import platform
 
-    class FactoryDaemonScriptBase(_FactoryDaemonScriptBase, FactoryPythonScriptBase):
-        pass
-
-    PROCESS_START_TIMEOUT = 2
-
-else:
-    from saltfactories.utils.processes.bases import FactoryDaemonScriptBase
-
-    PROCESS_START_TIMEOUT = 1
+PROCESS_START_TIMEOUT = 2
 
 
 def kill_children(procs):
@@ -98,7 +78,12 @@ def test_daemon_process_termination(request, tempfiles):
         ),
         executable=True,
     )
-    daemon = FactoryDaemonScriptBase(script)
+    if not platform.is_windows():
+        factory_kwargs = dict(cli_script_name=script)
+    else:
+        # Windows don't know how to handle python scripts directly
+        factory_kwargs = dict(cli_script_name=sys.executable, base_script_args=[script])
+    daemon = DaemonFactory(**factory_kwargs)
     daemon.start()
     daemon_pid = daemon.pid
     # Make sure the daemon is terminated no matter what
@@ -184,7 +169,12 @@ def test_daemon_process_termination_parent_killed(request, tempfiles):
         ),
         executable=True,
     )
-    daemon = FactoryDaemonScriptBase(script)
+    if not platform.is_windows():
+        factory_kwargs = dict(cli_script_name=script)
+    else:
+        # Windows don't know how to handle python scripts directly
+        factory_kwargs = dict(cli_script_name=sys.executable, base_script_args=[script])
+    daemon = DaemonFactory(**factory_kwargs)
     daemon.start()
     daemon_pid = daemon.pid
     # Make sure the daemon is terminated no matter what

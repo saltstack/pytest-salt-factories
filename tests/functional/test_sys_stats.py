@@ -70,7 +70,7 @@ def test_proc_sys_stats(testdir):
             "* Processes Statistics *",
             "* System  -  CPU: * %   MEM: * % (Virtual Memory)*",
             "* Test Suite Run  -  CPU: * %   MEM: * % (RSS) * CHILD PROCS: *",
-            "* sshd  -  CPU: * %   MEM: * % (RSS)",
+            "* SSHD  -  CPU: * %   MEM: * % (RSS)",
             "* 1 passed in *",
         ]
     )

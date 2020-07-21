@@ -1,21 +1,15 @@
-"""
-tests.functional.utils.processes.bases.test_factory_script_base
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Test saltfactories.utils.processes.bases.FactoryScriptBase
-"""
 import os
 import sys
 
 import pytest
 
 from saltfactories.exceptions import ProcessTimeout
-from saltfactories.utils.processes.bases import FactoryScriptBase
+from saltfactories.factories.base import ProcessFactory
 
 
 @pytest.mark.parametrize("exitcode", [0, 1, 3, 9, 40, 120])
 def test_exitcode(exitcode, tempfiles):
-    shell = FactoryScriptBase(sys.executable)
+    shell = ProcessFactory(cli_script_name=sys.executable)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -31,7 +25,7 @@ def test_exitcode(exitcode, tempfiles):
 
 
 def test_timeout_defined_on_class_instantiation(tempfiles):
-    shell = FactoryScriptBase(sys.executable, default_timeout=0.5)
+    shell = ProcessFactory(cli_script_name=sys.executable, default_timeout=0.5)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -45,7 +39,7 @@ def test_timeout_defined_on_class_instantiation(tempfiles):
 
 
 def test_timeout_defined_run(tempfiles):
-    shell = FactoryScriptBase(sys.executable)
+    shell = ProcessFactory(cli_script_name=sys.executable)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -79,7 +73,7 @@ def test_timeout_defined_run(tempfiles):
     ],
 )
 def test_json_output(input_str, expected_object, tempfiles):
-    shell = FactoryScriptBase(sys.executable)
+    shell = ProcessFactory(cli_script_name=sys.executable)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -99,7 +93,7 @@ def test_json_output(input_str, expected_object, tempfiles):
 
 def test_stderr_output(tempfiles):
     input_str = "Thou shalt not exit cleanly"
-    shell = FactoryScriptBase(sys.executable)
+    shell = ProcessFactory(cli_script_name=sys.executable)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -113,11 +107,8 @@ def test_stderr_output(tempfiles):
     assert result.stderr.replace(os.linesep, "\n") == input_str + "\n"
 
 
-@pytest.mark.skipif(
-    sys.version_info < (3,), reason="This test will fail on Py2 and we do not support Py2"
-)
 def test_unicode_output(tempfiles):
-    shell = FactoryScriptBase(sys.executable)
+    shell = ProcessFactory(cli_script_name=sys.executable)
     script = tempfiles.makepyfile(
         r"""
         # coding=utf-8

@@ -1,9 +1,13 @@
 """
-saltfactories.factories.master
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+saltfactories.factories.daemons.master
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Master Factory
 """
+import attr
+
+from saltfactories.factories.base import SaltDaemonFactory
+from saltfactories.utils import ports
 
 try:
     import salt.config
@@ -15,10 +19,9 @@ except ImportError:  # pragma: no cover
     # import error, but its safe to pass
     pass
 
-from saltfactories.utils import ports
 
-
-class MasterFactory:
+@attr.s(kw_only=True, slots=True)
+class MasterFactory(SaltDaemonFactory):
     @staticmethod
     def default_config(
         root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,
@@ -91,3 +94,9 @@ class MasterFactory:
             salt.utils.dictupdate.update(config_defaults, config_overrides, merge_lists=True)
 
         return config_defaults
+
+    def get_check_events(self):
+        """
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
+        """
+        yield self.config["id"], "salt/master/{id}/start".format(**self.config)

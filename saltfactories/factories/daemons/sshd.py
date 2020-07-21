@@ -1,8 +1,8 @@
 """
-    saltfactories.utils.processes.sshd
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+saltfactories.factories.daemons.sshd
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    SSHD daemon process implementation
+SSHD daemon process implementation
 """
 import logging
 import pathlib
@@ -11,38 +11,49 @@ import socket
 import subprocess
 from datetime import datetime
 
+import attr
+
 from saltfactories.exceptions import ProcessFailed
+from saltfactories.factories.base import DaemonFactory
 from saltfactories.utils import ports
 from saltfactories.utils import running_username
-from saltfactories.utils.processes.bases import FactoryDaemonScriptBase
 
 log = logging.getLogger(__name__)
 
 
-class SshdDaemon(FactoryDaemonScriptBase):
-    def __init__(self, *args, **kwargs):
-        config_dir = kwargs.pop("config_dir")
-        listen_address = kwargs.pop("listen_address", None) or "127.0.0.1"
-        listen_port = kwargs.pop("listen_port", None) or ports.get_unused_localhost_port()
-        authorized_keys = kwargs.pop("authorized_keys", None) or []
-        sshd_config_dict = kwargs.pop("sshd_config_dict", None) or {}
-        super().__init__(*args, **kwargs)
-        config_dir.chmod(0o0700)
-        self.config_dir = config_dir
-        self.listen_address = listen_address
-        self.listen_port = listen_port
-        authorized_keys_file = config_dir / "authorized_keys"
+@attr.s(kw_only=True, slots=True)
+class SshdDaemonFactory(DaemonFactory):
+    config_dir = attr.ib()
+    listen_address = attr.ib(default=None)
+    listen_port = attr.ib(default=None)
+    authorized_keys = attr.ib(default=None)
+    sshd_config_dict = attr.ib(default=None, repr=False)
+    client_key = attr.ib(default=None, init=False, repr=False)
+    _sshd_config = attr.ib(default=None, init=False, repr=False)
+
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+        if self.authorized_keys is None:
+            self.authorized_keys = []
+        if self.sshd_config_dict is None:
+            self.sshd_config_dict = {}
+        if self.listen_address is None:
+            self.listen_address = "127.0.0.1"
+        if self.listen_port is None:
+            self.listen_port = ports.get_unused_localhost_port()
+        self.config_dir.chmod(0o0700)
+        authorized_keys_file = self.config_dir / "authorized_keys"
 
         # Let's generate the client key
         self.client_key = self._generate_client_ecdsa_key()
         with open("{}.pub".format(self.client_key)) as rfh:
             pubkey = rfh.read().strip()
             log.debug("SSH client pub key: %r", pubkey)
-            authorized_keys.append(pubkey)
+            self.authorized_keys.append(pubkey)
 
         # Write the authorized pub keys to file
         with open(str(authorized_keys_file), "w") as wfh:
-            wfh.write("\n".join(authorized_keys))
+            wfh.write("\n".join(self.authorized_keys))
 
         authorized_keys_file.chmod(0o0600)
 
@@ -50,8 +61,8 @@ class SshdDaemon(FactoryDaemonScriptBase):
             log.debug("AuthorizedKeysFile contents:\n%s", rfh.read())
 
         _default_config = {
-            "Port": listen_port,
-            "ListenAddress": listen_address,
+            "Port": self.listen_port,
+            "ListenAddress": self.listen_address,
             "PermitRootLogin": "no",
             "ChallengeResponseAuthentication": "no",
             "PasswordAuthentication": "no",
@@ -60,7 +71,7 @@ class SshdDaemon(FactoryDaemonScriptBase):
             "PidFile": self.config_dir / "sshd.pid",
             "AuthorizedKeysFile": authorized_keys_file,
         }
-        _default_config.update(sshd_config_dict)
+        _default_config.update(self.sshd_config_dict)
         self._sshd_config = _default_config
         self._write_config()
 

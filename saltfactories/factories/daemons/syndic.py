@@ -1,9 +1,13 @@
 """
-saltfactories.factories.minion
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+saltfactories.factories.daemons.syndic
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Minion Factory
+Syndic Factory
 """
+import attr
+
+from saltfactories.factories.base import SaltDaemonFactory
+from saltfactories.utils import ports
 
 try:
     import salt.config
@@ -15,10 +19,9 @@ except ImportError:  # pragma: no cover
     # import error, but its safe to pass
     pass
 
-from saltfactories.utils import ports
 
-
-class SyndicFactory:
+@attr.s(kw_only=True, slots=True)
+class SyndicFactory(SaltDaemonFactory):
     @staticmethod
     def default_config(
         root_dir,
@@ -214,3 +217,10 @@ class SyndicFactory:
                 config_defaults.pop(key)
 
         return config_defaults
+
+    def get_check_events(self):
+        """
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
+        """
+        pytest_config = self.config["pytest-{}".format(self.config["__role"])]
+        yield pytest_config["master_config"]["id"], "salt/{__role}/{id}/start".format(**self.config)

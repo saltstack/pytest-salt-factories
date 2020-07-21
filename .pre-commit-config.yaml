@@ -46,3 +46,4 @@ repos:
         exclude: (versioneer.py|saltfactories/_version.py)
         additional_dependencies:
           - saltpylint
+          - salt>=3001
