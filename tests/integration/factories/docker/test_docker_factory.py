@@ -2,9 +2,19 @@ import socket
 
 import pytest
 
+from saltfactories.factories.daemons.docker import DockerFactory
 from saltfactories.utils import ports
 
-pytest.importorskip("docker")
+docker = pytest.importorskip("docker")
+
+
+@pytest.fixture(scope="module")
+def docker_client():
+    client = docker.from_env()
+    connectable = DockerFactory.client_connectable(client)
+    if connectable is not True:
+        pytest.skip(connectable)
+    return client
 
 
 @pytest.fixture(scope="module")
@@ -13,12 +23,12 @@ def echo_server_port():
 
 
 @pytest.fixture(scope="module")
-@pytest.mark.skip_if_binaries_missing("docker", reason="Docker does not appear to be installed")
-def docker_container(request, salt_factories, echo_server_port):
+def docker_container(request, salt_factories, docker_client, echo_server_port):
     return salt_factories.spawn_docker_container(
         request,
         "echo-server-test",
         "cjimti/go-echo",
+        docker_client=docker_client,
         check_ports=[echo_server_port],
         container_run_kwargs={
             "ports": {"{}/tcp".format(echo_server_port): echo_server_port},

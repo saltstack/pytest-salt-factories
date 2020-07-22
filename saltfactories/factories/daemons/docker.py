@@ -18,10 +18,29 @@ from saltfactories.utils.processes import ProcessResult
 
 try:
     import docker
+    from docker.exceptions import APIError
+    from requests.exceptions import ConnectionError as RequestsConnectionError
 
     HAS_DOCKER = True
 except ImportError:
     HAS_DOCKER = False
+
+    class APIError(Exception):
+        pass
+
+    class RequestsConnectionError(ConnectionError):
+        pass
+
+
+try:
+    import pywintypes
+
+    PyWinTypesError = pywintypes.error
+except ImportError:
+
+    class PyWinTypesError(Exception):
+        pass
+
 
 log = logging.getLogger(__name__)
 
@@ -46,13 +65,9 @@ class DockerFactory(Factory):
 
     def start(self):
         atexit.register(self.terminate)
-        try:
-            if not self.docker_client.ping():
-                pytest.fail(
-                    "The docker client failed to get a ping response from the docker daemon"
-                )
-        except docker.errors.APIError as exc:
-            pytest.fail("The docker client failed to ping the docker server: {}".format(exc))
+        connectable = DockerFactory.client_connectable(self.docker_client)
+        if connectable is not True:
+            pytest.fail(connectable)
         start_time = time.time()
         start_timeout = start_time + 30
         # image = self.docker_client.images.pull(self.image)
@@ -75,10 +90,12 @@ class DockerFactory(Factory):
             time.sleep(1)
 
     def terminate(self):
+        atexit.unregister(self.terminate)
         stdout = stderr = None
+        if self.container is None:
+            return ProcessResult(exitcode=0, stdout=None, stderr=None)
         try:
             container = self.docker_client.containers.get(self.container.id)
-            atexit.unregister(self.terminate)
             logs = container.logs(stdout=True, stderr=True, stream=False)
             if isinstance(logs, bytes):
                 stdout = logs.decode()
@@ -115,3 +132,12 @@ class DockerFactory(Factory):
         if stderr is not None:
             stderr = stderr.decode()
         return ProcessResult(exitcode=exitcode, stdout=stdout, stderr=stderr, cmdline=cmd)
+
+    @staticmethod
+    def client_connectable(docker_client):
+        try:
+            if not docker_client.ping():
+                return "The docker client failed to get a ping response from the docker daemon"
+            return True
+        except (APIError, RequestsConnectionError, PyWinTypesError) as exc:
+            return "The docker client failed to ping the docker server: {}".format(exc)
