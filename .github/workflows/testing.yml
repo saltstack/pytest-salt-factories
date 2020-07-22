@@ -191,7 +191,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@main
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artefacts/runtests-*.log
@@ -337,7 +337,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@main
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artefacts/runtests-*.log
@@ -479,7 +479,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@main
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artefacts/runtests-*.log
