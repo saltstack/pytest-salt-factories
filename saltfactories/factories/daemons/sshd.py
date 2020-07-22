@@ -13,7 +13,7 @@ from datetime import datetime
 
 import attr
 
-from saltfactories.exceptions import ProcessFailed
+from saltfactories.exceptions import FactoryFailure
 from saltfactories.factories.base import DaemonFactory
 from saltfactories.utils import ports
 from saltfactories.utils import running_username
@@ -196,7 +196,7 @@ class SshdDaemonFactory(DaemonFactory):
                 stderr=subprocess.PIPE,
             )
         except subprocess.CalledProcessError as exc:
-            raise ProcessFailed(
+            raise FactoryFailure(
                 "Failed to generate ssh key.",
                 cmdline=exc.args,
                 stdout=exc.stdout,

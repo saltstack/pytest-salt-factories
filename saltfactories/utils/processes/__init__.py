@@ -11,7 +11,7 @@ import weakref
 
 import attr
 
-from saltfactories.exceptions import ProcessTimeout
+from saltfactories.exceptions import FactoryTimeout
 from saltfactories.utils.processes.helpers import terminate_process
 
 

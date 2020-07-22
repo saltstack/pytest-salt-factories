@@ -14,7 +14,7 @@ import weakref
 
 import psutil
 
-from saltfactories.exceptions import ProcessNotStarted
+from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.utils import ports
 
 
@@ -241,7 +241,7 @@ def start_daemon(
             Keyword arguments to pass to the ``daemon_class`` when instantiating it.
 
     Raises:
-        ProcessNotStarted:
+        FactoryNotStarted:
             Raised when a process fails to start or when the code used to confirm that the daemon is up also fails.
         RuntimeError:
             `RuntimeError` is raised when a process defines
@@ -328,7 +328,7 @@ def start_daemon(
                 if all_checks_passed is False:
                     result = process.terminate()
                     if attempts >= max_attempts:
-                        raise ProcessNotStarted(
+                        raise FactoryNotStarted(
                             "{}The {!r} has failed to confirm running status after {} attempts, which "
                             "took {:.2f} seconds({:.2f} seconds each)".format(
                                 log_prefix,
@@ -342,7 +342,7 @@ def start_daemon(
                             exitcode=result.exitcode,
                         )
                     continue
-            except ProcessNotStarted:
+            except FactoryNotStarted:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
                 log.exception(
@@ -350,7 +350,7 @@ def start_daemon(
                 )
                 result = process.terminate()
                 if attempts >= max_attempts:
-                    raise ProcessNotStarted(
+                    raise FactoryNotStarted(
                         "{}The {!r} has failed to confirm running status after {} attempts and raised an "
                         "exception: {}. Took {:.2f} seconds({:.2f} seconds each attempt).".format(
                             log_prefix,
@@ -392,7 +392,7 @@ def start_daemon(
             stderr = result.stderr
             stdout = result.stdout
             exitcode = result.exitcode
-        raise ProcessNotStarted(
+        raise FactoryNotStarted(
             "{}The {!r} has failed to confirm running status after {} attempts, which "
             "took {:.2f} seconds.".format(
                 log_prefix, process, attempts, time.time() - checks_start_time

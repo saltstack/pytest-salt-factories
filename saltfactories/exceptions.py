@@ -13,7 +13,7 @@ class SaltFactoriesException(Exception):
     """
 
 
-class ProcessFailed(SaltFactoriesException):
+class FactoryFailure(SaltFactoriesException):
     """
     Exception raised when a sub-process fails
     """
@@ -51,13 +51,13 @@ class ProcessFailed(SaltFactoriesException):
         return message
 
 
-class ProcessNotStarted(ProcessFailed):
+class FactoryNotStarted(FactoryFailure):
     """
     Exception raised when a process failed to start
     """
 
 
-class ProcessTimeout(ProcessNotStarted):
+class FactoryTimeout(FactoryNotStarted):
     """
     Exception raised when a process timmed out
     """

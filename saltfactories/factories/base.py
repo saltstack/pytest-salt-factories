@@ -15,7 +15,7 @@ import attr
 import psutil
 import pytest
 
-from saltfactories.exceptions import ProcessTimeout
+from saltfactories.exceptions import FactoryTimeout
 from saltfactories.utils.processes import Popen
 from saltfactories.utils.processes import ProcessResult
 from saltfactories.utils.processes import ShellResult
@@ -306,7 +306,7 @@ class ProcessFactory(SubprocessFactoryBase):
 
         result = self.terminate()
         if timmed_out:
-            raise ProcessTimeout(
+            raise FactoryTimeout(
                 "{}Failed to run: {}; Error: Timed out after {:.2f} seconds!".format(
                     self.get_log_prefix(), result.cmdline, time.time() - start_time
                 ),

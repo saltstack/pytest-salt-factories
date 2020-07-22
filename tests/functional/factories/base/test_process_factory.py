@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from saltfactories.exceptions import ProcessTimeout
+from saltfactories.exceptions import FactoryTimeout
 from saltfactories.factories.base import ProcessFactory
 
 
@@ -34,7 +34,7 @@ def test_timeout_defined_on_class_instantiation(tempfiles):
         exit(0)
         """
     )
-    with pytest.raises(ProcessTimeout):
+    with pytest.raises(FactoryTimeout):
         shell.run(script)
 
 
@@ -59,7 +59,7 @@ def test_timeout_defined_run(tempfiles):
         exit(0)
         """
     )
-    with pytest.raises(ProcessTimeout):
+    with pytest.raises(FactoryTimeout):
         shell.run(script, _timeout=0.1)
 
 

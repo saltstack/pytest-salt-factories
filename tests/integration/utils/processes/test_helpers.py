@@ -8,7 +8,7 @@ import time
 
 import pytest
 
-from saltfactories.exceptions import ProcessNotStarted
+from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.factories.daemons.master import MasterFactory
 from saltfactories.utils import cli_scripts
 
@@ -60,7 +60,7 @@ def test_exit_status_unknown_user(request, salt_factories, shell_tests_salt_mast
     assert "The user is not available." in ret.stderr, ret
 
     # Now spawn_<daemon> should behave the same
-    with pytest.raises(ProcessNotStarted) as exc:
+    with pytest.raises(FactoryNotStarted) as exc:
         salt_factories.spawn_master(
             request, shell_tests_salt_master_config["id"], max_start_attempts=1
         )
