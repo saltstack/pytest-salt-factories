@@ -10,6 +10,14 @@ import string
 import sys
 from functools import lru_cache
 
+try:
+    import salt.utils.user
+except ImportError:  # pragma: no cover
+    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
+    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
+    # import error, but its safe to pass
+    pass
+
 
 def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
     """
@@ -39,11 +47,4 @@ def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
 
 @lru_cache(maxsize=1)
 def running_username():
-    if sys.platform.startswith("win32"):
-        import win32api
-
-        return win32api.GetUserName()
-    else:
-        import pwd
-
-        return pwd.getpwuid(os.getuid()).pw_name
+    return salt.utils.user.get_user()
