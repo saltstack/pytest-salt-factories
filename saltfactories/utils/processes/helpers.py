@@ -215,13 +215,12 @@ def terminate_process(pid=None, process=None, children=None, kill_children=None,
 
 
 def start_daemon(
-    cli_script_name,
     daemon_class,
     start_timeout=10,
     max_attempts=3,
     event_listener=None,
     salt_factories=None,
-    **extra_daemon_class_kwargs
+    **daemon_class_kwargs
 ):
     """
     Returns a running process daemon
@@ -238,8 +237,8 @@ def start_daemon(
         event_listener(:py:class:`~saltfactories.utils.event_listener.EventListener`):
             An instance of :py:class:`~saltfactories.utils.event_listener.EventListener` in case the daemon
             is a salt daemon.
-        **extra_daemon_class_kwargs(dict):
-            Extra keyword arguments to pass to the ``daemon_class`` when instantiating it.
+        **daemon_class_kwargs(dict):
+            Keyword arguments to pass to the ``daemon_class`` when instantiating it.
 
     Raises:
         ProcessNotStarted:
@@ -258,8 +257,7 @@ def start_daemon(
 
     checks_start_time = time.time()
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
-        log.warning("KLASS: %s // EXtra: %s", daemon_class, extra_daemon_class_kwargs.keys())
-        process = daemon_class(cli_script_name=cli_script_name, **extra_daemon_class_kwargs)
+        process = daemon_class(**daemon_class_kwargs)
         log_prefix = process.get_log_prefix()
         log.info("%sStarting %r. Attempt: %s", log_prefix, process, attempts)
         start_time = time.time()
@@ -268,9 +266,12 @@ def start_daemon(
         attempts += 1
         if process.is_alive():
             try:
-                check_ports = set(process.get_check_ports())
-                if check_ports:
-                    log.debug("Checking for connectable ports: %s", check_ports)
+                try:
+                    check_ports = set(process.get_check_ports())
+                    if check_ports:
+                        log.debug("Checking for connectable ports: %s", check_ports)
+                except AttributeError:
+                    check_ports = False
 
                 try:
                     check_events = set(process.get_check_events())

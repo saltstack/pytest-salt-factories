@@ -1069,9 +1069,9 @@ class SaltFactoriesManager:
             config_dir = pathlib.Path(config_dir).resolve()
         return self.spawn_daemon(
             request,
-            "sshd",
             daemon_class,
             daemon_id,
+            cli_script_name="sshd",
             log_prefix=log_prefix or "SSHD",
             display_name=display_name or "SSHD",
             config_dir=config_dir,
@@ -1084,14 +1084,13 @@ class SaltFactoriesManager:
     def spawn_daemon(
         self,
         request,
-        script_name,
         daemon_class,
         daemon_id,
         environ=None,
         cwd=None,
         slow_stop=None,
         max_start_attempts=3,
-        **extra_daemon_class_kwargs
+        **daemon_class_kwargs
     ):
         """
         Start a non-salt daemon
@@ -1103,14 +1102,13 @@ class SaltFactoriesManager:
         if slow_stop is None:
             slow_stop = False
         proc = saltfactories.utils.processes.helpers.start_daemon(
-            script_name,
             daemon_class,
             start_timeout=self.start_timeout,
             slow_stop=slow_stop,
             environ=environ,
             cwd=cwd,
             max_attempts=max_start_attempts,
-            **extra_daemon_class_kwargs,
+            **daemon_class_kwargs,
         )
         self.cache["daemons"][daemon_id] = proc
         if self.stats_processes:
@@ -1128,7 +1126,7 @@ class SaltFactoriesManager:
         cache_key,
         daemon_id,
         max_start_attempts=3,
-        **extra_daemon_class_kwargs
+        **daemon_class_kwargs
     ):
         """
         Helper method to start daemons
@@ -1142,7 +1140,6 @@ class SaltFactoriesManager:
             inject_sitecustomize=self.inject_sitecustomize,
         )
         proc = saltfactories.utils.processes.helpers.start_daemon(
-            script_path,
             daemon_class,
             config=daemon_config,
             start_timeout=self.start_timeout,
@@ -1152,7 +1149,8 @@ class SaltFactoriesManager:
             max_attempts=max_start_attempts,
             event_listener=self.event_listener,
             salt_factories=self,
-            **extra_daemon_class_kwargs,
+            cli_script_name=script_path,
+            **daemon_class_kwargs,
         )
         self.cache[cache_key][daemon_id] = proc
         if self.stats_processes:
