@@ -101,3 +101,17 @@ class DockerFactory(Factory):
 
     def is_running(self):
         return self.container.status == "running"
+
+    def run(self, *cmd, **kwargs):
+        if len(cmd) == 1:
+            cmd = cmd[0]
+        log.info("%sRunning %r ...", self.get_log_prefix(), cmd)
+        # We force dmux to True so that we always get back both stdout and stderr
+        ret = self.container.exec_run(cmd, demux=True, **kwargs)
+        exitcode = ret.exit_code
+        stdout, stderr = ret.output
+        if stdout is not None:
+            stdout = stdout.decode()
+        if stderr is not None:
+            stderr = stderr.decode()
+        return ProcessResult(exitcode=exitcode, stdout=stdout, stderr=stderr, cmdline=cmd)
