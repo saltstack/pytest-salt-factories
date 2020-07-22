@@ -1081,6 +1081,58 @@ class SaltFactoriesManager:
             **extra_factory_class_kwargs,
         )
 
+    def spawn_docker_container(
+        self,
+        request,
+        container_name,
+        image_name,
+        docker_client=None,
+        log_prefix=None,
+        display_name=None,
+        factory_class=daemons.docker.DockerFactory,
+        max_start_attempts=3,
+        **extra_factory_class_kwargs
+    ):
+        """
+        Start an docker container
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            container_name(str):
+                The name to give the container
+            image_name(str):
+                The image to use
+            docker_client:
+                An intance of the docker client to use
+            max_start_attempts(int):
+                How many attempts should be made to start the proxy minion in case of failure to validate that
+                its running
+            listen_address(str):
+                The address where the sshd server will listen to connections. Defaults to 127.0.0.1
+            listen_port(int):
+                The port where the sshd server will listen to connections
+            sshd_config_dict(dict):
+                A dictionary of key-value pairs to construct the sshd config file
+            extra_factory_class_kwargs(dict):
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.docker.DockerFactory`
+
+        Returns:
+            :py:class:`~saltfactories.factories.daemons.docker.DockerFactory`:
+                The factory instance
+        """
+        return self.start_factory(
+            request,
+            factory_class,
+            container_name,
+            name=container_name,
+            image=image_name,
+            docker_client=docker_client,
+            log_prefix=log_prefix,
+            display_name=display_name or container_name,
+            **extra_factory_class_kwargs,
+        )
+
     def start_factory(
         self,
         request,
