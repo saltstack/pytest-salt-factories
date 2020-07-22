@@ -64,14 +64,21 @@ class Factory:
         """
         Returns a human readable name for the factory
         """
-        return self.display_name or self.__class__.__name__
+        if self.display_name:
+            return "{}({})".format(self.__class__.__name__, self.display_name)
+        return self.__class__.__name__
 
     def get_log_prefix(self):
         """
         Returns a log prefix that shall be used when starting the factory by :py:func:`start_daemon`, or,
         in case the factory supports log forwarding(ie, salt daemons).
         """
-        return self.log_prefix or ""
+        if self.log_prefix:
+            return "[{}] ".format(self.log_prefix)
+        display_name = self.get_display_name()
+        if display_name:
+            return "[{}] ".format(display_name)
+        return ""
 
 
 @attr.s(kw_only=True)
@@ -597,39 +604,22 @@ class SaltDaemonFactory(DaemonFactory, SaltFactory):
         DaemonFactory.__attrs_post_init__(self)
         SaltFactory.__attrs_post_init__(self)
         self.base_script_args.append("--config-dir={}".format(self.config_dir))
-
-    def get_log_prefix(self):
-        """
-        Returns the log prefix that shall be used for a salt daemon forwarding log records.
-        It is also used by :py:func:`start_daemon` when starting the daemon subprocess.
-        """
-        if self._log_prefix is None:
+        self.base_script_args.append("--log-level=quiet")
+        if self.display_name is None:
+            self.display_name = self.config["id"]
+        if self.log_prefix is None:
             try:
                 pytest_config_key = "pytest-{}".format(self.config["__role"])
                 log_prefix = (
                     self.config.get(pytest_config_key, {}).get("log", {}).get("prefix") or ""
                 )
                 if log_prefix:
-                    self.log_prefix = "[{}] ".format(
-                        log_prefix.format(cli_name=os.path.basename(self.cli_script_name))
+                    self.log_prefix = log_prefix.format(
+                        cli_name=os.path.basename(self.cli_script_name)
                     )
             except KeyError:
                 # This should really be a salt daemon which always set's `__role` in its config
-                self._log_prefix = super().get_log_prefix()
-        return self._log_prefix
-
-    def get_display_name(self):
-        """
-        Returns a name to show when process stats reports are enabled
-        """
-        if self._display_name is None:
-            self._display_name = self.get_log_prefix().strip().lstrip("[").rstrip("]")
-        return self._display_name
-
-    def get_base_script_args(self):
-        script_args = super().get_base_script_args()
-        script_args.append("--log-level=quiet")
-        return script_args
+                pass
 
     def get_check_events(self):
         """
