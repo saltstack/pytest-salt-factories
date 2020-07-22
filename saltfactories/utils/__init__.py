@@ -1,4 +1,8 @@
 """
+..
+    PYTEST_DONT_REWRITE
+
+
 saltfactories.utils
 ~~~~~~~~~~~~~~~~~~~
 
@@ -10,13 +14,7 @@ import string
 import sys
 from functools import lru_cache
 
-try:
-    import salt.utils.user
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
+import salt.utils.user
 
 
 def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):

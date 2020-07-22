@@ -1,23 +1,19 @@
 """
-    saltfactories.factories.cli.client
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..
+    PYTEST_DONT_REWRITE
 
-    Salt Client in-process implementation
+
+saltfactories.factories.cli.client
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Salt Client in-process implementation
 """
 import logging
 import re
 
 import attr
 import pytest
-
-
-try:
-    import salt.client
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
+import salt.client
 
 
 log = logging.getLogger(__name__)

@@ -1,4 +1,8 @@
 """
+..
+    PYTEST_DONT_REWRITE
+
+
 saltfactories.factories.manager
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -8,6 +12,7 @@ import pathlib
 import sys
 
 import psutil
+import salt.utils.dictupdate
 
 import saltfactories.utils.processes.helpers
 from saltfactories.factories import cli
@@ -16,14 +21,6 @@ from saltfactories.utils import cli_scripts
 from saltfactories.utils import event_listener
 from saltfactories.utils import running_username
 from saltfactories.utils.ports import get_unused_localhost_port
-
-try:
-    import salt.utils.dictupdate
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
 
 
 class SaltFactoriesManager:

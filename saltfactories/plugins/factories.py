@@ -1,8 +1,12 @@
 """
-    saltfactories.plugins.factories
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..
+    PYTEST_DONT_REWRITE
 
-    Salt Daemon Factories PyTest Plugin
+
+saltfactories.plugins.factories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Salt Daemon Factories PyTest Plugin
 """
 import logging
 import pathlib
@@ -10,24 +14,18 @@ import pprint
 import sys
 
 import pytest
-
-try:
-    import salt.config
-    import salt.loader  # pylint: disable=unused-import
-    import salt.utils.files
-    import salt.utils.verify
-    import salt.utils.yaml
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
+import salt.config
+import salt.loader  # pylint: disable=unused-import
+import salt.utils.files
+import salt.utils.verify
+import salt.utils.yaml
 
 import saltfactories
 from saltfactories import hookspec
 from saltfactories.factories import manager
 from saltfactories.utils import ports
 from saltfactories.utils.log_server import log_server_listener
+
 
 log = logging.getLogger(__name__)
 

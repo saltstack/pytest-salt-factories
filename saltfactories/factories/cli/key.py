@@ -1,4 +1,8 @@
 """
+..
+    PYTEST_DONT_REWRITE
+
+
 saltfactories.factories.cli.key
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -7,22 +11,15 @@ salt-key CLI factory
 import re
 
 import attr
+from salt.utils.parsers import SaltKeyOptionParser
 
 from saltfactories.factories.base import SaltCliFactory
 
 try:
-    from salt.utils.parsers import SaltKeyOptionParser
-
-    try:
-        SALT_KEY_LOG_LEVEL_SUPPORTED = SaltKeyOptionParser._skip_console_logging_config_ is False
-    except AttributeError:
-        # New logging is in place
-        SALT_KEY_LOG_LEVEL_SUPPORTED = True
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    SALT_KEY_LOG_LEVEL_SUPPORTED = False
+    SALT_KEY_LOG_LEVEL_SUPPORTED = SaltKeyOptionParser._skip_console_logging_config_ is False
+except AttributeError:
+    # New logging is in place
+    SALT_KEY_LOG_LEVEL_SUPPORTED = True
 
 
 @attr.s(kw_only=True, slots=True)

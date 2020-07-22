@@ -1,8 +1,12 @@
 """
-    saltfactories.factories.base
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..
+    PYTEST_DONT_REWRITE
 
-    Factories base classes
+
+saltfactories.factories.base
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Factories base classes
 """
 import atexit
 import json
@@ -14,20 +18,13 @@ import time
 import attr
 import psutil
 import pytest
+import salt.utils.path
 
 from saltfactories.exceptions import FactoryTimeout
 from saltfactories.utils.processes import Popen
 from saltfactories.utils.processes import ProcessResult
 from saltfactories.utils.processes import ShellResult
 from saltfactories.utils.processes.helpers import terminate_process
-
-try:
-    import salt.utils.path
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
 
 log = logging.getLogger(__name__)
 
