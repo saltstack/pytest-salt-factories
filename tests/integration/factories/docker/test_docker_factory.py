@@ -37,6 +37,8 @@ def docker_container(request, salt_factories, docker_client, echo_server_port):
     )
 
 
+@pytest.mark.skip_on_darwin
+@pytest.mark.skip_on_windows
 def test_spawn_docker_container(docker_container, echo_server_port):
     message = b"Hello!\n"
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -60,6 +62,8 @@ def test_spawn_docker_container(docker_container, echo_server_port):
         client.close()
 
 
+@pytest.mark.skip_on_darwin
+@pytest.mark.skip_on_windows
 def test_docker_container_run(docker_container):
     ret = docker_container.run("echo", "foo")
     assert ret.exitcode == 0
