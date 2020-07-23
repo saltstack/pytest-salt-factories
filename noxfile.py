@@ -17,6 +17,7 @@ SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000.1"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
 USE_SYSTEM_PYTHON = "USE_SYSTEM_PYTHON" in os.environ
+IS_WINDOWS = sys.platform.lower().startswith("win")
 
 # Be verbose when runing under a CI context
 PIP_INSTALL_SILENT = (
@@ -99,7 +100,7 @@ def _tests(session):
     """
     Run tests
     """
-    if CI_RUN:
+    if CI_RUN or IS_WINDOWS:
         env = None
     else:
         env = {"PYTHONPATH": str(REPO_ROOT)}
@@ -108,7 +109,7 @@ def _tests(session):
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
-        if CI_RUN:
+        if CI_RUN or IS_WINDOWS:
             session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
             session, "pip", "list", "--format=json", silent=True, log=False
