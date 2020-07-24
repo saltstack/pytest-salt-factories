@@ -38,12 +38,12 @@ def pytest_addhooks(pluginmanager):
 
 
 @pytest.fixture(scope="session")
-def log_server_host(request):
-    return "127.0.0.1"
+def log_server_host():
+    return "0.0.0.0"
 
 
 @pytest.fixture(scope="session")
-def log_server_port(request):
+def log_server_port():
     return ports.get_unused_localhost_port()
 
 
@@ -73,7 +73,7 @@ def log_server_level(request):
 
 @pytest.fixture(scope="session")
 def log_server(log_server_host, log_server_port):
-    log.info("Starting log server")
+    log.info("Starting log server at %s:%d", log_server_host, log_server_port)
     with log_server_listener(log_server_host, log_server_port):
         log.info("Log Server Started")
         # Run tests
@@ -104,6 +104,10 @@ def salt_factories(
 ):
     if not isinstance(salt_factories_config, dict):
         raise RuntimeError("The 'salt_factories_config' fixture MUST return a dictionary")
+    log.debug(
+        "Instantiating the Salt Factories Manager with the following keyword arguments:\n%s",
+        pprint.pformat(salt_factories_config),
+    )
     _manager = manager.SaltFactoriesManager(
         pytestconfig,
         tempdir,
