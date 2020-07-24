@@ -185,9 +185,9 @@ class SaltFactoriesManager:
             pytest_config["log"] = {}
 
         log_config = pytest_config["log"]
-        log_config["host"] = self.log_server_host
-        log_config["port"] = self.log_server_port
-        log_config["level"] = self.log_server_level
+        log_config.setdefault("host", self.log_server_host)
+        log_config.setdefault("port", self.log_server_port)
+        log_config.setdefault("level", self.log_server_level)
 
     def configure_master(
         self,
