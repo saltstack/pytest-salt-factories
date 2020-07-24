@@ -562,8 +562,9 @@ class SaltCliFactory(ProcessFactory, SaltFactory):
                 value = json.dumps(value)
             cmdline.append("{}={}".format(key, value))
         cmdline = super().build_cmdline(*cmdline)
-        if cmdline[0] != self.python_executable:
-            cmdline.insert(0, self.python_executable)
+        if self.python_executable:
+            if cmdline[0] != self.python_executable:
+                cmdline.insert(0, self.python_executable)
         log.debug("Built cmdline: %s", cmdline)
         return cmdline
 
@@ -626,6 +627,7 @@ class SaltDaemonFactory(DaemonFactory, SaltFactory):
 
     def build_cmdline(self, *args):
         cmdline = super().build_cmdline(*args)
-        if cmdline[0] != self.python_executable:
-            cmdline.insert(0, self.python_executable)
+        if self.python_executable:
+            if cmdline[0] != self.python_executable:
+                cmdline.insert(0, self.python_executable)
         return cmdline
