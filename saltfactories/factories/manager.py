@@ -287,6 +287,7 @@ class SaltFactoriesManager:
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        start_timeout=None,
         factory_class=daemons.master.MasterFactory,
         **extra_factory_class_kwargs
     ):
@@ -338,6 +339,7 @@ class SaltFactoriesManager:
             "masters",
             master_id,
             max_start_attempts=max_start_attempts,
+            start_timeout=start_timeout,
             **extra_factory_class_kwargs,
         )
 
@@ -432,6 +434,7 @@ class SaltFactoriesManager:
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        start_timeout=None,
         factory_class=daemons.minion.MinionFactory,
         **extra_factory_class_kwargs
     ):
@@ -479,6 +482,7 @@ class SaltFactoriesManager:
             "minions",
             minion_id,
             max_start_attempts=max_start_attempts,
+            start_timeout=start_timeout,
             **extra_factory_class_kwargs,
         )
 
@@ -653,6 +657,7 @@ class SaltFactoriesManager:
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        start_timeout=None,
         factory_class=daemons.syndic.SyndicFactory,
         **extra_factory_class_kwargs
     ):
@@ -701,12 +706,18 @@ class SaltFactoriesManager:
         # We need the syndic master and minion running
         if syndic_id not in self.cache["masters"]:
             self.spawn_master(
-                request, syndic_id, max_start_attempts=max_start_attempts,
+                request,
+                syndic_id,
+                max_start_attempts=max_start_attempts,
+                start_timeout=start_timeout,
             )
 
         if syndic_id not in self.cache["minions"]:
             self.spawn_minion(
-                request, syndic_id, max_start_attempts=max_start_attempts,
+                request,
+                syndic_id,
+                max_start_attempts=max_start_attempts,
+                start_timeout=start_timeout,
             )
 
         return self._start_factory(
@@ -717,6 +728,7 @@ class SaltFactoriesManager:
             "syndics",
             syndic_id,
             max_start_attempts=max_start_attempts,
+            start_timeout=start_timeout,
             **extra_factory_class_kwargs,
         )
 
@@ -810,6 +822,7 @@ class SaltFactoriesManager:
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
+        start_timeout=None,
         factory_class=daemons.proxy.ProxyMinionFactory,
         **extra_factory_class_kwargs
     ):
@@ -860,6 +873,7 @@ class SaltFactoriesManager:
             "proxy_minions",
             proxy_minion_id,
             max_start_attempts=max_start_attempts,
+            start_timeout=start_timeout,
             **extra_factory_class_kwargs,
         )
 
@@ -1024,6 +1038,7 @@ class SaltFactoriesManager:
         daemon_id,
         factory_class=daemons.sshd.SshdDaemonFactory,
         max_start_attempts=3,
+        start_timeout=None,
         config_dir=None,
         listen_address=None,
         listen_port=None,
@@ -1088,6 +1103,7 @@ class SaltFactoriesManager:
         display_name=None,
         factory_class=daemons.docker.DockerFactory,
         max_start_attempts=3,
+        start_timeout=None,
         **extra_factory_class_kwargs
     ):
         """
@@ -1138,6 +1154,7 @@ class SaltFactoriesManager:
         environ=None,
         cwd=None,
         max_start_attempts=3,
+        start_timeout=None,
         **factory_class_kwargs
     ):
         """
@@ -1149,7 +1166,7 @@ class SaltFactoriesManager:
             cwd = self.cwd
         proc = saltfactories.utils.processes.helpers.start_factory(
             factory_class,
-            start_timeout=self.start_timeout,
+            start_timeout=start_timeout or self.start_timeout,
             environ=environ,
             cwd=cwd,
             max_attempts=max_start_attempts,
@@ -1175,6 +1192,7 @@ class SaltFactoriesManager:
         cache_key,
         daemon_id,
         max_start_attempts=3,
+        start_timeout=None,
         **factory_class_kwargs
     ):
         """
@@ -1191,7 +1209,7 @@ class SaltFactoriesManager:
         proc = saltfactories.utils.processes.helpers.start_factory(
             factory_class,
             config=daemon_config,
-            start_timeout=self.start_timeout,
+            start_timeout=start_timeout or self.start_timeout,
             slow_stop=self.slow_stop,
             environ=self.environ,
             cwd=self.cwd,
