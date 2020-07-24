@@ -42,7 +42,6 @@ def test_exit_status_unknown_user(request, salt_factories, shell_tests_salt_mast
     script_path = cli_scripts.generate_script(
         salt_factories.scripts_dir,
         "salt-master",
-        executable=salt_factories.executable,
         code_dir=salt_factories.code_dir,
         inject_coverage=salt_factories.inject_coverage,
         inject_sitecustomize=salt_factories.inject_sitecustomize,

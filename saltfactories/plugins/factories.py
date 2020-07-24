@@ -11,7 +11,6 @@ Salt Daemon Factories PyTest Plugin
 import logging
 import pathlib
 import pprint
-import sys
 
 import pytest
 import salt.config
@@ -88,7 +87,6 @@ def salt_factories_config(
     Return a dictionary with the keyword arguments for SaltFactoriesManager
     """
     return {
-        "executable": sys.executable,
         "code_dir": saltfactories.CODE_ROOT_DIR.parent,
         "inject_coverage": True,
         "inject_sitecustomize": True,

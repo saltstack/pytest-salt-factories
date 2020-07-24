@@ -41,7 +41,6 @@ class SaltFactoriesManager:
         log_server_port=None,
         log_server_level=None,
         log_server_host=None,
-        executable=None,
         code_dir=None,
         inject_coverage=False,
         inject_sitecustomize=False,
@@ -61,9 +60,6 @@ class SaltFactoriesManager:
             log_server_level (int):
             log_server_host (str):
                 The hostname/ip address of the host running the logs server. Defaults to "localhost".
-            executable (str):
-                The path to the python executable to use to run python CLI scripts.
-                Defaults to :py:attr:`sys.executable`
             code_dir (str):
                 The path to the code root directory of the project being tested. This is important for proper
                 code-coverage paths.
@@ -94,7 +90,6 @@ class SaltFactoriesManager:
         self.log_server_port = log_server_port or get_unused_localhost_port()
         self.log_server_level = log_server_level or "error"
         self.log_server_host = log_server_host or "localhost"
-        self.executable = executable or sys.executable
         self.code_dir = code_dir
         self.inject_coverage = inject_coverage
         self.inject_sitecustomize = inject_sitecustomize
@@ -340,7 +335,6 @@ class SaltFactoriesManager:
             master_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
-            python_executable=self.executable,
             **extra_factory_class_kwargs,
         )
 
@@ -484,7 +478,6 @@ class SaltFactoriesManager:
             minion_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
-            python_executable=self.executable,
             **extra_factory_class_kwargs,
         )
 
@@ -712,7 +705,6 @@ class SaltFactoriesManager:
                 syndic_id,
                 max_start_attempts=max_start_attempts,
                 start_timeout=start_timeout,
-                python_executable=self.executable,
             )
 
         if syndic_id not in self.cache["minions"]:
@@ -721,7 +713,6 @@ class SaltFactoriesManager:
                 syndic_id,
                 max_start_attempts=max_start_attempts,
                 start_timeout=start_timeout,
-                python_executable=self.executable,
             )
 
         return self._start_factory(
@@ -733,7 +724,6 @@ class SaltFactoriesManager:
             syndic_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
-            python_executable=self.executable,
             **extra_factory_class_kwargs,
         )
 
@@ -879,7 +869,6 @@ class SaltFactoriesManager:
             proxy_minion_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
-            python_executable=self.executable,
             **extra_factory_class_kwargs,
         )
 
@@ -892,7 +881,6 @@ class SaltFactoriesManager:
         return cli_class(
             master_config=self.cache["configs"]["masters"][master_id].copy(),
             functions_known_to_return_none=functions_known_to_return_none,
-            python_executable=self.executable,
         )
 
     def get_salt_cli(self, master_id, cli_class=cli.salt.SaltCliFactory, **cli_kwargs):
@@ -909,7 +897,6 @@ class SaltFactoriesManager:
         return cli_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
-            python_executable=self.executable,
             **cli_kwargs,
         )
 
@@ -928,7 +915,6 @@ class SaltFactoriesManager:
             return cli_class(
                 cli_script_name=script_path,
                 config=self.cache["configs"]["minions"][minion_id],
-                python_executable=self.executable,
                 **cli_kwargs,
             )
         except KeyError:
@@ -937,7 +923,6 @@ class SaltFactoriesManager:
                     cli_script_name=script_path,
                     base_script_args=["--proxyid={}".format(minion_id)],
                     config=self.cache["proxy_minions"][minion_id].config,
-                    python_executable=self.executable,
                     **cli_kwargs,
                 )
             except KeyError:
@@ -959,7 +944,6 @@ class SaltFactoriesManager:
         return cli_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
-            python_executable=self.executable,
             **cli_kwargs,
         )
 
@@ -977,7 +961,6 @@ class SaltFactoriesManager:
         return cli_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
-            python_executable=self.executable,
             **cli_kwargs,
         )
 
@@ -995,7 +978,6 @@ class SaltFactoriesManager:
         return cli_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
-            python_executable=self.executable,
             **cli_kwargs,
         )
 
@@ -1036,7 +1018,6 @@ class SaltFactoriesManager:
             target_host=target_host,
             client_key=client_key,
             ssh_user=ssh_user or running_username(),
-            python_executable=self.executable,
             **cli_kwargs,
         )
 
