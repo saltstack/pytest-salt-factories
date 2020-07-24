@@ -6,13 +6,17 @@
 """
 import atexit
 import logging
+import os
 import time
 
 import attr
 import pytest
 
+from saltfactories import CODE_ROOT_DIR
 from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.factories.base import Factory
+from saltfactories.factories.base import SaltDaemonFactory
+from saltfactories.factories.daemons.minion import MinionFactory
 from saltfactories.utils import random_string
 from saltfactories.utils.processes import ProcessResult
 
@@ -70,7 +74,6 @@ class DockerFactory(Factory):
             pytest.fail(connectable)
         start_time = time.time()
         start_timeout = start_time + 30
-        # image = self.docker_client.images.pull(self.image)
         self.container = self.docker_client.containers.run(
             self.image, name=self.name, detach=True, stdin_open=True, **self.container_run_kwargs
         )
@@ -88,6 +91,7 @@ class DockerFactory(Factory):
                 self.container = container
                 break
             time.sleep(1)
+        return True
 
     def terminate(self):
         atexit.unregister(self.terminate)
@@ -126,7 +130,9 @@ class DockerFactory(Factory):
         # We force dmux to True so that we always get back both stdout and stderr
         ret = self.container.exec_run(cmd, demux=True, **kwargs)
         exitcode = ret.exit_code
-        stdout, stderr = ret.output
+        stdout = stderr = None
+        if ret.output:
+            stdout, stderr = ret.output
         if stdout is not None:
             stdout = stdout.decode()
         if stderr is not None:
@@ -141,3 +147,57 @@ class DockerFactory(Factory):
             return True
         except (APIError, RequestsConnectionError, PyWinTypesError) as exc:
             return "The docker client failed to ping the docker server: {}".format(exc)
+
+
+@attr.s(kw_only=True)
+class SaltDaemonDockerFactory(SaltDaemonFactory, DockerFactory):
+    def __attrs_post_init__(self):
+        if self.python_executable is None:
+            # Default to whatever is the default python in the container
+            self.python_executable = "python"
+        SaltDaemonFactory.__attrs_post_init__(self)
+        DockerFactory.__attrs_post_init__(self)
+        # There are some volumes which NEED to exist on the container
+        # so that configs are in the right place and also our custom
+        # salt plugins
+        root_dir = os.path.dirname(self.config["root_dir"])
+        volumes = {
+            root_dir: {"bind": root_dir, "mode": "z"},
+            str(CODE_ROOT_DIR): {"bind": str(CODE_ROOT_DIR), "mode": "z"},
+        }
+        if "volumes" not in self.container_run_kwargs:
+            self.container_run_kwargs["volumes"] = {}
+        self.container_run_kwargs["volumes"].update(volumes)
+
+    def build_cmdline(self, *args):
+        return ["docker", "exec", "-i", self.name] + super().build_cmdline(*args)
+
+    def start(self):
+        # Start the container
+        DockerFactory.start(self)
+        # Now that the container is up, let's start the daemon
+        return SaltDaemonFactory.start(self)
+
+    def terminate(self):
+        ret = SaltDaemonFactory.terminate(self)
+        DockerFactory.terminate(self)
+        return ret
+
+    def get_check_events(self):
+        """
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
+        """
+        raise NotImplementedError
+
+
+@attr.s(kw_only=True, slots=True)
+class MinionDockerFactory(SaltDaemonDockerFactory, MinionFactory):
+    """
+    Salt minion daemon implementation running in a docker container
+    """
+
+    def get_check_events(self):
+        """
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
+        """
+        return MinionFactory.get_check_events(self)
