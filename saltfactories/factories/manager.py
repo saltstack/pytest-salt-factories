@@ -340,6 +340,7 @@ class SaltFactoriesManager:
             master_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
+            python_executable=self.executable,
             **extra_factory_class_kwargs,
         )
 
@@ -483,6 +484,7 @@ class SaltFactoriesManager:
             minion_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
+            python_executable=self.executable,
             **extra_factory_class_kwargs,
         )
 
@@ -710,6 +712,7 @@ class SaltFactoriesManager:
                 syndic_id,
                 max_start_attempts=max_start_attempts,
                 start_timeout=start_timeout,
+                python_executable=self.executable,
             )
 
         if syndic_id not in self.cache["minions"]:
@@ -718,6 +721,7 @@ class SaltFactoriesManager:
                 syndic_id,
                 max_start_attempts=max_start_attempts,
                 start_timeout=start_timeout,
+                python_executable=self.executable,
             )
 
         return self._start_factory(
@@ -729,6 +733,7 @@ class SaltFactoriesManager:
             syndic_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
+            python_executable=self.executable,
             **extra_factory_class_kwargs,
         )
 
@@ -874,6 +879,7 @@ class SaltFactoriesManager:
             proxy_minion_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
+            python_executable=self.executable,
             **extra_factory_class_kwargs,
         )
 
@@ -886,6 +892,7 @@ class SaltFactoriesManager:
         return cli_class(
             master_config=self.cache["configs"]["masters"][master_id].copy(),
             functions_known_to_return_none=functions_known_to_return_none,
+            python_executable=self.executable,
         )
 
     def get_salt_cli(self, master_id, cli_class=cli.salt.SaltCliFactory, **cli_kwargs):
@@ -895,7 +902,6 @@ class SaltFactoriesManager:
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt",
-            executable=self.executable,
             code_dir=self.code_dir,
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
@@ -903,6 +909,7 @@ class SaltFactoriesManager:
         return cli_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
+            python_executable=self.executable,
             **cli_kwargs,
         )
 
@@ -913,7 +920,6 @@ class SaltFactoriesManager:
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt-call",
-            executable=self.executable,
             code_dir=self.code_dir,
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
@@ -922,6 +928,7 @@ class SaltFactoriesManager:
             return cli_class(
                 cli_script_name=script_path,
                 config=self.cache["configs"]["minions"][minion_id],
+                python_executable=self.executable,
                 **cli_kwargs,
             )
         except KeyError:
@@ -930,6 +937,7 @@ class SaltFactoriesManager:
                     cli_script_name=script_path,
                     base_script_args=["--proxyid={}".format(minion_id)],
                     config=self.cache["proxy_minions"][minion_id].config,
+                    python_executable=self.executable,
                     **cli_kwargs,
                 )
             except KeyError:
@@ -944,7 +952,6 @@ class SaltFactoriesManager:
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt-run",
-            executable=self.executable,
             code_dir=self.code_dir,
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
@@ -952,6 +959,7 @@ class SaltFactoriesManager:
         return cli_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
+            python_executable=self.executable,
             **cli_kwargs,
         )
 
@@ -962,7 +970,6 @@ class SaltFactoriesManager:
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt-cp",
-            executable=self.executable,
             code_dir=self.code_dir,
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
@@ -970,6 +977,7 @@ class SaltFactoriesManager:
         return cli_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
+            python_executable=self.executable,
             **cli_kwargs,
         )
 
@@ -980,7 +988,6 @@ class SaltFactoriesManager:
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt-key",
-            executable=self.executable,
             code_dir=self.code_dir,
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
@@ -988,6 +995,7 @@ class SaltFactoriesManager:
         return cli_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
+            python_executable=self.executable,
             **cli_kwargs,
         )
 
@@ -1017,7 +1025,6 @@ class SaltFactoriesManager:
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             "salt-ssh",
-            executable=self.executable,
             code_dir=self.code_dir,
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
@@ -1029,6 +1036,7 @@ class SaltFactoriesManager:
             target_host=target_host,
             client_key=client_key,
             ssh_user=ssh_user or running_username(),
+            python_executable=self.executable,
             **cli_kwargs,
         )
 
@@ -1201,7 +1209,6 @@ class SaltFactoriesManager:
         script_path = cli_scripts.generate_script(
             self.scripts_dir,
             script_name,
-            executable=self.executable,
             code_dir=self.code_dir,
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
