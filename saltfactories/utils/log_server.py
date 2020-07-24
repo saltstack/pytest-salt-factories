@@ -1,6 +1,6 @@
 """
-    pytestsalt.fixtures.log_server_tornado
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    saltfactories.utils.log_server
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     Tornado Log Server Fixture
 """
@@ -53,6 +53,20 @@ def log_server_listener(log_server_host, log_server_port):
                         # A sentinel to stop processing the queue
                         log.info("Received the sentinel to shutdown the log server")
                         break
+                    try:
+                        record_dict["message"]
+                    except KeyError:
+                        # This log record was msgpack dumped from Py2
+                        for key, value in record_dict.copy().items():
+                            skip_update = True
+                            if isinstance(value, bytes):
+                                value = value.decode("utf-8")
+                                skip_update = False
+                            if isinstance(key, bytes):
+                                key = key.decode("utf-8")
+                                skip_update = False
+                            if skip_update is False:
+                                record_dict[key] = value
                     # Just log everything, filtering will happen on the main process
                     # logging handlers
                     record = logging.makeLogRecord(record_dict)
@@ -62,7 +76,7 @@ def log_server_listener(log_server_host, log_server_port):
                     break
                 except Exception as exc:  # pylint: disable=broad-except
                     log.warning(
-                        "An exception occurred in the multiprocessing logging " "queue thread: %s",
+                        "An exception occurred in the multiprocessing logging queue thread: %s",
                         exc,
                         exc_info=True,
                     )
