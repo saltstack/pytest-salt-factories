@@ -31,7 +31,7 @@ def get_unused_localhost_port(cached_seconds=10):
     try:
         generated_ports = get_unused_localhost_port.__used_ports__
         # Cleanup ports. The idea behind this call is so that two consecutive calls to this
-        # function don't return the same port just because the first call hasn't actuallt started
+        # function don't return the same port just because the first call hasn't actually started
         # using the port.
         # It also makes this cache invalid after <cached_seconds> second
         for port in list(generated_ports):

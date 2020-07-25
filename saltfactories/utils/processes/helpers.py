@@ -344,7 +344,7 @@ def start_daemon(
                 raise
             except Exception as exc:  # pylint: disable=broad-except
                 log.exception(
-                    "%sException caugth on %r: %s", log_prefix, process, exc, exc_info=True
+                    "%sException caught on %r: %s", log_prefix, process, exc, exc_info=True
                 )
                 result = process.terminate()
                 if attempts >= max_attempts:

@@ -87,7 +87,7 @@ def salt_factories_config(
     pytestconfig, tempdir, log_server_host, log_server_port, log_server_level
 ):
     """
-    Return a dictionary with the keyworkd arguments for SaltFactoriesManager
+    Return a dictionary with the keyword arguments for SaltFactoriesManager
     """
     return {
         "executable": sys.executable,
@@ -118,7 +118,7 @@ def salt_factories(
 
 def pytest_saltfactories_minion_verify_configuration(request, minion_config, username):
     """
-    This hook is called to vefiry the provided minion configuration
+    This hook is called to verify the provided minion configuration
     """
     # verify env to make sure all required directories are created and have the
     # right permissions
@@ -139,7 +139,7 @@ def pytest_saltfactories_minion_verify_configuration(request, minion_config, use
 
 def pytest_saltfactories_minion_write_configuration(request, minion_config):
     """
-    This hook is called to vefiry the provided minion configuration
+    This hook is called to verify the provided minion configuration
     """
     config_file = minion_config.pop("conf_file")
     log.debug(
@@ -161,7 +161,7 @@ def pytest_saltfactories_minion_write_configuration(request, minion_config):
 
 def pytest_saltfactories_master_verify_configuration(request, master_config, username):
     """
-    This hook is called to vefiry the provided master configuration
+    This hook is called to verify the provided master configuration
     """
     # verify env to make sure all required directories are created and have the
     # right permissions
@@ -188,7 +188,7 @@ def pytest_saltfactories_master_verify_configuration(request, master_config, use
 
 def pytest_saltfactories_master_write_configuration(request, master_config):
     """
-    This hook is called to vefiry the provided master configuration
+    This hook is called to verify the provided master configuration
     """
     config_file = master_config.pop("conf_file")
     log.debug(
@@ -208,7 +208,7 @@ def pytest_saltfactories_master_write_configuration(request, master_config):
 
 def pytest_saltfactories_syndic_verify_configuration(request, syndic_config, username):
     """
-    This hook is called to vefiry the provided syndic configuration
+    This hook is called to verify the provided syndic configuration
     """
     # verify env to make sure all required directories are created and have the
     # right permissions
@@ -222,7 +222,7 @@ def pytest_saltfactories_syndic_verify_configuration(request, syndic_config, use
 
 def pytest_saltfactories_syndic_write_configuration(request, syndic_config):
     """
-    This hook is called to vefiry the provided syndic configuration
+    This hook is called to verify the provided syndic configuration
     """
     config_file = syndic_config.pop("conf_file")
     log.debug(
@@ -246,7 +246,7 @@ def pytest_saltfactories_syndic_write_configuration(request, syndic_config):
 
 def pytest_saltfactories_proxy_minion_verify_configuration(request, proxy_minion_config, username):
     """
-    This hook is called to vefiry the provided proxy_minion configuration
+    This hook is called to verify the provided proxy_minion configuration
     """
     # verify env to make sure all required directories are created and have the
     # right permissions
@@ -262,7 +262,7 @@ def pytest_saltfactories_proxy_minion_verify_configuration(request, proxy_minion
 
 def pytest_saltfactories_proxy_minion_write_configuration(request, proxy_minion_config):
     """
-    This hook is called to vefiry the provided proxy_minion configuration
+    This hook is called to verify the provided proxy_minion configuration
     """
     config_file = proxy_minion_config.pop("conf_file")
     log.debug(
