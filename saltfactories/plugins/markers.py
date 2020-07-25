@@ -307,7 +307,7 @@ def pytest_runtest_setup(item):
                 "The skip_unless_on_netbsd marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
-            reason = "Platorm is not NetBSD, skipped"
+            reason = "Platform is not NetBSD, skipped"
         if not saltfactories.utils.platform.is_netbsd():
             item._skipped_by_mark = True
             pytest.skip(reason)

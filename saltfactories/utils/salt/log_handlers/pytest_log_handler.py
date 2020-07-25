@@ -96,9 +96,9 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
 
     # We offload sending the log records to the consumer to a separate
     # thread because PUSH socket's WILL block if the receiving end can't
-    # receive fast engough, thus, also blocking the main thread.
+    # receive fast enough, thus, also blocking the main thread.
     #
-    # To achive this, we create an inproc zmq.PAIR, which also guarantees
+    # To achieve this, we create an inproc zmq.PAIR, which also guarantees
     # message delivery, but should be way faster than the PUSH.
     # We also set some high enough high water mark values to cope with the
     # message flooding.
@@ -253,7 +253,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         Writes the LogRecord to the queue, preparing it for pickling first.
         """
         # Python's logging machinery acquires a lock before calling this method
-        # that's why it's safe to call the start method wihtout an explicit acquire
+        # that's why it's safe to call the start method without an explicit acquire
         if self._exiting:
             return
         self.start()
@@ -326,7 +326,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
 
         # Close the receiving end of the PAIR proxy socket
         out_proxy.close(0)
-        # Allow, the pusher queue to send any messsges in it's queue for
+        # Allow, the pusher queue to send any messages in it's queue for
         # the next 1.5 seconds
         pusher.close(1500)
         context.term()

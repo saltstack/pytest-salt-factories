@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 def skip_if_not_root():
     """
-    Helper function to check for root/Administrator priviliges
+    Helper function to check for root/Administrator privileges
 
     Returns:
         str: The reason of the skip
