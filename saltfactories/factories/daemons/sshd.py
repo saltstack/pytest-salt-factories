@@ -41,6 +41,11 @@ class SshdDaemonFactory(DaemonFactory):
             self.listen_address = "127.0.0.1"
         if self.listen_port is None:
             self.listen_port = ports.get_unused_localhost_port()
+        if isinstance(self.config_dir, str):
+            self.config_dir = pathlib.Path(self.config_dir)
+        elif not isinstance(self.config_dir, pathlib.Path):
+            # A py local path?
+            self.config_dir = pathlib.Path(self.config_dir.strpath)
         self.config_dir.chmod(0o0700)
         authorized_keys_file = self.config_dir / "authorized_keys"
 
