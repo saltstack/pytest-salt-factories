@@ -1033,7 +1033,6 @@ class SaltFactoriesManager:
         listen_port=None,
         sshd_config_dict=None,
         display_name=None,
-        log_prefix=None,
         **extra_factory_class_kwargs
     ):
         """
@@ -1073,7 +1072,6 @@ class SaltFactoriesManager:
             factory_class,
             daemon_id,
             cli_script_name="sshd",
-            log_prefix=log_prefix or "SSHD",
             display_name=display_name or "SSHD",
             config_dir=config_dir,
             listen_address=listen_address,
@@ -1088,7 +1086,6 @@ class SaltFactoriesManager:
         container_name,
         image_name,
         docker_client=None,
-        log_prefix=None,
         display_name=None,
         factory_class=daemons.container.ContainerFactory,
         max_start_attempts=3,
@@ -1130,7 +1127,6 @@ class SaltFactoriesManager:
             name=container_name,
             image=image_name,
             docker_client=docker_client,
-            log_prefix=log_prefix,
             display_name=display_name or container_name,
             **extra_factory_class_kwargs,
         )

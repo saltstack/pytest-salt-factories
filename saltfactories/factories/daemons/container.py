@@ -126,7 +126,7 @@ class ContainerFactory(Factory):
     def run(self, *cmd, **kwargs):
         if len(cmd) == 1:
             cmd = cmd[0]
-        log.info("%sRunning %r ...", self.get_log_prefix(), cmd)
+        log.info("%s is running %r ...", self, cmd)
         # We force dmux to True so that we always get back both stdout and stderr
         ret = self.container.exec_run(cmd, demux=True, **kwargs)
         exitcode = ret.exit_code

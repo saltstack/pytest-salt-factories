@@ -253,13 +253,11 @@ def start_factory(
         :py:class:`~saltfactories.utils.processes.bases.FactoryDaemonScriptBase`
     """
     attempts = 1
-    log_prefix = ""
 
     checks_start_time = time.time()
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
         factory = factory_class(**factory_class_kwargs)
-        log_prefix = factory.get_log_prefix()
-        log.info("%sStarting %r. Attempt: %s", log_prefix, factory, attempts)
+        log.info("Starting %s. Attempt: %s", factory, attempts)
         start_time = time.time()
         checks_expire_time = start_time + start_timeout
         factory.start()
@@ -269,7 +267,7 @@ def start_factory(
                 try:
                     check_ports = set(factory.get_check_ports())
                     if check_ports:
-                        log.debug("Checking for connectable ports: %s", check_ports)
+                        log.debug("Checking %s for connectable ports: %s", factory, check_ports)
                 except AttributeError:
                     check_ports = False
 
@@ -281,7 +279,7 @@ def start_factory(
                             "Factory {} want's to have events checked but no 'event_listener' was "
                             "passed to start_daemon()".format(factory)
                         )
-                    log.debug("Checking for event patterns: %s", check_events)
+                    log.debug("Checking %s for event patterns: %s", factory, check_events)
                 except AttributeError:
                     check_events = False
 
@@ -329,13 +327,9 @@ def start_factory(
                     result = factory.terminate()
                     if attempts >= max_attempts:
                         raise FactoryNotStarted(
-                            "{}The {!r} has failed to confirm running status after {} attempts, which "
+                            "The {} factory has failed to confirm running status after {} attempts, which "
                             "took {:.2f} seconds({:.2f} seconds each)".format(
-                                log_prefix,
-                                factory,
-                                attempts,
-                                time.time() - checks_start_time,
-                                start_timeout,
+                                factory, attempts, time.time() - checks_start_time, start_timeout,
                             ),
                             stdout=result.stdout,
                             stderr=result.stderr,
@@ -345,20 +339,13 @@ def start_factory(
             except FactoryNotStarted:
                 raise
             except Exception as exc:  # pylint: disable=broad-except
-                log.exception(
-                    "%sException caught on %r: %s", log_prefix, factory, exc, exc_info=True
-                )
+                log.exception("Exception caught on %s: %s", factory, exc, exc_info=True)
                 result = factory.terminate()
                 if attempts >= max_attempts:
                     raise FactoryNotStarted(
-                        "{}The {!r} has failed to confirm running status after {} attempts and raised an "
+                        "The {} factory has failed to confirm running status after {} attempts and raised an "
                         "exception: {}. Took {:.2f} seconds({:.2f} seconds each attempt).".format(
-                            log_prefix,
-                            factory,
-                            attempts,
-                            str(exc),
-                            time.time() - start_time,
-                            start_timeout,
+                            factory, attempts, str(exc), time.time() - start_time, start_timeout,
                         ),
                         stdout=result.stdout,
                         stderr=result.stderr,
@@ -373,8 +360,7 @@ def start_factory(
             # A little breathing before returning the factory
             time.sleep(0.25)
             log.info(
-                "%sThe %r is running after %d attempts. Took %1.2f seconds",
-                log_prefix,
+                "The %s factory is running after %d attempts. Took %1.2f seconds",
                 factory,
                 attempts,
                 time.time() - checks_start_time,
@@ -393,10 +379,8 @@ def start_factory(
             stdout = result.stdout
             exitcode = result.exitcode
         raise FactoryNotStarted(
-            "{}The {!r} has failed to confirm running status after {} attempts, which "
-            "took {:.2f} seconds.".format(
-                log_prefix, factory, attempts, time.time() - checks_start_time
-            ),
+            "The {} factory has failed to confirm running status after {} attempts, which "
+            "took {:.2f} seconds.".format(factory, attempts, time.time() - checks_start_time),
             stdout=stdout,
             stderr=stderr,
             exitcode=exitcode,

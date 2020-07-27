@@ -37,9 +37,6 @@ class Factory:
     Args:
         display_name(str):
             Human readable name for the factory
-        log_prefix(str):
-            Log prefix that shall be used when starting the factory by :py:func:`start_daemon`, or,
-            to prepend to log messages in case the factory supports log forwarding(ie, salt daemons).
         environ(dict):
             A dictionary of `key`, `value` pairs to add to the environment.
         cwd (str):
@@ -47,7 +44,6 @@ class Factory:
     """
 
     display_name = attr.ib(default=None)
-    log_prefix = attr.ib(repr=False, default=None)
     cwd = attr.ib(default=None)
     environ = attr.ib(repr=False, default=None)
 
@@ -64,18 +60,6 @@ class Factory:
         if self.display_name:
             return "{}({})".format(self.__class__.__name__, self.display_name)
         return self.__class__.__name__
-
-    def get_log_prefix(self):
-        """
-        Returns a log prefix that shall be used when starting the factory by :py:func:`start_daemon`, or,
-        in case the factory supports log forwarding(ie, salt daemons).
-        """
-        if self.log_prefix:
-            return "[{}] ".format(self.log_prefix)
-        display_name = self.get_display_name()
-        if display_name:
-            return "[{}] ".format(display_name)
-        return ""
 
 
 @attr.s(kw_only=True)
@@ -117,13 +101,6 @@ class SubprocessFactoryBase(Factory):
         Returns a human readable name for the factory
         """
         return self.display_name or self.cli_script_name
-
-    def get_log_prefix(self):
-        """
-        Returns a log prefix that shall be used when starting the factory by :py:func:`start_daemon`, or,
-        in case the factory supports log forwarding(ie, salt daemons).
-        """
-        return self.log_prefix or self.cli_script_name
 
     def get_script_path(self):
         """
@@ -199,7 +176,7 @@ class SubprocessFactoryBase(Factory):
         """
         if self._terminal is None:
             return self._terminal_result
-        log.info("%sStopping %s", self.get_log_prefix(), self.__class__.__name__)
+        log.info("Stopping %s", self)
         # Collect any child processes information before terminating the process
         try:
             for child in psutil.Process(self._terminal.pid).children(recursive=True):
@@ -221,7 +198,7 @@ class SubprocessFactoryBase(Factory):
         )
         stdout, stderr = self._terminal.communicate()
         try:
-            log_message = "{}Terminated {}.".format(self.get_log_prefix(), self.__class__.__name__)
+            log_message = "Terminated {}.".format(self)
             if stdout or stderr:
                 log_message += " Process Output:"
                 if stdout:
@@ -255,7 +232,7 @@ class SubprocessFactoryBase(Factory):
         """
         cmdline = self.build_cmdline(*args, **kwargs)
 
-        log.info("%sRunning %r in CWD: %s ...", self.get_log_prefix(), cmdline, self.cwd)
+        log.info("%s is running %r in CWD: %s ...", self, cmdline, self.cwd)
 
         terminal = self.init_terminal(cmdline, cwd=self.cwd, env=self.environ)
         try:
@@ -311,8 +288,8 @@ class ProcessFactory(SubprocessFactoryBase):
         result = self.terminate()
         if timmed_out:
             raise FactoryTimeout(
-                "{}Failed to run: {}; Error: Timed out after {:.2f} seconds!".format(
-                    self.get_log_prefix(), result.cmdline, time.time() - start_time
+                "{} Failed to run: {}; Error: Timed out after {:.2f} seconds!".format(
+                    self, result.cmdline, time.time() - start_time
                 ),
                 stdout=result.stdout,
                 stderr=result.stderr,
@@ -326,8 +303,8 @@ class ProcessFactory(SubprocessFactoryBase):
             result.stdout, result.stderr, cmdline=cmdline
         )
         log.info(
-            "%sCompleted %r in CWD: %s after %.2f seconds",
-            self.get_log_prefix(),
+            "%s completed %r in CWD: %s after %.2f seconds",
+            self,
             cmdline,
             self.cwd,
             time.time() - start_time,
@@ -340,9 +317,7 @@ class ProcessFactory(SubprocessFactoryBase):
                 json_out = json.loads(stdout)
             except ValueError:
                 log.debug(
-                    "%sFailed to load JSON from the following output:\n%r",
-                    self.get_log_prefix(),
-                    stdout,
+                    "%s failed to load JSON from the following output:\n%r", self, stdout,
                 )
                 json_out = None
         else:
@@ -394,7 +369,6 @@ class SaltFactory:
     config_file = attr.ib(init=False, default=None)
     python_executable = attr.ib(default=None)
     display_name = attr.ib(init=False, default=None)
-    log_prefix = attr.ib(repr=False, init=False, default=None)
 
     def __attrs_post_init__(self):
         if self.python_executable is None:
@@ -414,15 +388,6 @@ class SaltFactory:
             self.display_name = self.cli_script_name
         return self.display_name
 
-    def get_log_prefix(self):
-        """
-        Returns a log prefix that shall be used when starting the factory by :py:func:`start_daemon`, or,
-        in case the factory supports log forwarding(ie, salt daemons).
-        """
-        if self.log_prefix is None:
-            self.log_prefix = self.cli_script_name
-        return self.log_prefix
-
 
 @attr.s(kw_only=True)
 class SaltCliFactory(ProcessFactory, SaltFactory):
@@ -437,14 +402,12 @@ class SaltCliFactory(ProcessFactory, SaltFactory):
     hard_crash = attr.ib(repr=False, default=False)
     # Override the following to default to non-mandatory and to None
     display_name = attr.ib(init=False, default=None)
-    log_prefix = attr.ib(repr=False, init=False, default=None)
     _minion_tgt = attr.ib(repr=False, init=False, default=None)
 
     __cli_timeout_supported__ = attr.ib(repr=False, init=False, default=False)
     __cli_log_level_supported__ = attr.ib(repr=False, init=False, default=True)
     # Override the following to default to non-mandatory and to None
     display_name = attr.ib(init=False, default=None)
-    log_prefix = attr.ib(repr=False, init=False, default=None)
 
     def __attrs_post_init__(self):
         ProcessFactory.__attrs_post_init__(self)
@@ -592,11 +555,9 @@ class SaltDaemonFactory(DaemonFactory, SaltFactory):
     Base factory for salt daemon's
     """
 
-    _log_prefix = attr.ib(repr=False, init=False, default=None)
     _display_name = attr.ib(repr=False, init=False, default=None)
     # Override the following to default to non-mandatory and to None
     display_name = attr.ib(init=False, default=None)
-    log_prefix = attr.ib(repr=False, init=False, default=None)
 
     def __attrs_post_init__(self):
         DaemonFactory.__attrs_post_init__(self)
@@ -605,19 +566,6 @@ class SaltDaemonFactory(DaemonFactory, SaltFactory):
         self.base_script_args.append("--log-level=quiet")
         if self.display_name is None:
             self.display_name = self.config["id"]
-        if self.log_prefix is None:
-            try:
-                pytest_config_key = "pytest-{}".format(self.config["__role"])
-                log_prefix = (
-                    self.config.get(pytest_config_key, {}).get("log", {}).get("prefix") or ""
-                )
-                if log_prefix:
-                    self.log_prefix = log_prefix.format(
-                        cli_name=os.path.basename(self.cli_script_name)
-                    )
-            except KeyError:
-                # This should really be a salt daemon which always set's `__role` in its config
-                pass
 
     def get_check_events(self):
         """
