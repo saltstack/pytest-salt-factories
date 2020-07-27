@@ -15,7 +15,7 @@ try:
     from salt.ext.tornado import gen
     from salt.ext.tornado import ioloop
 except ImportError:
-    # This likely due to running backwards compatability tests against older minions
+    # This likely due to running backwards compatibility tests against older minions
     from tornado import gen
     from tornado import ioloop
 

@@ -26,7 +26,7 @@ from saltfactories.utils.ports import get_unused_localhost_port
 class SaltFactoriesManager:
     """
     The :class:`SaltFactoriesManager` is responsible for configuring and spawning Salt Daemons and
-    making sure that any salt CLI tools are "targetted" to the right daemon.
+    making sure that any salt CLI tools are "targeted" to the right daemon.
 
     It also keeps track of which daemons were started and adds their termination routines to PyTest's
     request finalization routines.
@@ -73,8 +73,8 @@ class SaltFactoriesManager:
             environ(dict):
                 A dictionary of `key`, `value` pairs to add to the environment.
             slow_stop(bool):
-                Wether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
-                :py:meth:`~subprocess.Popen.terminate` on the sub-procecess.
+                Whether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
+                :py:meth:`~subprocess.Popen.terminate` on the sub-process.
                 When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
                 can be written down to disk.
             start_timeout(int):

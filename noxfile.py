@@ -19,7 +19,7 @@ if SALT_REQUIREMENT == "salt==master":
 USE_SYSTEM_PYTHON = "USE_SYSTEM_PYTHON" in os.environ
 IS_WINDOWS = sys.platform.lower().startswith("win")
 
-# Be verbose when runing under a CI context
+# Be verbose when running under a CI context
 PIP_INSTALL_SILENT = (
     os.environ.get("JENKINS_URL")
     or os.environ.get("CI")
@@ -71,7 +71,7 @@ def _patch_session(session):
             silent=True,
             log=False,
         )
-        # Let's patch nox to make it run and in partcular, install, to the system python
+        # Let's patch nox to make it run and in particular, install, to the system python
         session._runner.venv = VirtualEnv(
             sys_prefix, interpreter=session._runner.func.python, reuse_existing=True
         )
@@ -199,7 +199,7 @@ def coverage(session):
 @nox.session(python="3.7")
 def blacken(session):
     """
-    Run black code formater.
+    Run black code formatter.
     """
     _patch_session(session)
     session.install(

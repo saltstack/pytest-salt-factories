@@ -59,5 +59,5 @@ class FactoryNotStarted(FactoryFailure):
 
 class FactoryTimeout(FactoryNotStarted):
     """
-    Exception raised when a process timmed out
+    Exception raised when a process timed-out
     """

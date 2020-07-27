@@ -47,4 +47,5 @@ repos:
         exclude: (versioneer.py|saltfactories/_version.py)
         additional_dependencies:
           - saltpylint
+          - pyenchant
           - salt>=3001

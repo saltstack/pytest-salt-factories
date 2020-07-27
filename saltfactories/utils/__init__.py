@@ -24,8 +24,8 @@ def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
     Args:
         prefix(str): The prefix for the random string
         size(int): The size of the random string
-        uppercase(bool): If true, include uppercased ascii chars in choice sample
-        lowercase(bool): If true, include lowercased ascii chars in choice sample
+        uppercase(bool): If true, include upper-cased ascii chars in choice sample
+        lowercase(bool): If true, include lower-cased ascii chars in choice sample
         digits(bool): If true, include digits in choice sample
     Returns:
         str: The random string

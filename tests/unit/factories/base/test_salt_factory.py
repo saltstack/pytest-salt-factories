@@ -401,7 +401,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         expected.append("{}={}".format(key, value))
     proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
     cmdline = proc.build_cmdline(*args, **kwargs)
-    # Function **kwargs are not orderred dictionaries on some python versions
+    # Function **kwargs are not ordered dictionaries on some python versions
     # let's just use sorted to make sure everything is in the output
     assert sorted(cmdline) == sorted(expected)
 
@@ -423,7 +423,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         expected.append("{}={}".format(key, value))
     proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
     cmdline = proc.build_cmdline(*args, **kwargs)
-    # Function **kwargs are not orderred dictionaries on some python versions
+    # Function **kwargs are not ordered dictionaries on some python versions
     # let's just use sorted to make sure everything is in the output
     assert sorted(cmdline) == sorted(expected)
 
@@ -445,7 +445,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         expected.append("{}={}".format(key, value))
     proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
     cmdline = proc.build_cmdline(*args, **kwargs)
-    # Function **kwargs are not orderred dictionaries on some python versions
+    # Function **kwargs are not ordered dictionaries on some python versions
     # let's just use sorted to make sure everything is in the output
     assert sorted(cmdline) == sorted(expected)
 
@@ -464,6 +464,6 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     ]
     proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
     cmdline = proc.build_cmdline(*args, **kwargs)
-    # Function **kwargs are not orderred dictionaries on some python versions
+    # Function **kwargs are not ordered dictionaries on some python versions
     # let's just use sorted to make sure everything is in the output
     assert sorted(cmdline) == sorted(expected)

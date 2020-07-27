@@ -183,7 +183,7 @@ def terminate_process_list(process_list, kill=False, slow_stop=False):
 
 def terminate_process(pid=None, process=None, children=None, kill_children=None, slow_stop=False):
     """
-    Try to terminate/kill the started processe
+    Try to terminate/kill the started process
     """
     children = children or []
     process_list = []

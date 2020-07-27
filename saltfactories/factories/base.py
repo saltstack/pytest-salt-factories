@@ -92,8 +92,8 @@ class SubprocessFactoryBase(Factory):
             An list or tuple iterable of the base arguments to use when building the command line to
             launch the process
         slow_stop(bool):
-            Wether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
-            :py:meth:`~subprocess.Popen.terminate` on the sub-procecess.
+            Whether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
+            :py:meth:`~subprocess.Popen.terminate` on the sub-process.
             When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
             can be written down to disk.
     """
@@ -168,7 +168,7 @@ class SubprocessFactoryBase(Factory):
         """
         Instantiate a terminal with the passed cmdline and kwargs and return it.
 
-        Additionaly, it sets a reference to it in self._terminal and also collects
+        Additionally, it sets a reference to it in self._terminal and also collects
         an initial listing of child processes which will be used when terminating the
         terminal
         """
@@ -273,7 +273,7 @@ class ProcessFactory(SubprocessFactoryBase):
 
     Args:
         default_timeout(int):
-            The maximum ammount of seconds that a script should run
+            The maximum amount of seconds that a script should run
     """
 
     default_timeout = attr.ib()
@@ -435,14 +435,14 @@ class SaltCliFactory(ProcessFactory, SaltFactory):
     """
 
     hard_crash = attr.ib(repr=False, default=False)
-    # Override the followeing to default to non-mandatory and to None
+    # Override the following to default to non-mandatory and to None
     display_name = attr.ib(init=False, default=None)
     log_prefix = attr.ib(repr=False, init=False, default=None)
     _minion_tgt = attr.ib(repr=False, init=False, default=None)
 
     __cli_timeout_supported__ = attr.ib(repr=False, init=False, default=False)
     __cli_log_level_supported__ = attr.ib(repr=False, init=False, default=True)
-    # Override the followeing to default to non-mandatory and to None
+    # Override the following to default to non-mandatory and to None
     display_name = attr.ib(init=False, default=None)
     log_prefix = attr.ib(repr=False, init=False, default=None)
 
@@ -552,7 +552,7 @@ class SaltCliFactory(ProcessFactory, SaltFactory):
         if minion_tgt:
             cmdline.append(minion_tgt)
 
-        # Add the remaning args
+        # Add the remaining args
         cmdline.extend(args)
 
         # Keyword arguments get passed as KEY=VALUE pairs to the CLI
@@ -594,7 +594,7 @@ class SaltDaemonFactory(DaemonFactory, SaltFactory):
 
     _log_prefix = attr.ib(repr=False, init=False, default=None)
     _display_name = attr.ib(repr=False, init=False, default=None)
-    # Override the followeing to default to non-mandatory and to None
+    # Override the following to default to non-mandatory and to None
     display_name = attr.ib(init=False, default=None)
     log_prefix = attr.ib(repr=False, init=False, default=None)
 

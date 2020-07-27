@@ -2,4 +2,5 @@
 -r tests.txt
 sphinx
 sphinx-rtd-theme
+sphinxcontrib-spelling
 salt >= 3001

@@ -17,14 +17,14 @@ import traceback
 try:
     from salt.utils.stringutils import to_unicode
 except ImportError:
-    # This likely due to running backwards compatability tests against older minions
+    # This likely due to running backwards compatibility tests against older minions
     from salt.utils import to_unicode
 try:
     from salt._logging.impl import LOG_LEVELS
     from salt._logging.mixins import ExcInfoOnLogLevelFormatMixin
     from salt._logging.mixins import NewStyleClassMixin
 except ImportError:
-    # This likely due to running backwards compatability tests against older minions
+    # This likely due to running backwards compatibility tests against older minions
     from salt.log.setup import LOG_LEVELS
     from salt.log.mixins import ExcInfoOnLogLevelFormatMixIn as ExcInfoOnLogLevelFormatMixin
     from salt.log.mixins import NewStyleClassMixIn as NewStyleClassMixin
@@ -128,7 +128,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
     # forking, are inherited by forked processes, and we don't want the ZMQ
     # machinery inherited.
     # For the cases where the ZMQ machinery is still inherited because a
-    # process was forked after ZMQ has been prep'ed up, we check the handler's
+    # process was forked after ZMQ has been prepped up, we check the handler's
     # pid attribute against, the current process pid. If it's not a match, we
     # reconnect the ZMQ machinery.
 
@@ -179,7 +179,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         )
         self.proxy_thread.daemon = True
         self.proxy_thread.start()
-        # Now that we discovered which random port to use, lest's continue with the setup
+        # Now that we discovered which random port to use, let's continue with the setup
         if socket_bind_event.wait(5) is not True:
             sys.stderr.write("Failed to bind the ZMQ socket PAIR\n")
             sys.stderr.flush()
@@ -250,7 +250,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         record.exc_info = None
         record.exc_text = None
         record.message = None  # redundant with msg
-        # On Python >= 3.5 we also have stack_info, but we've formatted altready so, reset it
+        # On Python >= 3.5 we also have stack_info, but we've formatted already so, reset it
         record.stack_info = None
         try:
             return msgpack.dumps(record.__dict__, use_bin_type=True)
