@@ -22,28 +22,28 @@ def salt_call_cli(salt_factories, minion, master):
 
 
 def test_minion(minion, salt_cli):
-    assert minion.is_alive()
+    assert minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt="minion-1")
     assert ret.exitcode == 0, ret
     assert ret.json is True
 
 
 def test_no_match(minion, salt_cli):
-    assert minion.is_alive()
+    assert minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt="minion-2")
     assert ret.exitcode == 2, ret
     assert not ret.json
 
 
 def test_show_jid(minion, salt_cli):
-    assert minion.is_alive()
+    assert minion.is_running()
     ret = salt_cli.run("--show-jid", "test.ping", minion_tgt="minion-1")
     assert ret.exitcode == 0, ret
     assert ret.json is True
 
 
 def test_minion_salt_call(minion, salt_call_cli):
-    assert minion.is_alive()
+    assert minion.is_running()
     ret = salt_call_cli.run("test.ping")
     assert ret.exitcode == 0, ret
     assert ret.json is True

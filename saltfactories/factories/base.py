@@ -181,7 +181,7 @@ class SubprocessFactoryBase(Factory):
         atexit.register(self.terminate)
         return self._terminal
 
-    def is_alive(self):
+    def is_running(self):
         """
         Returns true if the sub-process is alive
         """
@@ -370,7 +370,7 @@ class DaemonFactory(SubprocessFactoryBase):
         Start the daemon
         """
         self._run()
-        return self.is_alive()
+        return self.is_running()
 
 
 @attr.s(kw_only=True)

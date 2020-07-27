@@ -35,7 +35,7 @@ def salt_key(salt_factories, master):
 
 
 def test_master(master):
-    assert master.is_alive()
+    assert master.is_running()
 
 
 def test_salt_run(master, salt_run):
@@ -55,8 +55,8 @@ def test_salt_cp(master, minion, salt_cp, tempfiles):
     try:
         contents = "id: foo"
         sls = tempfiles.makeslsfile(contents)
-        assert master.is_alive()
-        assert minion.is_alive()
+        assert master.is_running()
+        assert minion.is_running()
         ret = salt_cp.run("minion-1", sls, dest)
         assert ret.exitcode == 0, ret
         assert ret.json == {"minion-1": {dest: True}}, ret
@@ -73,8 +73,8 @@ def test_salt_cp(master, minion, salt_cp, tempfiles):
     try:
         contents = "id: foo"
         sls = tempfiles.makeslsfile(contents)
-        assert master.is_alive()
-        assert minion.is_alive()
+        assert master.is_running()
+        assert minion.is_running()
         ret = salt_cp.run(sls, dest, minion_tgt="minion-1")
         assert ret.exitcode == 0, ret
         assert ret.json == {dest: True}, ret
@@ -87,8 +87,8 @@ def test_salt_cp(master, minion, salt_cp, tempfiles):
 
 
 def test_salt_cp_no_match(master, minion, salt_cp, tempfiles):
-    assert master.is_alive()
-    assert minion.is_alive()
+    assert master.is_running()
+    assert minion.is_running()
 
     tfile = tempfile.NamedTemporaryFile(delete=True)
     tfile.close()
@@ -96,8 +96,8 @@ def test_salt_cp_no_match(master, minion, salt_cp, tempfiles):
     try:
         contents = "id: foo"
         sls = tempfiles.makeslsfile(contents)
-        assert master.is_alive()
-        assert minion.is_alive()
+        assert master.is_running()
+        assert minion.is_running()
         ret = salt_cp.run(sls, dest, minion_tgt="minion-2")
         assert ret.exitcode == 0, ret
         assert not ret.json, ret

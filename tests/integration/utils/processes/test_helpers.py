@@ -50,7 +50,7 @@ def test_exit_status_unknown_user(request, salt_factories, shell_tests_salt_mast
     proc = MasterFactory(cli_script_name=script_path, config=shell_tests_salt_master_config)
     proc.start()
     iterations = salt_factories.start_timeout
-    while proc.is_alive():
+    while proc.is_running():
         if not iterations:
             break
         time.sleep(1)

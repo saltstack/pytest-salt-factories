@@ -59,7 +59,7 @@ def test_proc_sys_stats(testdir):
             return salt_factories.spawn_sshd_server(request, "sshd")
 
         def test_one(sshd):
-            assert sshd.is_alive()
+            assert sshd.is_running()
         """
     )
     res = testdir.runpytest("-vv", "--sys-stats")

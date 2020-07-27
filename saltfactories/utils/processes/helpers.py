@@ -214,24 +214,24 @@ def terminate_process(pid=None, process=None, children=None, kill_children=None,
         terminate_process_list(process_list, kill=slow_stop is False, slow_stop=slow_stop)
 
 
-def start_daemon(
-    daemon_class,
+def start_factory(
+    factory_class,
     start_timeout=10,
     max_attempts=3,
     event_listener=None,
     salt_factories=None,
-    **daemon_class_kwargs
+    **factory_class_kwargs
 ):
     """
-    Returns a running process daemon
+    Returns a running factory
 
     Args:
         cli_script_name(str):
             The CLI script which starts the daemon
         daemon_class(:py:class:`~saltfactories.utils.processes.bases.FactoryDaemonScriptBase`):
-            The class to use to instantiate the process daemon instance.
+            The class to use to instantiate the factory instance.
         start_timeout(int):
-            The amount of time, in seconds, to wait, until a subprocess is considered as not started.
+            The amount of time, in seconds, to wait, until a factory is considered as not started.
         max_attempts(int):
             How many times to attempt to start the daemon in case of failure
         event_listener(:py:class:`~saltfactories.utils.event_listener.EventListener`):
@@ -242,14 +242,14 @@ def start_daemon(
 
     Raises:
         FactoryNotStarted:
-            Raised when a process fails to start or when the code used to confirm that the daemon is up also fails.
+            Raised when a factory fails to start or when the code used to confirm that the daemon is up also fails.
         RuntimeError:
-            `RuntimeError` is raised when a process defines
+            `RuntimeError` is raised when a factory defines
             :py:meth:`~saltfactories.utils.processes.salts.SaltDaemonScriptBase.get_check_events` but no
             ``event_listener`` argument was passed.
 
     Returns:
-        An instance of the ``daemon_class``, which is a subclass of
+        An instance of the ``factory_class``, which is a subclass of
         :py:class:`~saltfactories.utils.processes.bases.FactoryDaemonScriptBase`
     """
     attempts = 1
@@ -257,41 +257,41 @@ def start_daemon(
 
     checks_start_time = time.time()
     while attempts <= max_attempts:  # pylint: disable=too-many-nested-blocks
-        process = daemon_class(**daemon_class_kwargs)
-        log_prefix = process.get_log_prefix()
-        log.info("%sStarting %r. Attempt: %s", log_prefix, process, attempts)
+        factory = factory_class(**factory_class_kwargs)
+        log_prefix = factory.get_log_prefix()
+        log.info("%sStarting %r. Attempt: %s", log_prefix, factory, attempts)
         start_time = time.time()
         checks_expire_time = start_time + start_timeout
-        process.start()
+        factory.start()
         attempts += 1
-        if process.is_alive():
+        if factory.is_running():
             try:
                 try:
-                    check_ports = set(process.get_check_ports())
+                    check_ports = set(factory.get_check_ports())
                     if check_ports:
                         log.debug("Checking for connectable ports: %s", check_ports)
                 except AttributeError:
                     check_ports = False
 
                 try:
-                    check_events = set(process.get_check_events())
+                    check_events = set(factory.get_check_events())
                     if not event_listener:
-                        process.terminate()
+                        factory.terminate()
                         raise RuntimeError(
-                            "Process {} want's to have events checked but no 'event_listener' was "
-                            "passed to start_daemon()".format(process)
+                            "Factory {} want's to have events checked but no 'event_listener' was "
+                            "passed to start_daemon()".format(factory)
                         )
                     log.debug("Checking for event patterns: %s", check_events)
                 except AttributeError:
                     check_events = False
 
                 try:
-                    extra_checks_method = process.run_extra_checks
+                    extra_checks_method = factory.run_extra_checks
                     extra_checks_passed = False
                     if not salt_factories:
                         raise RuntimeError(
-                            "Process {} defines the run_extra_checks method but no 'salt_factories' was "
-                            "passed to start_daemon()".format(process)
+                            "Factory {} defines the run_extra_checks method but no 'salt_factories' was "
+                            "passed to start_daemon()".format(factory)
                         )
                 except AttributeError:
                     extra_checks_method = False
@@ -299,8 +299,8 @@ def start_daemon(
 
                 all_checks_passed = False
                 while time.time() <= checks_expire_time:
-                    if not process.is_alive():
-                        # If meanwhile the process dies, break the loop
+                    if not factory.is_running():
+                        # If meanwhile the factory dies, break the loop
                         break
 
                     if not check_ports and not check_events and extra_checks_passed:
@@ -326,13 +326,13 @@ def start_daemon(
                     time.sleep(0.5)
 
                 if all_checks_passed is False:
-                    result = process.terminate()
+                    result = factory.terminate()
                     if attempts >= max_attempts:
                         raise FactoryNotStarted(
                             "{}The {!r} has failed to confirm running status after {} attempts, which "
                             "took {:.2f} seconds({:.2f} seconds each)".format(
                                 log_prefix,
-                                process,
+                                factory,
                                 attempts,
                                 time.time() - checks_start_time,
                                 start_timeout,
@@ -346,15 +346,15 @@ def start_daemon(
                 raise
             except Exception as exc:  # pylint: disable=broad-except
                 log.exception(
-                    "%sException caught on %r: %s", log_prefix, process, exc, exc_info=True
+                    "%sException caught on %r: %s", log_prefix, factory, exc, exc_info=True
                 )
-                result = process.terminate()
+                result = factory.terminate()
                 if attempts >= max_attempts:
                     raise FactoryNotStarted(
                         "{}The {!r} has failed to confirm running status after {} attempts and raised an "
                         "exception: {}. Took {:.2f} seconds({:.2f} seconds each attempt).".format(
                             log_prefix,
-                            process,
+                            factory,
                             attempts,
                             str(exc),
                             time.time() - start_time,
@@ -370,35 +370,35 @@ def start_daemon(
                 time.sleep(1)
                 continue
 
-            # A little breathing before returning the process
+            # A little breathing before returning the factory
             time.sleep(0.25)
             log.info(
                 "%sThe %r is running after %d attempts. Took %1.2f seconds",
                 log_prefix,
-                process,
+                factory,
                 attempts,
                 time.time() - checks_start_time,
             )
             break
         else:
-            process.terminate()
+            factory.terminate()
             # A little pause before retrying
             time.sleep(1)
             continue
     else:
         stderr = stdout = exitcode = None
-        if process is not None:
-            result = process.terminate()
+        if factory is not None:
+            result = factory.terminate()
             stderr = result.stderr
             stdout = result.stdout
             exitcode = result.exitcode
         raise FactoryNotStarted(
             "{}The {!r} has failed to confirm running status after {} attempts, which "
             "took {:.2f} seconds.".format(
-                log_prefix, process, attempts, time.time() - checks_start_time
+                log_prefix, factory, attempts, time.time() - checks_start_time
             ),
             stdout=stdout,
             stderr=stderr,
             exitcode=exitcode,
         )
-    return process
+    return factory

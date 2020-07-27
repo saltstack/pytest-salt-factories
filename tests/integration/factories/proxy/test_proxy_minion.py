@@ -29,28 +29,28 @@ def salt_call_cli(salt_factories, proxy_minion, master):
 
 
 def test_proxy_minion(proxy_minion, salt_cli):
-    assert proxy_minion.is_alive()
+    assert proxy_minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt="proxy-minion-1")
     assert ret.exitcode == 0, ret
     assert ret.json is True
 
 
 def test_no_match(proxy_minion, salt_cli):
-    assert proxy_minion.is_alive()
+    assert proxy_minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt="proxy-minion-2")
     assert ret.exitcode == 2, ret
     assert not ret.json
 
 
 def test_show_jid(proxy_minion, salt_cli):
-    assert proxy_minion.is_alive()
+    assert proxy_minion.is_running()
     ret = salt_cli.run("--show-jid", "test.ping", minion_tgt="proxy-minion-1")
     assert ret.exitcode == 0, ret
     assert ret.json is True
 
 
 def test_proxy_minion_salt_call(proxy_minion, salt_call_cli):
-    assert proxy_minion.is_alive()
+    assert proxy_minion.is_running()
     ret = salt_call_cli.run("test.ping")
     assert ret.exitcode == 0, ret
     assert ret.json is True
