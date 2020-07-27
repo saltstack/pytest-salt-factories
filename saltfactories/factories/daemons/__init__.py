@@ -1,4 +1,4 @@
-from . import docker
+from . import container
 from . import master
 from . import minion
 from . import proxy

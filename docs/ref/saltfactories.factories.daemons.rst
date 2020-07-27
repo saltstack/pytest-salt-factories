@@ -9,10 +9,10 @@ saltfactories.factories.daemons package
 Submodules
 ----------
 
-saltfactories.factories.daemons.docker module
----------------------------------------------
+saltfactories.factories.daemons.container module
+------------------------------------------------
 
-.. automodule:: saltfactories.factories.daemons.docker
+.. automodule:: saltfactories.factories.daemons.container
    :members:
    :undoc-members:
    :show-inheritance:

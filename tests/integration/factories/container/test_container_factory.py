@@ -2,7 +2,7 @@ import socket
 
 import pytest
 
-from saltfactories.factories.daemons.docker import DockerFactory
+from saltfactories.factories.daemons.container import ContainerFactory
 from saltfactories.utils import ports
 
 docker = pytest.importorskip("docker")
@@ -11,7 +11,7 @@ docker = pytest.importorskip("docker")
 @pytest.fixture(scope="module")
 def docker_client():
     client = docker.from_env()
-    connectable = DockerFactory.client_connectable(client)
+    connectable = ContainerFactory.client_connectable(client)
     if connectable is not True:
         pytest.skip(connectable)
     return client
@@ -24,7 +24,7 @@ def echo_server_port():
 
 @pytest.fixture(scope="module")
 def docker_container(request, salt_factories, docker_client, echo_server_port):
-    return salt_factories.spawn_docker_container(
+    return salt_factories.spawn_container(
         request,
         "echo-server-test",
         "cjimti/go-echo",
@@ -39,7 +39,7 @@ def docker_container(request, salt_factories, docker_client, echo_server_port):
 
 @pytest.mark.skip_on_darwin
 @pytest.mark.skip_on_windows
-def test_spawn_docker_container(docker_container, echo_server_port):
+def test_spawn_container(docker_container, echo_server_port):
     message = b"Hello!\n"
     client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -64,7 +64,7 @@ def test_spawn_docker_container(docker_container, echo_server_port):
 
 @pytest.mark.skip_on_darwin
 @pytest.mark.skip_on_windows
-def test_docker_container_run(docker_container):
+def test_container_run(docker_container):
     ret = docker_container.run("echo", "foo")
     assert ret.exitcode == 0
     assert ret.stdout == "foo\n"

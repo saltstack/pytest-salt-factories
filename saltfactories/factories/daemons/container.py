@@ -1,8 +1,8 @@
 """
-    saltfactories.factories.daemons.docker
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    saltfactories.factories.daemons.container
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Docker based factories
+    Container based factories
 """
 import atexit
 import logging
@@ -50,7 +50,7 @@ log = logging.getLogger(__name__)
 
 
 @attr.s(kw_only=True)
-class DockerFactory(Factory):
+class ContainerFactory(Factory):
     image = attr.ib()
     name = attr.ib(default=None)
     check_ports = attr.ib(default=None)
@@ -69,7 +69,7 @@ class DockerFactory(Factory):
 
     def start(self):
         atexit.register(self.terminate)
-        connectable = DockerFactory.client_connectable(self.docker_client)
+        connectable = ContainerFactory.client_connectable(self.docker_client)
         if connectable is not True:
             pytest.fail(connectable)
         start_time = time.time()
@@ -150,13 +150,13 @@ class DockerFactory(Factory):
 
 
 @attr.s(kw_only=True)
-class SaltDaemonDockerFactory(SaltDaemonFactory, DockerFactory):
+class SaltDaemonContainerFactory(SaltDaemonFactory, ContainerFactory):
     def __attrs_post_init__(self):
         if self.python_executable is None:
             # Default to whatever is the default python in the container
             self.python_executable = "python"
         SaltDaemonFactory.__attrs_post_init__(self)
-        DockerFactory.__attrs_post_init__(self)
+        ContainerFactory.__attrs_post_init__(self)
         # There are some volumes which NEED to exist on the container
         # so that configs are in the right place and also our custom
         # salt plugins
@@ -174,13 +174,13 @@ class SaltDaemonDockerFactory(SaltDaemonFactory, DockerFactory):
 
     def start(self):
         # Start the container
-        DockerFactory.start(self)
+        ContainerFactory.start(self)
         # Now that the container is up, let's start the daemon
         return SaltDaemonFactory.start(self)
 
     def terminate(self):
         ret = SaltDaemonFactory.terminate(self)
-        DockerFactory.terminate(self)
+        ContainerFactory.terminate(self)
         return ret
 
     def get_check_events(self):
@@ -191,7 +191,7 @@ class SaltDaemonDockerFactory(SaltDaemonFactory, DockerFactory):
 
 
 @attr.s(kw_only=True, slots=True)
-class MinionDockerFactory(SaltDaemonDockerFactory, MinionFactory):
+class MinionContainerFactory(SaltDaemonContainerFactory, MinionFactory):
     """
     Salt minion daemon implementation running in a docker container
     """

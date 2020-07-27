@@ -1082,7 +1082,7 @@ class SaltFactoriesManager:
             **extra_factory_class_kwargs,
         )
 
-    def spawn_docker_container(
+    def spawn_container(
         self,
         request,
         container_name,
@@ -1090,7 +1090,7 @@ class SaltFactoriesManager:
         docker_client=None,
         log_prefix=None,
         display_name=None,
-        factory_class=daemons.docker.DockerFactory,
+        factory_class=daemons.container.ContainerFactory,
         max_start_attempts=3,
         start_timeout=None,
         **extra_factory_class_kwargs
@@ -1106,7 +1106,7 @@ class SaltFactoriesManager:
             image_name(str):
                 The image to use
             docker_client:
-                An intance of the docker client to use
+                An instance of the docker client to use
             max_start_attempts(int):
                 How many attempts should be made to start the proxy minion in case of failure to validate that
                 its running
@@ -1117,10 +1117,10 @@ class SaltFactoriesManager:
             sshd_config_dict(dict):
                 A dictionary of key-value pairs to construct the sshd config file
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.docker.DockerFactory`
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.container.ContainerFactory`
 
         Returns:
-            :py:class:`~saltfactories.factories.daemons.docker.DockerFactory`:
+            :py:class:`~saltfactories.factories.daemons.container.ContainerFactory`:
                 The factory instance
         """
         return self.start_factory(
