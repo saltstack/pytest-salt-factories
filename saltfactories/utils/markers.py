@@ -1,8 +1,12 @@
 """
-    saltfactories.utils.markers
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..
+    PYTEST_DONT_REWRITE
 
-    PyTest Markers related utilities
+
+saltfactories.utils.markers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyTest Markers related utilities
 """
 import contextlib
 import logging
@@ -10,14 +14,8 @@ import os
 import socket
 import sys
 
-try:
-    import salt.utils.path
-    import salt.utils.win_functions
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
+import salt.utils.path
+import salt.utils.win_functions
 
 from saltfactories.utils import ports
 
@@ -51,7 +49,7 @@ def skip_if_binaries_missing(binaries, check_all=True, message=None):
         check_all (bool):
             If ``check_all`` is ``True``, the default, all binaries must exist.
             If ``check_all`` is ``False``, then only one the passed binaries needs to be found.
-            Usefull when, for example, passing a list of python interpreter names(python3.5,
+            Useful when, for example, passing a list of python interpreter names(python3.5,
             python3, python), where only one needs to exist.
         message (str):
             Message to include in the skip reason.
@@ -116,7 +114,7 @@ def skip_if_no_remote_network():
     """
 
     # We are using the google.com DNS records as numerical IPs to avoid
-    # DNS lookups which could greatly slow down this check
+    # DNS look ups which could greatly slow down this check
     has_remote_network = False
     for addr in (
         "172.217.17.14",

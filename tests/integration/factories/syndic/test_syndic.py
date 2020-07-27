@@ -14,7 +14,7 @@ def minion_1(request, salt_factories, master_of_masters):
     """
     This minion connects to the master-of-masters directly
     """
-    assert master_of_masters.is_alive()
+    assert master_of_masters.is_running()
     return salt_factories.spawn_minion(request, "minion-1", master_id="master-of-masters")
 
 
@@ -50,7 +50,7 @@ def syndic_minion(request, salt_factories, syndic_master):
     We depend on the minion_1 fixture just so we get both the master-of-masters and minion-1 fixtures running
     when this master starts.
     """
-    assert syndic_master.is_alive()
+    assert syndic_master.is_running()
     return salt_factories.spawn_minion(request, "syndic-1", master_id=syndic_master.config["id"])
 
 
@@ -59,7 +59,7 @@ def minion_2(request, salt_factories, syndic_master):
     """
     This minion will connect to the syndic-1 master
     """
-    assert syndic_master.is_alive()
+    assert syndic_master.is_running()
     return salt_factories.spawn_minion(request, "minion-2", master_id=syndic_master.config["id"])
 
 
@@ -69,8 +69,8 @@ def master_of_masters_salt_cli(salt_factories, master_of_masters, minion_1):
     This is the 'salt' CLI tool, connected to master-of-masters.
     Should be able to ping minion-1 directly connected to it and minion-2 through the syndic
     """
-    assert master_of_masters.is_alive()
-    assert minion_1.is_alive()
+    assert master_of_masters.is_running()
+    assert minion_1.is_running()
     return salt_factories.get_salt_cli(master_of_masters.config["id"])
 
 
@@ -80,9 +80,9 @@ def syndic_master_salt_cli(salt_factories, syndic_master, syndic_minion, minion_
     This is the 'salt' CLI tool, connected to master-of-masters.
     Should be able to ping minion-1 directly connected to it and minion-2 through the syndic
     """
-    assert syndic_master.is_alive()
-    assert syndic_minion.is_alive()
-    assert minion_2.is_alive()
+    assert syndic_master.is_running()
+    assert syndic_minion.is_running()
+    assert minion_2.is_running()
     return salt_factories.get_salt_cli(syndic_master.config["id"])
 
 
@@ -94,11 +94,11 @@ def syndic(
     This syndic will run in tandem with master-2, connected to the upstream
     master-of-masters master.
     """
-    assert master_of_masters.is_alive()
-    assert minion_1.is_alive()
-    assert syndic_master.is_alive()
-    assert syndic_minion.is_alive()
-    assert minion_2.is_alive()
+    assert master_of_masters.is_running()
+    assert minion_1.is_running()
+    assert syndic_master.is_running()
+    assert syndic_minion.is_running()
+    assert minion_2.is_running()
     return salt_factories.spawn_syndic(
         request, syndic_master.config["id"], master_of_masters_id=master_of_masters.config["id"]
     )
@@ -138,7 +138,7 @@ def test_minion_2(syndic_master_salt_cli):
 
 @pytest.mark.skip("Syndics are still broken. Moving on for now")
 def test_syndic(syndic, salt_cli):
-    assert syndic.is_alive()
+    assert syndic.is_running()
     # Are we able to ping the minion connected to the master-of-masters
     ret = salt_cli.run("test.ping", minion_tgt="minion-1", _timeout=60)
     assert ret.exitcode == 0, ret

@@ -1,24 +1,29 @@
 """
-saltfactories.factories.proxy
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..
+    PYTEST_DONT_REWRITE
+
+
+saltfactories.factories.daemons.proxy
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Proxy Minion Factory
 """
+import sys
 
-try:
-    import salt.config
-    import salt.utils.files
-    import salt.utils.dictupdate
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
+import attr
+import salt.config
+import salt.utils.dictupdate
+import salt.utils.files
 
+from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.utils import ports
 
 
-class ProxyMinionFactory:
+@attr.s(kw_only=True, slots=True)
+class ProxyMinionFactory(SaltDaemonFactory):
+
+    include_proxyid_cli_flag = attr.ib(default=True)
+
     @staticmethod
     def default_config(
         root_dir, proxy_minion_id, config_defaults=None, config_overrides=None, master_port=None,
@@ -65,3 +70,18 @@ class ProxyMinionFactory:
             salt.utils.dictupdate.update(config_defaults, config_overrides, merge_lists=True)
 
         return config_defaults
+
+    def get_base_script_args(self):
+        script_args = super().get_base_script_args()
+        if sys.platform.startswith("win") is False:
+            script_args.append("--disable-keepalive")
+        if self.include_proxyid_cli_flag is True:
+            script_args.extend(["--proxyid", self.config["id"]])
+        return script_args
+
+    def get_check_events(self):
+        """
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
+        """
+        pytest_config = self.config["pytest-{}".format(self.config["__role"])]
+        yield pytest_config["master_config"]["id"], "salt/{__role}/{id}/start".format(**self.config)

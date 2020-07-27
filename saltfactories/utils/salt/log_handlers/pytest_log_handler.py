@@ -1,6 +1,6 @@
 """
-pytestsalt.salt.log_handlers.pytest_log_handler
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pytest_log_handler
+~~~~~~~~~~~~~~~~~~
 
 Salt External Logging Handler
 """
@@ -14,12 +14,32 @@ import sys
 import threading
 import traceback
 
-import salt.utils.msgpack
-import salt.utils.stringutils
-from salt._logging.impl import LOG_LEVELS
-from salt._logging.mixins import ExcInfoOnLogLevelFormatMixin
-from salt._logging.mixins import NewStyleClassMixin
-from salt.utils.zeromq import zmq
+try:
+    from salt.utils.stringutils import to_unicode
+except ImportError:
+    # This likely due to running backwards compatibility tests against older minions
+    from salt.utils import to_unicode
+try:
+    from salt._logging.impl import LOG_LEVELS
+    from salt._logging.mixins import ExcInfoOnLogLevelFormatMixin
+    from salt._logging.mixins import NewStyleClassMixin
+except ImportError:
+    # This likely due to running backwards compatibility tests against older minions
+    from salt.log.setup import LOG_LEVELS
+    from salt.log.mixins import ExcInfoOnLogLevelFormatMixIn as ExcInfoOnLogLevelFormatMixin
+    from salt.log.mixins import NewStyleClassMixIn as NewStyleClassMixin
+try:
+    import msgpack
+
+    HAS_MSGPACK = True
+except ImportError:
+    HAS_MSGPACK = False
+try:
+    import zmq
+
+    HAS_ZMQ = True
+except ImportError:
+    HAS_ZMQ = False
 
 
 __virtualname__ = "pytest_log_handler"
@@ -43,9 +63,9 @@ def __virtual__():
                 __opts__["role"]
             ),
         )
-    if salt.utils.msgpack.HAS_MSGPACK is False:
+    if HAS_MSGPACK is False:
         return False, "msgpack was not importable. Please install msgpack."
-    if zmq is None:
+    if HAS_ZMQ is False:
         return False, "zmq was not importable. Please install pyzmq."
     return True
 
@@ -79,7 +99,7 @@ def setup_handlers():
         sock.connect((host_addr, host_port))
     except OSError as exc:
         # Don't even bother if we can't connect
-        log.warning("Cannot connect back to log server: %s", exc)
+        log.warning("Cannot connect back to log server at %s:%d: %s", host_addr, host_port, exc)
         return
     finally:
         sock.close()
@@ -108,12 +128,12 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
     # forking, are inherited by forked processes, and we don't want the ZMQ
     # machinery inherited.
     # For the cases where the ZMQ machinery is still inherited because a
-    # process was forked after ZMQ has been prep'ed up, we check the handler's
+    # process was forked after ZMQ has been prepped up, we check the handler's
     # pid attribute against, the current process pid. If it's not a match, we
     # reconnect the ZMQ machinery.
 
     def __init__(self, host="127.0.0.1", port=3330, log_prefix=None, level=logging.NOTSET):
-        super().__init__(level=level)
+        super(ZMQHandler, self).__init__(level=level)
         self.pid = os.getpid()
         self.push_address = "tcp://{}:{}".format(host, port)
         self.log_prefix = self._get_log_prefix(log_prefix)
@@ -159,7 +179,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         )
         self.proxy_thread.daemon = True
         self.proxy_thread.start()
-        # Now that we discovered which random port to use, lest's continue with the setup
+        # Now that we discovered which random port to use, let's continue with the setup
         if socket_bind_event.wait(5) is not True:
             sys.stderr.write("Failed to bind the ZMQ socket PAIR\n")
             sys.stderr.flush()
@@ -200,7 +220,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
 
         try:
             if self.in_proxy is not None:
-                self.in_proxy.send(salt.utils.msgpack.dumps(None))
+                self.in_proxy.send(msgpack.dumps(None))
                 self.in_proxy.close(1500)
             if self.context is not None:
                 self.context.term()
@@ -216,14 +236,9 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
             self.context = self.in_proxy = self.proxy_address = self.proxy_thread = None
 
     def format(self, record):
-        msg = super().format(record)
+        msg = super(ZMQHandler, self).format(record)
         if self.log_prefix:
-            import salt.utils.stringutils
-
-            msg = "[{}] {}".format(
-                salt.utils.stringutils.to_unicode(self.log_prefix),
-                salt.utils.stringutils.to_unicode(msg),
-            )
+            msg = u"[{}] {}".format(to_unicode(self.log_prefix), to_unicode(msg),)
         return msg
 
     def prepare(self, record):
@@ -235,10 +250,10 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         record.exc_info = None
         record.exc_text = None
         record.message = None  # redundant with msg
-        # On Python >= 3.5 we also have stack_info, but we've formatted altready so, reset it
+        # On Python >= 3.5 we also have stack_info, but we've formatted already so, reset it
         record.stack_info = None
         try:
-            return salt.utils.msgpack.dumps(record.__dict__, use_bin_type=True)
+            return msgpack.dumps(record.__dict__, use_bin_type=True)
         except TypeError as exc:
             # Failed to serialize something with msgpack
             logging.getLogger(__name__).error(
@@ -309,7 +324,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
 
         socket_bind_event.set()
 
-        sentinel = salt.utils.msgpack.dumps(None)
+        sentinel = msgpack.dumps(None)
         while True:
             try:
                 msg = out_proxy.recv()

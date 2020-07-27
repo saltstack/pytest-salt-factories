@@ -1,33 +1,30 @@
 """
-    saltfactories.plugins.factories
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..
+    PYTEST_DONT_REWRITE
 
-    Salt Daemon Factories PyTest Plugin
+
+saltfactories.plugins.factories
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Salt Daemon Factories PyTest Plugin
 """
 import logging
 import pathlib
 import pprint
-import sys
 
 import pytest
-
-try:
-    import salt.config
-    import salt.loader  # pylint: disable=unused-import
-    import salt.utils.files
-    import salt.utils.verify
-    import salt.utils.yaml
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
+import salt.config
+import salt.loader  # pylint: disable=unused-import
+import salt.utils.files
+import salt.utils.verify
+import salt.utils.yaml
 
 import saltfactories
 from saltfactories import hookspec
 from saltfactories.factories import manager
 from saltfactories.utils import ports
 from saltfactories.utils.log_server import log_server_listener
+
 
 log = logging.getLogger(__name__)
 
@@ -40,12 +37,12 @@ def pytest_addhooks(pluginmanager):
 
 
 @pytest.fixture(scope="session")
-def log_server_host(request):
-    return "127.0.0.1"
+def log_server_host():
+    return "0.0.0.0"
 
 
 @pytest.fixture(scope="session")
-def log_server_port(request):
+def log_server_port():
     return ports.get_unused_localhost_port()
 
 
@@ -75,7 +72,7 @@ def log_server_level(request):
 
 @pytest.fixture(scope="session")
 def log_server(log_server_host, log_server_port):
-    log.info("Starting log server")
+    log.info("Starting log server at %s:%d", log_server_host, log_server_port)
     with log_server_listener(log_server_host, log_server_port):
         log.info("Log Server Started")
         # Run tests
@@ -90,7 +87,6 @@ def salt_factories_config(
     Return a dictionary with the keyword arguments for SaltFactoriesManager
     """
     return {
-        "executable": sys.executable,
         "code_dir": saltfactories.CODE_ROOT_DIR.parent,
         "inject_coverage": True,
         "inject_sitecustomize": True,
@@ -106,6 +102,10 @@ def salt_factories(
 ):
     if not isinstance(salt_factories_config, dict):
         raise RuntimeError("The 'salt_factories_config' fixture MUST return a dictionary")
+    log.debug(
+        "Instantiating the Salt Factories Manager with the following keyword arguments:\n%s",
+        pprint.pformat(salt_factories_config),
+    )
     _manager = manager.SaltFactoriesManager(
         pytestconfig,
         tempdir,

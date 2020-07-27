@@ -59,7 +59,7 @@ def test_get_unused_localhost_port_unique():
             # We make sure each port is repeated consecutively
             ports.append(port)
 
-    # Hold a referece to the list of unique ports
+    # Hold a reference to the list of unique ports
     unique = set(ports)
 
     # This list will hold all ports that the function returns

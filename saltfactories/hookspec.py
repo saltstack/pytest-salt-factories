@@ -106,7 +106,7 @@ def pytest_saltfactories_syndic_configuration_overrides(
 
     * `master`: The config overrides for the master running along with the syndic
     * `minion`: The config overrides for the master running along with the syndic
-    * `syndic`: The config overridess for the master running along with the syndic
+    * `syndic`: The config overrides for the master running along with the syndic
 
     The `config_defaults` parameter be None or have 3 keys, `master`, `minion`, `syndic`,
     while will contain the default options for each of the daemons.

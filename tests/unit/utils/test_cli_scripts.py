@@ -6,7 +6,6 @@ Test saltfactories.utils.cli_scripts
 """
 import os
 import pathlib
-import sys
 import textwrap
 
 import pytest
@@ -24,8 +23,6 @@ def test_generate_script_defaults(tmpdir):
 
     expected = textwrap.dedent(
         """\
-        #!{}
-
         from __future__ import absolute_import
         import os
         import sys
@@ -37,116 +34,9 @@ def test_generate_script_defaults(tmpdir):
 
         import atexit
         from salt.scripts import salt_foobar
-        import salt.utils.platform
 
         def main():
-            if salt.utils.platform.is_windows():
-                import os.path
-                import py_compile
-                cfile = os.path.splitext(__file__)[0] + '.pyc'
-                if not os.path.exists(cfile):
-                    py_compile.compile(__file__, cfile)
-            salt_foobar()
-
-        if __name__ == '__main__':
-            exitcode = 0
-            try:
-                main()
-            except SystemExit as exc:
-                exitcode = exc.code
-            sys.stdout.flush()
-            sys.stderr.flush()
-            atexit._run_exitfuncs()
-            os._exit(exitcode)
-        """.format(
-            sys.executable
-        )
-    )
-    assert contents == expected
-
-
-def test_generate_script_executable(tmpdir):
-    """
-    Test custom executable path
-    """
-    script_path = cli_scripts.generate_script(
-        tmpdir.strpath, "salt-foobar", executable="/usr/bin/python4"
-    )
-    with open(script_path) as rfh:
-        contents = rfh.read()
-
-    expected = textwrap.dedent(
-        """\
-        #!/usr/bin/python4
-
-        from __future__ import absolute_import
-        import os
-        import sys
-
-        # We really do not want buffered output
-        os.environ[str("PYTHONUNBUFFERED")] = str("1")
-        # Don't write .pyc files or create them in __pycache__ directories
-        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
-
-        import atexit
-        from salt.scripts import salt_foobar
-        import salt.utils.platform
-
-        def main():
-            if salt.utils.platform.is_windows():
-                import os.path
-                import py_compile
-                cfile = os.path.splitext(__file__)[0] + '.pyc'
-                if not os.path.exists(cfile):
-                    py_compile.compile(__file__, cfile)
-            salt_foobar()
-
-        if __name__ == '__main__':
-            exitcode = 0
-            try:
-                main()
-            except SystemExit as exc:
-                exitcode = exc.code
-            sys.stdout.flush()
-            sys.stderr.flush()
-            atexit._run_exitfuncs()
-            os._exit(exitcode)
-        """
-    )
-    assert contents == expected
-
-
-def test_generate_script_long_executable(tmpdir):
-    """
-    Test that long executable paths get converted to `/usr/bin/env python`
-    """
-    executable = sys.executable
-    while len(executable) <= 128:
-        executable += executable
-
-    script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar", executable=executable)
-    with open(script_path) as rfh:
-        contents = rfh.read()
-
-    expected = textwrap.dedent(
-        """\
-        #!/usr/bin/env python
-
-        from __future__ import absolute_import
-        import os
-        import sys
-
-        # We really do not want buffered output
-        os.environ[str("PYTHONUNBUFFERED")] = str("1")
-        # Don't write .pyc files or create them in __pycache__ directories
-        os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
-
-        import atexit
-        from salt.scripts import salt_foobar
-        import salt.utils.platform
-
-        def main():
-            if salt.utils.platform.is_windows():
+            if sys.platform.startswith("win"):
                 import os.path
                 import py_compile
                 cfile = os.path.splitext(__file__)[0] + '.pyc'
@@ -180,8 +70,6 @@ def test_generate_script_code_dir(tmpdir):
 
     expected = textwrap.dedent(
         """\
-        #!{}
-
         from __future__ import absolute_import
         import os
         import sys
@@ -198,10 +86,9 @@ def test_generate_script_code_dir(tmpdir):
 
         import atexit
         from salt.scripts import salt_foobar
-        import salt.utils.platform
 
         def main():
-            if salt.utils.platform.is_windows():
+            if sys.platform.startswith("win"):
                 import os.path
                 import py_compile
                 cfile = os.path.splitext(__file__)[0] + '.pyc'
@@ -220,7 +107,7 @@ def test_generate_script_code_dir(tmpdir):
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
-            sys.executable, code_dir
+            code_dir
         )
     )
     assert contents == expected
@@ -243,8 +130,6 @@ def test_generate_script_inject_coverage(tmpdir):
 
     expected = textwrap.dedent(
         """\
-        #!{}
-
         from __future__ import absolute_import
         import os
         import sys
@@ -267,10 +152,9 @@ def test_generate_script_inject_coverage(tmpdir):
 
         import atexit
         from salt.scripts import salt_foobar
-        import salt.utils.platform
 
         def main():
-            if salt.utils.platform.is_windows():
+            if sys.platform.startswith("win"):
                 import os.path
                 import py_compile
                 cfile = os.path.splitext(__file__)[0] + '.pyc'
@@ -289,7 +173,7 @@ def test_generate_script_inject_coverage(tmpdir):
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
-            sys.executable, code_dir
+            code_dir
         )
     )
     assert contents == expected
@@ -313,8 +197,6 @@ def test_generate_script_inject_sitecustomize(tmpdir):
 
     expected = textwrap.dedent(
         """\
-        #!{}
-
         from __future__ import absolute_import
         import os
         import sys
@@ -353,10 +235,9 @@ def test_generate_script_inject_sitecustomize(tmpdir):
 
         import atexit
         from salt.scripts import salt_foobar
-        import salt.utils.platform
 
         def main():
-            if salt.utils.platform.is_windows():
+            if sys.platform.startswith("win"):
                 import os.path
                 import py_compile
                 cfile = os.path.splitext(__file__)[0] + '.pyc'
@@ -375,7 +256,7 @@ def test_generate_script_inject_sitecustomize(tmpdir):
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
-            sys.executable, code_dir, str(sitecustomize_path)
+            code_dir, str(sitecustomize_path)
         )
     )
     assert contents == expected
@@ -388,8 +269,6 @@ def test_generate_script_inject_sitecustomize(tmpdir):
 
     expected = textwrap.dedent(
         """\
-        #!{}
-
         from __future__ import absolute_import
         import os
         import sys
@@ -417,10 +296,9 @@ def test_generate_script_inject_sitecustomize(tmpdir):
 
         import atexit
         from salt.scripts import salt_foobar_2
-        import salt.utils.platform
 
         def main():
-            if salt.utils.platform.is_windows():
+            if sys.platform.startswith("win"):
                 import os.path
                 import py_compile
                 cfile = os.path.splitext(__file__)[0] + '.pyc'
@@ -439,7 +317,7 @@ def test_generate_script_inject_sitecustomize(tmpdir):
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
-            sys.executable, sitecustomize_path
+            str(sitecustomize_path)
         )
     )
     assert contents == expected
@@ -455,8 +333,6 @@ def test_generate_script_salt(tmpdir):
 
     expected = textwrap.dedent(
         """\
-        #!{}
-
         from __future__ import absolute_import
         import os
         import sys
@@ -479,9 +355,7 @@ def test_generate_script_salt(tmpdir):
             sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
-        """.format(
-            sys.executable
-        )
+        """
     )
     assert contents == expected
 
@@ -496,8 +370,6 @@ def test_generate_script_salt_api(tmpdir):
 
     expected = textwrap.dedent(
         """\
-        #!{}
-
         from __future__ import absolute_import
         import os
         import sys
@@ -524,9 +396,7 @@ def test_generate_script_salt_api(tmpdir):
             sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
-        """.format(
-            sys.executable
-        )
+        """
     )
     assert contents == expected
 
@@ -541,8 +411,6 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
 
     expected = textwrap.dedent(
         """\
-        #!{}
-
         from __future__ import absolute_import
         import os
         import sys
@@ -554,10 +422,9 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
 
         import atexit
         from salt.scripts import salt_foobar
-        import salt.utils.platform
 
         def main():
-            if salt.utils.platform.is_windows():
+            if sys.platform.startswith("win"):
                 import os.path
                 import py_compile
                 cfile = os.path.splitext(__file__)[0] + '.pyc'
@@ -575,9 +442,7 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
             sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
-        """.format(
-            sys.executable
-        )
+        """
     )
     assert contents == expected
     assert os.path.isdir(tmpdir.join("blah").strpath)
@@ -593,8 +458,6 @@ def test_generate_script_only_generates_once(tmpdir):
 
     expected = textwrap.dedent(
         """\
-        #!{}
-
         from __future__ import absolute_import
         import os
         import sys
@@ -606,10 +469,9 @@ def test_generate_script_only_generates_once(tmpdir):
 
         import atexit
         from salt.scripts import salt_foobar
-        import salt.utils.platform
 
         def main():
-            if salt.utils.platform.is_windows():
+            if sys.platform.startswith("win"):
                 import os.path
                 import py_compile
                 cfile = os.path.splitext(__file__)[0] + '.pyc'
@@ -627,9 +489,7 @@ def test_generate_script_only_generates_once(tmpdir):
             sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
-        """.format(
-            sys.executable
-        )
+        """
     )
     assert contents == expected
     statinfo_1 = os.stat(script_path)

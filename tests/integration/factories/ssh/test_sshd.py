@@ -14,7 +14,7 @@ def sshd(request, salt_factories):
 
 @pytest.mark.skip_on_windows
 def test_sshd(sshd):
-    assert sshd.is_alive()
+    assert sshd.is_running()
 
 
 @pytest.mark.skip_on_windows

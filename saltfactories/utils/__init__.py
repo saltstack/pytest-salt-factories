@@ -1,4 +1,8 @@
 """
+..
+    PYTEST_DONT_REWRITE
+
+
 saltfactories.utils
 ~~~~~~~~~~~~~~~~~~~
 
@@ -10,6 +14,8 @@ import string
 import sys
 from functools import lru_cache
 
+import salt.utils.user
+
 
 def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
     """
@@ -18,8 +24,8 @@ def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
     Args:
         prefix(str): The prefix for the random string
         size(int): The size of the random string
-        uppercase(bool): If true, include uppercased ascii chars in choice sample
-        lowercase(bool): If true, include lowercased ascii chars in choice sample
+        uppercase(bool): If true, include upper-cased ascii chars in choice sample
+        lowercase(bool): If true, include lower-cased ascii chars in choice sample
         digits(bool): If true, include digits in choice sample
     Returns:
         str: The random string
@@ -39,11 +45,4 @@ def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
 
 @lru_cache(maxsize=1)
 def running_username():
-    if sys.platform.startswith("win32"):
-        import win32api
-
-        return win32api.GetUserName()
-    else:
-        import pwd
-
-        return pwd.getpwuid(os.getuid()).pw_name
+    return salt.utils.user.get_user()

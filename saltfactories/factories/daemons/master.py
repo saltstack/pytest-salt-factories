@@ -1,24 +1,24 @@
 """
-saltfactories.factories.master
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..
+    PYTEST_DONT_REWRITE
+
+
+saltfactories.factories.daemons.master
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Master Factory
 """
+import attr
+import salt.config
+import salt.utils.dictupdate
+import salt.utils.files
 
-try:
-    import salt.config
-    import salt.utils.files
-    import salt.utils.dictupdate
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
-
+from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.utils import ports
 
 
-class MasterFactory:
+@attr.s(kw_only=True, slots=True)
+class MasterFactory(SaltDaemonFactory):
     @staticmethod
     def default_config(
         root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,
@@ -91,3 +91,9 @@ class MasterFactory:
             salt.utils.dictupdate.update(config_defaults, config_overrides, merge_lists=True)
 
         return config_defaults
+
+    def get_check_events(self):
+        """
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
+        """
+        yield self.config["id"], "salt/master/{id}/start".format(**self.config)

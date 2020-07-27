@@ -7,7 +7,6 @@ Code to generate Salt CLI scripts for test runs
 import logging
 import pathlib
 import stat
-import sys
 import textwrap
 
 log = logging.getLogger(__name__)
@@ -55,10 +54,9 @@ SCRIPT_TEMPLATES = {
         """
         import atexit
         from salt.scripts import salt_{0}
-        import salt.utils.platform
 
         def main():
-            if salt.utils.platform.is_windows():
+            if sys.platform.startswith("win"):
                 import os.path
                 import py_compile
                 cfile = os.path.splitext(__file__)[0] + '.pyc'
@@ -110,12 +108,7 @@ SCRIPT_TEMPLATES = {
 
 
 def generate_script(
-    bin_dir,
-    script_name,
-    executable=None,
-    code_dir=None,
-    inject_coverage=False,
-    inject_sitecustomize=False,
+    bin_dir, script_name, code_dir=None, inject_coverage=False, inject_sitecustomize=False,
 ):
     """
     Generate script
@@ -135,16 +128,9 @@ def generate_script(
             if script_template is None:
                 script_template = SCRIPT_TEMPLATES.get("common", None)
 
-            if executable and len(executable) > 128:
-                # Too long for a shebang, let's use /usr/bin/env and hope
-                # the right python is picked up
-                executable = "/usr/bin/env python"
-
             script_contents = (
                 textwrap.dedent(
                     """
-                #!{executable}
-
                 from __future__ import absolute_import
                 import os
                 import sys
@@ -153,9 +139,7 @@ def generate_script(
                 os.environ[str("PYTHONUNBUFFERED")] = str("1")
                 # Don't write .pyc files or create them in __pycache__ directories
                 os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
-                """.format(
-                        executable=executable or sys.executable
-                    )
+                """
                 ).strip()
                 + "\n\n"
             )

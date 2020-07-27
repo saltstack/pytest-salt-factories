@@ -96,18 +96,16 @@ jobs:
 
     - name: Install Test Requirements
       env:
-        USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
       run: |
-        nox --force-color -e tests-system-python --install-only
+        nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
     - name: Test
       env:
-        USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
-        nox --force-color -e tests-system-python -- -vv tests/
+        nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
     - name: Upload Test Results
       if: always()
@@ -150,7 +148,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -181,7 +179,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -191,7 +189,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@main
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artefacts/runtests-*.log
@@ -207,9 +205,9 @@ jobs:
       max-parallel: 3
       matrix:
         python-version:
-          - 3.5
+#          - 3.5
           - 3.6
-#          - 3.7
+          - 3.7
         salt-version:
           - salt==3001
 
@@ -239,21 +237,19 @@ jobs:
     - name: Install Test Requirements
       shell: bash
       env:
-        USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
-        nox --force-color -e tests-system-python --install-only
+        nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
     - name: Test
       shell: bash
       env:
-        USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
-        nox --force-color -e tests-system-python -- -vv tests/
+        nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
     - name: Upload Test Results
       if: always()
@@ -296,7 +292,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -327,7 +323,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -337,7 +333,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@main
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artefacts/runtests-*.log
@@ -384,18 +380,16 @@ jobs:
 
     - name: Install Test Requirements
       env:
-        USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
       run: |
-        nox --force-color -e tests-system-python --install-only
+        nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
     - name: Test
       env:
-        USE_SYSTEM_PYTHON: YES
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
-        nox --force-color -e tests-system-python -- -vv tests/
+        nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
     - name: Upload Test Results
       if: always()
@@ -438,7 +432,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -469,7 +463,7 @@ jobs:
           n=0
           until [ "$n" -ge 5 ]
           do
-            if sh codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
                 break
             fi
             n=$((n+1))
@@ -479,7 +473,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@master
+      uses: actions/upload-artifact@main
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artefacts/runtests-*.log

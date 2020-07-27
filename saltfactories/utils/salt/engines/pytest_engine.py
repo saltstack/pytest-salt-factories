@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 """
-pytestsalt.engines.pytest_engine
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+pytest_engine
+~~~~~~~~~~~~~
 
 Simple salt engine which will setup a socket to accept connections allowing us to know
 when a daemon is up and running
@@ -8,12 +9,15 @@ when a daemon is up and running
 import atexit
 import logging
 
-import salt.utils.event
-import salt.utils.msgpack
 import zmq
-from tornado import gen
-from tornado import ioloop
-from zmq.eventloop.future import Context
+
+try:
+    from salt.ext.tornado import gen
+    from salt.ext.tornado import ioloop
+except ImportError:
+    # This likely due to running backwards compatibility tests against older minions
+    from tornado import gen
+    from tornado import ioloop
 
 try:
     import salt.utils.asynchronous
@@ -21,6 +25,12 @@ try:
     HAS_SALT_ASYNC = True
 except ImportError:
     HAS_SALT_ASYNC = False
+try:
+    import msgpack
+
+    HAS_MSGPACK = True
+except ImportError:
+    HAS_MSGPACK = False
 
 
 log = logging.getLogger(__name__)
@@ -37,6 +47,8 @@ def __virtual__():
     pytest_config = __opts__[pytest_key]
     if "returner_address" not in pytest_config:
         return False, "No 'returner_address' key in opts['{}'] dictionary".format(pytest_key)
+    if HAS_MSGPACK is False:
+        return False, "msgpack was not importable. Please install msgpack."
     return True
 
 
@@ -62,7 +74,7 @@ class PyTestEngine:
 
     @gen.coroutine
     def _start(self):
-        self.context = Context()
+        self.context = zmq.Context()
         self.push = self.context.socket(zmq.PUSH)
         log.debug("Connecting PUSH socket to %s", self.returner_address)
         self.push.connect(self.returner_address)
@@ -95,5 +107,5 @@ class PyTestEngine:
     def handle_event(self, payload):
         tag, data = salt.utils.event.SaltEvent.unpack(payload)
         log.debug("Received Event; TAG: %r DATA: %r", tag, data)
-        forward = salt.utils.msgpack.dumps((self.id, tag, data), use_bin_type=True)
+        forward = msgpack.dumps((self.id, tag, data), use_bin_type=True)
         yield self.push.send(forward)

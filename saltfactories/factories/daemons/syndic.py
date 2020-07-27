@@ -1,24 +1,24 @@
 """
-saltfactories.factories.minion
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..
+    PYTEST_DONT_REWRITE
 
-Minion Factory
+
+saltfactories.factories.daemons.syndic
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Syndic Factory
 """
+import attr
+import salt.config
+import salt.utils.dictupdate
+import salt.utils.files
 
-try:
-    import salt.config
-    import salt.utils.files
-    import salt.utils.dictupdate
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
-
+from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.utils import ports
 
 
-class SyndicFactory:
+@attr.s(kw_only=True, slots=True)
+class SyndicFactory(SaltDaemonFactory):
     @staticmethod
     def default_config(
         root_dir,
@@ -214,3 +214,10 @@ class SyndicFactory:
                 config_defaults.pop(key)
 
         return config_defaults
+
+    def get_check_events(self):
+        """
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
+        """
+        pytest_config = self.config["pytest-{}".format(self.config["__role"])]
+        yield pytest_config["master_config"]["id"], "salt/{__role}/{id}/start".format(**self.config)

@@ -1,9 +1,3 @@
-"""
-    tests.functional.factories.test_syndic_factory
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Functional tests for the salt syndic factory
-"""
 import re
 
 import pytest

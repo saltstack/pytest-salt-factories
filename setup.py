@@ -54,6 +54,7 @@ setup(
     packages=find_packages(),
     cmdclass=versioneer.get_cmdclass(),
     install_requires=parse_requirements(),
+    extras_require={"docker": ["docker"]},
     include_package_data=True,
     zip_safe=False,
     classifiers=[
