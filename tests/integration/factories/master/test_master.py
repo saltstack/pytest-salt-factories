@@ -63,7 +63,7 @@ def test_salt_cp(master, minion, salt_cp, tempfiles):
         assert os.path.exists(dest)
         with open(dest) as rfh:
             assert rfh.read() == contents
-    finally:
+    finally:  # pragma: no cover
         if os.path.exists(dest):
             os.unlink(dest)
 
@@ -81,7 +81,7 @@ def test_salt_cp(master, minion, salt_cp, tempfiles):
         assert os.path.exists(dest)
         with open(dest) as rfh:
             assert rfh.read() == contents
-    finally:
+    finally:  # pragma: no cover
         if os.path.exists(dest):
             os.unlink(dest)
 
@@ -102,7 +102,7 @@ def test_salt_cp_no_match(master, minion, salt_cp, tempfiles):
         assert ret.exitcode == 0, ret
         assert not ret.json, ret
         assert not os.path.exists(dest)
-    finally:
+    finally:  # pragma: no cover
         if os.path.exists(dest):
             os.unlink(dest)
 
