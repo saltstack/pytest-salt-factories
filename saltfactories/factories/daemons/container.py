@@ -22,7 +22,7 @@ from saltfactories.utils.processes import ProcessResult
 
 try:
     import docker
-    from docker.exceptions import APIError
+    from docker.errors import APIError
     from requests.exceptions import ConnectionError as RequestsConnectionError
 
     HAS_DOCKER = True
