@@ -22,8 +22,7 @@ from saltfactories.utils.processes import ProcessResult
 
 try:
     import docker
-    from docker.exceptions import APIError
-    from requests.exceptions import ConnectionError as RequestsConnectionError
+    from docker.errors import APIError
 
     HAS_DOCKER = True
 except ImportError:
@@ -31,6 +30,14 @@ except ImportError:
 
     class APIError(Exception):
         pass
+
+
+try:
+    from requests.exceptions import ConnectionError as RequestsConnectionError
+
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
 
     class RequestsConnectionError(ConnectionError):
         pass
@@ -65,6 +72,8 @@ class ContainerFactory(Factory):
         if self.docker_client is None:
             if not HAS_DOCKER:
                 pytest.fail("The docker python library was not found installed")
+            if not HAS_REQUESTS:
+                pytest.fail("The requests python library was not found installed")
             self.docker_client = docker.from_env()
 
     def start(self):

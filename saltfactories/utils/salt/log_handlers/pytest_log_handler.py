@@ -105,7 +105,10 @@ def setup_handlers():
         sock.close()
 
     pytest_log_prefix = log_opts.get("prefix")
-    level = LOG_LEVELS[(log_opts.get("level") or "error").lower()]
+    try:
+        level = LOG_LEVELS[(log_opts.get("level") or "error").lower()]
+    except KeyError:
+        level = logging.ERROR
     handler = ZMQHandler(host=host_addr, port=host_port, log_prefix=pytest_log_prefix, level=level)
     handler.setLevel(level)
     handler.start()

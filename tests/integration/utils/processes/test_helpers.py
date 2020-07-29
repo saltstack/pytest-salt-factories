@@ -7,19 +7,11 @@
 import time
 
 import pytest
+import salt.defaults.exitcodes
 
 from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.factories.daemons.master import MasterFactory
 from saltfactories.utils import cli_scripts
-
-
-try:
-    import salt.defaults.exitcodes
-except ImportError:  # pragma: no cover
-    # We need salt to test salt with saltfactories, and, when pytest is rewriting modules for proper assertion
-    # reporting, we still haven't had a chance to inject the salt path into sys.modules, so we'll hit this
-    # import error, but its safe to pass
-    pass
 
 
 @pytest.fixture(scope="package")
@@ -50,7 +42,7 @@ def test_exit_status_unknown_user(request, salt_factories, shell_tests_salt_mast
     proc.start()
     iterations = salt_factories.start_timeout
     while proc.is_running():
-        if not iterations:
+        if not iterations:  # pragma: no cover
             break
         time.sleep(1)
         iterations -= 1

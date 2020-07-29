@@ -12,7 +12,7 @@ docker = pytest.importorskip("docker")
 def docker_client():
     client = docker.from_env()
     connectable = ContainerFactory.client_connectable(client)
-    if connectable is not True:
+    if connectable is not True:  # pragma: no cover
         pytest.skip(connectable)
     return client
 
