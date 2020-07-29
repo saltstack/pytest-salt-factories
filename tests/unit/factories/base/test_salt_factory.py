@@ -7,6 +7,7 @@ from unittest import mock
 import pytest
 
 from saltfactories.factories.base import SaltCliFactory
+from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.utils.processes import ProcessResult
 
 
@@ -42,7 +43,7 @@ def cli_script_name(testdir):
 
 
 def test_default_cli_flags(minion_id, config_dir, config_file, cli_script_name):
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
     expected = [
@@ -61,7 +62,7 @@ def test_default_cli_flags(minion_id, config_dir, config_file, cli_script_name):
 
 @pytest.mark.parametrize("flag", ["-l", "--log-level", "--log-level="])
 def test_override_log_level(minion_id, config_dir, config_file, cli_script_name, flag):
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = []
     if flag.endswith("="):
         flag_overrides_args = [flag + "info"]
@@ -89,7 +90,7 @@ def test_override_log_level(minion_id, config_dir, config_file, cli_script_name,
 
 @pytest.mark.parametrize("flag", ["--out", "--output", "--out=", "--output="])
 def test_override_output(minion_id, config_dir, config_file, cli_script_name, flag):
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = []
     if flag.endswith("="):
         flag_overrides_args = [flag + "nested"]
@@ -117,7 +118,7 @@ def test_override_output(minion_id, config_dir, config_file, cli_script_name, fl
 
 def test_default_cli_flags_with_timeout(minion_id, config_dir, config_file, cli_script_name):
     default_timeout = 10
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
     expected = [
@@ -152,7 +153,7 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
     """
     default_timeout = 10
     explicit_timeout = 60
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = ["--timeout=6", "test.ping"]
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
@@ -190,7 +191,7 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
     # To confirm behavior, let's NOT pass --timeout in args
     default_timeout = 10
     explicit_timeout = 60
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
@@ -227,7 +228,7 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
 
     # To confirm behavior, let's NOT pass --timeout in args nor _timeout in kwargs
     default_timeout = 10
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
     expected = [
@@ -272,7 +273,7 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
         flag_overrides_args = [flag, str(flag_value)]
 
     default_timeout = 10
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = flag_overrides_args + ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
     expected = (
@@ -312,7 +313,7 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
         flag_overrides_args = [flag, str(flag_value) + "i"]
 
     default_timeout = 10
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = flag_overrides_args + ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
     expected = (
@@ -354,7 +355,7 @@ def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name
         flag_overrides_args = [flag, passed_config_dir]
 
     default_timeout = 10
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = flag_overrides_args + ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
     expected = (
@@ -373,7 +374,7 @@ def test_process_output(cli_script_name, config_file):
     in_stdout = '"The salt master could not be contacted. Is master running?"\n'
     in_stderr = ""
     cmdline = ["--out=json"]
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
     stdout, stderr, json_out = proc.process_output(in_stdout, in_stderr, cmdline=cmdline)
     assert stdout == json.loads(in_stdout)
@@ -382,7 +383,7 @@ def test_process_output(cli_script_name, config_file):
 
 
 def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
-    config = {"conf_file": config_file}
+    config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
     # Strings
     extra_kwargs = OrderedDict((("look", "Ma"), ("no", "Hands!")))
@@ -467,3 +468,21 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     # Function **kwargs are not ordered dictionaries on some python versions
     # let's just use sorted to make sure everything is in the output
     assert sorted(cmdline) == sorted(expected)
+
+
+def test_salt_cli_factory_id_attr_comes_first_in_repr(config_file):
+    proc = SaltCliFactory(
+        cli_script_name="foo-bar", config={"id": "TheID", "conf_file": config_file}
+    )
+    regex = r"{}(id='TheID'".format(proc.__class__.__name__)
+    assert repr(proc).startswith(regex)
+    assert str(proc).startswith(regex)
+
+
+def test_salt_daemon_factory_id_attr_comes_first_in_repr(config_file):
+    proc = SaltDaemonFactory(
+        cli_script_name="foo-bar", config={"id": "TheID", "conf_file": config_file}
+    )
+    regex = r"{}(id='TheID'".format(proc.__class__.__name__)
+    assert repr(proc).startswith(regex)
+    assert str(proc).startswith(regex)

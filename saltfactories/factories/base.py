@@ -364,6 +364,7 @@ class SaltFactory:
             The path to the python executable to use
     """
 
+    id = attr.ib(default=None)
     config = attr.ib(repr=False)
     config_dir = attr.ib(init=False, default=None)
     config_file = attr.ib(init=False, default=None)
@@ -379,6 +380,7 @@ class SaltFactory:
         self.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")
         self.config_file = self.config["conf_file"]
         self.config_dir = os.path.dirname(self.config_file)
+        self.id = self.config["id"]
 
     def get_display_name(self):
         """
@@ -390,7 +392,7 @@ class SaltFactory:
 
 
 @attr.s(kw_only=True)
-class SaltCliFactory(ProcessFactory, SaltFactory):
+class SaltCliFactory(SaltFactory, ProcessFactory):
     """
     Base factory for salt cli's
 
@@ -550,13 +552,11 @@ class SaltCliFactory(ProcessFactory, SaltFactory):
 
 
 @attr.s(kw_only=True)
-class SaltDaemonFactory(DaemonFactory, SaltFactory):
+class SaltDaemonFactory(SaltFactory, DaemonFactory):
     """
     Base factory for salt daemon's
     """
 
-    _display_name = attr.ib(repr=False, init=False, default=None)
-    # Override the following to default to non-mandatory and to None
     display_name = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
@@ -565,7 +565,7 @@ class SaltDaemonFactory(DaemonFactory, SaltFactory):
         self.base_script_args.append("--config-dir={}".format(self.config_dir))
         self.base_script_args.append("--log-level=quiet")
         if self.display_name is None:
-            self.display_name = self.config["id"]
+            self.display_name = self.id
 
     def get_check_events(self):
         """
