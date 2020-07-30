@@ -19,6 +19,9 @@ from saltfactories.utils import ports
 
 @attr.s(kw_only=True, slots=True)
 class SaltMasterFactory(SaltDaemonFactory):
+
+    factories_manager = attr.ib(repr=False, hash=False, default=None)
+
     @staticmethod
     def default_config(
         root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,
@@ -83,7 +86,7 @@ class SaltMasterFactory(SaltDaemonFactory):
             "transport": "zeromq",
             "order_masters": order_masters,
             "max_open_files": 10240,
-            "pytest-master": {"log": {"prefix": "{{cli_name}}({})".format(master_id)},},
+            "pytest-master": {"log": {"prefix": "{{cli_name}}({})".format(master_id)}},
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
@@ -99,3 +102,47 @@ class SaltMasterFactory(SaltDaemonFactory):
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         yield self.config["id"], "salt/master/{id}/start".format(**self.config)
+
+    # The following methods just route the calls to the right method in the factories manager
+    # while making sure the CLI tools are referring to this daemon
+    def get_salt_cli(self, **kwargs):
+        """
+        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cli`
+        """
+        return self.factories_manager.get_salt_cli(self.id, **kwargs)
+
+    def get_salt_cp_cli(self, **kwargs):
+        """
+        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cp_cli`
+        """
+        return self.factories_manager.get_salt_cp_cli(self.id, **kwargs)
+
+    def get_salt_key_cli(self, **kwargs):
+        """
+        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_key_cli`
+        """
+        return self.factories_manager.get_salt_key_cli(self.id, **kwargs)
+
+    def get_salt_run_cli(self, **kwargs):
+        """
+        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_run_cli`
+        """
+        return self.factories_manager.get_salt_run_cli(self.id, **kwargs)
+
+    def get_salt_spm_cli(self, **kwargs):
+        """
+        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_spm_cli`
+        """
+        return self.factories_manager.get_salt_spm_cli(self.id, **kwargs)
+
+    def get_salt_ssh_cli(self, **kwargs):
+        """
+        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_ssh_cli`
+        """
+        return self.factories_manager.get_salt_ssh_cli(self.id, **kwargs)
+
+    def get_salt_cloud_cli(self, request, **kwargs):
+        """
+        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cloud_cli`
+        """
+        return self.factories_manager.get_salt_cloud_cli(request, self.id, **kwargs)

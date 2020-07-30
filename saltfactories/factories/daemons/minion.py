@@ -21,6 +21,9 @@ from saltfactories.utils import ports
 
 @attr.s(kw_only=True, slots=True)
 class SaltMinionFactory(SaltDaemonFactory):
+
+    factories_manager = attr.ib(repr=False, hash=False, default=None)
+
     @staticmethod
     def default_config(
         root_dir, minion_id, config_defaults=None, config_overrides=None, master_port=None
@@ -79,3 +82,11 @@ class SaltMinionFactory(SaltDaemonFactory):
         """
         pytest_config = self.config["pytest-{}".format(self.config["__role"])]
         yield pytest_config["master_config"]["id"], "salt/{__role}/{id}/start".format(**self.config)
+
+    # The following methods just route the calls to the right method in the factories manager
+    # while making sure the CLI tools are referring to this daemon
+    def get_salt_call_cli(self, **kwargs):
+        """
+        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_call_cli`
+        """
+        return self.factories_manager.get_salt_call_cli(self.id, **kwargs)
