@@ -6,7 +6,7 @@
 saltfactories.factories.daemons.minion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Minion Factory
+Salt Minion Factory
 """
 import sys
 

@@ -2,7 +2,7 @@
 saltfactories.factories.cli.cp
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-salt-cp CLI factory
+``salt-cp`` CLI factory
 """
 import attr
 

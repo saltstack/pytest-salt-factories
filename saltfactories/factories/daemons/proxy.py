@@ -6,7 +6,7 @@
 saltfactories.factories.daemons.proxy
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Proxy Minion Factory
+Salt Proxy Minion Factory
 """
 import sys
 

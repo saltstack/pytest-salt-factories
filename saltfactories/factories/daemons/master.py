@@ -6,7 +6,7 @@
 saltfactories.factories.daemons.master
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Master Factory
+Salt Master Factory
 """
 import attr
 import salt.config

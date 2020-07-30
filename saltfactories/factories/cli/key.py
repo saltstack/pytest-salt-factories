@@ -6,7 +6,7 @@
 saltfactories.factories.cli.key
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-salt-key CLI factory
+``salt-key`` CLI factory
 """
 import re
 

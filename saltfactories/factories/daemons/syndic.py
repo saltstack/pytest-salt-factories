@@ -6,7 +6,7 @@
 saltfactories.factories.daemons.syndic
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Syndic Factory
+Salt Syndic Factory
 """
 import attr
 import salt.config

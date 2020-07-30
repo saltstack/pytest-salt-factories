@@ -2,7 +2,7 @@
 saltfactories.factories.cli.run
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-salt-run CLI factory
+``salt-run`` CLI factory
 """
 import attr
 

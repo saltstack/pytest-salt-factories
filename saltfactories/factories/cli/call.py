@@ -2,7 +2,7 @@
 saltfactories.factories.cli.call
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-salt-call CLI factory
+``salt-call`` CLI factory
 """
 import attr
 
