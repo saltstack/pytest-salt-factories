@@ -165,6 +165,42 @@ def pytest_saltfactories_proxy_minion_write_configuration(request, proxy_minion_
 
 
 @pytest.hookspec(firstresult=True)
+def pytest_saltfactories_cloud_configuration_defaults(
+    request, factories_manager, root_dir, master_id
+):
+    """
+    Hook which should return a dictionary tailored for the provided master_id
+
+    Stops at the first non None result
+    """
+
+
+@pytest.hookspec(firstresult=True)
+def pytest_saltfactories_cloud_configuration_overrides(
+    request, factories_manager, root_dir, master_id, config_defaults
+):
+    """
+    Hook which should return a dictionary tailored for the provided master_id.
+    This dictionary will override the config_defaults dictionary.
+
+    Stops at the first non None result
+    """
+
+
+def pytest_saltfactories_cloud_verify_configuration(request, cloud_config, username):
+    """
+    This hook is called to verify the provided cloud configuration
+    """
+
+
+@pytest.hookspec(firstresult=True)
+def pytest_saltfactories_cloud_write_configuration(request, cloud_config):
+    """
+    This hook is called to write the provided cloud configuration
+    """
+
+
+@pytest.hookspec(firstresult=True)
 def pytest_saltfactories_handle_key_auth_event(
     factories_manager, master_id, minion_id, keystate, payload
 ):

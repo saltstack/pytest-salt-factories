@@ -69,6 +69,7 @@ rc
 ret
 returncode
 saltapifactory
+saltcloudfactory
 saltfactories
 saltmaster
 saltmasterfactory

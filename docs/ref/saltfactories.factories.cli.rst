@@ -25,6 +25,14 @@ saltfactories.factories.cli.client module
    :undoc-members:
    :show-inheritance:
 
+saltfactories.factories.cli.cloud module
+----------------------------------------
+
+.. automodule:: saltfactories.factories.cli.cloud
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 saltfactories.factories.cli.cp module
 -------------------------------------
 

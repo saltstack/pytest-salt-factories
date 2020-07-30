@@ -282,6 +282,38 @@ def pytest_saltfactories_proxy_minion_write_configuration(request, proxy_minion_
     return options
 
 
+def pytest_saltfactories_cloud_verify_configuration(request, cloud_config, username):
+    """
+    This hook is called to verify the provided cloud configuration
+    """
+    # verify env to make sure all required directories are created and have the
+    # right permissions
+    verify_env_entries = [
+        str(pathlib.Path(cloud_config["log_file"]).parent),
+    ]
+    salt.utils.verify.verify_env(verify_env_entries, username, root_dir=cloud_config["root_dir"])
+
+
+def pytest_saltfactories_cloud_write_configuration(request, cloud_config):
+    """
+    This hook is called to write the provided cloud configuration
+    """
+    config_file = cloud_config.pop("conf_file")
+    log.debug(
+        "Writing to configuration file %s. Configuration:\n%s",
+        config_file,
+        pprint.pformat(cloud_config),
+    )
+
+    # Write down the computed configuration into the config file
+    with salt.utils.files.fopen(config_file, "w") as wfh:
+        salt.utils.yaml.safe_dump(cloud_config, wfh, default_flow_style=False)
+
+    # Make sure to load the config file as a salt-master starting from CLI
+    options = salt.config.cloud_config(config_file)
+    return options
+
+
 def pytest_saltfactories_handle_key_auth_event(
     factories_manager, master_id, minion_id, keystate, payload
 ):
