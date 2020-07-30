@@ -18,7 +18,7 @@ from saltfactories.utils import ports
 
 
 @attr.s(kw_only=True, slots=True)
-class SyndicFactory(SaltDaemonFactory):
+class SaltSyndicFactory(SaltDaemonFactory):
     @staticmethod
     def default_config(
         root_dir,
@@ -46,14 +46,14 @@ class SyndicFactory(SaltDaemonFactory):
         conf_d_dir.mkdir(exist_ok=True)
         conf_file = str(conf_d_dir / "syndic.conf")
 
-        master_config = SyndicFactory.default_master_config(
+        master_config = SaltSyndicFactory.default_master_config(
             root_dir,
             conf_dir,
             syndic_id,
             config_defaults=config_defaults.get("master"),
             config_overrides=config_overrides.get("master"),
         )
-        minion_config = SyndicFactory.default_minion_config(
+        minion_config = SaltSyndicFactory.default_minion_config(
             root_dir,
             conf_dir,
             syndic_id,

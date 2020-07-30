@@ -14,7 +14,7 @@ from saltfactories.factories.base import SaltDaemonFactory
 
 
 @attr.s(kw_only=True, slots=True)
-class ApiFactory(SaltDaemonFactory):
+class SaltApiFactory(SaltDaemonFactory):
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
         if "rest_cherrypy" in self.config:

@@ -18,7 +18,7 @@ from saltfactories.utils import ports
 
 
 @attr.s(kw_only=True, slots=True)
-class MasterFactory(SaltDaemonFactory):
+class SaltMasterFactory(SaltDaemonFactory):
     @staticmethod
     def default_config(
         root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,

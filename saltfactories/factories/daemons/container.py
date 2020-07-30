@@ -16,7 +16,7 @@ from saltfactories import CODE_ROOT_DIR
 from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.factories.base import Factory
 from saltfactories.factories.base import SaltDaemonFactory
-from saltfactories.factories.daemons.minion import MinionFactory
+from saltfactories.factories.daemons.minion import SaltMinionFactory
 from saltfactories.utils import random_string
 from saltfactories.utils.processes import ProcessResult
 
@@ -200,7 +200,7 @@ class SaltDaemonContainerFactory(SaltDaemonFactory, ContainerFactory):
 
 
 @attr.s(kw_only=True, slots=True)
-class MinionContainerFactory(SaltDaemonContainerFactory, MinionFactory):
+class SaltMinionContainerFactory(SaltDaemonContainerFactory, SaltMinionFactory):
     """
     Salt minion daemon implementation running in a docker container
     """
@@ -209,4 +209,4 @@ class MinionContainerFactory(SaltDaemonContainerFactory, MinionFactory):
         """
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
-        return MinionFactory.get_check_events(self)
+        return SaltMinionFactory.get_check_events(self)

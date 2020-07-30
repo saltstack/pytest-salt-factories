@@ -256,7 +256,7 @@ class SaltFactoriesManager:
             config_overrides["syndic_master"] = master_of_masters_config["interface"]
             config_overrides["syndic_master_port"] = master_of_masters_config["ret_port"]
 
-        master_config = daemons.master.MasterFactory.default_config(
+        master_config = daemons.master.SaltMasterFactory.default_config(
             root_dir,
             master_id=master_id,
             config_defaults=_config_defaults,
@@ -284,7 +284,7 @@ class SaltFactoriesManager:
         config_overrides=None,
         max_start_attempts=3,
         start_timeout=None,
-        factory_class=daemons.master.MasterFactory,
+        factory_class=daemons.master.SaltMasterFactory,
         **extra_factory_class_kwargs
     ):
         """
@@ -307,10 +307,10 @@ class SaltFactoriesManager:
             max_start_attempts(int):
                 How many attempts should be made to start the master in case of failure to validate that its running
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltMaster`
+                Extra keyword arguments to pass to :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`
 
         Returns:
-            :py:class:`~saltfactories.utils.processes.salts.SaltMaster`:
+            :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`:
                 The master process class instance
         """
         if master_id in self.cache["masters"]:
@@ -397,7 +397,7 @@ class SaltFactoriesManager:
             else:
                 _config_overrides = config_overrides.copy()
 
-        minion_config = daemons.minion.MinionFactory.default_config(
+        minion_config = daemons.minion.SaltMinionFactory.default_config(
             root_dir,
             minion_id=minion_id,
             config_defaults=_config_defaults,
@@ -431,7 +431,7 @@ class SaltFactoriesManager:
         config_overrides=None,
         max_start_attempts=3,
         start_timeout=None,
-        factory_class=daemons.minion.MinionFactory,
+        factory_class=daemons.minion.SaltMinionFactory,
         **extra_factory_class_kwargs
     ):
         """
@@ -451,10 +451,10 @@ class SaltFactoriesManager:
             max_start_attempts(int):
                 How many attempts should be made to start the minion in case of failure to validate that its running
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltMinion`
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.minion.SaltMinionFactory`
 
         Returns:
-            :py:class:`~saltfactories.utils.processes.salts.SaltMinion`:
+            :py:class:`~saltfactories.factories.daemons.minion.SaltMinionFactory`:
                 The minion process class instance
         """
         if minion_id in self.cache["minions"]:
@@ -598,7 +598,7 @@ class SaltFactoriesManager:
             else:
                 _config_overrides = config_overrides.copy()
 
-        syndic_setup_config = daemons.syndic.SyndicFactory.default_config(
+        syndic_setup_config = daemons.syndic.SaltSyndicFactory.default_config(
             root_dir,
             syndic_id=syndic_id,
             config_defaults=_config_defaults,
@@ -654,7 +654,7 @@ class SaltFactoriesManager:
         config_overrides=None,
         max_start_attempts=3,
         start_timeout=None,
-        factory_class=daemons.syndic.SyndicFactory,
+        factory_class=daemons.syndic.SaltSyndicFactory,
         **extra_factory_class_kwargs
     ):
         """
@@ -680,10 +680,10 @@ class SaltFactoriesManager:
             max_start_attempts(int):
                 How many attempts should be made to start the syndic in case of failure to validate that its running
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltSyndic`
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.syndic.SaltSyndicFactory`
 
         Returns:
-            :py:class:`~saltfactories.utils.processes.salts.SaltSyndic`:
+            :py:class:`~saltfactories.factories.daemons.syndic.SaltSyndicFactory`:
                 The syndic process class instance
         """
         if syndic_id in self.cache["syndics"]:
@@ -785,7 +785,7 @@ class SaltFactoriesManager:
             else:
                 _config_overrides = config_overrides.copy()
 
-        proxy_minion_config = daemons.proxy.ProxyMinionFactory.default_config(
+        proxy_minion_config = daemons.proxy.SaltProxyMinionFactory.default_config(
             root_dir,
             proxy_minion_id=proxy_minion_id,
             config_defaults=_config_defaults,
@@ -819,7 +819,7 @@ class SaltFactoriesManager:
         config_overrides=None,
         max_start_attempts=3,
         start_timeout=None,
-        factory_class=daemons.proxy.ProxyMinionFactory,
+        factory_class=daemons.proxy.SaltProxyMinionFactory,
         **extra_factory_class_kwargs
     ):
         """
@@ -840,10 +840,10 @@ class SaltFactoriesManager:
                 How many attempts should be made to start the proxy minion in case of failure to validate that
                 its running
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltProxyMinion`
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.proxy.SaltProxyMinionFactory`
 
         Returns:
-            :py:class:`~saltfactories.utils.processes.salts.SaltProxyMinion`:
+            :py:class:`~saltfactories.factories.daemons.proxy.SaltProxyMinionFactory`:
                 The proxy minion process class instance
         """
         if proxy_minion_id in self.cache["proxy_minions"]:
@@ -883,7 +883,7 @@ class SaltFactoriesManager:
         config_overrides=None,
         max_start_attempts=3,
         start_timeout=None,
-        factory_class=daemons.api.ApiFactory,
+        factory_class=daemons.api.SaltApiFactory,
         **extra_factory_class_kwargs
     ):
         """
@@ -893,7 +893,7 @@ class SaltFactoriesManager:
         documentation.
 
         Returns:
-            :py:class:`~saltfactories.factories.daemons.master.MasterFactory`:
+            :py:class:`~saltfactories.factories.daemons.api.SaltApiFactory`:
                 The salt-api process class instance
         """
         if master_id in self.cache["api"]:
@@ -1124,10 +1124,10 @@ class SaltFactoriesManager:
             sshd_config_dict(dict):
                 A dictionary of key-value pairs to construct the sshd config file
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltProxyMinion`
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.sshd.SshdDaemonFactory`
 
         Returns:
-            :py:class:`~saltfactories.utils.processes.sshd.SshdDaemon`:
+            :py:class:`~saltfactories.factories.daemons.sshd.SshdDaemonFactory`:
                 The sshd process class instance
         """
         if config_dir is None:

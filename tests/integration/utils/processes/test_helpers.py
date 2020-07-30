@@ -10,7 +10,7 @@ import pytest
 import salt.defaults.exitcodes
 
 from saltfactories.exceptions import FactoryNotStarted
-from saltfactories.factories.daemons.master import MasterFactory
+from saltfactories.factories.daemons.master import SaltMasterFactory
 from saltfactories.utils import cli_scripts
 
 
@@ -38,7 +38,7 @@ def test_exit_status_unknown_user(request, salt_factories, shell_tests_salt_mast
         inject_coverage=salt_factories.inject_coverage,
         inject_sitecustomize=salt_factories.inject_sitecustomize,
     )
-    proc = MasterFactory(cli_script_name=script_path, config=shell_tests_salt_master_config)
+    proc = SaltMasterFactory(cli_script_name=script_path, config=shell_tests_salt_master_config)
     proc.start()
     iterations = salt_factories.start_timeout
     while proc.is_running():
