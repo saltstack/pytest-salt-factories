@@ -408,6 +408,7 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
 
     __cli_timeout_supported__ = attr.ib(repr=False, init=False, default=False)
     __cli_log_level_supported__ = attr.ib(repr=False, init=False, default=True)
+    __cli_output_supported__ = attr.ib(repr=False, init=False, default=True)
     # Override the following to default to non-mandatory and to None
     display_name = attr.ib(init=False, default=None)
 
@@ -494,14 +495,15 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                     cmdline.append("--timeout={}".format(salt_cli_timeout))
 
         # Handle the output flag
-        for arg in args:
-            if arg in ("--out", "--output"):
-                break
-            if arg.startswith(("--out=", "--output=")):
-                break
-        else:
-            # No output was passed, the default output is JSON
-            cmdline.append("--out=json")
+        if self.__cli_output_supported__:
+            for arg in args:
+                if arg in ("--out", "--output"):
+                    break
+                if arg.startswith(("--out=", "--output=")):
+                    break
+            else:
+                # No output was passed, the default output is JSON
+                cmdline.append("--out=json")
 
         if self.__cli_log_level_supported__:
             # Handle the logging flag
@@ -535,7 +537,12 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
 
     def process_output(self, stdout, stderr, cmdline=None):
         stdout, stderr, json_out = super().process_output(stdout, stderr, cmdline=cmdline)
-        if json_out and isinstance(json_out, str) and "--out=json" in cmdline:
+        if (
+            self.__cli_output_supported__
+            and json_out
+            and isinstance(json_out, str)
+            and "--out=json" in cmdline
+        ):
             # Sometimes the parsed JSON is just a string, for example:
             #  OUTPUT: '"The salt master could not be contacted. Is master running?"\n'
             #  LOADED JSON: 'The salt master could not be contacted. Is master running?'
@@ -543,7 +550,7 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
             # In this case, we assign the loaded JSON to stdout and reset json_out
             stdout = json_out
             json_out = None
-        if json_out and self._minion_tgt:
+        if self.__cli_output_supported__ and json_out and self._minion_tgt:
             try:
                 json_out = json_out[self._minion_tgt]
             except KeyError:
