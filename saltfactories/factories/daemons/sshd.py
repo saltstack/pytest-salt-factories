@@ -2,7 +2,7 @@
 saltfactories.factories.daemons.sshd
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-SSHD daemon process implementation
+SSHD daemon factory implementation
 """
 import logging
 import pathlib

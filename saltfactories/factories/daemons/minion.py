@@ -6,7 +6,7 @@
 saltfactories.factories.daemons.minion
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Minion Factory
+Salt Minion Factory
 """
 import sys
 
@@ -20,7 +20,7 @@ from saltfactories.utils import ports
 
 
 @attr.s(kw_only=True, slots=True)
-class MinionFactory(SaltDaemonFactory):
+class SaltMinionFactory(SaltDaemonFactory):
     @staticmethod
     def default_config(
         root_dir, minion_id, config_defaults=None, config_overrides=None, master_port=None

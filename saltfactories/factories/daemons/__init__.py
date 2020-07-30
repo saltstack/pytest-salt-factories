@@ -1,3 +1,4 @@
+from . import api
 from . import container
 from . import master
 from . import minion

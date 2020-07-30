@@ -32,10 +32,13 @@ SCRIPT_TEMPLATES = {
     "salt-api": textwrap.dedent(
         """
         import atexit
-        import salt.cli
+        import salt.cli.api
+        import salt.utils.process
+
+        salt.utils.process.notify_systemd()
 
         def main():
-            sapi = salt.cli.SaltAPI()
+            sapi = salt.cli.api.SaltAPI()
             sapi.start()
 
         if __name__ == '__main__':

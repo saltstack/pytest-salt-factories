@@ -6,7 +6,7 @@
 saltfactories.factories.daemons.master
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Master Factory
+Salt Master Factory
 """
 import attr
 import salt.config
@@ -18,7 +18,7 @@ from saltfactories.utils import ports
 
 
 @attr.s(kw_only=True, slots=True)
-class MasterFactory(SaltDaemonFactory):
+class SaltMasterFactory(SaltDaemonFactory):
     @staticmethod
     def default_config(
         root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,
@@ -56,6 +56,7 @@ class MasterFactory(SaltDaemonFactory):
             "tcp_master_workers": ports.get_unused_localhost_port(),
             "worker_threads": 3,
             "pidfile": "run/master.pid",
+            "api_pidfile": "run/api.pid",
             "pki_dir": "pki",
             "cachedir": "cache",
             "timeout": 3,
@@ -66,6 +67,7 @@ class MasterFactory(SaltDaemonFactory):
             "peer": {".*": ["test.*"]},
             "log_file": "logs/master.log",
             "log_level_logfile": "debug",
+            "api_logfile": "logs/api.log",
             "key_logfile": "logs/key.log",
             "token_dir": "tokens",
             "token_file": str(root_dir / "ksfjhdgiuebfgnkefvsikhfjdgvkjahcsidk"),

@@ -11,6 +11,7 @@ Salt Factories Manager
 import pathlib
 import sys
 
+import attr
 import psutil
 import salt.utils.dictupdate
 
@@ -23,93 +24,97 @@ from saltfactories.utils import running_username
 from saltfactories.utils.ports import get_unused_localhost_port
 
 
-class SaltFactoriesManager:
+@attr.s(kw_only=True, slots=True)
+class FactoriesManager:
     """
-    The :class:`SaltFactoriesManager` is responsible for configuring and spawning Salt Daemons and
+    The :class:`FactoriesManager` is responsible for configuring and spawning Salt Daemons and
     making sure that any salt CLI tools are "targeted" to the right daemon.
 
     It also keeps track of which daemons were started and adds their termination routines to PyTest's
     request finalization routines.
 
     If process statistics are enabled, it also adds the started daemons to those statistics.
+
+    Args:
+        pytestconfig (:fixture:`pytestconfig`):
+            PyTest `pytestconfig` fixture
+        root_dir:
+        log_server_port (int):
+        log_server_level (int):
+        log_server_host (str):
+            The hostname/ip address of the host running the logs server. Defaults to "localhost".
+        code_dir (str):
+            The path to the code root directory of the project being tested. This is important for proper
+            code-coverage paths.
+        inject_coverage (bool):
+            Inject code-coverage related code in the generated CLI scripts
+        inject_sitecustomize (bool):
+            Inject code in the generated CLI scripts in order for our `sitecustomise.py` to be loaded by
+            subprocesses.
+        cwd (str):
+            The path to the current working directory
+        environ(dict):
+            A dictionary of `key`, `value` pairs to add to the environment.
+        slow_stop(bool):
+            Whether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
+            :py:meth:`~subprocess.Popen.terminate` on the sub-process.
+            When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
+            can be written down to disk.
+        start_timeout(int):
+            The amount of time, in seconds, to wait, until a subprocess is considered as not started.
+        stats_processes (:py:class:`~collections.OrderedDict`):
+            This will be an `OrderedDict` instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
+            hook accessible at `stats_processes` on the `session` attribute of the :fixture:`request`.
     """
 
-    def __init__(
-        self,
-        pytestconfig,
-        root_dir,
-        log_server_port=None,
-        log_server_level=None,
-        log_server_host=None,
-        code_dir=None,
-        inject_coverage=False,
-        inject_sitecustomize=False,
-        cwd=None,
-        environ=None,
-        slow_stop=True,
-        start_timeout=None,
-        stats_processes=None,
-    ):
-        """
+    pytestconfig = attr.ib(repr=False)
+    root_dir = attr.ib()
+    log_server_port = attr.ib(default=None)
+    log_server_level = attr.ib(default=None)
+    log_server_host = attr.ib(default=None)
+    code_dir = attr.ib(default=None)
+    inject_coverage = attr.ib(default=False)
+    inject_sitecustomize = attr.ib(default=False)
+    cwd = attr.ib(default=None)
+    environ = attr.ib(default=None)
+    slow_stop = attr.ib(default=True)
+    start_timeout = attr.ib(default=None)
+    stats_processes = attr.ib(default=None)
 
-        Args:
-            pytestconfig (:fixture:`pytestconfig`):
-                PyTest `pytestconfig` fixture
-            root_dir:
-            log_server_port (int):
-            log_server_level (int):
-            log_server_host (str):
-                The hostname/ip address of the host running the logs server. Defaults to "localhost".
-            code_dir (str):
-                The path to the code root directory of the project being tested. This is important for proper
-                code-coverage paths.
-            inject_coverage (bool):
-                Inject code-coverage related code in the generated CLI scripts
-            inject_sitecustomize (bool):
-                Inject code in the generated CLI scripts in order for our `sitecustomise.py` to be loaded by
-                subprocesses.
-            cwd (str):
-                The path to the current working directory
-            environ(dict):
-                A dictionary of `key`, `value` pairs to add to the environment.
-            slow_stop(bool):
-                Whether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
-                :py:meth:`~subprocess.Popen.terminate` on the sub-process.
-                When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
-                can be written down to disk.
-            start_timeout(int):
-                The amount of time, in seconds, to wait, until a subprocess is considered as not started.
-            stats_processes (:py:class:`~collections.OrderedDict`):
-                This will be an `OrderedDict` instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
-                hook accessible at `stats_processes` on the `session` attribute of the :fixture:`request`.
-        """
-        self.pytestconfig = pytestconfig
-        self.stats_processes = stats_processes
-        self.root_dir = pathlib.Path(root_dir.strpath)
+    # Internal attributes
+    cache = attr.ib(default=None, init=False, repr=False)
+    scripts_dir = attr.ib(default=None, init=False, repr=False)
+    event_listener = attr.ib(default=None, init=False, repr=False)
+
+    def __attrs_post_init__(self):
+        self.root_dir = pathlib.Path(self.root_dir.strpath)
         self.root_dir.mkdir(exist_ok=True)
-        self.log_server_port = log_server_port or get_unused_localhost_port()
-        self.log_server_level = log_server_level or "error"
-        self.log_server_host = log_server_host or "localhost"
-        self.code_dir = code_dir
-        self.inject_coverage = inject_coverage
-        self.inject_sitecustomize = inject_sitecustomize
-        self.cwd = cwd
-        self.environ = environ
-        self.slow_stop = slow_stop
-        if start_timeout is None:
+        if self.log_server_port is None:
+            self.log_server_port = get_unused_localhost_port()
+        if self.log_server_level is None:
+            self.log_server_level = "error"
+        if self.log_server_host is None:
+            self.log_server_host = "localhost"
+        if self.start_timeout is None:
             if not sys.platform.startswith(("win", "darwin")):
-                start_timeout = 30
+                self.start_timeout = 30
             else:
                 # Windows and macOS are just slower
-                start_timeout = 120
-        self.start_timeout = start_timeout
+                self.start_timeout = 120
+
+        # Setup the internal attributes
         self.scripts_dir = self.root_dir / "scripts"
         self.scripts_dir.mkdir(exist_ok=True)
-        self.configs = {"minions": {}, "masters": {}}
-        self.masters = {}
-        self.minions = {}
         self.cache = {
-            "configs": {"masters": {}, "minions": {}, "syndics": {}, "proxy_minions": {}},
+            "configs": {
+                "masters": {},
+                "minions": {},
+                "syndics": {},
+                "proxy_minions": {},
+                "cloud": {},
+            },
+            "api": {},
+            "cloud": {},
             "masters": {},
             "minions": {},
             "syndics": {},
@@ -151,6 +156,9 @@ class SaltFactoriesManager:
     def final_proxy_minion_config_tweaks(self, config):
         self.final_common_config_tweaks(config, "minion")
 
+    def final_cloud_config_tweaks(self, config):
+        self.final_common_config_tweaks(config, "cloud")
+
     def final_common_config_tweaks(self, config, role):
         config.setdefault("engines", [])
         if "pytest" not in config["engines"]:
@@ -158,7 +166,7 @@ class SaltFactoriesManager:
 
         if "engines_dirs" not in config:
             config["engines_dirs"] = []
-        config["engines_dirs"].insert(0, str(SaltFactoriesManager.get_salt_engines_path()))
+        config["engines_dirs"].insert(0, str(FactoriesManager.get_salt_engines_path()))
         config.setdefault("user", running_username())
         if not config["user"]:
             # If this value is empty, None, False, just remove it
@@ -168,7 +176,7 @@ class SaltFactoriesManager:
             if "log_handlers_dirs" not in config:
                 config["log_handlers_dirs"] = []
             config["log_handlers_dirs"].insert(
-                0, str(SaltFactoriesManager.get_salt_log_handlers_path())
+                0, str(FactoriesManager.get_salt_log_handlers_path())
             )
 
         pytest_key = "pytest-{}".format(role)
@@ -255,7 +263,7 @@ class SaltFactoriesManager:
             config_overrides["syndic_master"] = master_of_masters_config["interface"]
             config_overrides["syndic_master_port"] = master_of_masters_config["ret_port"]
 
-        master_config = daemons.master.MasterFactory.default_config(
+        master_config = daemons.master.SaltMasterFactory.default_config(
             root_dir,
             master_id=master_id,
             config_defaults=_config_defaults,
@@ -273,7 +281,7 @@ class SaltFactoriesManager:
         request.addfinalizer(lambda: self.cache["configs"]["masters"].pop(master_id))
         return master_config
 
-    def spawn_master(
+    def spawn_salt_master(
         self,
         request,
         master_id,
@@ -283,7 +291,7 @@ class SaltFactoriesManager:
         config_overrides=None,
         max_start_attempts=3,
         start_timeout=None,
-        factory_class=daemons.master.MasterFactory,
+        factory_class=daemons.master.SaltMasterFactory,
         **extra_factory_class_kwargs
     ):
         """
@@ -306,10 +314,10 @@ class SaltFactoriesManager:
             max_start_attempts(int):
                 How many attempts should be made to start the master in case of failure to validate that its running
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltMaster`
+                Extra keyword arguments to pass to :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`
 
         Returns:
-            :py:class:`~saltfactories.utils.processes.salts.SaltMaster`:
+            :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`:
                 The master process class instance
         """
         if master_id in self.cache["masters"]:
@@ -396,7 +404,7 @@ class SaltFactoriesManager:
             else:
                 _config_overrides = config_overrides.copy()
 
-        minion_config = daemons.minion.MinionFactory.default_config(
+        minion_config = daemons.minion.SaltMinionFactory.default_config(
             root_dir,
             minion_id=minion_id,
             config_defaults=_config_defaults,
@@ -421,7 +429,7 @@ class SaltFactoriesManager:
         request.addfinalizer(lambda: self.cache["configs"]["minions"].pop(minion_id))
         return minion_config
 
-    def spawn_minion(
+    def spawn_salt_minion(
         self,
         request,
         minion_id,
@@ -430,7 +438,7 @@ class SaltFactoriesManager:
         config_overrides=None,
         max_start_attempts=3,
         start_timeout=None,
-        factory_class=daemons.minion.MinionFactory,
+        factory_class=daemons.minion.SaltMinionFactory,
         **extra_factory_class_kwargs
     ):
         """
@@ -450,10 +458,10 @@ class SaltFactoriesManager:
             max_start_attempts(int):
                 How many attempts should be made to start the minion in case of failure to validate that its running
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltMinion`
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.minion.SaltMinionFactory`
 
         Returns:
-            :py:class:`~saltfactories.utils.processes.salts.SaltMinion`:
+            :py:class:`~saltfactories.factories.daemons.minion.SaltMinionFactory`:
                 The minion process class instance
         """
         if minion_id in self.cache["minions"]:
@@ -597,7 +605,7 @@ class SaltFactoriesManager:
             else:
                 _config_overrides = config_overrides.copy()
 
-        syndic_setup_config = daemons.syndic.SyndicFactory.default_config(
+        syndic_setup_config = daemons.syndic.SaltSyndicFactory.default_config(
             root_dir,
             syndic_id=syndic_id,
             config_defaults=_config_defaults,
@@ -644,7 +652,7 @@ class SaltFactoriesManager:
         request.addfinalizer(lambda: self.cache["configs"]["syndics"].pop(syndic_id))
         return syndic_config
 
-    def spawn_syndic(
+    def spawn_salt_syndic(
         self,
         request,
         syndic_id,
@@ -653,7 +661,7 @@ class SaltFactoriesManager:
         config_overrides=None,
         max_start_attempts=3,
         start_timeout=None,
-        factory_class=daemons.syndic.SyndicFactory,
+        factory_class=daemons.syndic.SaltSyndicFactory,
         **extra_factory_class_kwargs
     ):
         """
@@ -679,10 +687,10 @@ class SaltFactoriesManager:
             max_start_attempts(int):
                 How many attempts should be made to start the syndic in case of failure to validate that its running
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltSyndic`
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.syndic.SaltSyndicFactory`
 
         Returns:
-            :py:class:`~saltfactories.utils.processes.salts.SaltSyndic`:
+            :py:class:`~saltfactories.factories.daemons.syndic.SaltSyndicFactory`:
                 The syndic process class instance
         """
         if syndic_id in self.cache["syndics"]:
@@ -700,7 +708,7 @@ class SaltFactoriesManager:
 
         # We need the syndic master and minion running
         if syndic_id not in self.cache["masters"]:
-            self.spawn_master(
+            self.spawn_salt_master(
                 request,
                 syndic_id,
                 max_start_attempts=max_start_attempts,
@@ -708,7 +716,7 @@ class SaltFactoriesManager:
             )
 
         if syndic_id not in self.cache["minions"]:
-            self.spawn_minion(
+            self.spawn_salt_minion(
                 request,
                 syndic_id,
                 max_start_attempts=max_start_attempts,
@@ -784,7 +792,7 @@ class SaltFactoriesManager:
             else:
                 _config_overrides = config_overrides.copy()
 
-        proxy_minion_config = daemons.proxy.ProxyMinionFactory.default_config(
+        proxy_minion_config = daemons.proxy.SaltProxyMinionFactory.default_config(
             root_dir,
             proxy_minion_id=proxy_minion_id,
             config_defaults=_config_defaults,
@@ -809,7 +817,7 @@ class SaltFactoriesManager:
         request.addfinalizer(lambda: self.cache["configs"]["proxy_minions"].pop(proxy_minion_id))
         return proxy_minion_config
 
-    def spawn_proxy_minion(
+    def spawn_salt_proxy_minion(
         self,
         request,
         proxy_minion_id,
@@ -818,7 +826,7 @@ class SaltFactoriesManager:
         config_overrides=None,
         max_start_attempts=3,
         start_timeout=None,
-        factory_class=daemons.proxy.ProxyMinionFactory,
+        factory_class=daemons.proxy.SaltProxyMinionFactory,
         **extra_factory_class_kwargs
     ):
         """
@@ -839,10 +847,10 @@ class SaltFactoriesManager:
                 How many attempts should be made to start the proxy minion in case of failure to validate that
                 its running
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltProxyMinion`
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.proxy.SaltProxyMinionFactory`
 
         Returns:
-            :py:class:`~saltfactories.utils.processes.salts.SaltProxyMinion`:
+            :py:class:`~saltfactories.factories.daemons.proxy.SaltProxyMinionFactory`:
                 The proxy minion process class instance
         """
         if proxy_minion_id in self.cache["proxy_minions"]:
@@ -872,18 +880,201 @@ class SaltFactoriesManager:
             **extra_factory_class_kwargs,
         )
 
+    def spawn_salt_api(
+        self,
+        request,
+        master_id,
+        order_masters=False,
+        master_of_masters_id=None,
+        config_defaults=None,
+        config_overrides=None,
+        max_start_attempts=3,
+        start_timeout=None,
+        factory_class=daemons.api.SaltApiFactory,
+        **extra_factory_class_kwargs
+    ):
+        """
+        Spawn a salt-api
+
+        Please see py:class:`~saltfactories.factories.manager.FactoriesManager.spawn_salt_master` for argument
+        documentation.
+
+        Returns:
+            :py:class:`~saltfactories.factories.daemons.api.SaltApiFactory`:
+                The salt-api process class instance
+        """
+        if master_id in self.cache["api"]:
+            raise RuntimeError(
+                "A salt-api for the master by the ID of '{}' was already spawned".format(master_id)
+            )
+
+        master_config = self.cache["configs"]["masters"].get(master_id)
+        if master_config is None:
+            master_config = self.configure_master(
+                request,
+                master_id,
+                order_masters=order_masters,
+                master_of_masters_id=master_of_masters_id,
+                config_defaults=config_defaults,
+                config_overrides=config_overrides,
+            )
+
+        return self._start_factory(
+            request,
+            "salt-api",
+            master_config,
+            factory_class,
+            "api",
+            master_id,
+            max_start_attempts=max_start_attempts,
+            start_timeout=start_timeout,
+            **extra_factory_class_kwargs,
+        )
+
+    def configure_cloud(self, request, master_id, config_defaults=None, config_overrides=None):
+        """
+        Configure salt-cloud
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            master_id(str):
+                The master ID this salt-cloud will interact with.
+            config_defaults(dict):
+                A dictionary of default configuration to use when configuring the minion
+            config_overrides(dict):
+                A dictionary of configuration overrides to use when configuring the minion
+
+        Returns:
+            dict: The salt cloud configuration dictionary
+
+        """
+        if master_id in self.cache["configs"]["cloud"]:
+            return self.cache["configs"]["cloud"][master_id]
+
+        try:
+            master_config = self.cache["configs"]["masters"][master_id]
+        except KeyError:
+            raise RuntimeError(
+                "Please configure the salt-master by the ID of {} before configuring salt-cloud".format(
+                    master_id
+                )
+            )
+
+        root_dir = pathlib.Path(master_config["root_dir"])
+
+        _config_defaults = self.pytestconfig.hook.pytest_saltfactories_cloud_configuration_defaults(
+            request=request, factories_manager=self, root_dir=root_dir, master_id=master_id,
+        )
+        if config_defaults:
+            if _config_defaults:
+                salt.utils.dictupdate.update(_config_defaults, config_defaults)
+            else:
+                _config_defaults = config_defaults.copy()
+
+        _config_overrides = self.pytestconfig.hook.pytest_saltfactories_cloud_configuration_overrides(
+            request=request,
+            factories_manager=self,
+            root_dir=root_dir,
+            master_id=master_id,
+            config_defaults=_config_defaults,
+        )
+        if config_overrides:
+            if _config_overrides:
+                salt.utils.dictupdate.update(_config_overrides, config_overrides)
+            else:
+                _config_overrides = config_overrides.copy()
+
+        cloud_config = cli.cloud.SaltCloudFactory.default_config(
+            root_dir,
+            master_id=master_id,
+            config_defaults=_config_defaults,
+            config_overrides=_config_overrides,
+        )
+        self.final_cloud_config_tweaks(cloud_config)
+        cloud_config = self.pytestconfig.hook.pytest_saltfactories_cloud_write_configuration(
+            request=request, cloud_config=cloud_config
+        )
+        self.pytestconfig.hook.pytest_saltfactories_cloud_verify_configuration(
+            request=request, cloud_config=cloud_config, username=running_username(),
+        )
+        if master_id:
+            # The in-memory minion config dictionary will hold a copy of the master config
+            # in order to listen to start events so that we can confirm the minion is up, running
+            # and accepting requests
+            cloud_config["pytest-cloud"]["master_config"] = self.cache["configs"]["masters"][
+                master_id
+            ]
+        self.cache["configs"]["cloud"][master_id] = cloud_config
+        request.addfinalizer(lambda: self.cache["configs"]["cloud"].pop(master_id))
+        return cloud_config
+
+    def get_salt_cloud_cli(
+        self,
+        request,
+        master_id,
+        config_defaults=None,
+        config_overrides=None,
+        max_start_attempts=3,
+        start_timeout=None,
+        factory_class=cli.cloud.SaltCloudFactory,
+        **cli_kwargs
+    ):
+        """
+        Return a salt-cloud CLI instance
+
+        Args:
+            request(:fixture:`request`):
+                The PyTest test execution request
+            master_id(str):
+                The master ID this salt-cloud will interact with.
+            config_defaults(dict):
+                A dictionary of default configuration to use when configuring the minion
+            config_overrides(dict):
+                A dictionary of configuration overrides to use when configuring the minion
+            max_start_attempts(int):
+                How many attempts should be made to start the minion in case of failure to validate that its running
+            cli_kwargs(dict):
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.cli.cloud.SaltCloudFactory`
+
+        Returns:
+            :py:class:`~saltfactories.factories.cli.cloud.SaltCloudFactory`:
+                The salt-cloud CLI script process class instance
+        """
+
+        cloud_config = self.cache["configs"]["cloud"].get(master_id)
+        if cloud_config is None:
+            cloud_config = self.configure_cloud(
+                request,
+                master_id,
+                config_defaults=config_defaults,
+                config_overrides=config_overrides,
+            )
+
+        script_path = cli_scripts.generate_script(
+            self.scripts_dir,
+            "salt-cloud",
+            code_dir=self.code_dir,
+            inject_coverage=self.inject_coverage,
+            inject_sitecustomize=self.inject_sitecustomize,
+        )
+        return factory_class(cli_script_name=script_path, config=cloud_config, **cli_kwargs,)
+
     def get_salt_client(
-        self, master_id, functions_known_to_return_none=None, cli_class=cli.client.SaltClientFactory
+        self,
+        master_id,
+        functions_known_to_return_none=None,
+        factory_class=cli.client.SaltClientFactory,
     ):
         """
         Return a local salt client object
         """
-        return cli_class(
+        return factory_class(
             master_config=self.cache["configs"]["masters"][master_id].copy(),
             functions_known_to_return_none=functions_known_to_return_none,
         )
 
-    def get_salt_cli(self, master_id, cli_class=cli.salt.SaltCliFactory, **cli_kwargs):
+    def get_salt_cli(self, master_id, factory_class=cli.salt.SaltCliFactory, **cli_kwargs):
         """
         Return a `salt` CLI process
         """
@@ -894,13 +1085,13 @@ class SaltFactoriesManager:
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return cli_class(
+        return factory_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
             **cli_kwargs,
         )
 
-    def get_salt_call_cli(self, minion_id, cli_class=cli.call.SaltCallCliFactory, **cli_kwargs):
+    def get_salt_call_cli(self, minion_id, factory_class=cli.call.SaltCallCliFactory, **cli_kwargs):
         """
         Return a `salt-call` CLI process
         """
@@ -912,14 +1103,14 @@ class SaltFactoriesManager:
             inject_sitecustomize=self.inject_sitecustomize,
         )
         try:
-            return cli_class(
+            return factory_class(
                 cli_script_name=script_path,
                 config=self.cache["configs"]["minions"][minion_id],
                 **cli_kwargs,
             )
         except KeyError:
             try:
-                return cli_class(
+                return factory_class(
                     cli_script_name=script_path,
                     base_script_args=["--proxyid={}".format(minion_id)],
                     config=self.cache["proxy_minions"][minion_id].config,
@@ -930,7 +1121,7 @@ class SaltFactoriesManager:
                     "Could not find {} in the minions or proxy minions caches".format(minion_id)
                 )
 
-    def get_salt_run_cli(self, master_id, cli_class=cli.run.SaltRunCliFactory, **cli_kwargs):
+    def get_salt_run_cli(self, master_id, factory_class=cli.run.SaltRunCliFactory, **cli_kwargs):
         """
         Return a `salt-run` CLI process
         """
@@ -941,13 +1132,13 @@ class SaltFactoriesManager:
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return cli_class(
+        return factory_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
             **cli_kwargs,
         )
 
-    def get_salt_cp_cli(self, master_id, cli_class=cli.cp.SaltCpCliFactory, **cli_kwargs):
+    def get_salt_cp_cli(self, master_id, factory_class=cli.cp.SaltCpCliFactory, **cli_kwargs):
         """
         Return a `salt-cp` CLI process
         """
@@ -958,13 +1149,13 @@ class SaltFactoriesManager:
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return cli_class(
+        return factory_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
             **cli_kwargs,
         )
 
-    def get_salt_key_cli(self, master_id, cli_class=cli.key.SaltKeyCliFactory, **cli_kwargs):
+    def get_salt_key_cli(self, master_id, factory_class=cli.key.SaltKeyCliFactory, **cli_kwargs):
         """
         Return a `salt-key` CLI process
         """
@@ -975,7 +1166,24 @@ class SaltFactoriesManager:
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return cli_class(
+        return factory_class(
+            cli_script_name=script_path,
+            config=self.cache["configs"]["masters"][master_id],
+            **cli_kwargs,
+        )
+
+    def get_spm_cli(self, master_id, factory_class=cli.spm.SpmCliFactory, **cli_kwargs):
+        """
+        Return a salt `spm` CLI process
+        """
+        script_path = cli_scripts.generate_script(
+            self.scripts_dir,
+            "spm",
+            code_dir=self.code_dir,
+            inject_coverage=self.inject_coverage,
+            inject_sitecustomize=self.inject_sitecustomize,
+        )
+        return factory_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
             **cli_kwargs,
@@ -984,7 +1192,7 @@ class SaltFactoriesManager:
     def get_salt_ssh_cli(
         self,
         master_id,
-        cli_class=cli.ssh.SaltSshCliFactory,
+        factory_class=cli.ssh.SaltSshCliFactory,
         roster_file=None,
         target_host=None,
         client_key=None,
@@ -1011,7 +1219,7 @@ class SaltFactoriesManager:
             inject_coverage=self.inject_coverage,
             inject_sitecustomize=self.inject_sitecustomize,
         )
-        return cli_class(
+        return factory_class(
             cli_script_name=script_path,
             config=self.cache["configs"]["masters"][master_id],
             roster_file=roster_file,
@@ -1055,10 +1263,10 @@ class SaltFactoriesManager:
             sshd_config_dict(dict):
                 A dictionary of key-value pairs to construct the sshd config file
             extra_factory_class_kwargs(dict):
-                Extra keyword arguments to pass to :py:class:`~saltfactories.utils.processes.salts.SaltProxyMinion`
+                Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.sshd.SshdDaemonFactory`
 
         Returns:
-            :py:class:`~saltfactories.utils.processes.sshd.SshdDaemon`:
+            :py:class:`~saltfactories.factories.daemons.sshd.SshdDaemonFactory`:
                 The sshd process class instance
         """
         if config_dir is None:

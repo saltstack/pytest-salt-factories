@@ -14,7 +14,7 @@ def sshd(request, salt_factories):
 
 @pytest.fixture(scope="module")
 def master(request, salt_factories):
-    return salt_factories.spawn_master(request, "master-1")
+    return salt_factories.spawn_salt_master(request, "master-1")
 
 
 @pytest.fixture(scope="module")
