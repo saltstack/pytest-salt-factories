@@ -1090,10 +1090,10 @@ class SaltFactoriesManager:
         factory_class=daemons.container.ContainerFactory,
         max_start_attempts=3,
         start_timeout=None,
-        **extra_factory_class_kwargs
+        **container_run_kwargs
     ):
         """
-        Start an docker container
+        Start a docker container
 
         Args:
             request(:fixture:`request`):
@@ -1104,16 +1104,16 @@ class SaltFactoriesManager:
                 The image to use
             docker_client:
                 An instance of the docker client to use
+            display_name(str):
+                Human readable name for the factory
+            factory_class:
+                A factory class. (Default :py:class:`~saltfactories.factories.daemons.container.ContainerFactory`)
             max_start_attempts(int):
-                How many attempts should be made to start the proxy minion in case of failure to validate that
-                its running
-            listen_address(str):
-                The address where the sshd server will listen to connections. Defaults to 127.0.0.1
-            listen_port(int):
-                The port where the sshd server will listen to connections
-            sshd_config_dict(dict):
-                A dictionary of key-value pairs to construct the sshd config file
-            extra_factory_class_kwargs(dict):
+                How many attempts should be made to start the container in case of failure to validate that
+                its running.
+            start_timeout(int):
+                The amount of time, in seconds, to wait, until the container is considered as not started.
+            container_run_kwargs(dict):
                 Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.container.ContainerFactory`
 
         Returns:
@@ -1128,7 +1128,9 @@ class SaltFactoriesManager:
             image=image_name,
             docker_client=docker_client,
             display_name=display_name or container_name,
-            **extra_factory_class_kwargs,
+            max_start_attempts=max_start_attempts,
+            start_timeout=start_timeout,
+            **container_run_kwargs,
         )
 
     def start_factory(
