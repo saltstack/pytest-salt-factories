@@ -47,6 +47,7 @@ json
 kwargs
 linenum
 localhost
+masterfactory
 msg
 msgpack
 ng

@@ -380,10 +380,13 @@ def test_generate_script_salt_api(tmpdir):
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         import atexit
-        import salt.cli
+        import salt.cli.api
+        import salt.utils.process
+
+        salt.utils.process.notify_systemd()
 
         def main():
-            sapi = salt.cli.SaltAPI()
+            sapi = salt.cli.api.SaltAPI()
             sapi.start()
 
         if __name__ == '__main__':

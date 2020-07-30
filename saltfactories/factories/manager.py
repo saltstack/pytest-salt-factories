@@ -110,6 +110,7 @@ class SaltFactoriesManager:
         self.minions = {}
         self.cache = {
             "configs": {"masters": {}, "minions": {}, "syndics": {}, "proxy_minions": {}},
+            "api": {},
             "masters": {},
             "minions": {},
             "syndics": {},
@@ -867,6 +868,57 @@ class SaltFactoriesManager:
             factory_class,
             "proxy_minions",
             proxy_minion_id,
+            max_start_attempts=max_start_attempts,
+            start_timeout=start_timeout,
+            **extra_factory_class_kwargs,
+        )
+
+    def spawn_salt_api(
+        self,
+        request,
+        master_id,
+        order_masters=False,
+        master_of_masters_id=None,
+        config_defaults=None,
+        config_overrides=None,
+        max_start_attempts=3,
+        start_timeout=None,
+        factory_class=daemons.api.ApiFactory,
+        **extra_factory_class_kwargs
+    ):
+        """
+        Spawn a salt-api
+
+        Please see py:class:`~saltfactories.factories.manager.SaltFactoriesManager.spawn_master` for argument
+        documentation.
+
+        Returns:
+            :py:class:`~saltfactories.factories.daemons.master.MasterFactory`:
+                The salt-api process class instance
+        """
+        if master_id in self.cache["api"]:
+            raise RuntimeError(
+                "A salt-api for the master by the ID of '{}' was already spawned".format(master_id)
+            )
+
+        master_config = self.cache["configs"]["masters"].get(master_id)
+        if master_config is None:
+            master_config = self.configure_master(
+                request,
+                master_id,
+                order_masters=order_masters,
+                master_of_masters_id=master_of_masters_id,
+                config_defaults=config_defaults,
+                config_overrides=config_overrides,
+            )
+
+        return self._start_factory(
+            request,
+            "salt-api",
+            master_config,
+            factory_class,
+            "api",
+            master_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
             **extra_factory_class_kwargs,

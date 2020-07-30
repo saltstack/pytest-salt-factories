@@ -9,6 +9,14 @@ saltfactories.factories.daemons package
 Submodules
 ----------
 
+saltfactories.factories.daemons.api module
+------------------------------------------
+
+.. automodule:: saltfactories.factories.daemons.api
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 saltfactories.factories.daemons.container module
 ------------------------------------------------
 

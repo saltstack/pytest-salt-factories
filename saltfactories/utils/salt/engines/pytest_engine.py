@@ -65,7 +65,12 @@ class PyTestEngine:
         self.returner_address = opts["pytest-{}".format(self.role)]["returner_address"]
 
     def start(self):
-        log.info("Starting Pytest Event Forwarder Engine(forwarding to %s)", self.returner_address)
+        log.info(
+            "Starting Pytest Event Forwarder Engine(forwarding to %s) on daemon with role %r and ID %r",
+            self.returner_address,
+            self.role,
+            self.id,
+        )
         self.io_loop = ioloop.IOLoop()
         self.io_loop.make_current()
         self.io_loop.add_callback(self._start)
