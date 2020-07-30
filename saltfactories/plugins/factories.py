@@ -84,7 +84,7 @@ def salt_factories_config(
     pytestconfig, tempdir, log_server_host, log_server_port, log_server_level
 ):
     """
-    Return a dictionary with the keyword arguments for SaltFactoriesManager
+    Return a dictionary with the keyword arguments for FactoriesManager
     """
     return {
         "code_dir": saltfactories.CODE_ROOT_DIR.parent,
@@ -106,9 +106,9 @@ def salt_factories(
         "Instantiating the Salt Factories Manager with the following keyword arguments:\n%s",
         pprint.pformat(salt_factories_config),
     )
-    _manager = manager.SaltFactoriesManager(
-        pytestconfig,
-        tempdir,
+    _manager = manager.FactoriesManager(
+        pytestconfig=pytestconfig,
+        root_dir=tempdir,
         stats_processes=request.session.stats_processes,
         **salt_factories_config
     )

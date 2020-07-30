@@ -11,6 +11,7 @@ Salt Factories Manager
 import pathlib
 import sys
 
+import attr
 import psutil
 import salt.utils.dictupdate
 
@@ -23,91 +24,87 @@ from saltfactories.utils import running_username
 from saltfactories.utils.ports import get_unused_localhost_port
 
 
-class SaltFactoriesManager:
+@attr.s(kw_only=True, slots=True)
+class FactoriesManager:
     """
-    The :class:`SaltFactoriesManager` is responsible for configuring and spawning Salt Daemons and
+    The :class:`FactoriesManager` is responsible for configuring and spawning Salt Daemons and
     making sure that any salt CLI tools are "targeted" to the right daemon.
 
     It also keeps track of which daemons were started and adds their termination routines to PyTest's
     request finalization routines.
 
     If process statistics are enabled, it also adds the started daemons to those statistics.
+
+    Args:
+        pytestconfig (:fixture:`pytestconfig`):
+            PyTest `pytestconfig` fixture
+        root_dir:
+        log_server_port (int):
+        log_server_level (int):
+        log_server_host (str):
+            The hostname/ip address of the host running the logs server. Defaults to "localhost".
+        code_dir (str):
+            The path to the code root directory of the project being tested. This is important for proper
+            code-coverage paths.
+        inject_coverage (bool):
+            Inject code-coverage related code in the generated CLI scripts
+        inject_sitecustomize (bool):
+            Inject code in the generated CLI scripts in order for our `sitecustomise.py` to be loaded by
+            subprocesses.
+        cwd (str):
+            The path to the current working directory
+        environ(dict):
+            A dictionary of `key`, `value` pairs to add to the environment.
+        slow_stop(bool):
+            Whether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
+            :py:meth:`~subprocess.Popen.terminate` on the sub-process.
+            When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
+            can be written down to disk.
+        start_timeout(int):
+            The amount of time, in seconds, to wait, until a subprocess is considered as not started.
+        stats_processes (:py:class:`~collections.OrderedDict`):
+            This will be an `OrderedDict` instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
+            hook accessible at `stats_processes` on the `session` attribute of the :fixture:`request`.
     """
 
-    def __init__(
-        self,
-        pytestconfig,
-        root_dir,
-        log_server_port=None,
-        log_server_level=None,
-        log_server_host=None,
-        code_dir=None,
-        inject_coverage=False,
-        inject_sitecustomize=False,
-        cwd=None,
-        environ=None,
-        slow_stop=True,
-        start_timeout=None,
-        stats_processes=None,
-    ):
-        """
+    pytestconfig = attr.ib(repr=False)
+    root_dir = attr.ib()
+    log_server_port = attr.ib(default=None)
+    log_server_level = attr.ib(default=None)
+    log_server_host = attr.ib(default=None)
+    code_dir = attr.ib(default=None)
+    inject_coverage = attr.ib(default=False)
+    inject_sitecustomize = attr.ib(default=False)
+    cwd = attr.ib(default=None)
+    environ = attr.ib(default=None)
+    slow_stop = attr.ib(default=True)
+    start_timeout = attr.ib(default=None)
+    stats_processes = attr.ib(default=None)
 
-        Args:
-            pytestconfig (:fixture:`pytestconfig`):
-                PyTest `pytestconfig` fixture
-            root_dir:
-            log_server_port (int):
-            log_server_level (int):
-            log_server_host (str):
-                The hostname/ip address of the host running the logs server. Defaults to "localhost".
-            code_dir (str):
-                The path to the code root directory of the project being tested. This is important for proper
-                code-coverage paths.
-            inject_coverage (bool):
-                Inject code-coverage related code in the generated CLI scripts
-            inject_sitecustomize (bool):
-                Inject code in the generated CLI scripts in order for our `sitecustomise.py` to be loaded by
-                subprocesses.
-            cwd (str):
-                The path to the current working directory
-            environ(dict):
-                A dictionary of `key`, `value` pairs to add to the environment.
-            slow_stop(bool):
-                Whether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
-                :py:meth:`~subprocess.Popen.terminate` on the sub-process.
-                When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
-                can be written down to disk.
-            start_timeout(int):
-                The amount of time, in seconds, to wait, until a subprocess is considered as not started.
-            stats_processes (:py:class:`~collections.OrderedDict`):
-                This will be an `OrderedDict` instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
-                hook accessible at `stats_processes` on the `session` attribute of the :fixture:`request`.
-        """
-        self.pytestconfig = pytestconfig
-        self.stats_processes = stats_processes
-        self.root_dir = pathlib.Path(root_dir.strpath)
+    # Internal attributes
+    cache = attr.ib(default=None, init=False, repr=False)
+    scripts_dir = attr.ib(default=None, init=False, repr=False)
+    event_listener = attr.ib(default=None, init=False, repr=False)
+
+    def __attrs_post_init__(self):
+        self.root_dir = pathlib.Path(self.root_dir.strpath)
         self.root_dir.mkdir(exist_ok=True)
-        self.log_server_port = log_server_port or get_unused_localhost_port()
-        self.log_server_level = log_server_level or "error"
-        self.log_server_host = log_server_host or "localhost"
-        self.code_dir = code_dir
-        self.inject_coverage = inject_coverage
-        self.inject_sitecustomize = inject_sitecustomize
-        self.cwd = cwd
-        self.environ = environ
-        self.slow_stop = slow_stop
-        if start_timeout is None:
+        if self.log_server_port is None:
+            self.log_server_port = get_unused_localhost_port()
+        if self.log_server_level is None:
+            self.log_server_level = "error"
+        if self.log_server_host is None:
+            self.log_server_host = "localhost"
+        if self.start_timeout is None:
             if not sys.platform.startswith(("win", "darwin")):
-                start_timeout = 30
+                self.start_timeout = 30
             else:
                 # Windows and macOS are just slower
-                start_timeout = 120
-        self.start_timeout = start_timeout
+                self.start_timeout = 120
+
+        # Setup the internal attributes
         self.scripts_dir = self.root_dir / "scripts"
         self.scripts_dir.mkdir(exist_ok=True)
-        self.configs = {"minions": {}, "masters": {}}
-        self.masters = {}
-        self.minions = {}
         self.cache = {
             "configs": {
                 "masters": {},
@@ -169,7 +166,7 @@ class SaltFactoriesManager:
 
         if "engines_dirs" not in config:
             config["engines_dirs"] = []
-        config["engines_dirs"].insert(0, str(SaltFactoriesManager.get_salt_engines_path()))
+        config["engines_dirs"].insert(0, str(FactoriesManager.get_salt_engines_path()))
         config.setdefault("user", running_username())
         if not config["user"]:
             # If this value is empty, None, False, just remove it
@@ -179,7 +176,7 @@ class SaltFactoriesManager:
             if "log_handlers_dirs" not in config:
                 config["log_handlers_dirs"] = []
             config["log_handlers_dirs"].insert(
-                0, str(SaltFactoriesManager.get_salt_log_handlers_path())
+                0, str(FactoriesManager.get_salt_log_handlers_path())
             )
 
         pytest_key = "pytest-{}".format(role)
@@ -899,7 +896,7 @@ class SaltFactoriesManager:
         """
         Spawn a salt-api
 
-        Please see py:class:`~saltfactories.factories.manager.SaltFactoriesManager.spawn_master` for argument
+        Please see py:class:`~saltfactories.factories.manager.FactoriesManager.spawn_master` for argument
         documentation.
 
         Returns:
