@@ -6,7 +6,7 @@ def master_of_masters(request, salt_factories):
     """
     This is the master of all masters, top of the chain
     """
-    return salt_factories.spawn_master(request, "master-of-masters", order_masters=True)
+    return salt_factories.spawn_salt_master(request, "master-of-masters", order_masters=True)
 
 
 @pytest.fixture(scope="module")
@@ -15,7 +15,7 @@ def minion_1(request, salt_factories, master_of_masters):
     This minion connects to the master-of-masters directly
     """
     assert master_of_masters.is_running()
-    return salt_factories.spawn_minion(request, "minion-1", master_id="master-of-masters")
+    return salt_factories.spawn_salt_minion(request, "minion-1", master_id="master-of-masters")
 
 
 @pytest.fixture(scope="module")
@@ -37,7 +37,7 @@ def syndic_master(request, salt_factories, master_of_masters, configure_syndic):
     We depend on the minion_1 fixture just so we get both the master-of-masters and minion-1 fixtures running
     when this master starts.
     """
-    return salt_factories.spawn_master(
+    return salt_factories.spawn_salt_master(
         request, "syndic-1", master_of_masters_id=master_of_masters.config["id"],
     )
 
@@ -51,7 +51,9 @@ def syndic_minion(request, salt_factories, syndic_master):
     when this master starts.
     """
     assert syndic_master.is_running()
-    return salt_factories.spawn_minion(request, "syndic-1", master_id=syndic_master.config["id"])
+    return salt_factories.spawn_salt_minion(
+        request, "syndic-1", master_id=syndic_master.config["id"]
+    )
 
 
 @pytest.fixture(scope="module")
@@ -60,7 +62,9 @@ def minion_2(request, salt_factories, syndic_master):
     This minion will connect to the syndic-1 master
     """
     assert syndic_master.is_running()
-    return salt_factories.spawn_minion(request, "minion-2", master_id=syndic_master.config["id"])
+    return salt_factories.spawn_salt_minion(
+        request, "minion-2", master_id=syndic_master.config["id"]
+    )
 
 
 @pytest.fixture(scope="module")
@@ -99,7 +103,7 @@ def syndic(
     assert syndic_master.is_running()
     assert syndic_minion.is_running()
     assert minion_2.is_running()
-    return salt_factories.spawn_syndic(
+    return salt_factories.spawn_salt_syndic(
         request, syndic_master.config["id"], master_of_masters_id=master_of_masters.config["id"]
     )
 

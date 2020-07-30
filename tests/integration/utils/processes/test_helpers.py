@@ -52,7 +52,7 @@ def test_exit_status_unknown_user(request, salt_factories, shell_tests_salt_mast
 
     # Now spawn_<daemon> should behave the same
     with pytest.raises(FactoryNotStarted) as exc:
-        salt_factories.spawn_master(
+        salt_factories.spawn_salt_master(
             request, shell_tests_salt_master_config["id"], max_start_attempts=1
         )
 

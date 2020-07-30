@@ -10,12 +10,12 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(scope="module")
 def master(request, salt_factories):
-    return salt_factories.spawn_master(request, "master-1")
+    return salt_factories.spawn_salt_master(request, "master-1")
 
 
 @pytest.fixture(scope="module")
 def proxy_minion(request, salt_factories, master):
-    return salt_factories.spawn_proxy_minion(request, "proxy-minion-1", master_id="master-1")
+    return salt_factories.spawn_salt_proxy_minion(request, "proxy-minion-1", master_id="master-1")
 
 
 @pytest.fixture

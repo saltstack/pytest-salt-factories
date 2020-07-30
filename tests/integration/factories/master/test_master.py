@@ -6,17 +6,17 @@ import pytest
 
 @pytest.fixture(scope="module")
 def master(request, salt_factories):
-    return salt_factories.spawn_master(request, "master-1")
+    return salt_factories.spawn_salt_master(request, "master-1")
 
 
 @pytest.fixture(scope="module")
 def minion(request, salt_factories, master):
-    return salt_factories.spawn_minion(request, "minion-1", master_id="master-1")
+    return salt_factories.spawn_salt_minion(request, "minion-1", master_id="master-1")
 
 
 @pytest.fixture
 def minion_3(request, salt_factories, master):
-    return salt_factories.spawn_minion(request, "minion-3", master_id="master-1")
+    return salt_factories.spawn_salt_minion(request, "minion-3", master_id="master-1")
 
 
 @pytest.fixture

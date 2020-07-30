@@ -281,7 +281,7 @@ class FactoriesManager:
         request.addfinalizer(lambda: self.cache["configs"]["masters"].pop(master_id))
         return master_config
 
-    def spawn_master(
+    def spawn_salt_master(
         self,
         request,
         master_id,
@@ -429,7 +429,7 @@ class FactoriesManager:
         request.addfinalizer(lambda: self.cache["configs"]["minions"].pop(minion_id))
         return minion_config
 
-    def spawn_minion(
+    def spawn_salt_minion(
         self,
         request,
         minion_id,
@@ -652,7 +652,7 @@ class FactoriesManager:
         request.addfinalizer(lambda: self.cache["configs"]["syndics"].pop(syndic_id))
         return syndic_config
 
-    def spawn_syndic(
+    def spawn_salt_syndic(
         self,
         request,
         syndic_id,
@@ -708,7 +708,7 @@ class FactoriesManager:
 
         # We need the syndic master and minion running
         if syndic_id not in self.cache["masters"]:
-            self.spawn_master(
+            self.spawn_salt_master(
                 request,
                 syndic_id,
                 max_start_attempts=max_start_attempts,
@@ -716,7 +716,7 @@ class FactoriesManager:
             )
 
         if syndic_id not in self.cache["minions"]:
-            self.spawn_minion(
+            self.spawn_salt_minion(
                 request,
                 syndic_id,
                 max_start_attempts=max_start_attempts,
@@ -817,7 +817,7 @@ class FactoriesManager:
         request.addfinalizer(lambda: self.cache["configs"]["proxy_minions"].pop(proxy_minion_id))
         return proxy_minion_config
 
-    def spawn_proxy_minion(
+    def spawn_salt_proxy_minion(
         self,
         request,
         proxy_minion_id,
@@ -896,7 +896,7 @@ class FactoriesManager:
         """
         Spawn a salt-api
 
-        Please see py:class:`~saltfactories.factories.manager.FactoriesManager.spawn_master` for argument
+        Please see py:class:`~saltfactories.factories.manager.FactoriesManager.spawn_salt_master` for argument
         documentation.
 
         Returns:
