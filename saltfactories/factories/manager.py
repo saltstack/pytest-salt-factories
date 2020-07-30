@@ -343,6 +343,7 @@ class FactoriesManager:
             master_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
+            factories_manager=self,
             **extra_factory_class_kwargs,
         )
 
@@ -486,6 +487,7 @@ class FactoriesManager:
             minion_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
+            factories_manager=self,
             **extra_factory_class_kwargs,
         )
 
@@ -877,6 +879,7 @@ class FactoriesManager:
             proxy_minion_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
+            factories_manager=self,
             **extra_factory_class_kwargs,
         )
 
@@ -1113,7 +1116,7 @@ class FactoriesManager:
                 return factory_class(
                     cli_script_name=script_path,
                     base_script_args=["--proxyid={}".format(minion_id)],
-                    config=self.cache["proxy_minions"][minion_id].config,
+                    config=self.cache["configs"]["proxy_minions"][minion_id],
                     **cli_kwargs,
                 )
             except KeyError:
@@ -1172,7 +1175,7 @@ class FactoriesManager:
             **cli_kwargs,
         )
 
-    def get_spm_cli(self, master_id, factory_class=cli.spm.SpmCliFactory, **cli_kwargs):
+    def get_salt_spm_cli(self, master_id, factory_class=cli.spm.SpmCliFactory, **cli_kwargs):
         """
         Return a salt `spm` CLI process
         """
