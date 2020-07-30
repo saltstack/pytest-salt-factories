@@ -981,6 +981,23 @@ class SaltFactoriesManager:
             **cli_kwargs,
         )
 
+    def get_spm_cli(self, master_id, cli_class=cli.spm.SpmCliFactory, **cli_kwargs):
+        """
+        Return a salt `spm` CLI process
+        """
+        script_path = cli_scripts.generate_script(
+            self.scripts_dir,
+            "spm",
+            code_dir=self.code_dir,
+            inject_coverage=self.inject_coverage,
+            inject_sitecustomize=self.inject_sitecustomize,
+        )
+        return cli_class(
+            cli_script_name=script_path,
+            config=self.cache["configs"]["masters"][master_id],
+            **cli_kwargs,
+        )
+
     def get_salt_ssh_cli(
         self,
         master_id,

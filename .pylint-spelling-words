@@ -78,6 +78,7 @@ sigterm
 sitecustomise
 sitecustomize
 sls
+spm
 sshd
 sshddaemon
 stderr

@@ -57,6 +57,14 @@ saltfactories.factories.cli.salt module
    :undoc-members:
    :show-inheritance:
 
+saltfactories.factories.cli.spm module
+--------------------------------------
+
+.. automodule:: saltfactories.factories.cli.spm
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 saltfactories.factories.cli.ssh module
 --------------------------------------
 
