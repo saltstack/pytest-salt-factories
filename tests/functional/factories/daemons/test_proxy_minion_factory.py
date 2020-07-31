@@ -13,7 +13,7 @@ def test_hook_basic_config_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            proxy_minion_config = salt_factories.configure_proxy_minion(request, 'proxy-minion-1')
+            proxy_minion_config = salt_factories.configure_salt_proxy_minion(request, 'proxy-minion-1')
             assert 'zzzz' in proxy_minion_config
         """
     )
@@ -22,7 +22,7 @@ def test_hook_basic_config_defaults(testdir):
 
 
 def test_keyword_basic_config_defaults(request, salt_factories):
-    proxy_minion_config = salt_factories.configure_proxy_minion(
+    proxy_minion_config = salt_factories.configure_salt_proxy_minion(
         request, "proxy-minion-1", config_defaults={"zzzz": True}
     )
     assert "zzzz" in proxy_minion_config
@@ -38,7 +38,7 @@ def test_hook_basic_config_overrides(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            proxy_minion_config = salt_factories.configure_proxy_minion(request, 'proxy-minion-1')
+            proxy_minion_config = salt_factories.configure_salt_proxy_minion(request, 'proxy-minion-1')
             assert 'zzzz' in proxy_minion_config
         """
     )
@@ -47,7 +47,7 @@ def test_hook_basic_config_overrides(testdir):
 
 
 def test_keyword_basic_config_overrides(request, salt_factories):
-    proxy_minion_config = salt_factories.configure_proxy_minion(
+    proxy_minion_config = salt_factories.configure_salt_proxy_minion(
         request, "proxy-minion-1", config_overrides={"zzzz": True}
     )
     assert "zzzz" in proxy_minion_config
@@ -66,7 +66,7 @@ def test_hook_simple_overrides_override_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            proxy_minion_config = salt_factories.configure_proxy_minion(request, 'proxy-minion-1')
+            proxy_minion_config = salt_factories.configure_salt_proxy_minion(request, 'proxy-minion-1')
             assert 'zzzz' in proxy_minion_config
             assert proxy_minion_config['zzzz'] is True
         """
@@ -76,7 +76,7 @@ def test_hook_simple_overrides_override_defaults(testdir):
 
 
 def test_keyword_simple_overrides_override_defaults(request, salt_factories):
-    proxy_minion_config = salt_factories.configure_proxy_minion(
+    proxy_minion_config = salt_factories.configure_salt_proxy_minion(
         request, "proxy-minion-1", config_defaults={"zzzz": False}, config_overrides={"zzzz": True}
     )
     assert "zzzz" in proxy_minion_config
@@ -108,7 +108,7 @@ def test_hook_nested_overrides_override_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            proxy_minion_config = salt_factories.configure_proxy_minion(request, 'proxy-minion-1')
+            proxy_minion_config = salt_factories.configure_salt_proxy_minion(request, 'proxy-minion-1')
             assert 'zzzz' in proxy_minion_config
             assert proxy_minion_config['zzzz'] is False
             assert proxy_minion_config['colors'] == {
@@ -123,7 +123,7 @@ def test_hook_nested_overrides_override_defaults(testdir):
 
 
 def test_keyword_nested_overrides_override_defaults(request, salt_factories):
-    proxy_minion_config = salt_factories.configure_proxy_minion(
+    proxy_minion_config = salt_factories.configure_salt_proxy_minion(
         request,
         "proxy-minion-1",
         config_defaults={
@@ -165,7 +165,7 @@ def test_nested_overrides_override_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            proxy_minion_config = salt_factories.configure_proxy_minion(
+            proxy_minion_config = salt_factories.configure_salt_proxy_minion(
                 request,
                 'proxy-minion-1',
                 config_defaults={
@@ -200,7 +200,7 @@ def test_nested_overrides_override_defaults(testdir):
 def test_provide_root_dir(testdir, request, salt_factories):
     root_dir = testdir.mkdir("custom-root")
     config_defaults = {"root_dir": root_dir}
-    proxy_minion_config = salt_factories.configure_proxy_minion(
+    proxy_minion_config = salt_factories.configure_salt_proxy_minion(
         request, "proxy_minion-1", config_defaults=config_defaults
     )
     assert proxy_minion_config["root_dir"] == root_dir
@@ -216,7 +216,7 @@ def configure_kwargs_ids(value):
     ids=configure_kwargs_ids,
 )
 def test_provide_user(request, salt_factories, configure_kwargs):
-    proxy_minion_config = salt_factories.configure_proxy_minion(
+    proxy_minion_config = salt_factories.configure_salt_proxy_minion(
         request, "proxy-minion-1", **configure_kwargs
     )
     if not configure_kwargs:

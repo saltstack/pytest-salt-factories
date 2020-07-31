@@ -5,6 +5,7 @@ import stat
 import tempfile
 import textwrap
 
+import pkg_resources
 import pytest
 import salt.version
 
@@ -80,3 +81,8 @@ def tempfiles(request):
     Temporary files fixture
     """
     return Tempfiles(request)
+
+
+@pytest.fixture(scope="session")
+def salt_version():
+    return pkg_resources.get_distribution("salt").version

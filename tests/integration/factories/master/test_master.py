@@ -10,28 +10,28 @@ def master(request, salt_factories):
 
 
 @pytest.fixture(scope="module")
-def minion(request, salt_factories, master):
-    return salt_factories.spawn_salt_minion(request, "minion-1", master_id="master-1")
+def minion(request, master):
+    return master.spawn_salt_minion(request, "minion-1")
 
 
 @pytest.fixture
-def minion_3(request, salt_factories, master):
-    return salt_factories.spawn_salt_minion(request, "minion-3", master_id="master-1")
+def minion_3(request, master):
+    return master.spawn_salt_minion(request, "minion-3")
 
 
 @pytest.fixture
-def salt_run(salt_factories, master):
-    return salt_factories.get_salt_run_cli(master.config["id"])
+def salt_run(master):
+    return master.get_salt_run_cli()
 
 
 @pytest.fixture
-def salt_cp(salt_factories, master):
-    return salt_factories.get_salt_cp_cli(master.config["id"])
+def salt_cp(master):
+    return master.get_salt_cp_cli()
 
 
 @pytest.fixture
-def salt_key(salt_factories, master):
-    return salt_factories.get_salt_key_cli(master.config["id"])
+def salt_key(master):
+    return master.get_salt_key_cli()
 
 
 def test_master(master):

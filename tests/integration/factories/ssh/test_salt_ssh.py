@@ -35,8 +35,8 @@ def salt_ssh_cli(sshd, salt_factories, master):
             )
         )
     try:
-        yield salt_factories.get_salt_ssh_cli(
-            master.config["id"], roster_file=str(roster_file_path), client_key=str(sshd.client_key)
+        yield master.get_salt_ssh_cli(
+            roster_file=str(roster_file_path), client_key=str(sshd.client_key)
         )
     finally:
         roster_file_path.unlink()

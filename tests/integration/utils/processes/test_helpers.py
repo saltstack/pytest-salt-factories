@@ -21,7 +21,7 @@ def daemons_id():
 
 @pytest.fixture(scope="package")
 def shell_tests_salt_master_config(request, salt_factories, daemons_id):
-    return salt_factories.configure_master(
+    return salt_factories.configure_salt_master(
         request, daemons_id, config_overrides={"user": "unknown-user"}
     )
 

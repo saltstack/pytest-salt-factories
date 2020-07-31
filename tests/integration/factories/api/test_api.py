@@ -12,14 +12,8 @@ def master(request, salt_factories):
 
 
 @pytest.fixture(scope="module")
-def minion(request, salt_factories, master):
-    return
-    # return salt_factories.spawn_salt_minion(request, "minion-1", master_id="master-1")
-
-
-@pytest.fixture(scope="module")
-def salt_api(request, salt_factories, master, minion):
-    return salt_factories.spawn_salt_api(request, master.config["id"])
+def salt_api(request, master):
+    return master.spawn_salt_api(request)
 
 
 def test_api(salt_api):

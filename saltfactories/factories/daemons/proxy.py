@@ -77,7 +77,7 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
         if sys.platform.startswith("win") is False:
             script_args.append("--disable-keepalive")
         if self.include_proxyid_cli_flag is True:
-            script_args.extend(["--proxyid", self.config["id"]])
+            script_args.extend(["--proxyid", self.id])
         return script_args
 
     def get_check_events(self):
@@ -91,6 +91,6 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
     # while making sure the CLI tools are referring to this daemon
     def get_salt_call_cli(self, **kwargs):
         """
-        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_call_cli`
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_call_cli`
         """
         return self.factories_manager.get_salt_call_cli(self.id, **kwargs)

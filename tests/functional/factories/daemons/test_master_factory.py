@@ -13,7 +13,7 @@ def test_hook_basic_config_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            master_config = salt_factories.configure_master(request, 'master-1')
+            master_config = salt_factories.configure_salt_master(request, 'master-1')
             assert 'zzzz' in master_config
         """
     )
@@ -22,7 +22,7 @@ def test_hook_basic_config_defaults(testdir):
 
 
 def test_keyword_basic_config_defaults(request, salt_factories):
-    master_config = salt_factories.configure_master(
+    master_config = salt_factories.configure_salt_master(
         request, "master-1", config_defaults={"zzzz": True}
     )
     assert "zzzz" in master_config
@@ -30,7 +30,7 @@ def test_keyword_basic_config_defaults(request, salt_factories):
 
 def test_interface_config_defaults(request, salt_factories):
     interface = "172.17.0.1"
-    master_config = salt_factories.configure_master(
+    master_config = salt_factories.configure_salt_master(
         request, "master-1", config_defaults={"interface": interface}
     )
     assert master_config["interface"] != interface
@@ -47,7 +47,7 @@ def test_hook_basic_config_overrides(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            master_config = salt_factories.configure_master(request, 'master-1')
+            master_config = salt_factories.configure_salt_master(request, 'master-1')
             assert 'zzzz' in master_config
         """
     )
@@ -56,7 +56,7 @@ def test_hook_basic_config_overrides(testdir):
 
 
 def test_keyword_basic_config_overrides(request, salt_factories):
-    master_config = salt_factories.configure_master(
+    master_config = salt_factories.configure_salt_master(
         request, "master-1", config_overrides={"zzzz": True}
     )
     assert "zzzz" in master_config
@@ -64,7 +64,7 @@ def test_keyword_basic_config_overrides(request, salt_factories):
 
 def test_interface_config_overrides(request, salt_factories):
     interface = "172.17.0.1"
-    master_config = salt_factories.configure_master(
+    master_config = salt_factories.configure_salt_master(
         request, "master-1", config_overrides={"interface": interface}
     )
     assert master_config["interface"] != "127.0.0.1"
@@ -84,7 +84,7 @@ def test_hook_simple_overrides_override_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            master_config = salt_factories.configure_master(request, 'master-1')
+            master_config = salt_factories.configure_salt_master(request, 'master-1')
             assert 'zzzz' in master_config
             assert master_config['zzzz'] is True
         """
@@ -94,7 +94,7 @@ def test_hook_simple_overrides_override_defaults(testdir):
 
 
 def test_keyword_simple_overrides_override_defaults(request, salt_factories):
-    master_config = salt_factories.configure_master(
+    master_config = salt_factories.configure_salt_master(
         request, "master-1", config_defaults={"zzzz": False}, config_overrides={"zzzz": True}
     )
     assert "zzzz" in master_config
@@ -126,7 +126,7 @@ def test_hook_nested_overrides_override_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            master_config = salt_factories.configure_master(request, 'master-1')
+            master_config = salt_factories.configure_salt_master(request, 'master-1')
             assert 'zzzz' in master_config
             assert master_config['zzzz'] is False
             assert master_config['colors'] == {
@@ -141,7 +141,7 @@ def test_hook_nested_overrides_override_defaults(testdir):
 
 
 def test_keyword_nested_overrides_override_defaults(request, salt_factories):
-    master_config = salt_factories.configure_master(
+    master_config = salt_factories.configure_salt_master(
         request,
         "master-1",
         config_defaults={
@@ -183,7 +183,7 @@ def test_nested_overrides_override_defaults(testdir):
     p = testdir.makepyfile(
         """
         def test_basic_config_override(request, salt_factories):
-            master_config = salt_factories.configure_master(
+            master_config = salt_factories.configure_salt_master(
                 request,
                 'master-1',
                 config_defaults={
@@ -218,7 +218,7 @@ def test_nested_overrides_override_defaults(testdir):
 def test_provide_root_dir(testdir, request, salt_factories):
     root_dir = testdir.mkdir("custom-root")
     config_defaults = {"root_dir": root_dir}
-    master_config = salt_factories.configure_master(
+    master_config = salt_factories.configure_salt_master(
         request, "master-1", config_defaults=config_defaults
     )
     assert master_config["root_dir"] == root_dir
@@ -234,7 +234,7 @@ def configure_kwargs_ids(value):
     ids=configure_kwargs_ids,
 )
 def test_provide_user(request, salt_factories, configure_kwargs):
-    master_config = salt_factories.configure_master(request, "master-1", **configure_kwargs)
+    master_config = salt_factories.configure_salt_master(request, "master-1", **configure_kwargs)
     if not configure_kwargs:
         # salt-factories injects the current username
         assert master_config["user"] is not None
