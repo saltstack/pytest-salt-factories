@@ -21,9 +21,6 @@ from saltfactories.utils import ports
 
 @attr.s(kw_only=True, slots=True)
 class SaltMinionFactory(SaltDaemonFactory):
-
-    factories_manager = attr.ib(repr=False, hash=False, default=None)
-
     @staticmethod
     def default_config(
         root_dir, minion_id, config_defaults=None, config_overrides=None, master_port=None

@@ -181,11 +181,13 @@ class SaltDaemonContainerFactory(SaltDaemonFactory, ContainerFactory):
     def build_cmdline(self, *args):
         return ["docker", "exec", "-i", self.name] + super().build_cmdline(*args)
 
-    def start(self):
+    def start(self, max_start_attempts=None, start_timeout=None):
         # Start the container
         ContainerFactory.start(self)
         # Now that the container is up, let's start the daemon
-        return SaltDaemonFactory.start(self)
+        return SaltDaemonFactory.start(
+            self, max_start_attempts=max_start_attempts, start_timeout=start_timeout
+        )
 
     def terminate(self):
         ret = SaltDaemonFactory.terminate(self)

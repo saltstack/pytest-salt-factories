@@ -481,7 +481,7 @@ def test_salt_cli_factory_id_attr_comes_first_in_repr(config_file):
 
 def test_salt_daemon_factory_id_attr_comes_first_in_repr(config_file):
     proc = SaltDaemonFactory(
-        cli_script_name="foo-bar", config={"id": "TheID", "conf_file": config_file}
+        start_timeout=1, cli_script_name="foo-bar", config={"id": "TheID", "conf_file": config_file}
     )
     regex = r"{}(id='TheID'".format(proc.__class__.__name__)
     assert repr(proc).startswith(regex)

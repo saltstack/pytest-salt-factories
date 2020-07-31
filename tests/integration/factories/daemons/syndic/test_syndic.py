@@ -1,45 +1,59 @@
 import pytest
 
+pytestmark = pytest.mark.skip(reason="Skipping until we devote time to fix syndic support")
+
 
 @pytest.fixture(scope="module")
-def master_of_masters(request, salt_factories):
+def master_of_masters(salt_factories):
     """
     This is the master of all masters, top of the chain
     """
-    return salt_factories.spawn_salt_master(request, "master-of-masters", order_masters=True)
+    factory = salt_factories.get_salt_master_daemon("master-of-masters", order_masters=True)
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture(scope="module")
-def minion_1(request, master_of_masters):
+def minion_1(master_of_masters):
     """
     This minion connects to the master-of-masters directly
     """
     assert master_of_masters.is_running()
-    return master_of_masters.spawn_salt_minion(request, "minion-1")
+    factory = master_of_masters.get_salt_minion_daemon("minion-1")
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture(scope="module")
-def configure_salt_syndic(request, salt_factories, master_of_masters, minion_1):
+def configure_salt_syndic(master_of_masters, minion_1):
     """
     This syndic will run in tandem with a master and minion which share the same ID, connected to the upstream
     master-of-masters master.
     """
-    return master_of_masters.configure_salt_syndic(request, "syndic-1")
+    factory = master_of_masters.get_salt_syndic_daemon("syndic-1")
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture(scope="module")
-def syndic_master(request, master_of_masters, configure_salt_syndic):
+def syndic_master(master_of_masters, configure_salt_syndic):
     """
     This is a second master, which will connect to master-of-masters through the syndic.
 
     We depend on the minion_1 fixture just so we get both the master-of-masters and minion-1 fixtures running
     when this master starts.
     """
-    return master_of_masters.spawn_salt_master(request, "syndic-1",)
+    factory = master_of_masters.get_salt_master_daemon("syndic-1")
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture(scope="module")
-def syndic_minion(request, syndic_master):
+def syndic_minion(syndic_master):
     """
     This is a second master, which will connect to master-of-masters through the syndic.
 
@@ -47,16 +61,22 @@ def syndic_minion(request, syndic_master):
     when this master starts.
     """
     assert syndic_master.is_running()
-    return syndic_master.spawn_salt_minion(request, "syndic-1")
+    factory = syndic_master.get_salt_minion_daemon("syndic-1")
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture(scope="module")
-def minion_2(request, syndic_master):
+def minion_2(syndic_master):
     """
     This minion will connect to the syndic-1 master
     """
     assert syndic_master.is_running()
-    return syndic_master.spawn_salt_minion(request, "minion-2")
+    factory = syndic_master.get_salt_minion_daemon("minion-2")
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture(scope="module")
@@ -95,7 +115,7 @@ def syndic(
     assert syndic_master.is_running()
     assert syndic_minion.is_running()
     assert minion_2.is_running()
-    return master_of_masters.spawn_salt_syndic(request, syndic_master.id)
+    return master_of_masters.get_salt_syndic_daemon(syndic_master.id)
 
 
 @pytest.fixture(scope="module")

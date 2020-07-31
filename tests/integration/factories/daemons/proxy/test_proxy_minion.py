@@ -9,13 +9,19 @@ pytestmark = pytest.mark.skipif(
 
 
 @pytest.fixture(scope="module")
-def master(request, salt_factories):
-    return salt_factories.spawn_salt_master(request, "master-1")
+def master(salt_factories):
+    factory = salt_factories.get_salt_master_daemon("master-1")
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture(scope="module")
-def proxy_minion(request, master):
-    return master.spawn_salt_proxy_minion(request, "proxy-minion-1")
+def proxy_minion(master):
+    factory = master.get_salt_proxy_minion_daemon("proxy-minion-1")
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture

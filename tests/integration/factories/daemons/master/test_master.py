@@ -2,21 +2,33 @@ import os
 import tempfile
 
 import pytest
+import salt.defaults.exitcodes
+
+from saltfactories.exceptions import FactoryNotStarted
 
 
 @pytest.fixture(scope="module")
 def master(request, salt_factories):
-    return salt_factories.spawn_salt_master(request, "master-1")
+    factory = salt_factories.get_salt_master_daemon("master-1")
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture(scope="module")
 def minion(request, master):
-    return master.spawn_salt_minion(request, "minion-1")
+    factory = master.get_salt_minion_daemon("minion-1")
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture
 def minion_3(request, master):
-    return master.spawn_salt_minion(request, "minion-3")
+    factory = master.get_salt_minion_daemon("minion-3")
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture
@@ -116,3 +128,15 @@ def test_salt_key(master, minion, minion_3, salt_key):
         "minions_denied": [],
         "minions_rejected": [],
     }, ret
+
+
+@pytest.mark.skip_on_windows
+def test_exit_status_unknown_user(request, salt_factories):
+    master = salt_factories.get_salt_master_daemon(
+        "set-exitcodes", config_overrides={"user": "unknown-user"}
+    )
+    with pytest.raises(FactoryNotStarted) as exc:
+        master.start(max_start_attempts=1)
+
+    assert exc.value.exitcode == salt.defaults.exitcodes.EX_NOUSER, str(exc.value)
+    assert "The user is not available." in exc.value.stderr, str(exc.value)

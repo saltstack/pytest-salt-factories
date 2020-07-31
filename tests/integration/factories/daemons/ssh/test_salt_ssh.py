@@ -5,16 +5,19 @@ import pytest
 
 @pytest.fixture(scope="module")
 @pytest.mark.skip_if_binaries_missing("sshd", "ssh-keygen")
-def sshd(request, salt_factories):
+def sshd(salt_factories):
     # Set StrictModes to no because our config directory lives in /tmp and those permissions
     # are not acceptable by sshd strict paranoia.
     sshd_config_dict = {"StrictModes": "no"}
-    return salt_factories.spawn_sshd_server(request, "sshd", sshd_config_dict=sshd_config_dict)
+    factory = salt_factories.get_sshd_daemon("sshd", sshd_config_dict=sshd_config_dict)
+    factory.start()
+    yield factory
+    factory.terminate()
 
 
 @pytest.fixture(scope="module")
 def master(request, salt_factories):
-    return salt_factories.spawn_salt_master(request, "master-1")
+    return salt_factories.get_salt_master_daemon("master-1")
 
 
 @pytest.fixture(scope="module")

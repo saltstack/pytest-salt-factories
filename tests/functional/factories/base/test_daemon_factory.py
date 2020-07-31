@@ -83,7 +83,7 @@ def test_daemon_process_termination(request, tempfiles):
     else:
         # Windows don't know how to handle python scripts directly
         factory_kwargs = dict(cli_script_name=sys.executable, base_script_args=[script])
-    daemon = DaemonFactory(**factory_kwargs)
+    daemon = DaemonFactory(start_timeout=1, **factory_kwargs)
     daemon.start()
     daemon_pid = daemon.pid
     # Make sure the daemon is terminated no matter what
@@ -174,7 +174,7 @@ def test_daemon_process_termination_parent_killed(request, tempfiles):
     else:
         # Windows don't know how to handle python scripts directly
         factory_kwargs = dict(cli_script_name=sys.executable, base_script_args=[script])
-    daemon = DaemonFactory(**factory_kwargs)
+    daemon = DaemonFactory(start_timeout=1, **factory_kwargs)
     daemon.start()
     daemon_pid = daemon.pid
     # Make sure the daemon is terminated no matter what

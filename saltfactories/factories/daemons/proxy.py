@@ -22,7 +22,6 @@ from saltfactories.utils import ports
 @attr.s(kw_only=True, slots=True)
 class SaltProxyMinionFactory(SaltDaemonFactory):
 
-    factories_manager = attr.ib(repr=False, hash=False, default=None)
     include_proxyid_cli_flag = attr.ib(default=True, repr=False)
 
     @staticmethod

@@ -116,7 +116,7 @@ def salt_factories(
     _manager.event_listener.stop()
 
 
-def pytest_saltfactories_minion_verify_configuration(request, minion_config, username):
+def pytest_saltfactories_minion_verify_configuration(minion_config, username):
     """
     This hook is called to verify the provided minion configuration
     """
@@ -137,7 +137,7 @@ def pytest_saltfactories_minion_verify_configuration(request, minion_config, use
     salt.utils.verify.verify_env(verify_env_entries, username, pki_dir=minion_config["pki_dir"])
 
 
-def pytest_saltfactories_minion_write_configuration(request, minion_config):
+def pytest_saltfactories_minion_write_configuration(minion_config):
     """
     This hook is called to verify the provided minion configuration
     """
@@ -159,7 +159,7 @@ def pytest_saltfactories_minion_write_configuration(request, minion_config):
     return options
 
 
-def pytest_saltfactories_master_verify_configuration(request, master_config, username):
+def pytest_saltfactories_master_verify_configuration(master_config, username):
     """
     This hook is called to verify the provided master configuration
     """
@@ -186,7 +186,7 @@ def pytest_saltfactories_master_verify_configuration(request, master_config, use
     salt.utils.verify.verify_env(verify_env_entries, username, pki_dir=master_config["pki_dir"])
 
 
-def pytest_saltfactories_master_write_configuration(request, master_config):
+def pytest_saltfactories_master_write_configuration(master_config):
     """
     This hook is called to verify the provided master configuration
     """
@@ -206,7 +206,7 @@ def pytest_saltfactories_master_write_configuration(request, master_config):
     return options
 
 
-def pytest_saltfactories_syndic_verify_configuration(request, syndic_config, username):
+def pytest_saltfactories_syndic_verify_configuration(syndic_config, username):
     """
     This hook is called to verify the provided syndic configuration
     """
@@ -220,7 +220,7 @@ def pytest_saltfactories_syndic_verify_configuration(request, syndic_config, use
     )
 
 
-def pytest_saltfactories_syndic_write_configuration(request, syndic_config):
+def pytest_saltfactories_syndic_write_configuration(syndic_config):
     """
     This hook is called to verify the provided syndic configuration
     """
@@ -244,7 +244,7 @@ def pytest_saltfactories_syndic_write_configuration(request, syndic_config):
     return options
 
 
-def pytest_saltfactories_proxy_minion_verify_configuration(request, proxy_minion_config, username):
+def pytest_saltfactories_proxy_minion_verify_configuration(proxy_minion_config, username):
     """
     This hook is called to verify the provided proxy_minion configuration
     """
@@ -260,7 +260,7 @@ def pytest_saltfactories_proxy_minion_verify_configuration(request, proxy_minion
     )
 
 
-def pytest_saltfactories_proxy_minion_write_configuration(request, proxy_minion_config):
+def pytest_saltfactories_proxy_minion_write_configuration(proxy_minion_config):
     """
     This hook is called to verify the provided proxy_minion configuration
     """
@@ -282,7 +282,7 @@ def pytest_saltfactories_proxy_minion_write_configuration(request, proxy_minion_
     return options
 
 
-def pytest_saltfactories_cloud_verify_configuration(request, cloud_config, username):
+def pytest_saltfactories_cloud_verify_configuration(cloud_config, username):
     """
     This hook is called to verify the provided cloud configuration
     """
@@ -294,7 +294,7 @@ def pytest_saltfactories_cloud_verify_configuration(request, cloud_config, usern
     salt.utils.verify.verify_env(verify_env_entries, username, root_dir=cloud_config["root_dir"])
 
 
-def pytest_saltfactories_cloud_write_configuration(request, cloud_config):
+def pytest_saltfactories_cloud_write_configuration(cloud_config):
     """
     This hook is called to write the provided cloud configuration
     """
