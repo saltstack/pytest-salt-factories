@@ -3,4 +3,3 @@
 sphinx
 sphinx-rtd-theme
 sphinxcontrib-spelling
-salt >= 3001

@@ -105,44 +105,130 @@ class SaltMasterFactory(SaltDaemonFactory):
 
     # The following methods just route the calls to the right method in the factories manager
     # while making sure the CLI tools are referring to this daemon
+    def configure_salt_master(self, request, master_id, **kwargs):
+        """
+        This method will configure a master under a master-of-masters.
+
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.configure_salt_master`
+        """
+        return self.factories_manager.configure_salt_master(
+            request, master_id, master_of_masters_id=self.id, **kwargs
+        )
+
+    def spawn_salt_master(self, request, master_id, **kwargs):
+        """
+        This method will configure a master under a master-of-masters.
+
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.spawn_salt_master`
+        """
+        return self.factories_manager.spawn_salt_master(
+            request, master_id, master_of_masters_id=self.id, **kwargs
+        )
+
+    def configure_salt_minion(self, request, minion_id, **kwargs):
+        """
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.configure_salt_minion`
+        """
+        return self.factories_manager.configure_salt_minion(
+            request, minion_id, master_id=self.id, **kwargs
+        )
+
+    def spawn_salt_minion(self, request, minion_id, **kwargs):
+        """
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.spawn_salt_minion`
+        """
+        return self.factories_manager.spawn_salt_minion(
+            request, minion_id, master_id=self.id, **kwargs
+        )
+
+    def configure_salt_proxy_minion(self, request, minion_id, **kwargs):
+        """
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.configure_salt_proxy_minion`
+        """
+        return self.factories_manager.configure_salt_proxy_minion(
+            request, minion_id, master_id=self.id, **kwargs
+        )
+
+    def spawn_salt_proxy_minion(self, request, minion_id, **kwargs):
+        """
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.spawn_salt_proxy_minion`
+        """
+        return self.factories_manager.spawn_salt_proxy_minion(
+            request, minion_id, master_id=self.id, **kwargs
+        )
+
+    def configure_salt_api(self, request, **kwargs):
+        """
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.configure_salt_api`
+        """
+        return self.factories_manager.configure_salt_api(request, self.id, **kwargs)
+
+    def spawn_salt_api(self, request, **kwargs):
+        """
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.spawn_salt_api`
+        """
+        return self.factories_manager.spawn_salt_api(request, self.id, **kwargs)
+
+    def configure_salt_syndic(self, request, syndic_id, **kwargs):
+        """
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.configure_salt_syndic`
+        """
+        return self.factories_manager.configure_salt_syndic(
+            request, syndic_id, master_of_masters_id=self.id, **kwargs
+        )
+
+    def spawn_salt_syndic(self, request, syndic_id, **kwargs):
+        """
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.spawn_salt_syndic`
+        """
+        return self.factories_manager.spawn_salt_syndic(
+            request, syndic_id, master_of_masters_id=self.id, **kwargs
+        )
+
+    def configure_salt_cloud(self, request, **kwargs):
+        """
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.configure_salt_cloud`
+        """
+        return self.factories_manager.configure_salt_cloud(request, self.id, **kwargs)
+
+    def get_salt_cloud_cli(self, request, **kwargs):
+        """
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cloud_cli`
+        """
+        return self.factories_manager.get_salt_cloud_cli(request, self.id, **kwargs)
+
     def get_salt_cli(self, **kwargs):
         """
-        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cli`
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cli`
         """
         return self.factories_manager.get_salt_cli(self.id, **kwargs)
 
     def get_salt_cp_cli(self, **kwargs):
         """
-        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cp_cli`
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cp_cli`
         """
         return self.factories_manager.get_salt_cp_cli(self.id, **kwargs)
 
     def get_salt_key_cli(self, **kwargs):
         """
-        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_key_cli`
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_key_cli`
         """
         return self.factories_manager.get_salt_key_cli(self.id, **kwargs)
 
     def get_salt_run_cli(self, **kwargs):
         """
-        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_run_cli`
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_run_cli`
         """
         return self.factories_manager.get_salt_run_cli(self.id, **kwargs)
 
     def get_salt_spm_cli(self, **kwargs):
         """
-        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_spm_cli`
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_spm_cli`
         """
         return self.factories_manager.get_salt_spm_cli(self.id, **kwargs)
 
     def get_salt_ssh_cli(self, **kwargs):
         """
-        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_ssh_cli`
+        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_ssh_cli`
         """
         return self.factories_manager.get_salt_ssh_cli(self.id, **kwargs)
-
-    def get_salt_cloud_cli(self, request, **kwargs):
-        """
-        Please see the documentation in py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cloud_cli`
-        """
-        return self.factories_manager.get_salt_cloud_cli(request, self.id, **kwargs)

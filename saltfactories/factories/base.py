@@ -364,7 +364,7 @@ class SaltFactory:
             The path to the python executable to use
     """
 
-    id = attr.ib(default=None)
+    id = attr.ib(default=None, init=False)
     config = attr.ib(repr=False)
     config_dir = attr.ib(init=False, default=None)
     config_file = attr.ib(init=False, default=None)

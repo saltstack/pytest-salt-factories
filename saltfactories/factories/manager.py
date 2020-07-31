@@ -192,7 +192,7 @@ class FactoriesManager:
         log_config.setdefault("port", self.log_server_port)
         log_config.setdefault("level", self.log_server_level)
 
-    def configure_master(
+    def configure_salt_master(
         self,
         request,
         master_id,
@@ -325,7 +325,7 @@ class FactoriesManager:
 
         master_config = self.cache["configs"]["masters"].get(master_id)
         if master_config is None:
-            master_config = self.configure_master(
+            master_config = self.configure_salt_master(
                 request,
                 master_id,
                 order_masters=order_masters,
@@ -347,7 +347,7 @@ class FactoriesManager:
             **extra_factory_class_kwargs,
         )
 
-    def configure_minion(
+    def configure_salt_minion(
         self, request, minion_id, master_id=None, config_defaults=None, config_overrides=None
     ):
         """
@@ -470,7 +470,7 @@ class FactoriesManager:
 
         minion_config = self.cache["configs"]["minions"].get(minion_id)
         if minion_config is None:
-            minion_config = self.configure_minion(
+            minion_config = self.configure_salt_minion(
                 request,
                 minion_id,
                 master_id=master_id,
@@ -491,7 +491,7 @@ class FactoriesManager:
             **extra_factory_class_kwargs,
         )
 
-    def configure_syndic(
+    def configure_salt_syndic(
         self,
         request,
         syndic_id,
@@ -539,7 +539,7 @@ class FactoriesManager:
 
         master_of_masters_config = self.cache["configs"]["masters"].get(master_of_masters_id)
         if master_of_masters_config is None and master_of_masters_id:
-            master_of_masters_config = self.configure_master(
+            master_of_masters_config = self.configure_salt_master(
                 request, master_of_masters_id, order_masters=True
             )
 
@@ -700,7 +700,7 @@ class FactoriesManager:
 
         syndic_config = self.cache["configs"]["syndics"].get(syndic_id)
         if syndic_config is None:
-            syndic_config = self.configure_syndic(
+            syndic_config = self.configure_salt_syndic(
                 request,
                 syndic_id,
                 master_of_masters_id=master_of_masters_id,
@@ -737,7 +737,7 @@ class FactoriesManager:
             **extra_factory_class_kwargs,
         )
 
-    def configure_proxy_minion(
+    def configure_salt_proxy_minion(
         self, request, proxy_minion_id, master_id=None, config_defaults=None, config_overrides=None
     ):
         """
@@ -862,7 +862,7 @@ class FactoriesManager:
 
         proxy_minion_config = self.cache["configs"]["proxy_minions"].get(proxy_minion_id)
         if proxy_minion_config is None:
-            proxy_minion_config = self.configure_proxy_minion(
+            proxy_minion_config = self.configure_salt_proxy_minion(
                 request,
                 proxy_minion_id,
                 master_id=master_id,
@@ -913,7 +913,7 @@ class FactoriesManager:
 
         master_config = self.cache["configs"]["masters"].get(master_id)
         if master_config is None:
-            master_config = self.configure_master(
+            master_config = self.configure_salt_master(
                 request,
                 master_id,
                 order_masters=order_masters,
@@ -934,7 +934,7 @@ class FactoriesManager:
             **extra_factory_class_kwargs,
         )
 
-    def configure_cloud(self, request, master_id, config_defaults=None, config_overrides=None):
+    def configure_salt_cloud(self, request, master_id, config_defaults=None, config_overrides=None):
         """
         Configure salt-cloud
 
@@ -1047,7 +1047,7 @@ class FactoriesManager:
 
         cloud_config = self.cache["configs"]["cloud"].get(master_id)
         if cloud_config is None:
-            cloud_config = self.configure_cloud(
+            cloud_config = self.configure_salt_cloud(
                 request,
                 master_id,
                 config_defaults=config_defaults,

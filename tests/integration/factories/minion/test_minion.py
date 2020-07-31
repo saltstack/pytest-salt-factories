@@ -7,23 +7,23 @@ def master(request, salt_factories):
 
 
 @pytest.fixture(scope="module")
-def minion(request, salt_factories, master):
-    return salt_factories.spawn_salt_minion(request, "minion-1", master_id="master-1")
+def minion(request, master):
+    return master.spawn_salt_minion(request, "minion-1")
 
 
 @pytest.fixture
-def salt_cli(salt_factories, minion, master):
-    return salt_factories.get_salt_cli(master.config["id"])
+def salt_cli(master):
+    return master.get_salt_cli()
 
 
 @pytest.fixture
-def salt_call_cli(salt_factories, minion, master):
-    return salt_factories.get_salt_call_cli(minion.config["id"])
+def salt_call_cli(minion):
+    return minion.get_salt_call_cli()
 
 
 def test_minion(minion, salt_cli):
     assert minion.is_running()
-    ret = salt_cli.run("test.ping", minion_tgt="minion-1")
+    ret = salt_cli.run("test.ping", minion_tgt=minion.id)
     assert ret.exitcode == 0, ret
     assert ret.json is True
 
@@ -37,7 +37,7 @@ def test_no_match(minion, salt_cli):
 
 def test_show_jid(minion, salt_cli):
     assert minion.is_running()
-    ret = salt_cli.run("--show-jid", "test.ping", minion_tgt="minion-1")
+    ret = salt_cli.run("--show-jid", "test.ping", minion_tgt=minion.id)
     assert ret.exitcode == 0, ret
     assert ret.json is True
 
