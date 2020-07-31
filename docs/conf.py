@@ -99,6 +99,11 @@ intersphinx_mapping = {
 }
 # <---- Intersphinx Config -----------------------------------------------------------------------------------------
 
+# ----- Autodoc Config ---------------------------------------------------------------------------------------------->
+autodoc_default_options = {"member-order": "bysource"}
+autodoc_mock_imports = ["salt"]
+# <---- Autodoc Config -----------------------------------------------------------------------------------------------
+
 
 def setup(app):
     app.add_crossref_type(
