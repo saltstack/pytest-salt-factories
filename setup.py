@@ -54,7 +54,7 @@ setup(
     packages=find_packages(),
     cmdclass=versioneer.get_cmdclass(),
     install_requires=parse_requirements(),
-    extras_require={"docker": ["docker"]},
+    extras_require={"docker": ["docker"], "salt": ["salt>=3000.1"]},
     include_package_data=True,
     zip_safe=False,
     classifiers=[
