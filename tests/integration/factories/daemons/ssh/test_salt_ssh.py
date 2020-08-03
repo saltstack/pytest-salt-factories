@@ -10,9 +10,8 @@ def sshd(salt_factories):
     # are not acceptable by sshd strict paranoia.
     sshd_config_dict = {"StrictModes": "no"}
     factory = salt_factories.get_sshd_daemon("sshd", sshd_config_dict=sshd_config_dict)
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture(scope="module")

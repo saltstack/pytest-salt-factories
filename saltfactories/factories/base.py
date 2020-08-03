@@ -26,7 +26,7 @@ from saltfactories.utils import ports
 from saltfactories.utils.processes import Popen
 from saltfactories.utils.processes import ProcessResult
 from saltfactories.utils.processes import ShellResult
-from saltfactories.utils.processes.helpers import terminate_process
+from saltfactories.utils.processes import terminate_process
 
 log = logging.getLogger(__name__)
 
@@ -451,6 +451,13 @@ class DaemonFactory(SubprocessFactoryBase):
             exitcode=result.exitcode,
         )
 
+    def started(self, max_start_attempts=None, start_timeout=None):
+        """
+        Start the daemon and return it's instance so it can be used as a context manager
+        """
+        self.start(max_start_attempts=max_start_attempts, start_timeout=start_timeout)
+        return self
+
     def terminate(self):
         for callback, args, kwargs in self.before_terminate_callbacks:
             try:
@@ -492,6 +499,18 @@ class DaemonFactory(SubprocessFactoryBase):
             log.error("Failed to check ports after %1.2f seconds", time.time() - checks_start_time)
             return False
         return True
+
+    def __enter__(self):
+        if not self.is_running():
+            raise RuntimeError(
+                "Factory not yet started. Perhaps you're after something like:\n\n"
+                "with {}.started() as factory:\n"
+                "    yield factory".format(self.__class__.__name__)
+            )
+        return self
+
+    def __exit__(self, *exc):
+        return self.terminate()
 
 
 @attr.s(kw_only=True)

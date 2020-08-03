@@ -57,9 +57,8 @@ def test_proc_sys_stats(testdir):
         @pytest.fixture(scope="module")
         def sshd(request, salt_factories):
             factory = salt_factories.get_sshd_daemon("sshd")
-            factory.start()
-            yield factory
-            factory.terminate()
+            with factory.started():
+                yield factory
 
         def test_one(sshd):
             assert sshd.is_running()

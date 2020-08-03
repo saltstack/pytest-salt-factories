@@ -13,10 +13,9 @@ import pathlib
 import sys
 
 import attr
-import psutil
 import salt.utils.dictupdate
 
-import saltfactories.utils.processes.helpers
+import saltfactories
 from saltfactories.factories import cli
 from saltfactories.factories import daemons
 from saltfactories.utils import cli_scripts
@@ -1043,9 +1042,8 @@ class FactoriesManager:
         factory.register_after_terminate_callback(self.cache["factories"].pop, daemon_id, None)
         return factory
 
-    def spawn_container(
+    def get_container(
         self,
-        request,
         container_name,
         image_name,
         docker_client=None,
@@ -1059,8 +1057,6 @@ class FactoriesManager:
         Start a docker container
 
         Args:
-            request(:fixture:`request`):
-                The PyTest test execution request
             container_name(str):
                 The name to give the container
             image_name(str):
@@ -1083,55 +1079,20 @@ class FactoriesManager:
             :py:class:`~saltfactories.factories.daemons.container.ContainerFactory`:
                 The factory instance
         """
-        return self.start_factory(
-            request,
-            factory_class,
-            container_name,
+        factory = factory_class(
             name=container_name,
             image=image_name,
             docker_client=docker_client,
             display_name=display_name or container_name,
+            environ=self.environ,
+            cwd=self.cwd,
+            start_timeout=start_timeout or self.start_timeout,
             max_start_attempts=max_start_attempts,
-            start_timeout=start_timeout,
             **container_run_kwargs,
         )
-
-    def start_factory(
-        self,
-        request,
-        factory_class,
-        factory_id,
-        environ=None,
-        cwd=None,
-        max_start_attempts=3,
-        start_timeout=None,
-        **factory_class_kwargs
-    ):
-        """
-        Start a non-salt factory
-        """
-        if environ is None:
-            environ = self.environ
-        if cwd is None:
-            cwd = self.cwd
-        proc = saltfactories.utils.processes.helpers.start_factory(
-            factory_class,
-            start_timeout=start_timeout or self.start_timeout,
-            environ=environ,
-            cwd=cwd,
-            max_attempts=max_start_attempts,
-            **factory_class_kwargs,
-        )
-        self.cache["factories"][factory_id] = proc
-        try:
-            if self.stats_processes:
-                self.stats_processes[proc.get_display_name()] = psutil.Process(proc.pid)
-        except AttributeError:
-            # The factory does not provide the pid attribute
-            pass
-        request.addfinalizer(proc.terminate)
-        request.addfinalizer(lambda: self.cache["factories"].pop(factory_id))
-        return proc
+        self.cache["factories"][container_name] = factory
+        factory.register_after_terminate_callback(self.cache["factories"].pop, container_name, None)
+        return factory
 
     def _get_factory_class_instance(
         self,

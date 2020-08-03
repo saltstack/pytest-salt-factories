@@ -23,9 +23,8 @@ def echo_server_port():
 
 
 @pytest.fixture(scope="module")
-def docker_container(request, salt_factories, docker_client, echo_server_port):
-    return salt_factories.spawn_container(
-        request,
+def docker_container(salt_factories, docker_client, echo_server_port):
+    container = salt_factories.get_container(
         "echo-server-test",
         "cjimti/go-echo",
         docker_client=docker_client,
@@ -35,6 +34,8 @@ def docker_container(request, salt_factories, docker_client, echo_server_port):
             "environment": {"TCP_PORT": str(echo_server_port), "NODE_NAME": "echo-server-test"},
         },
     )
+    with container.started() as factory:
+        yield factory
 
 
 @pytest.mark.skip_on_darwin

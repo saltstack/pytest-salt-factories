@@ -9,9 +9,8 @@ def master_of_masters(salt_factories):
     This is the master of all masters, top of the chain
     """
     factory = salt_factories.get_salt_master_daemon("master-of-masters", order_masters=True)
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture(scope="module")
@@ -21,9 +20,8 @@ def minion_1(master_of_masters):
     """
     assert master_of_masters.is_running()
     factory = master_of_masters.get_salt_minion_daemon("minion-1")
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture(scope="module")
@@ -33,9 +31,8 @@ def configure_salt_syndic(master_of_masters, minion_1):
     master-of-masters master.
     """
     factory = master_of_masters.get_salt_syndic_daemon("syndic-1")
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture(scope="module")
@@ -47,9 +44,8 @@ def syndic_master(master_of_masters, configure_salt_syndic):
     when this master starts.
     """
     factory = master_of_masters.get_salt_master_daemon("syndic-1")
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture(scope="module")
@@ -62,9 +58,8 @@ def syndic_minion(syndic_master):
     """
     assert syndic_master.is_running()
     factory = syndic_master.get_salt_minion_daemon("syndic-1")
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture(scope="module")
@@ -74,9 +69,8 @@ def minion_2(syndic_master):
     """
     assert syndic_master.is_running()
     factory = syndic_master.get_salt_minion_daemon("minion-2")
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture(scope="module")

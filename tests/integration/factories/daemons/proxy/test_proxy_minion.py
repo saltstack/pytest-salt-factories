@@ -11,17 +11,15 @@ pytestmark = pytest.mark.skipif(
 @pytest.fixture(scope="module")
 def master(salt_factories):
     factory = salt_factories.get_salt_master_daemon("master-1")
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture(scope="module")
 def proxy_minion(master):
     factory = master.get_salt_proxy_minion_daemon("proxy-minion-1")
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture

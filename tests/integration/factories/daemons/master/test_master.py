@@ -10,25 +10,22 @@ from saltfactories.exceptions import FactoryNotStarted
 @pytest.fixture(scope="module")
 def master(request, salt_factories):
     factory = salt_factories.get_salt_master_daemon("master-1")
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture(scope="module")
 def minion(request, master):
     factory = master.get_salt_minion_daemon("minion-1")
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture
 def minion_3(request, master):
     factory = master.get_salt_minion_daemon("minion-3")
-    factory.start()
-    yield factory
-    factory.terminate()
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture
