@@ -2,13 +2,17 @@ import pytest
 
 
 @pytest.fixture(scope="module")
-def master(request, salt_factories):
-    return salt_factories.spawn_salt_master(request, "master-1")
+def master(salt_factories):
+    factory = salt_factories.get_salt_master_daemon("master-1")
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture(scope="module")
-def minion(request, master):
-    return master.spawn_salt_minion(request, "minion-1")
+def minion(master):
+    factory = master.get_salt_minion_daemon("minion-1")
+    with factory.started():
+        yield factory
 
 
 @pytest.fixture

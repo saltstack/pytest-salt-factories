@@ -17,6 +17,7 @@ from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.factories.base import Factory
 from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.factories.daemons.minion import SaltMinionFactory
+from saltfactories.utils import ports
 from saltfactories.utils import random_string
 from saltfactories.utils.processes import ProcessResult
 
@@ -64,6 +65,12 @@ class ContainerFactory(Factory):
     docker_client = attr.ib(repr=False, default=None)
     container_run_kwargs = attr.ib(repr=False, default=attr.Factory(dict))
     container = attr.ib(init=False, default=None, repr=False)
+    start_timeout = attr.ib(repr=False, default=30)
+    max_start_attempts = attr.ib(repr=False, default=3)
+    before_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
+    before_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
+    after_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
+    after_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
@@ -76,51 +83,176 @@ class ContainerFactory(Factory):
                 pytest.fail("The requests python library was not found installed")
             self.docker_client = docker.from_env()
 
-    def start(self):
+    def _format_callback(self, callback, args, kwargs):
+        callback_str = "{}(".format(callback.__name__)
+        if args:
+            callback_str += ", ".join(args)
+        if kwargs:
+            callback_str += ", ".join(["{}={!r}".format(k, v) for (k, v) in kwargs.items()])
+        callback_str += ")"
+        return callback_str
+
+    def register_before_start_callback(self, callback, *args, **kwargs):
+        self.before_start_callbacks.append((callback, args, kwargs))
+
+    def register_before_terminate_callback(self, callback, *args, **kwargs):
+        self.before_terminate_callbacks.append((callback, args, kwargs))
+
+    def register_after_start_callback(self, callback, *args, **kwargs):
+        self.after_start_callbacks.append((callback, args, kwargs))
+
+    def register_after_terminate_callback(self, callback, *args, **kwargs):
+        self.after_terminate_callbacks.append((callback, args, kwargs))
+
+    def start(self, max_start_attempts=None, start_timeout=None):
         atexit.register(self.terminate)
+        factory_started = False
+        for callback, args, kwargs in self.before_start_callbacks:
+            try:
+                callback(*args, **kwargs)
+            except Exception as exc:  # pylint: disable=broad-except
+                log.info(
+                    "Exception raised when running %s: %s",
+                    self._format_callback(callback, args, kwargs),
+                    exc,
+                    exc_info=True,
+                )
         connectable = ContainerFactory.client_connectable(self.docker_client)
         if connectable is not True:
+            self.terminate()
             pytest.fail(connectable)
+
         start_time = time.time()
-        start_timeout = start_time + 30
-        self.container = self.docker_client.containers.run(
-            self.image, name=self.name, detach=True, stdin_open=True, **self.container_run_kwargs
-        )
-        while True:
-            if start_timeout <= time.time():
-                result = self.terminate()
-                raise FactoryNotStarted(
-                    "Container failed to start",
-                    stdout=result.stdout,
-                    stderr=result.stderr,
-                    exitcode=result.exitcode,
-                )
-            container = self.docker_client.containers.get(self.container.id)
-            if container.status == "running":
-                self.container = container
+        start_attempts = max_start_attempts or self.max_start_attempts
+        current_attempt = 0
+        while current_attempt <= start_attempts:
+            current_attempt += 1
+            if factory_started:
                 break
-            time.sleep(1)
-        return True
+            log.info("Starting %s. Attempt: %d of %d", self, current_attempt, start_attempts)
+            current_start_time = time.time()
+            start_running_timeout = current_start_time + (start_timeout or self.start_timeout)
+
+            # Start the container
+            self.container = self.docker_client.containers.run(
+                self.image,
+                name=self.name,
+                detach=True,
+                stdin_open=True,
+                **self.container_run_kwargs
+            )
+            while time.time() <= start_running_timeout:
+                container = self.docker_client.containers.get(self.container.id)
+                if container.status != "running":
+                    time.sleep(0.25)
+                    continue
+
+                # If we reached this far it means that we get the running status above:
+                if self.container.status != "running":
+                    # If the status here is not running, then we need to update our
+                    # self.container reference
+                    self.container = container
+
+                log.warning("Container is running! %s", self.is_running())
+                if not self.is_running():
+                    self.container.remove(force=True)
+                    self.container.wait()
+                    self.container = None
+                    break
+
+                # Now that the container has started
+                if self.run_start_checks(current_start_time, start_running_timeout) is False:
+                    time.sleep(1)
+                    continue
+                log.info(
+                    "The %s factory is running after %d attempts. Took %1.2f seconds",
+                    self,
+                    current_attempt,
+                    time.time() - start_time,
+                )
+                factory_started = True
+                break
+            else:
+                # The factory failed to confirm it's running status
+                self.terminate()
+        if factory_started:
+            for callback, args, kwargs in self.after_start_callbacks:
+                try:
+                    callback(*args, **kwargs)
+                except Exception as exc:  # pylint: disable=broad-except
+                    log.info(
+                        "Exception raised when running %s: %s",
+                        self._format_callback(callback, args, kwargs),
+                        exc,
+                        exc_info=True,
+                    )
+            # TODO: Add containers to the processes stats?!
+            # if self.factories_manager and self.factories_manager.stats_processes is not None:
+            #    self.factories_manager.stats_processes[self.get_display_name()] = psutil.Process(
+            #        self.pid
+            #    )
+            return factory_started
+        result = self.terminate()
+        raise FactoryNotStarted(
+            "The {} factory has failed to confirm running status after {} attempts, which "
+            "took {:.2f} seconds({:.2f} seconds each)".format(
+                self,
+                current_attempt - 1,
+                time.time() - start_time,
+                start_timeout or self.start_timeout,
+            ),
+            stdout=result.stdout,
+            stderr=result.stderr,
+            exitcode=result.exitcode,
+        )
+
+    def started(self, max_start_attempts=None, start_timeout=None):
+        """
+        Start the container and return it's instance so it can be used as a context manager
+        """
+        self.start(max_start_attempts=max_start_attempts, start_timeout=start_timeout)
+        return self
 
     def terminate(self):
         atexit.unregister(self.terminate)
+        for callback, args, kwargs in self.before_terminate_callbacks:
+            try:
+                callback(*args, **kwargs)
+            except Exception as exc:  # pylint: disable=broad-except
+                log.info(
+                    "Exception raised when running %s: %s",
+                    self._format_callback(callback, args, kwargs),
+                    exc,
+                    exc_info=True,
+                )
         stdout = stderr = None
-        if self.container is None:
-            return ProcessResult(exitcode=0, stdout=None, stderr=None)
         try:
-            container = self.docker_client.containers.get(self.container.id)
-            logs = container.logs(stdout=True, stderr=True, stream=False)
-            if isinstance(logs, bytes):
-                stdout = logs.decode()
-            else:
-                stdout = logs[0].decode()
-                stderr = logs[1].decode()
-            log.warning("Running Container Logs:\n%s\n%s", stdout, stderr)
-            if container.status == "running":
-                container.remove(force=True)
-                container.wait()
+            if self.container is not None:
+                container = self.docker_client.containers.get(self.container.id)
+                logs = container.logs(stdout=True, stderr=True, stream=False)
+                if isinstance(logs, bytes):
+                    stdout = logs.decode()
+                else:
+                    stdout = logs[0].decode()
+                    stderr = logs[1].decode()
+                log.warning("Running Container Logs:\n%s\n%s", stdout, stderr)
+                if container.status == "running":
+                    container.remove(force=True)
+                    container.wait()
+                self.container = None
         except docker.errors.NotFound:
             pass
+        finally:
+            for callback, args, kwargs in self.after_terminate_callbacks:
+                try:
+                    callback(*args, **kwargs)
+                except Exception as exc:  # pylint: disable=broad-except
+                    log.info(
+                        "Exception raised when running %s: %s",
+                        self._format_callback(callback, args, kwargs),
+                        exc,
+                        exc_info=True,
+                    )
         return ProcessResult(exitcode=0, stdout=stdout, stderr=stderr)
 
     def get_check_ports(self):
@@ -157,6 +289,35 @@ class ContainerFactory(Factory):
         except (APIError, RequestsConnectionError, PyWinTypesError) as exc:
             return "The docker client failed to ping the docker server: {}".format(exc)
 
+    def run_start_checks(self, started_at, timeout_at):
+        check_ports = set(self.get_check_ports())
+        if not check_ports:
+            return True
+        checks_start_time = time.time()
+        while time.time() <= timeout_at:
+            if not self.is_running():
+                log.info("%s is no longer running", self)
+                return False
+            if not check_ports:
+                break
+            check_ports -= ports.get_connectable_ports(check_ports)
+        else:
+            log.error("Failed to check ports after %1.2f seconds", time.time() - checks_start_time)
+            return False
+        return True
+
+    def __enter__(self):
+        if not self.is_running():
+            raise RuntimeError(
+                "Factory not yet started. Perhaps you're after something like:\n\n"
+                "with {}.started() as factory:\n"
+                "    yield factory".format(self.__class__.__name__)
+            )
+        return self
+
+    def __exit__(self, *exc):
+        return self.terminate()
+
 
 @attr.s(kw_only=True)
 class SaltDaemonContainerFactory(SaltDaemonFactory, ContainerFactory):
@@ -181,11 +342,15 @@ class SaltDaemonContainerFactory(SaltDaemonFactory, ContainerFactory):
     def build_cmdline(self, *args):
         return ["docker", "exec", "-i", self.name] + super().build_cmdline(*args)
 
-    def start(self):
+    def start(self, max_start_attempts=None, start_timeout=None):
         # Start the container
-        ContainerFactory.start(self)
+        ContainerFactory.start(
+            self, max_start_attempts=max_start_attempts, start_timeout=start_timeout
+        )
         # Now that the container is up, let's start the daemon
-        return SaltDaemonFactory.start(self)
+        return SaltDaemonFactory.start(
+            self, max_start_attempts=max_start_attempts, start_timeout=start_timeout
+        )
 
     def terminate(self):
         ret = SaltDaemonFactory.terminate(self)

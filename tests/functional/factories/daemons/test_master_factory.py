@@ -12,8 +12,8 @@ def test_hook_basic_config_defaults(testdir):
     )
     p = testdir.makepyfile(
         """
-        def test_basic_config_override(request, salt_factories):
-            master_config = salt_factories.configure_salt_master(request, 'master-1')
+        def test_basic_config_override(salt_factories):
+            master_config = salt_factories.get_salt_master_daemon('master-1').config
             assert 'zzzz' in master_config
         """
     )
@@ -21,18 +21,18 @@ def test_hook_basic_config_defaults(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_basic_config_defaults(request, salt_factories):
-    master_config = salt_factories.configure_salt_master(
-        request, "master-1", config_defaults={"zzzz": True}
-    )
+def test_keyword_basic_config_defaults(salt_factories):
+    master_config = salt_factories.get_salt_master_daemon(
+        "master-1", config_defaults={"zzzz": True}
+    ).config
     assert "zzzz" in master_config
 
 
-def test_interface_config_defaults(request, salt_factories):
+def test_interface_config_defaults(salt_factories):
     interface = "172.17.0.1"
-    master_config = salt_factories.configure_salt_master(
-        request, "master-1", config_defaults={"interface": interface}
-    )
+    master_config = salt_factories.get_salt_master_daemon(
+        "master-1", config_defaults={"interface": interface}
+    ).config
     assert master_config["interface"] != interface
     assert master_config["interface"] == "127.0.0.1"
 
@@ -46,8 +46,8 @@ def test_hook_basic_config_overrides(testdir):
     )
     p = testdir.makepyfile(
         """
-        def test_basic_config_override(request, salt_factories):
-            master_config = salt_factories.configure_salt_master(request, 'master-1')
+        def test_basic_config_override(salt_factories):
+            master_config = salt_factories.get_salt_master_daemon('master-1').config
             assert 'zzzz' in master_config
         """
     )
@@ -55,18 +55,18 @@ def test_hook_basic_config_overrides(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_basic_config_overrides(request, salt_factories):
-    master_config = salt_factories.configure_salt_master(
-        request, "master-1", config_overrides={"zzzz": True}
-    )
+def test_keyword_basic_config_overrides(salt_factories):
+    master_config = salt_factories.get_salt_master_daemon(
+        "master-1", config_overrides={"zzzz": True}
+    ).config
     assert "zzzz" in master_config
 
 
-def test_interface_config_overrides(request, salt_factories):
+def test_interface_config_overrides(salt_factories):
     interface = "172.17.0.1"
-    master_config = salt_factories.configure_salt_master(
-        request, "master-1", config_overrides={"interface": interface}
-    )
+    master_config = salt_factories.get_salt_master_daemon(
+        "master-1", config_overrides={"interface": interface}
+    ).config
     assert master_config["interface"] != "127.0.0.1"
     assert master_config["interface"] == interface
 
@@ -83,8 +83,8 @@ def test_hook_simple_overrides_override_defaults(testdir):
     )
     p = testdir.makepyfile(
         """
-        def test_basic_config_override(request, salt_factories):
-            master_config = salt_factories.configure_salt_master(request, 'master-1')
+        def test_basic_config_override(salt_factories):
+            master_config = salt_factories.get_salt_master_daemon('master-1').config
             assert 'zzzz' in master_config
             assert master_config['zzzz'] is True
         """
@@ -93,10 +93,10 @@ def test_hook_simple_overrides_override_defaults(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_simple_overrides_override_defaults(request, salt_factories):
-    master_config = salt_factories.configure_salt_master(
-        request, "master-1", config_defaults={"zzzz": False}, config_overrides={"zzzz": True}
-    )
+def test_keyword_simple_overrides_override_defaults(salt_factories):
+    master_config = salt_factories.get_salt_master_daemon(
+        "master-1", config_defaults={"zzzz": False}, config_overrides={"zzzz": True}
+    ).config
     assert "zzzz" in master_config
     assert master_config["zzzz"] is True
 
@@ -125,8 +125,8 @@ def test_hook_nested_overrides_override_defaults(testdir):
     )
     p = testdir.makepyfile(
         """
-        def test_basic_config_override(request, salt_factories):
-            master_config = salt_factories.configure_salt_master(request, 'master-1')
+        def test_basic_config_override(salt_factories):
+            master_config = salt_factories.get_salt_master_daemon('master-1').config
             assert 'zzzz' in master_config
             assert master_config['zzzz'] is False
             assert master_config['colors'] == {
@@ -140,9 +140,8 @@ def test_hook_nested_overrides_override_defaults(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_keyword_nested_overrides_override_defaults(request, salt_factories):
-    master_config = salt_factories.configure_salt_master(
-        request,
+def test_keyword_nested_overrides_override_defaults(salt_factories):
+    master_config = salt_factories.get_salt_master_daemon(
         "master-1",
         config_defaults={
             "zzzz": False,
@@ -150,7 +149,7 @@ def test_keyword_nested_overrides_override_defaults(request, salt_factories):
             "colors": {"black": True, "white": False},
         },
         config_overrides={"colors": {"white": True, "grey": False}},
-    )
+    ).config
     assert "zzzz" in master_config
     assert master_config["zzzz"] is False
     assert master_config["colors"] == {"black": True, "white": True, "grey": False}
@@ -182,9 +181,8 @@ def test_nested_overrides_override_defaults(testdir):
     )
     p = testdir.makepyfile(
         """
-        def test_basic_config_override(request, salt_factories):
-            master_config = salt_factories.configure_salt_master(
-                request,
+        def test_basic_config_override(salt_factories):
+            master_config = salt_factories.get_salt_master_daemon(
                 'master-1',
                 config_defaults={
                     'zzzz': False,
@@ -200,7 +198,7 @@ def test_nested_overrides_override_defaults(testdir):
                         'grey': False
                     }
                 }
-            )
+            ).config
             assert 'zzzz' in master_config
             assert master_config['zzzz'] is False
             assert master_config['colors'] == {
@@ -215,12 +213,12 @@ def test_nested_overrides_override_defaults(testdir):
     res.assert_outcomes(passed=1)
 
 
-def test_provide_root_dir(testdir, request, salt_factories):
+def test_provide_root_dir(testdir, salt_factories):
     root_dir = testdir.mkdir("custom-root")
     config_defaults = {"root_dir": root_dir}
-    master_config = salt_factories.configure_salt_master(
-        request, "master-1", config_defaults=config_defaults
-    )
+    master_config = salt_factories.get_salt_master_daemon(
+        "master-1", config_defaults=config_defaults
+    ).config
     assert master_config["root_dir"] == root_dir
 
 
@@ -233,8 +231,8 @@ def configure_kwargs_ids(value):
     [{"config_defaults": {"user": "blah"}}, {"config_overrides": {"user": "blah"}}, {}],
     ids=configure_kwargs_ids,
 )
-def test_provide_user(request, salt_factories, configure_kwargs):
-    master_config = salt_factories.configure_salt_master(request, "master-1", **configure_kwargs)
+def test_provide_user(salt_factories, configure_kwargs):
+    master_config = salt_factories.get_salt_master_daemon("master-1", **configure_kwargs).config
     if not configure_kwargs:
         # salt-factories injects the current username
         assert master_config["user"] is not None

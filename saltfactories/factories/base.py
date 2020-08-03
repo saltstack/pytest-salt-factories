@@ -20,11 +20,13 @@ import psutil
 import pytest
 import salt.utils.path
 
+from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.exceptions import FactoryTimeout
+from saltfactories.utils import ports
 from saltfactories.utils.processes import Popen
 from saltfactories.utils.processes import ProcessResult
 from saltfactories.utils.processes import ShellResult
-from saltfactories.utils.processes.helpers import terminate_process
+from saltfactories.utils.processes import terminate_process
 
 log = logging.getLogger(__name__)
 
@@ -176,6 +178,7 @@ class SubprocessFactoryBase(Factory):
         """
         if self._terminal is None:
             return self._terminal_result
+        atexit.unregister(self.terminate)
         log.info("Stopping %s", self)
         # Collect any child processes information before terminating the process
         try:
@@ -332,24 +335,182 @@ class DaemonFactory(SubprocessFactoryBase):
     """
 
     check_ports = attr.ib(default=None)
+    factories_manager = attr.ib(repr=False, hash=False, default=None)
+    start_timeout = attr.ib(repr=False)
+    max_start_attempts = attr.ib(repr=False, default=3)
+    before_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
+    before_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
+    after_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
+    after_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
         if self.check_ports and not isinstance(self.check_ports, (list, tuple)):
             self.check_ports = [self.check_ports]
 
-    def get_check_ports(self):  # pylint: disable=no-self-use
+    def register_before_start_callback(self, callback, *args, **kwargs):
+        self.before_start_callbacks.append((callback, args, kwargs))
+
+    def register_before_terminate_callback(self, callback, *args, **kwargs):
+        self.before_terminate_callbacks.append((callback, args, kwargs))
+
+    def register_after_start_callback(self, callback, *args, **kwargs):
+        self.after_start_callbacks.append((callback, args, kwargs))
+
+    def register_after_terminate_callback(self, callback, *args, **kwargs):
+        self.after_terminate_callbacks.append((callback, args, kwargs))
+
+    def get_check_ports(self):
         """
         Return a list of ports to check against to ensure the daemon is running
         """
         return self.check_ports or []
 
-    def start(self):
+    def _format_callback(self, callback, args, kwargs):
+        callback_str = "{}(".format(callback.__name__)
+        if args:
+            callback_str += ", ".join(args)
+        if kwargs:
+            callback_str += ", ".join(["{}={!r}".format(k, v) for (k, v) in kwargs.items()])
+        callback_str += ")"
+        return callback_str
+
+    def start(self, max_start_attempts=None, start_timeout=None):
         """
         Start the daemon
         """
-        self._run()
-        return self.is_running()
+        process_running = False
+        for callback, args, kwargs in self.before_start_callbacks:
+            try:
+                callback(*args, **kwargs)
+            except Exception as exc:  # pylint: disable=broad-except
+                log.info(
+                    "Exception raised when running %s: %s",
+                    self._format_callback(callback, args, kwargs),
+                    exc,
+                    exc_info=True,
+                )
+        start_time = time.time()
+        start_attempts = max_start_attempts or self.max_start_attempts
+        current_attempt = 0
+        while current_attempt <= start_attempts:
+            current_attempt += 1
+            if process_running:
+                break
+            log.info("Starting %s. Attempt: %d of %d", self, current_attempt, start_attempts)
+            current_start_time = time.time()
+            start_running_timeout = current_start_time + (start_timeout or self.start_timeout)
+            self._run()
+            if not self.is_running():
+                # A little breathe time to allow the process to start if not started already
+                time.sleep(0.5)
+            while time.time() <= start_running_timeout:
+                if not self.is_running():
+                    break
+                if self.run_start_checks(current_start_time, start_running_timeout) is False:
+                    time.sleep(1)
+                    continue
+                log.info(
+                    "The %s factory is running after %d attempts. Took %1.2f seconds",
+                    self,
+                    current_attempt,
+                    time.time() - start_time,
+                )
+                process_running = True
+                break
+            else:
+                # The factory failed to confirm it's running status
+                self.terminate()
+        if process_running:
+            for callback, args, kwargs in self.after_start_callbacks:
+                try:
+                    callback(*args, **kwargs)
+                except Exception as exc:  # pylint: disable=broad-except
+                    log.info(
+                        "Exception raised when running %s: %s",
+                        self._format_callback(callback, args, kwargs),
+                        exc,
+                        exc_info=True,
+                    )
+            if self.factories_manager and self.factories_manager.stats_processes is not None:
+                self.factories_manager.stats_processes[self.get_display_name()] = psutil.Process(
+                    self.pid
+                )
+            return process_running
+        result = self.terminate()
+        raise FactoryNotStarted(
+            "The {} factory has failed to confirm running status after {} attempts, which "
+            "took {:.2f} seconds({:.2f} seconds each)".format(
+                self,
+                current_attempt - 1,
+                time.time() - start_time,
+                start_timeout or self.start_timeout,
+            ),
+            stdout=result.stdout,
+            stderr=result.stderr,
+            exitcode=result.exitcode,
+        )
+
+    def started(self, max_start_attempts=None, start_timeout=None):
+        """
+        Start the daemon and return it's instance so it can be used as a context manager
+        """
+        self.start(max_start_attempts=max_start_attempts, start_timeout=start_timeout)
+        return self
+
+    def terminate(self):
+        for callback, args, kwargs in self.before_terminate_callbacks:
+            try:
+                callback(*args, **kwargs)
+            except Exception as exc:  # pylint: disable=broad-except
+                log.info(
+                    "Exception raised when running %s: %s",
+                    self._format_callback(callback, args, kwargs),
+                    exc,
+                    exc_info=True,
+                )
+        try:
+            return super().terminate()
+        finally:
+            for callback, args, kwargs in self.after_terminate_callbacks:
+                try:
+                    callback(*args, **kwargs)
+                except Exception as exc:  # pylint: disable=broad-except
+                    log.info(
+                        "Exception raised when running %s: %s",
+                        self._format_callback(callback, args, kwargs),
+                        exc,
+                        exc_info=True,
+                    )
+
+    def run_start_checks(self, started_at, timeout_at):
+        check_ports = set(self.get_check_ports())
+        if not check_ports:
+            return True
+        checks_start_time = time.time()
+        while time.time() <= timeout_at:
+            if not self.is_running():
+                log.info("%s is no longer running", self)
+                return False
+            if not check_ports:
+                break
+            check_ports -= ports.get_connectable_ports(check_ports)
+        else:
+            log.error("Failed to check ports after %1.2f seconds", time.time() - checks_start_time)
+            return False
+        return True
+
+    def __enter__(self):
+        if not self.is_running():
+            raise RuntimeError(
+                "Factory not yet started. Perhaps you're after something like:\n\n"
+                "with {}.started() as factory:\n"
+                "    yield factory".format(self.__class__.__name__)
+            )
+        return self
+
+    def __exit__(self, *exc):
+        return self.terminate()
 
 
 @attr.s(kw_only=True)
@@ -565,6 +726,8 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
     """
 
     display_name = attr.ib(init=False, default=None)
+    event_listener = attr.ib(repr=False, default=None)
+    started_at = attr.ib(repr=False, default=None)
 
     def __attrs_post_init__(self):
         DaemonFactory.__attrs_post_init__(self)
@@ -579,6 +742,28 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         raise NotImplementedError
+
+    def run_start_checks(self, started_at, timeout_at):
+        if not super().run_start_checks(started_at, timeout_at):
+            return False
+        if not self.event_listener:
+            return True
+
+        check_events = set(self.get_check_events())
+        if not check_events:
+            return True
+        checks_start_time = time.time()
+        while time.time() <= timeout_at:
+            if not self.is_running():
+                log.info("%s is no longer running", self)
+                return False
+            if not check_events:
+                break
+            check_events -= self.event_listener.get_events(check_events, after_time=started_at)
+        else:
+            log.error("Failed to check events after %1.2f seconds", time.time() - checks_start_time)
+            return False
+        return True
 
     def build_cmdline(self, *args):
         cmdline = super().build_cmdline(*args)

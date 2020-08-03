@@ -5,7 +5,7 @@ tests.integration.factories.master.conftest
 
 
 def pytest_saltfactories_master_configuration_overrides(
-    request, factories_manager, config_defaults, master_id
+    factories_manager, config_defaults, master_id
 ):
     """
     Hook which should return a dictionary tailored for the provided master_id.

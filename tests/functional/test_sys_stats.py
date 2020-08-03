@@ -56,7 +56,9 @@ def test_proc_sys_stats(testdir):
 
         @pytest.fixture(scope="module")
         def sshd(request, salt_factories):
-            return salt_factories.spawn_sshd_server(request, "sshd")
+            factory = salt_factories.get_sshd_daemon("sshd")
+            with factory.started():
+                yield factory
 
         def test_one(sshd):
             assert sshd.is_running()
@@ -70,7 +72,7 @@ def test_proc_sys_stats(testdir):
             "* Processes Statistics *",
             "* System  -  CPU: * %   MEM: * % (Virtual Memory)*",
             "* Test Suite Run  -  CPU: * %   MEM: * % (RSS) * CHILD PROCS: *",
-            "* SSHD  -  CPU: * %   MEM: * % (RSS)",
+            "* SSHD  -  CPU: * %   MEM: * % (RSS)*",
             "* 1 passed in *",
         ]
     )

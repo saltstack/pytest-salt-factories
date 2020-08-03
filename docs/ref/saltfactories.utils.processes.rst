@@ -9,14 +9,6 @@ saltfactories.utils.processes package
 Submodules
 ----------
 
-saltfactories.utils.processes.helpers module
---------------------------------------------
-
-.. automodule:: saltfactories.utils.processes.helpers
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 saltfactories.utils.processes.stats module
 ------------------------------------------
 

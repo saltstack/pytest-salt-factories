@@ -19,6 +19,11 @@ if SALT_REQUIREMENT == "salt==master":
 USE_SYSTEM_PYTHON = "USE_SYSTEM_PYTHON" in os.environ
 IS_WINDOWS = sys.platform.lower().startswith("win")
 
+if not IS_WINDOWS:
+    COVERAGE_FAIL_UNDER_PERCENT = 80
+else:
+    COVERAGE_FAIL_UNDER_PERCENT = 70
+
 # Be verbose when running under a CI context
 PIP_INSTALL_SILENT = (
     os.environ.get("JENKINS_URL")
@@ -190,7 +195,12 @@ def coverage(session):
         "--include=tests/*",
     )
     try:
-        session.run("coverage", "report", "--fail-under=80", "--show-missing")
+        session.run(
+            "coverage",
+            "report",
+            "--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT),
+            "--show-missing",
+        )
     finally:
         if os.path.exists(".coverage"):
             shutil.copyfile(".coverage", str(COVERAGE_REPORT_DB))
