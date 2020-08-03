@@ -121,11 +121,13 @@ jobs:
           --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
 
     - name: Create CodeCov Flags
+      if: always()
       id: codecov-flags
       run: |
         echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Salt Factories Code Coverage
+      if: always()
       shell: bash
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -157,6 +159,7 @@ jobs:
         fi
 
     - name: Upload Salt Factories Tests Code Coverage
+      if: always()
       shell: bash
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -265,11 +268,13 @@ jobs:
           --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
 
     - name: Create CodeCov Flags
+      if: always()
       id: codecov-flags
       run: |
         echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Salt Factories Code Coverage
+      if: always()
       shell: bash
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -301,6 +306,7 @@ jobs:
         fi
 
     - name: Upload Salt Factories Tests Code Coverage
+      if: always()
       shell: bash
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -405,11 +411,13 @@ jobs:
           --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
 
     - name: Create CodeCov Flags
+      if: always()
       id: codecov-flags
       run: |
         echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Salt Factories Code Coverage
+      if: always()
       shell: bash
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
@@ -441,6 +449,7 @@ jobs:
         fi
 
     - name: Upload Salt Factories Tests Code Coverage
+      if: always()
       shell: bash
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
