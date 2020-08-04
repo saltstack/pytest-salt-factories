@@ -12,17 +12,22 @@ import atexit
 import json
 import logging
 import os
+import pprint
 import sys
 import time
 
 import attr
 import psutil
 import pytest
+import salt.utils.files
 import salt.utils.path
+import salt.utils.verify
+import salt.utils.yaml
 
 from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.exceptions import FactoryTimeout
 from saltfactories.utils import ports
+from saltfactories.utils import running_username
 from saltfactories.utils.processes import Popen
 from saltfactories.utils.processes import ProcessResult
 from saltfactories.utils.processes import ShellResult
@@ -736,6 +741,73 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         self.base_script_args.append("--log-level=quiet")
         if self.display_name is None:
             self.display_name = self.id
+
+    @classmethod
+    def configure(
+        cls,
+        factories_manager,
+        daemon_id,
+        root_dir=None,
+        config_defaults=None,
+        config_overrides=None,
+        **configure_kwargs
+    ):
+        return cls._configure(
+            factories_manager,
+            daemon_id,
+            root_dir=root_dir,
+            config_defaults=config_defaults,
+            config_overrides=config_overrides,
+            **configure_kwargs
+        )
+
+    @classmethod
+    def _configure(
+        cls,
+        factories_manager,
+        daemon_id,
+        root_dir=None,
+        config_defaults=None,
+        config_overrides=None,
+    ):
+        raise NotImplementedError
+
+    @classmethod
+    def verify_config(cls, config):
+        salt.utils.verify.verify_env(
+            cls._get_verify_config_entries(config),
+            running_username(),
+            pki_dir=config.get("pki_dir") or "",
+            root_dir=config["root_dir"],
+        )
+
+    @classmethod
+    def _get_verify_config_entries(cls, config):
+        raise NotImplementedError
+
+    @classmethod
+    def write_config(cls, config):
+        config_file = config.pop("conf_file")
+        log.debug(
+            "Writing to configuration file %s. Configuration:\n%s",
+            config_file,
+            pprint.pformat(config),
+        )
+
+        # Write down the computed configuration into the config file
+        with salt.utils.files.fopen(config_file, "w") as wfh:
+            salt.utils.yaml.safe_dump(config, wfh, default_flow_style=False)
+        loaded_config = cls.load_config(config_file, config)
+        cls.verify_config(loaded_config)
+        return loaded_config
+
+    @classmethod
+    def load_config(cls, config_file, config):
+        """
+        Should return the configuration as the daemon would have loaded after
+        parsing the CLI
+        """
+        raise NotImplementedError
 
     def get_check_events(self):
         """

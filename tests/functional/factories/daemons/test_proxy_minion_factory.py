@@ -3,47 +3,11 @@ import pytest
 from saltfactories.utils import running_username
 
 
-def test_hook_basic_config_defaults(testdir):
-    testdir.makeconftest(
-        """
-        def pytest_saltfactories_proxy_minion_configuration_defaults():
-            return {'zzzz': True}
-        """
-    )
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(salt_factories):
-            proxy_minion_config = salt_factories.get_salt_proxy_minion_daemon('proxy-minion-1').config
-            assert 'zzzz' in proxy_minion_config
-        """
-    )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
-
-
 def test_keyword_basic_config_defaults(salt_factories):
     proxy_minion_config = salt_factories.get_salt_proxy_minion_daemon(
         "proxy-minion-1", config_defaults={"zzzz": True}
     ).config
     assert "zzzz" in proxy_minion_config
-
-
-def test_hook_basic_config_overrides(testdir):
-    testdir.makeconftest(
-        """
-        def pytest_saltfactories_proxy_minion_configuration_overrides():
-            return {'zzzz': True}
-        """
-    )
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(salt_factories):
-            proxy_minion_config = salt_factories.get_salt_proxy_minion_daemon('proxy-minion-1').config
-            assert 'zzzz' in proxy_minion_config
-        """
-    )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
 
 
 def test_keyword_basic_config_overrides(salt_factories):
@@ -53,73 +17,12 @@ def test_keyword_basic_config_overrides(salt_factories):
     assert "zzzz" in proxy_minion_config
 
 
-def test_hook_simple_overrides_override_defaults(testdir):
-    testdir.makeconftest(
-        """
-        def pytest_saltfactories_proxy_minion_configuration_defaults():
-            return {'zzzz': False}
-
-        def pytest_saltfactories_proxy_minion_configuration_overrides():
-            return {'zzzz': True}
-        """
-    )
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(salt_factories):
-            proxy_minion_config = salt_factories.get_salt_proxy_minion_daemon('proxy-minion-1').config
-            assert 'zzzz' in proxy_minion_config
-            assert proxy_minion_config['zzzz'] is True
-        """
-    )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
-
-
 def test_keyword_simple_overrides_override_defaults(salt_factories):
     proxy_minion_config = salt_factories.get_salt_proxy_minion_daemon(
         "proxy-minion-1", config_defaults={"zzzz": False}, config_overrides={"zzzz": True}
     ).config
     assert "zzzz" in proxy_minion_config
     assert proxy_minion_config["zzzz"] is True
-
-
-def test_hook_nested_overrides_override_defaults(testdir):
-    testdir.makeconftest(
-        """
-        def pytest_saltfactories_proxy_minion_configuration_defaults():
-            return {
-                'zzzz': False,
-                'user': 'foobar',
-                'colors': {
-                    'black': True,
-                    'white': False
-                }
-            }
-
-        def pytest_saltfactories_proxy_minion_configuration_overrides():
-            return {
-                'colors': {
-                    'white': True,
-                    'grey': False
-                }
-            }
-        """
-    )
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(salt_factories):
-            proxy_minion_config = salt_factories.get_salt_proxy_minion_daemon('proxy-minion-1').config
-            assert 'zzzz' in proxy_minion_config
-            assert proxy_minion_config['zzzz'] is False
-            assert proxy_minion_config['colors'] == {
-                'black': True,
-                'white': True,
-                'grey': False
-            }
-        """
-    )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
 
 
 def test_keyword_nested_overrides_override_defaults(salt_factories):
@@ -135,64 +38,6 @@ def test_keyword_nested_overrides_override_defaults(salt_factories):
     assert "zzzz" in proxy_minion_config
     assert proxy_minion_config["zzzz"] is False
     assert proxy_minion_config["colors"] == {"black": True, "white": True, "grey": False}
-
-
-def test_nested_overrides_override_defaults(testdir):
-    testdir.makeconftest(
-        """
-        def pytest_saltfactories_proxy_minion_configuration_defaults():
-            return {
-                'zzzz': True,
-                'user': 'foobar',
-                'colors': {
-                    'black': False,
-                    'white': True,
-                    'blue': False
-                }
-            }
-
-        def pytest_saltfactories_proxy_minion_configuration_overrides():
-            return {
-                'colors': {
-                    'white': False,
-                    'grey': True,
-                    'blue': True
-                }
-            }
-        """
-    )
-    p = testdir.makepyfile(
-        """
-        def test_basic_config_override(salt_factories):
-            proxy_minion_config = salt_factories.get_salt_proxy_minion_daemon(
-                'proxy-minion-1',
-                config_defaults={
-                    'zzzz': False,
-                    'user': 'foobar',
-                    'colors': {
-                        'black': True,
-                        'white': False
-                    }
-                },
-                config_overrides={
-                    'colors': {
-                        'white': True,
-                        'grey': False
-                    }
-                }
-            ).config
-            assert 'zzzz' in proxy_minion_config
-            assert proxy_minion_config['zzzz'] is False
-            assert proxy_minion_config['colors'] == {
-                'black': True,
-                'white': True,
-                'grey': False,
-                'blue': True
-            }
-        """
-    )
-    res = testdir.runpytest("-v")
-    res.assert_outcomes(passed=1)
 
 
 def test_provide_root_dir(testdir, salt_factories):

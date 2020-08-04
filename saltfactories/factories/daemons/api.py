@@ -27,6 +27,31 @@ class SaltApiFactory(SaltDaemonFactory):
                 "any api properly configured."
             )
 
+    @classmethod
+    def _configure(
+        cls,
+        factories_manager,
+        daemon_id,
+        root_dir=None,
+        config_defaults=None,
+        config_overrides=None,
+    ):
+        raise RuntimeError(
+            "The salt-api daemon is not configurable. It uses the salt-master config that "
+            "it's attached to."
+        )
+
+    @classmethod
+    def _get_verify_config_entries(cls, config):
+        return []
+
+    @classmethod
+    def load_config(cls, config_file, config):
+        raise RuntimeError(
+            "The salt-api daemon does not have it's own config file. It uses the salt-master config that "
+            "it's attached to."
+        )
+
     def get_check_events(self):
         """
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
