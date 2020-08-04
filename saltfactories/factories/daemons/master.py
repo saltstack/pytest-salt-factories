@@ -8,6 +8,8 @@ saltfactories.factories.daemons.master
 
 Salt Master Factory
 """
+import pathlib
+
 import attr
 import salt.config
 import salt.utils.dictupdate
@@ -24,8 +26,7 @@ class SaltMasterFactory(SaltDaemonFactory):
         root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,
     ):
         if config_defaults is None:
-            config_defaults = salt.config.DEFAULT_MASTER_OPTS.copy()
-            config_defaults.pop("user", None)
+            config_defaults = {}
 
         conf_dir = root_dir / "conf"
         conf_dir.mkdir(parents=True, exist_ok=True)
@@ -93,6 +94,64 @@ class SaltMasterFactory(SaltDaemonFactory):
             salt.utils.dictupdate.update(config_defaults, config_overrides, merge_lists=True)
 
         return config_defaults
+
+    @classmethod
+    def _configure(  # pylint: disable=arguments-differ
+        cls,
+        factories_manager,
+        daemon_id,
+        root_dir=None,
+        config_defaults=None,
+        config_overrides=None,
+        order_masters=False,
+        master_of_masters_id=None,
+    ):
+        if config_overrides is None:
+            _config_overrides = {}
+        else:
+            _config_overrides = config_overrides.copy()
+        if master_of_masters_id is not None:
+            master_of_masters = factories_manager.cache["masters"].get(master_of_masters_id)
+            if master_of_masters is None:
+                raise RuntimeError("No config found for {}".format(master_of_masters_id))
+            master_of_masters_config = master_of_masters.config
+            _config_overrides["syndic_master"] = master_of_masters_config["interface"]
+            _config_overrides["syndic_master_port"] = master_of_masters_config["ret_port"]
+        return cls.default_config(
+            root_dir,
+            daemon_id,
+            config_defaults=config_defaults,
+            config_overrides=_config_overrides,
+            order_masters=order_masters,
+        )
+
+    @classmethod
+    def _get_verify_config_entries(cls, config):
+        # verify env to make sure all required directories are created and have the
+        # right permissions
+        pki_dir = pathlib.Path(config["pki_dir"])
+        verify_env_entries = [
+            str(pki_dir / "minions"),
+            str(pki_dir / "minions_pre"),
+            str(pki_dir / "minions_rejected"),
+            str(pki_dir / "accepted"),
+            str(pki_dir / "rejected"),
+            str(pki_dir / "pending"),
+            str(pathlib.Path(config["log_file"]).parent),
+            str(pathlib.Path(config["cachedir"]) / "proc"),
+            str(pathlib.Path(config["cachedir"]) / "jobs"),
+            # config['extension_modules'],
+            config["sock_dir"],
+        ]
+        verify_env_entries += config["file_roots"]["base"]
+        verify_env_entries += config["file_roots"]["prod"]
+        verify_env_entries += config["pillar_roots"]["base"]
+        verify_env_entries += config["pillar_roots"]["prod"]
+        return verify_env_entries
+
+    @classmethod
+    def load_config(cls, config_file, config):
+        return salt.config.master_config(config_file)
 
     def get_check_events(self):
         """

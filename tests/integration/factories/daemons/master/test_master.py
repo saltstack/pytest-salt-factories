@@ -9,7 +9,9 @@ from saltfactories.exceptions import FactoryNotStarted
 
 @pytest.fixture(scope="module")
 def master(request, salt_factories):
-    factory = salt_factories.get_salt_master_daemon("master-1")
+    factory = salt_factories.get_salt_master_daemon(
+        "master-1", config_overrides={"max_open_files": 4096}
+    )
     with factory.started():
         yield factory
 
