@@ -10,7 +10,6 @@ import os
 import time
 
 import attr
-import pytest
 
 from saltfactories import CODE_ROOT_DIR
 from saltfactories.exceptions import FactoryNotStarted
@@ -26,7 +25,7 @@ try:
     from docker.errors import APIError
 
     HAS_DOCKER = True
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_DOCKER = False
 
     class APIError(Exception):
@@ -37,7 +36,7 @@ try:
     from requests.exceptions import ConnectionError as RequestsConnectionError
 
     HAS_REQUESTS = True
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_REQUESTS = False
 
     class RequestsConnectionError(ConnectionError):
@@ -71,6 +70,7 @@ class ContainerFactory(Factory):
     before_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     after_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     after_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
+    _terminate_result = attr.ib(repr=False, hash=False, init=False, default=None)
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
@@ -78,9 +78,9 @@ class ContainerFactory(Factory):
             self.name = random_string("factories-")
         if self.docker_client is None:
             if not HAS_DOCKER:
-                pytest.fail("The docker python library was not found installed")
+                raise RuntimeError("The docker python library was not found installed")
             if not HAS_REQUESTS:
-                pytest.fail("The requests python library was not found installed")
+                raise RuntimeError("The requests python library was not found installed")
             self.docker_client = docker.from_env()
 
     def _format_callback(self, callback, args, kwargs):
@@ -105,6 +105,14 @@ class ContainerFactory(Factory):
         self.after_terminate_callbacks.append((callback, args, kwargs))
 
     def start(self, max_start_attempts=None, start_timeout=None):
+        if self.is_running():
+            log.warning("%s is already running.", self)
+            return True
+        connectable = ContainerFactory.client_connectable(self.docker_client)
+        if connectable is not True:
+            self.terminate()
+            raise RuntimeError(connectable)
+        self._terminate_result = None
         atexit.register(self.terminate)
         factory_started = False
         for callback, args, kwargs in self.before_start_callbacks:
@@ -117,10 +125,6 @@ class ContainerFactory(Factory):
                     exc,
                     exc_info=True,
                 )
-        connectable = ContainerFactory.client_connectable(self.docker_client)
-        if connectable is not True:
-            self.terminate()
-            pytest.fail(connectable)
 
         start_time = time.time()
         start_attempts = max_start_attempts or self.max_start_attempts
@@ -142,27 +146,18 @@ class ContainerFactory(Factory):
                 **self.container_run_kwargs
             )
             while time.time() <= start_running_timeout:
-                container = self.docker_client.containers.get(self.container.id)
-                if container.status != "running":
+                # Don't know why, but if self.container wasn't previously in a running
+                # state, and now it is, we have to re-set the self.container attribute
+                # so that it gives valid status information
+                self.container = self.docker_client.containers.get(self.container.id)
+                if self.container.status != "running":
                     time.sleep(0.25)
                     continue
 
-                # If we reached this far it means that we get the running status above:
-                if self.container.status != "running":
-                    # If the status here is not running, then we need to update our
-                    # self.container reference
-                    self.container = container
-
-                log.warning("Container is running! %s", self.is_running())
-                if not self.is_running():
-                    self.container.remove(force=True)
-                    self.container.wait()
-                    self.container = None
-                    break
-
-                # Now that the container has started
+                # If we reached this far it means that we got the running status above, and
+                # now that the container has started, run start checks
                 if self.run_start_checks(current_start_time, start_running_timeout) is False:
-                    time.sleep(1)
+                    time.sleep(0.5)
                     continue
                 log.info(
                     "The %s factory is running after %d attempts. Took %1.2f seconds",
@@ -173,8 +168,16 @@ class ContainerFactory(Factory):
                 factory_started = True
                 break
             else:
-                # The factory failed to confirm it's running status
-                self.terminate()
+                # We reached start_running_timeout, re-try
+                try:
+                    self.container.remove(force=True)
+                    self.container.wait()
+                except docker.errors.NotFound:
+                    pass
+                self.container = None
+        else:
+            # The factory failed to confirm it's running status
+            self.terminate()
         if factory_started:
             for callback, args, kwargs in self.after_start_callbacks:
                 try:
@@ -214,6 +217,9 @@ class ContainerFactory(Factory):
         return self
 
     def terminate(self):
+        if self._terminate_result is not None:
+            # The factory is already terminated
+            return self._terminate_result
         atexit.unregister(self.terminate)
         for callback, args, kwargs in self.before_terminate_callbacks:
             try:
@@ -253,7 +259,8 @@ class ContainerFactory(Factory):
                         exc,
                         exc_info=True,
                     )
-        return ProcessResult(exitcode=0, stdout=stdout, stderr=stderr)
+        self._terminate_result = ProcessResult(exitcode=0, stdout=stdout, stderr=stderr)
+        return self._terminate_result
 
     def get_check_ports(self):
         """
@@ -262,6 +269,8 @@ class ContainerFactory(Factory):
         return self.check_ports or []
 
     def is_running(self):
+        if self.container is None:
+            return False
         return self.container.status == "running"
 
     def run(self, *cmd, **kwargs):

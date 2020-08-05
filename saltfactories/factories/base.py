@@ -157,6 +157,8 @@ class SubprocessFactoryBase(Factory):
         terminal
         """
         self._terminal = Popen(cmdline, **kwargs)
+        # Reset the previous _terminal_result if set
+        self._terminal_result = None
         # A little sleep to allow the subprocess to start
         time.sleep(0.125)
         try:
@@ -384,6 +386,9 @@ class DaemonFactory(SubprocessFactoryBase):
         """
         Start the daemon
         """
+        if self.is_running():
+            log.warning("%s is already running.", self)
+            return True
         process_running = False
         for callback, args, kwargs in self.before_start_callbacks:
             try:
@@ -464,6 +469,9 @@ class DaemonFactory(SubprocessFactoryBase):
         return self
 
     def terminate(self):
+        if self._terminal_result is not None:
+            # This factory has already been terminated
+            return self._terminal_result
         for callback, args, kwargs in self.before_terminate_callbacks:
             try:
                 callback(*args, **kwargs)
