@@ -161,16 +161,6 @@ class SaltMasterFactory(SaltDaemonFactory):
 
     # The following methods just route the calls to the right method in the factories manager
     # while making sure the CLI tools are referring to this daemon
-    def configure_salt_master(self, request, master_id, **kwargs):
-        """
-        This method will configure a master under a master-of-masters.
-
-        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.configure_salt_master`
-        """
-        return self.factories_manager.configure_salt_master(
-            request, master_id, master_of_masters_id=self.id, **kwargs
-        )
-
     def get_salt_master_daemon(self, master_id, **kwargs):
         """
         This method will configure a master under a master-of-masters.
