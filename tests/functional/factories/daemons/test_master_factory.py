@@ -86,3 +86,25 @@ def test_provide_user(salt_factories, configure_kwargs):
         # salt-factories does not override the passed user value
         assert master_config["user"] != running_username()
         assert master_config["user"] == "blah"
+
+
+@pytest.mark.parametrize(
+    "configure_kwargs",
+    [
+        {"config_defaults": None},
+        {"config_overrides": None},
+        {},
+        {"config_defaults": None, "config_overrides": {"user": "blah"}},
+        {"config_defaults": {"user": "blah"}, "config_overrides": None},
+        {"config_defaults": {"user": "blah"}, "config_overrides": {"user": "blah"}},
+    ],
+    ids=configure_kwargs_ids,
+)
+def test_pytest_config(salt_factories, configure_kwargs):
+    master_id = "master-1"
+    config = salt_factories.get_salt_master_daemon(master_id, **configure_kwargs).config
+    config_key = "pytest-master"
+    assert config_key in config
+    assert "log" in config[config_key]
+    for key in ("host", "level", "port", "prefix"):
+        assert key in config[config_key]["log"]

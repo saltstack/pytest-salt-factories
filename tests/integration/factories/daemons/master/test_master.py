@@ -49,6 +49,19 @@ def test_master(master):
     assert master.is_running()
 
 
+def test_multiple_start_stops(salt_factories):
+    factory = salt_factories.get_salt_master_daemon("master-2")
+    assert factory.is_running() is False
+    pid = None
+    with factory.started():
+        assert factory.is_running() is True
+        pid = factory.pid
+    assert factory.is_running() is False
+    with factory.started():
+        assert factory.is_running() is True
+        assert factory.pid != pid
+
+
 def test_salt_run(master, salt_run):
     max_open_files_config_value = master.config["max_open_files"]
     ret = salt_run.run("config.get", "max_open_files")

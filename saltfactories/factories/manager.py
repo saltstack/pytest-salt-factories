@@ -11,6 +11,7 @@ Salt Factories Manager
 import logging
 import pathlib
 import sys
+import weakref
 
 import attr
 
@@ -109,13 +110,13 @@ class FactoriesManager:
         self.scripts_dir = self.root_dir / "scripts"
         self.scripts_dir.mkdir(exist_ok=True)
         self.cache = {
-            "api": {},
-            "cloud": {},
-            "masters": {},
-            "minions": {},
-            "syndics": {},
-            "proxy-minions": {},
-            "factories": {},
+            "api": weakref.WeakValueDictionary(),
+            "cloud": weakref.WeakValueDictionary(),
+            "masters": weakref.WeakValueDictionary(),
+            "minions": weakref.WeakValueDictionary(),
+            "syndics": weakref.WeakValueDictionary(),
+            "proxy-minions": weakref.WeakValueDictionary(),
+            "factories": weakref.WeakValueDictionary(),
         }
         self.event_listener = event_listener.EventListener(
             auth_events_callback=self._handle_auth_event
@@ -861,7 +862,6 @@ class FactoriesManager:
             **factory_class_kwargs
         )
         self.cache["factories"][daemon_id] = factory
-        factory.register_after_terminate_callback(self.cache["factories"].pop, daemon_id, None)
         return factory
 
     def get_container(
@@ -913,7 +913,6 @@ class FactoriesManager:
             **factory_class_kwargs
         )
         self.cache["factories"][container_name] = factory
-        factory.register_after_terminate_callback(self.cache["factories"].pop, container_name, None)
         return factory
 
     def _get_factory_class_instance(
@@ -950,7 +949,6 @@ class FactoriesManager:
             **factory_class_kwargs
         )
         self.cache[cache_key][daemon_id] = factory
-        factory.register_after_terminate_callback(self.cache[cache_key].pop, daemon_id, None)
         return factory
 
     def _get_root_dir_for_daemon(self, daemon_id, config_defaults=None):
