@@ -53,11 +53,13 @@ def test_spawn_container(docker_container, echo_server_port):
             except socket.timeout:
                 break
         client.send(message)
+        response = None
         while True:
             try:
                 response = client.recv(4096)
             except socket.timeout:
                 break
+        assert response is not None
         assert response == message
     finally:
         client.close()
