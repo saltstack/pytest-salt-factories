@@ -1,5 +1,7 @@
 import pytest
 
+from saltfactories.utils import random_string
+
 
 @pytest.fixture(scope="module")
 def master(salt_factories):
@@ -10,7 +12,7 @@ def master(salt_factories):
 
 @pytest.fixture(scope="module")
 def minion(master):
-    factory = master.get_salt_minion_daemon("minion-1")
+    factory = master.get_salt_minion_daemon(random_string("minion-"))
     with factory.started():
         yield factory
 

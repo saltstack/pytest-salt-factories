@@ -2,6 +2,8 @@ import textwrap
 
 import pytest
 
+from saltfactories.utils import random_string
+
 
 @pytest.fixture(scope="module")
 @pytest.mark.skip_if_binaries_missing("sshd", "ssh-keygen")
@@ -16,7 +18,7 @@ def sshd(salt_factories):
 
 @pytest.fixture(scope="module")
 def master(request, salt_factories):
-    return salt_factories.get_salt_master_daemon("master-1")
+    return salt_factories.get_salt_master_daemon(random_string("master-"))
 
 
 @pytest.fixture(scope="module")

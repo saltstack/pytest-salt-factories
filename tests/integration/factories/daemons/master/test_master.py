@@ -5,12 +5,13 @@ import pytest
 import salt.defaults.exitcodes
 
 from saltfactories.exceptions import FactoryNotStarted
+from saltfactories.utils import random_string
 
 
 @pytest.fixture(scope="module")
 def master(request, salt_factories):
     factory = salt_factories.get_salt_master_daemon(
-        "master-1", config_overrides={"max_open_files": 4096}
+        random_string("master-"), config_overrides={"max_open_files": 4096}
     )
     with factory.started():
         yield factory
@@ -18,14 +19,14 @@ def master(request, salt_factories):
 
 @pytest.fixture(scope="module")
 def minion(request, master):
-    factory = master.get_salt_minion_daemon("minion-1")
+    factory = master.get_salt_minion_daemon(random_string("minion-1-"))
     with factory.started():
         yield factory
 
 
 @pytest.fixture
 def minion_3(request, master):
-    factory = master.get_salt_minion_daemon("minion-3")
+    factory = master.get_salt_minion_daemon(random_string("minion-3-"))
     with factory.started():
         yield factory
 
@@ -50,7 +51,7 @@ def test_master(master):
 
 
 def test_multiple_start_stops(salt_factories):
-    factory = salt_factories.get_salt_master_daemon("master-2")
+    factory = salt_factories.get_salt_master_daemon(random_string("master-"))
     assert factory.is_running() is False
     pid = None
     with factory.started():
@@ -81,9 +82,9 @@ def test_salt_cp(master, minion, salt_cp, tempfiles):
         sls = tempfiles.makeslsfile(contents)
         assert master.is_running()
         assert minion.is_running()
-        ret = salt_cp.run("minion-1", sls, dest)
+        ret = salt_cp.run(minion.id, sls, dest)
         assert ret.exitcode == 0, ret
-        assert ret.json == {"minion-1": {dest: True}}, ret
+        assert ret.json == {minion.id: {dest: True}}, ret
         assert os.path.exists(dest)
         with open(dest) as rfh:
             assert rfh.read() == contents
@@ -99,7 +100,7 @@ def test_salt_cp(master, minion, salt_cp, tempfiles):
         sls = tempfiles.makeslsfile(contents)
         assert master.is_running()
         assert minion.is_running()
-        ret = salt_cp.run(sls, dest, minion_tgt="minion-1")
+        ret = salt_cp.run(sls, dest, minion_tgt=minion.id)
         assert ret.exitcode == 0, ret
         assert ret.json == {dest: True}, ret
         assert os.path.exists(dest)
@@ -135,7 +136,7 @@ def test_salt_key(master, minion, minion_3, salt_key):
     ret = salt_key.run("--list-all")
     assert ret.exitcode == 0, ret
     assert ret.json == {
-        "minions": ["minion-1", "minion-3"],
+        "minions": [minion.id, minion_3.id],
         "minions_pre": [],
         "minions_denied": [],
         "minions_rejected": [],

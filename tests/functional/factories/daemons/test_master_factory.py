@@ -1,11 +1,12 @@
 import pytest
 
+from saltfactories.utils import random_string
 from saltfactories.utils import running_username
 
 
 def test_keyword_basic_config_defaults(salt_factories):
     master_config = salt_factories.get_salt_master_daemon(
-        "master-1", config_defaults={"zzzz": True}
+        random_string("master-"), config_defaults={"zzzz": True}
     ).config
     assert "zzzz" in master_config
 
@@ -13,7 +14,7 @@ def test_keyword_basic_config_defaults(salt_factories):
 def test_interface_config_defaults(salt_factories):
     interface = "172.17.0.1"
     master_config = salt_factories.get_salt_master_daemon(
-        "master-1", config_defaults={"interface": interface}
+        random_string("master-"), config_defaults={"interface": interface}
     ).config
     assert master_config["interface"] != interface
     assert master_config["interface"] == "127.0.0.1"
@@ -21,7 +22,7 @@ def test_interface_config_defaults(salt_factories):
 
 def test_keyword_basic_config_overrides(salt_factories):
     master_config = salt_factories.get_salt_master_daemon(
-        "master-1", config_overrides={"zzzz": True}
+        random_string("master-"), config_overrides={"zzzz": True}
     ).config
     assert "zzzz" in master_config
 
@@ -29,7 +30,7 @@ def test_keyword_basic_config_overrides(salt_factories):
 def test_interface_config_overrides(salt_factories):
     interface = "172.17.0.1"
     master_config = salt_factories.get_salt_master_daemon(
-        "master-1", config_overrides={"interface": interface}
+        random_string("master-"), config_overrides={"interface": interface}
     ).config
     assert master_config["interface"] != "127.0.0.1"
     assert master_config["interface"] == interface
@@ -37,7 +38,7 @@ def test_interface_config_overrides(salt_factories):
 
 def test_keyword_simple_overrides_override_defaults(salt_factories):
     master_config = salt_factories.get_salt_master_daemon(
-        "master-1", config_defaults={"zzzz": False}, config_overrides={"zzzz": True}
+        random_string("master-"), config_defaults={"zzzz": False}, config_overrides={"zzzz": True}
     ).config
     assert "zzzz" in master_config
     assert master_config["zzzz"] is True
@@ -45,7 +46,7 @@ def test_keyword_simple_overrides_override_defaults(salt_factories):
 
 def test_keyword_nested_overrides_override_defaults(salt_factories):
     master_config = salt_factories.get_salt_master_daemon(
-        "master-1",
+        random_string("master-"),
         config_defaults={
             "zzzz": False,
             "user": "foobar",
@@ -62,7 +63,7 @@ def test_provide_root_dir(testdir, salt_factories):
     root_dir = testdir.mkdir("custom-root")
     config_defaults = {"root_dir": root_dir}
     master_config = salt_factories.get_salt_master_daemon(
-        "master-1", config_defaults=config_defaults
+        random_string("master-"), config_defaults=config_defaults
     ).config
     assert master_config["root_dir"] == root_dir
 
@@ -77,7 +78,9 @@ def configure_kwargs_ids(value):
     ids=configure_kwargs_ids,
 )
 def test_provide_user(salt_factories, configure_kwargs):
-    master_config = salt_factories.get_salt_master_daemon("master-1", **configure_kwargs).config
+    master_config = salt_factories.get_salt_master_daemon(
+        random_string("master-"), **configure_kwargs
+    ).config
     if not configure_kwargs:
         # salt-factories injects the current username
         assert master_config["user"] is not None
@@ -101,7 +104,7 @@ def test_provide_user(salt_factories, configure_kwargs):
     ids=configure_kwargs_ids,
 )
 def test_pytest_config(salt_factories, configure_kwargs):
-    master_id = "master-1"
+    master_id = random_string("master-")
     config = salt_factories.get_salt_master_daemon(master_id, **configure_kwargs).config
     config_key = "pytest-master"
     assert config_key in config

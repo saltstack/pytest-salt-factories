@@ -1,10 +1,11 @@
 import pytest
 
 from saltfactories.factories.daemons.api import SaltApiFactory
+from saltfactories.utils import random_string
 
 
 def test_missing_api_config(salt_factories):
-    master = salt_factories.get_salt_master_daemon("master-1")
+    master = salt_factories.get_salt_master_daemon(random_string("master-"))
     with pytest.raises(RuntimeError) as exc:
         master.get_salt_api_daemon()
 
