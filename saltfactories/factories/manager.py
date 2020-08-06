@@ -226,6 +226,7 @@ class FactoriesManager:
                 The master process class instance
         """
         if master_id in self.cache["masters"]:
+            log.info("Returning cached salt master factory with the ID: %s", master_id)
             return self.cache["masters"][master_id]
 
         root_dir = self._get_root_dir_for_daemon(master_id, config_defaults=config_defaults)
@@ -283,6 +284,7 @@ class FactoriesManager:
                 The minion process class instance
         """
         if minion_id in self.cache["minions"]:
+            log.info("Returning cached salt minion factory with the ID: %s", minion_id)
             return self.cache["minions"][minion_id]
 
         root_dir = self._get_root_dir_for_daemon(minion_id, config_defaults=config_defaults)
@@ -349,6 +351,7 @@ class FactoriesManager:
                 The syndic process class instance
         """
         if syndic_id in self.cache["syndics"]:
+            log.info("Returning cached syndic factory with the ID: %s", syndic_id)
             return self.cache["syndics"][syndic_id]
         elif syndic_id in self.cache["masters"]:
             raise RuntimeError(
@@ -485,6 +488,7 @@ class FactoriesManager:
                 The proxy minion process class instance
         """
         if proxy_minion_id in self.cache["proxy-minions"]:
+            log.info("Returning cached salt proxy minion factory with the ID: %s", proxy_minion_id)
             return self.cache["proxy-minions"][proxy_minion_id]
 
         root_dir = self._get_root_dir_for_daemon(proxy_minion_id, config_defaults=config_defaults)
@@ -533,9 +537,8 @@ class FactoriesManager:
                 The salt-api process class instance
         """
         if master_id in self.cache["api"]:
-            raise RuntimeError(
-                "A salt-api for the master by the ID of '{}' was already spawned".format(master_id)
-            )
+            log.info("Returning cached salt api factory with the ID: %s", master_id)
+            return self.cache["api"][master_id]
 
         master = self.cache["masters"].get(master_id)
         if master is None:
@@ -588,6 +591,7 @@ class FactoriesManager:
         """
 
         if master_id in self.cache["cloud"]:
+            log.info("Returning cached salt cloud factory with the ID: %s", master_id)
             return self.cache["cloud"][master_id]
 
         master = self.cache["masters"].get(master_id)
