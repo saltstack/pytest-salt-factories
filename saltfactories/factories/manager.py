@@ -21,7 +21,6 @@ from saltfactories.factories import daemons
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import event_listener
 from saltfactories.utils import running_username
-from saltfactories.utils.ports import get_unused_localhost_port
 
 log = logging.getLogger(__name__)
 
@@ -73,9 +72,9 @@ class FactoriesManager:
 
     pytestconfig = attr.ib(repr=False)
     root_dir = attr.ib()
-    log_server_port = attr.ib(default=None)
-    log_server_level = attr.ib(default=None)
-    log_server_host = attr.ib(default=None)
+    log_server_port = attr.ib()
+    log_server_level = attr.ib()
+    log_server_host = attr.ib()
     code_dir = attr.ib(default=None)
     inject_coverage = attr.ib(default=False)
     inject_sitecustomize = attr.ib(default=False)
@@ -93,12 +92,6 @@ class FactoriesManager:
     def __attrs_post_init__(self):
         self.root_dir = pathlib.Path(self.root_dir.strpath)
         self.root_dir.mkdir(exist_ok=True)
-        if self.log_server_port is None:
-            self.log_server_port = get_unused_localhost_port()
-        if self.log_server_level is None:
-            self.log_server_level = "error"
-        if self.log_server_host is None:
-            self.log_server_host = "localhost"
         if self.start_timeout is None:
             if not sys.platform.startswith(("win", "darwin")):
                 self.start_timeout = 30

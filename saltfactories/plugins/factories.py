@@ -111,7 +111,7 @@ def salt_factories(
         pytestconfig=pytestconfig,
         root_dir=tempdir,
         stats_processes=request.session.stats_processes,
-        **salt_factories_config
+        **factories_config
     )
     with manager:
         yield manager
