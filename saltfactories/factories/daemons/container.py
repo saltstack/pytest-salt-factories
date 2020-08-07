@@ -104,7 +104,7 @@ class ContainerFactory(Factory):
     def register_after_terminate_callback(self, callback, *args, **kwargs):
         self.after_terminate_callbacks.append((callback, args, kwargs))
 
-    def start(self, max_start_attempts=None, start_timeout=None):
+    def start(self, *command, max_start_attempts=None, start_timeout=None):
         if self.is_running():
             log.warning("%s is already running.", self)
             return True
@@ -143,6 +143,7 @@ class ContainerFactory(Factory):
                 name=self.name,
                 detach=True,
                 stdin_open=True,
+                command=list(command) or None,
                 **self.container_run_kwargs
             )
             while time.time() <= start_running_timeout:
@@ -209,11 +210,11 @@ class ContainerFactory(Factory):
             exitcode=result.exitcode,
         )
 
-    def started(self, max_start_attempts=None, start_timeout=None):
+    def started(self, *command, max_start_attempts=None, start_timeout=None):
         """
         Start the container and return it's instance so it can be used as a context manager
         """
-        self.start(max_start_attempts=max_start_attempts, start_timeout=start_timeout)
+        self.start(*command, max_start_attempts=max_start_attempts, start_timeout=start_timeout)
         return self
 
     def terminate(self):
@@ -351,14 +352,17 @@ class SaltDaemonContainerFactory(SaltDaemonFactory, ContainerFactory):
     def build_cmdline(self, *args):
         return ["docker", "exec", "-i", self.name] + super().build_cmdline(*args)
 
-    def start(self, max_start_attempts=None, start_timeout=None):
+    def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
         # Start the container
         ContainerFactory.start(
             self, max_start_attempts=max_start_attempts, start_timeout=start_timeout
         )
         # Now that the container is up, let's start the daemon
         return SaltDaemonFactory.start(
-            self, max_start_attempts=max_start_attempts, start_timeout=start_timeout
+            self,
+            *extra_cli_arguments,
+            max_start_attempts=max_start_attempts,
+            start_timeout=start_timeout
         )
 
     def terminate(self):
