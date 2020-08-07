@@ -15,7 +15,7 @@ import pytest
 
 import saltfactories
 from saltfactories import hookspec
-from saltfactories.factories import manager
+from saltfactories.factories.manager import FactoriesManager
 from saltfactories.utils import ports
 from saltfactories.utils.log_server import log_server_listener
 
@@ -74,9 +74,7 @@ def log_server(log_server_host, log_server_port):
 
 
 @pytest.fixture(scope="session")
-def salt_factories_config(
-    pytestconfig, tempdir, log_server_host, log_server_port, log_server_level
-):
+def _salt_factories_config(log_server_host, log_server_port, log_server_level):
     """
     Return a dictionary with the keyword arguments for FactoriesManager
     """
@@ -91,23 +89,31 @@ def salt_factories_config(
 
 
 @pytest.fixture(scope="session")
+def salt_factories_config():
+    return {}
+
+
+@pytest.fixture(scope="session")
 def salt_factories(
-    request, pytestconfig, tempdir, log_server, salt_factories_config,
+    request, pytestconfig, tempdir, log_server, salt_factories_config, _salt_factories_config
 ):
     if not isinstance(salt_factories_config, dict):
         raise RuntimeError("The 'salt_factories_config' fixture MUST return a dictionary")
+    log.debug("Salt Factories Manager Default Config:\n%s", _salt_factories_config)
+    log.debug("Salt Factories Manager User Config:\n%s", salt_factories_config)
+    factories_config = _salt_factories_config.copy()
+    factories_config.update(salt_factories_config)
     log.debug(
         "Instantiating the Salt Factories Manager with the following keyword arguments:\n%s",
-        pprint.pformat(salt_factories_config),
+        pprint.pformat(factories_config),
     )
-    _manager = manager.FactoriesManager(
+    with FactoriesManager(
         pytestconfig=pytestconfig,
         root_dir=tempdir,
         stats_processes=request.session.stats_processes,
         **salt_factories_config
-    )
-    yield _manager
-    _manager.event_listener.stop()
+    ) as manager:
+        yield manager
 
 
 def pytest_saltfactories_handle_key_auth_event(

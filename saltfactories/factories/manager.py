@@ -123,6 +123,13 @@ class FactoriesManager:
         )
         self.event_listener.start()
 
+    def __enter__(self):
+        self.event_listener.start()
+        yield self
+
+    def __exit__(self, *exc):
+        self.event_listener.stop()
+
     @staticmethod
     def get_salt_log_handlers_path():
         """
