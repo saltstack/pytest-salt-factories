@@ -382,7 +382,7 @@ class DaemonFactory(SubprocessFactoryBase):
         callback_str += ")"
         return callback_str
 
-    def start(self, max_start_attempts=None, start_timeout=None):
+    def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
         """
         Start the daemon
         """
@@ -410,7 +410,7 @@ class DaemonFactory(SubprocessFactoryBase):
             log.info("Starting %s. Attempt: %d of %d", self, current_attempt, start_attempts)
             current_start_time = time.time()
             start_running_timeout = current_start_time + (start_timeout or self.start_timeout)
-            self._run()
+            self._run(*extra_cli_arguments)
             if not self.is_running():
                 # A little breathe time to allow the process to start if not started already
                 time.sleep(0.5)
@@ -461,11 +461,13 @@ class DaemonFactory(SubprocessFactoryBase):
             exitcode=result.exitcode,
         )
 
-    def started(self, max_start_attempts=None, start_timeout=None):
+    def started(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
         """
         Start the daemon and return it's instance so it can be used as a context manager
         """
-        self.start(max_start_attempts=max_start_attempts, start_timeout=start_timeout)
+        self.start(
+            *extra_cli_arguments, max_start_attempts=max_start_attempts, start_timeout=start_timeout
+        )
         return self
 
     def terminate(self):
@@ -745,8 +747,6 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
     def __attrs_post_init__(self):
         DaemonFactory.__attrs_post_init__(self)
         SaltFactory.__attrs_post_init__(self)
-        self.base_script_args.append("--config-dir={}".format(self.config_dir))
-        self.base_script_args.append("--log-level=quiet")
         if self.display_name is None:
             self.display_name = self.id
 
@@ -846,7 +846,25 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         return True
 
     def build_cmdline(self, *args):
-        cmdline = super().build_cmdline(*args)
+        _args = []
+        # Handle the config directory flag
+        for arg in args:
+            if arg.startswith("--config-dir="):
+                break
+            if arg in ("-c", "--config-dir"):
+                break
+        else:
+            _args.append("--config-dir={}".format(self.config_dir))
+        # Handle the logging flag
+        for arg in args:
+            if arg in ("-l", "--log-level"):
+                break
+            if arg.startswith("--log-level="):
+                break
+        else:
+            # Default to being quiet on console output
+            _args.append("--log-level=quiet")
+        cmdline = super().build_cmdline(*(_args + list(args)))
         if self.python_executable:
             if cmdline[0] != self.python_executable:
                 cmdline.insert(0, self.python_executable)

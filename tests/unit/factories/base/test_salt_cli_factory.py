@@ -7,7 +7,6 @@ from unittest import mock
 import pytest
 
 from saltfactories.factories.base import SaltCliFactory
-from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.utils.processes import ProcessResult
 
 
@@ -364,8 +363,6 @@ def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name
         + ["test.ping",]
     )
     proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    # We set the _terminal_timeout attribute just to test. This attribute would be set when calling
-    # SaltScriptBase.run() but we don't really want to call it
     cmdline = proc.build_cmdline(*args, **kwargs)
     assert cmdline == expected
 
@@ -473,15 +470,6 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
 def test_salt_cli_factory_id_attr_comes_first_in_repr(config_file):
     proc = SaltCliFactory(
         cli_script_name="foo-bar", config={"id": "TheID", "conf_file": config_file}
-    )
-    regex = r"{}(id='TheID'".format(proc.__class__.__name__)
-    assert repr(proc).startswith(regex)
-    assert str(proc).startswith(regex)
-
-
-def test_salt_daemon_factory_id_attr_comes_first_in_repr(config_file):
-    proc = SaltDaemonFactory(
-        start_timeout=1, cli_script_name="foo-bar", config={"id": "TheID", "conf_file": config_file}
     )
     regex = r"{}(id='TheID'".format(proc.__class__.__name__)
     assert repr(proc).startswith(regex)

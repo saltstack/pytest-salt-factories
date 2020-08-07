@@ -121,9 +121,18 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
         script_args = super().get_base_script_args()
         if sys.platform.startswith("win") is False:
             script_args.append("--disable-keepalive")
-        if self.include_proxyid_cli_flag is True:
-            script_args.extend(["--proxyid", self.id])
         return script_args
+
+    def build_cmdline(self, *args):
+        if self.include_proxyid_cli_flag is False:
+            return super().build_cmdline(*args)
+        _args = []
+        for arg in args:
+            if arg.startswith("--proxyid"):
+                break
+        else:
+            _args.append("--proxyid={}".format(self.id))
+        return super().build_cmdline(*(_args + list(args)))
 
     def get_check_events(self):
         """
