@@ -107,12 +107,13 @@ def salt_factories(
         "Instantiating the Salt Factories Manager with the following keyword arguments:\n%s",
         pprint.pformat(factories_config),
     )
-    with FactoriesManager(
+    manager = FactoriesManager(
         pytestconfig=pytestconfig,
         root_dir=tempdir,
         stats_processes=request.session.stats_processes,
         **salt_factories_config
-    ) as manager:
+    )
+    with manager:
         yield manager
 
 
