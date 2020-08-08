@@ -55,3 +55,14 @@ def pytest_runtest_logfinish(nodeid):
     :param location: a triple of ``(filename, linenum, testname)``
     """
     log.debug("<<<<<<< END %s <<<<<<<", nodeid)
+
+
+def pytest_configure(config):
+    # Register our internal plugins
+    for mod in (
+        "saltfactories.plugins.factories",
+        "saltfactories.plugins.markers",
+        "saltfactories.plugins.sysinfo",
+        "saltfactories.plugins.sysstats",
+    ):
+        config.pluginmanager.import_plugin(mod)

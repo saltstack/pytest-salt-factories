@@ -72,13 +72,5 @@ setup(
         "Operating System :: OS Independent",
         "License :: OSI Approved :: Apache Software License",
     ],
-    entry_points={
-        "pytest11": [
-            "salt-factories = saltfactories.plugin",
-            "salt-factories-factories = saltfactories.plugins.factories",
-            "salt-factories-markers = saltfactories.plugins.markers",
-            "salt-factories-sysinfo = saltfactories.plugins.sysinfo",
-            "salt-factories-sysstats = saltfactories.plugins.sysstats",
-        ]
-    },
+    entry_points={"pytest11": ["salt-factories = saltfactories.plugin",]},
 )
