@@ -563,8 +563,8 @@ class SaltFactory:
         Returns a human readable name for the factory
         """
         if self.display_name is None:
-            self.display_name = self.cli_script_name
-        return self.display_name
+            self.display_name = "{}(id={})".format(self.__class__.__name__, self.id)
+        return super().get_display_name()
 
 
 @attr.s(kw_only=True)
