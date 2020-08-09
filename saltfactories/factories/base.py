@@ -418,6 +418,7 @@ class DaemonFactory(SubprocessFactoryBase):
                 time.sleep(0.5)
             while time.time() <= start_running_timeout:
                 if not self.is_running():
+                    log.warning("%s is no longer running", self)
                     break
                 if self.run_start_checks(current_start_time, start_running_timeout) is False:
                     time.sleep(1)
@@ -499,11 +500,12 @@ class DaemonFactory(SubprocessFactoryBase):
     def run_start_checks(self, started_at, timeout_at):
         check_ports = set(self.get_check_ports())
         if not check_ports:
+            log.debug("No ports to check connection to")
             return True
         checks_start_time = time.time()
         while time.time() <= timeout_at:
             if not self.is_running():
-                log.info("%s is no longer running", self)
+                log.warning("%s is no longer running", self)
                 return False
             if not check_ports:
                 break
@@ -511,6 +513,7 @@ class DaemonFactory(SubprocessFactoryBase):
         else:
             log.error("Failed to check ports after %1.2f seconds", time.time() - checks_start_time)
             return False
+        log.debug("Successfuly connected to ports: %s", set(self.get_check_ports()))
         return True
 
     def _add_factory_to_stats_processes(self):
@@ -839,6 +842,7 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
 
         check_events = set(self.get_check_events())
         if not check_events:
+            log.debug("No events to listen to.")
             return True
         checks_start_time = time.time()
         while time.time() <= timeout_at:
@@ -851,6 +855,7 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         else:
             log.error("Failed to check events after %1.2f seconds", time.time() - checks_start_time)
             return False
+        log.debug("Successfuly checked for all events: %s", set(self.get_check_events()))
         return True
 
     def build_cmdline(self, *args):
