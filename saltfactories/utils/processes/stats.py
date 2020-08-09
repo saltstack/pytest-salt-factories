@@ -94,6 +94,7 @@ class SaltTerminalReporter(TerminalReporter):
                                         continue
                                     pids.append(child.pid)
                                     if not psutil.pid_exists(child.pid):
+                                        remove_from_stats.add(name)
                                         continue
                                     try:
                                         c_mem += child.memory_percent(self._sys_stats_mem_type)
