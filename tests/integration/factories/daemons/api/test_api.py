@@ -27,14 +27,21 @@ def test_api(salt_api):
     assert salt_api.is_running()
 
 
-def test_multiple_start_stops(master):
-    factory = master.get_salt_api_daemon()
-    assert factory.is_running() is False
-    pid = None
-    with factory.started():
-        assert factory.is_running() is True
-        pid = factory.pid
-    assert factory.is_running() is False
-    with factory.started():
-        assert factory.is_running() is True
-        assert factory.pid != pid
+def test_multiple_start_stops(salt_factories):
+    config_defaults = {
+        "rest_tornado": {"port": ports.get_unused_localhost_port(), "disable_ssl": True}
+    }
+    master = salt_factories.get_salt_master_daemon(
+        random_string("master-"), config_defaults=config_defaults
+    )
+    with master.started():
+        factory = master.get_salt_api_daemon()
+        assert factory.is_running() is False
+        pid = None
+        with factory.started():
+            assert factory.is_running() is True
+            pid = factory.pid
+        assert factory.is_running() is False
+        with factory.started():
+            assert factory.is_running() is True
+            assert factory.pid != pid
