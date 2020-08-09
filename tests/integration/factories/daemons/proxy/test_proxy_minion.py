@@ -41,6 +41,19 @@ def test_proxy_minion(proxy_minion, salt_cli):
     assert ret.json is True
 
 
+def test_multiple_start_stops(master):
+    factory = master.get_salt_proxy_minion_daemon(random_string("proxy-minion-"))
+    assert factory.is_running() is False
+    pid = None
+    with factory.started():
+        assert factory.is_running() is True
+        pid = factory.pid
+    assert factory.is_running() is False
+    with factory.started():
+        assert factory.is_running() is True
+        assert factory.pid != pid
+
+
 def test_no_match(proxy_minion, salt_cli):
     assert proxy_minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt="proxy-minion-2")

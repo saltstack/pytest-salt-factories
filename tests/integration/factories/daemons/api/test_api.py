@@ -25,3 +25,16 @@ def salt_api(master):
 
 def test_api(salt_api):
     assert salt_api.is_running()
+
+
+def test_multiple_start_stops(master):
+    factory = master.get_salt_api_daemon()
+    assert factory.is_running() is False
+    pid = None
+    with factory.started():
+        assert factory.is_running() is True
+        pid = factory.pid
+    assert factory.is_running() is False
+    with factory.started():
+        assert factory.is_running() is True
+        assert factory.pid != pid
