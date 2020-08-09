@@ -354,6 +354,8 @@ class DaemonFactory(SubprocessFactoryBase):
         super().__attrs_post_init__()
         if self.check_ports and not isinstance(self.check_ports, (list, tuple)):
             self.check_ports = [self.check_ports]
+        self.register_after_start_callback(self._add_factory_to_stats_processes)
+        self.register_after_terminate_callback(self._remove_factory_from_stats_processes)
 
     def register_before_start_callback(self, callback, *args, **kwargs):
         self.before_start_callbacks.append((callback, args, kwargs))
@@ -442,10 +444,6 @@ class DaemonFactory(SubprocessFactoryBase):
                         exc,
                         exc_info=True,
                     )
-            if self.factories_manager and self.factories_manager.stats_processes is not None:
-                self.factories_manager.stats_processes[self.get_display_name()] = psutil.Process(
-                    self.pid
-                )
             return process_running
         result = self.terminate()
         raise FactoryNotStarted(
@@ -514,6 +512,16 @@ class DaemonFactory(SubprocessFactoryBase):
             log.error("Failed to check ports after %1.2f seconds", time.time() - checks_start_time)
             return False
         return True
+
+    def _add_factory_to_stats_processes(self):
+        if self.factories_manager and self.factories_manager.stats_processes is not None:
+            display_name = self.get_display_name()
+            self.factories_manager.stats_processes[display_name] = psutil.Process(self.pid)
+
+    def _remove_factory_from_stats_processes(self):
+        if self.factories_manager and self.factories_manager.stats_processes is not None:
+            display_name = self.get_display_name()
+            self.factories_manager.stats_processes.pop(display_name, None)
 
     def __enter__(self):
         if not self.is_running():
