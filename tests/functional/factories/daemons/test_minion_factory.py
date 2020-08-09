@@ -124,7 +124,7 @@ def test_provide_user(salt_factories, configure_kwargs):
 def test_pytest_config(salt_factories, configure_kwargs):
     master_id = random_string("master-")
     master = salt_factories.get_salt_master_daemon(master_id)
-    config = master.get_salt_minion_daemon("the-id", **configure_kwargs).config
+    config = master.get_salt_minion_daemon(random_string("the-id-"), **configure_kwargs).config
     config_key = "pytest-minion"
     assert config_key in config
     assert "log" in config[config_key]
