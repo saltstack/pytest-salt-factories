@@ -23,6 +23,7 @@ import salt.utils.files
 import salt.utils.path
 import salt.utils.verify
 import salt.utils.yaml
+from salt.utils.immutabletypes import freeze
 
 from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.exceptions import FactoryTimeout
@@ -570,6 +571,7 @@ class SaltFactory:
         self.config_file = self.config["conf_file"]
         self.config_dir = os.path.dirname(self.config_file)
         self.id = self.config["id"]
+        self.config = freeze(self.config)
 
     def get_display_name(self):
         """
