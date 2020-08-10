@@ -44,7 +44,10 @@ class SaltCloudFactory(SaltCliFactory):
             "root_dir": str(root_dir),
             "log_file": "logs/cloud.log",
             "log_level_logfile": "debug",
-            "pytest-cloud": {"log": {"prefix": "{{cli_name}}({})".format(master_id)},},
+            "pytest-cloud": {
+                "master-id": master_id,
+                "log": {"prefix": "{{cli_name}}({})".format(master_id)},
+            },
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
@@ -65,15 +68,9 @@ class SaltCloudFactory(SaltCliFactory):
         config_overrides=None,
         **configure_kwargs
     ):
-        config = cls.default_config(
+        return cls.default_config(
             root_dir, daemon_id, config_defaults=config_defaults, config_overrides=config_overrides,
         )
-        master = factories_manager.cache["masters"].get(daemon_id)
-        if master:
-            # The in-memory minion config dictionary will hold a copy of the master config
-            # in order to listen to start or other events
-            config["pytest-cloud"]["master_config"] = master.config
-        return config
 
     @classmethod
     def verify_config(cls, config):

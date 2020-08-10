@@ -29,7 +29,13 @@ log = logging.getLogger(__name__)
 class SaltMinionFactory(SaltDaemonFactory):
     @classmethod
     def default_config(
-        cls, root_dir, minion_id, config_defaults=None, config_overrides=None, master_port=None
+        cls,
+        root_dir,
+        minion_id,
+        config_defaults=None,
+        config_overrides=None,
+        master_id=None,
+        master_port=None,
     ):
         if config_defaults is None:
             config_defaults = {}
@@ -59,7 +65,10 @@ class SaltMinionFactory(SaltDaemonFactory):
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "hash_type": "sha256",
             "transport": "zeromq",
-            "pytest-minion": {"log": {"prefix": "{}(id={!r})".format(cls.__name__, minion_id)}},
+            "pytest-minion": {
+                "master-id": master_id,
+                "log": {"prefix": "{}(id={!r})".format(cls.__name__, minion_id)},
+            },
             "acceptance_wait_time": 0.5,
             "acceptance_wait_time_max": 5,
         }
@@ -87,19 +96,14 @@ class SaltMinionFactory(SaltDaemonFactory):
             master = factories_manager.cache["masters"].get(master_id)
             if master:
                 master_port = master.config.get("ret_port")
-        config = cls.default_config(
+        return cls.default_config(
             root_dir,
             daemon_id,
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             master_port=master_port,
+            master_id=master_id,
         )
-        if master is not None:
-            # The in-memory minion config dictionary will hold a copy of the master config
-            # in order to listen to start events so that we can confirm the minion is up, running
-            # and accepting requests
-            config["pytest-minion"]["master_config"] = master.config
-        return config
 
     @classmethod
     def _get_verify_config_entries(cls, config):
@@ -134,16 +138,16 @@ class SaltMinionFactory(SaltDaemonFactory):
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         pytest_config = self.config["pytest-{}".format(self.config["__role"])]
-        if "master_config" not in pytest_config:
+        if not pytest_config.get("master-id"):
             log.warning(
-                "Will not be able to check for start events for %s since it's missing 'master_config' key "
-                "in the 'pytest-%s' dictionary",
+                "Will not be able to check for start events for %s since it's missing the 'master-id' key "
+                "in the 'pytest-%s' dictionary, or it's value is None.",
                 self,
                 self.config["__role"],
             )
         else:
-            yield pytest_config["master_config"]["id"], "salt/{__role}/{id}/start".format(
-                **self.config
+            yield pytest_config["master-id"], "salt/{role}/{id}/start".format(
+                role=self.config["__role"], id=self.id
             )
 
     def get_salt_call_cli(self, factory_class=cli.call.SaltCallCliFactory, **factory_class_kwargs):

@@ -34,6 +34,7 @@ class SaltSyndicFactory(SaltDaemonFactory):
         config_defaults=None,
         config_overrides=None,
         syndic_master_port=None,
+        master_of_masters_id=None,
     ):
         if config_defaults is None:
             config_defaults = {"syndic": {}}
@@ -63,6 +64,7 @@ class SaltSyndicFactory(SaltDaemonFactory):
             config_defaults=config_defaults.get("minion"),
             config_overrides=config_overrides.get("minion"),
             master_port=master_config["ret_port"],
+            master_id=syndic_id,
         )
 
         _config_defaults = {
@@ -76,7 +78,10 @@ class SaltSyndicFactory(SaltDaemonFactory):
             "syndic_log_file": "logs/syndic.log",
             "syndic_log_level_logfile": "debug",
             "syndic_dir": "cache/syndics",
-            "pytest-syndic": {"log": {"prefix": "{}(id={!r})".format(cls.__name__, syndic_id)}},
+            "pytest-syndic": {
+                "master-id": master_of_masters_id,
+                "log": {"prefix": "{}(id={!r})".format(cls.__name__, syndic_id)},
+            },
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(
@@ -97,7 +102,13 @@ class SaltSyndicFactory(SaltDaemonFactory):
 
     @classmethod
     def default_minion_config(
-        cls, root_dir, minion_id, config_defaults=None, config_overrides=None, master_port=None
+        cls,
+        root_dir,
+        minion_id,
+        config_defaults=None,
+        config_overrides=None,
+        master_port=None,
+        master_id=None,
     ):
         return SaltMinionFactory.default_config(
             root_dir,
@@ -105,6 +116,7 @@ class SaltSyndicFactory(SaltDaemonFactory):
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             master_port=master_port,
+            master_id=master_id,
         )
 
     @classmethod
@@ -146,6 +158,7 @@ class SaltSyndicFactory(SaltDaemonFactory):
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             syndic_master_port=syndic_master_port,
+            master_of_masters_id=master_of_masters_id,
         )
 
     @classmethod
@@ -169,14 +182,14 @@ class SaltSyndicFactory(SaltDaemonFactory):
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         pytest_config = self.config["pytest-{}".format(self.config["__role"])]
-        if "master_config" not in pytest_config:
+        if not pytest_config.get("master-id"):
             log.warning(
-                "Will not be able to check for start events for %s since it's missing 'master_config' key "
-                "in the 'pytest-%s' dictionary",
+                "Will not be able to check for start events for %s since it's missing the 'master-id' key "
+                "in the 'pytest-%s' dictionary, or it's value is None.",
                 self,
                 self.config["__role"],
             )
         else:
-            yield pytest_config["master_config"]["id"], "salt/{__role}/{id}/start".format(
-                **self.config
+            yield pytest_config["master-id"], "salt/{role}/{id}/start".format(
+                role=self.config["__role"], id=self.id
             )

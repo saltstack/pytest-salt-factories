@@ -118,12 +118,12 @@ def salt_factories(
 
 
 def pytest_saltfactories_handle_key_auth_event(
-    factories_manager, master_id, minion_id, keystate, payload
+    factories_manager, master, minion_id, keystate, payload
 ):
     """
     This hook is called for every auth event on the masters
     """
-    salt_key_cli = factories_manager.get_salt_key_cli(master_id)
+    salt_key_cli = master.get_salt_key_cli()
     if keystate == "pend":
         ret = salt_key_cli.run("--yes", "--accept", minion_id)
         assert ret.exitcode == 0

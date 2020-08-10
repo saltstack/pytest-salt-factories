@@ -394,15 +394,18 @@ class FactoriesManager:
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             syndic_master_port=syndic_master_port,
+            master_of_masters_id=master_of_masters_id,
         )
 
         master_config = master_factory_class.configure(
-            self, syndic_id, root_dir=root_dir, config_overrides=syndic_setup_config["master"]
+            self,
+            syndic_id,
+            root_dir=root_dir,
+            config_overrides=syndic_setup_config["master"],
+            master_of_masters_id=master_of_masters_id,
         )
         self.final_master_config_tweaks(master_config)
         master_loaded_config = master_factory_class.write_config(master_config)
-        if master_of_masters:
-            master_loaded_config["pytest-master"]["master_config"] = master_of_masters.config
         master_factory = self._get_factory_class_instance(
             "salt-master",
             master_loaded_config,
@@ -414,11 +417,14 @@ class FactoriesManager:
         )
 
         minion_config = minion_factory_class.configure(
-            self, syndic_id, root_dir=root_dir, config_overrides=syndic_setup_config["minion"]
+            self,
+            syndic_id,
+            root_dir=root_dir,
+            config_overrides=syndic_setup_config["minion"],
+            master_id=syndic_id,
         )
         self.final_minion_config_tweaks(minion_config)
         minion_loaded_config = minion_factory_class.write_config(minion_config)
-        minion_loaded_config["pytest-minion"]["master_config"] = master_loaded_config
         minion_factory = self._get_factory_class_instance(
             "salt-minion",
             minion_loaded_config,
@@ -432,10 +438,6 @@ class FactoriesManager:
         syndic_config = syndic_setup_config["syndic"]
         self.final_syndic_config_tweaks(syndic_config)
         syndic_loaded_config = factory_class.write_config(syndic_config)
-        if master_of_masters:
-            syndic_loaded_config["pytest-syndic"]["master_config"] = master_of_masters.config
-        # Just to get info about the master running along with the syndic
-        syndic_loaded_config["pytest-syndic"]["syndic_master"] = syndic_loaded_config
         factory = self._get_factory_class_instance(
             "salt-syndic",
             syndic_loaded_config,
@@ -730,7 +732,7 @@ class FactoriesManager:
     def _handle_auth_event(self, master_id, payload):
         self.pytestconfig.hook.pytest_saltfactories_handle_key_auth_event(
             factories_manager=self,
-            master_id=master_id,
+            master=self.cache["masters"][master_id],
             minion_id=payload["id"],
             keystate=payload["act"],
             payload=payload,

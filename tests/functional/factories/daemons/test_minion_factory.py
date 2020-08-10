@@ -130,5 +130,5 @@ def test_pytest_config(salt_factories, configure_kwargs):
     assert "log" in config[config_key]
     for key in ("host", "level", "port", "prefix"):
         assert key in config[config_key]["log"]
-    assert "master_config" in config[config_key]
-    assert config[config_key]["master_config"]["id"] == master_id
+    assert "master-id" in config[config_key]
+    assert config[config_key]["master-id"] == master_id

@@ -26,7 +26,13 @@ from saltfactories.utils import running_username
 class SaltMasterFactory(SaltDaemonFactory):
     @classmethod
     def default_config(
-        cls, root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,
+        cls,
+        root_dir,
+        master_id,
+        config_defaults=None,
+        config_overrides=None,
+        order_masters=False,
+        master_of_masters_id=None,
     ):
         if config_defaults is None:
             config_defaults = {}
@@ -87,7 +93,10 @@ class SaltMasterFactory(SaltDaemonFactory):
             "transport": "zeromq",
             "order_masters": order_masters,
             "max_open_files": 10240,
-            "pytest-master": {"log": {"prefix": "{}(id={!r})".format(cls.__name__, master_id)}},
+            "pytest-master": {
+                "master-id": master_of_masters_id,
+                "log": {"prefix": "{}(id={!r})".format(cls.__name__, master_id)},
+            },
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
