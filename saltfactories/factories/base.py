@@ -574,7 +574,7 @@ class SaltFactory:
         Returns a human readable name for the factory
         """
         if self.display_name is None:
-            self.display_name = "{}(id={})".format(self.__class__.__name__, self.id)
+            self.display_name = "{}(id={!r})".format(self.__class__.__name__, self.id)
         return super().get_display_name()
 
 
@@ -758,8 +758,6 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
     def __attrs_post_init__(self):
         DaemonFactory.__attrs_post_init__(self)
         SaltFactory.__attrs_post_init__(self)
-        if self.display_name is None:
-            self.display_name = self.id
 
     @classmethod
     def configure(

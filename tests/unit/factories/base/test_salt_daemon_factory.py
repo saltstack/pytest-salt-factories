@@ -92,3 +92,13 @@ def test_salt_daemon_factory_id_attr_comes_first_in_repr(config_file):
     regex = r"{}(id='TheID'".format(proc.__class__.__name__)
     assert repr(proc).startswith(regex)
     assert str(proc).startswith(regex)
+
+
+def test_salt_cli_display_name(config_file):
+    factory_id = "TheID"
+    proc = SaltDaemonFactory(
+        start_timeout=1,
+        cli_script_name="foo-bar",
+        config={"id": factory_id, "conf_file": config_file},
+    )
+    assert proc.get_display_name() == "{}(id={!r})".format(SaltDaemonFactory.__name__, factory_id)
