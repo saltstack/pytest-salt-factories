@@ -21,9 +21,9 @@ from saltfactories.utils import ports
 
 @attr.s(kw_only=True, slots=True)
 class SaltMasterFactory(SaltDaemonFactory):
-    @staticmethod
+    @classmethod
     def default_config(
-        root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,
+        cls, root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,
     ):
         if config_defaults is None:
             config_defaults = {}
@@ -84,7 +84,7 @@ class SaltMasterFactory(SaltDaemonFactory):
             "transport": "zeromq",
             "order_masters": order_masters,
             "max_open_files": 10240,
-            "pytest-master": {"log": {"prefix": "{{cli_name}}({})".format(master_id)}},
+            "pytest-master": {"log": {"prefix": "{}(id={!r})".format(cls.__name__, master_id)}},
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)

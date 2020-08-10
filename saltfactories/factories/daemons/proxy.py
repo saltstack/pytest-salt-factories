@@ -28,9 +28,14 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
 
     include_proxyid_cli_flag = attr.ib(default=True, repr=False)
 
-    @staticmethod
+    @classmethod
     def default_config(
-        root_dir, proxy_minion_id, config_defaults=None, config_overrides=None, master_port=None,
+        cls,
+        root_dir,
+        proxy_minion_id,
+        config_defaults=None,
+        config_overrides=None,
+        master_port=None,
     ):
         if config_defaults is None:
             config_defaults = {}
@@ -62,7 +67,9 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
             "transport": "zeromq",
             "add_proxymodule_to_opts": False,
             "proxy": {"proxytype": "dummy"},
-            "pytest-minion": {"log": {"prefix": "{{cli_name}}({})".format(proxy_minion_id)},},
+            "pytest-minion": {
+                "log": {"prefix": "{}(id={!r})".format(cls.__name__, proxy_minion_id)}
+            },
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
