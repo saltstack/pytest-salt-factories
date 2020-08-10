@@ -419,6 +419,7 @@ class DaemonFactory(SubprocessFactoryBase):
             while time.time() <= start_running_timeout:
                 if not self.is_running():
                     log.warning("%s is no longer running", self)
+                    self.terminate()
                     break
                 if self.run_start_checks(current_start_time, start_running_timeout) is False:
                     time.sleep(1)
@@ -449,12 +450,7 @@ class DaemonFactory(SubprocessFactoryBase):
         result = self.terminate()
         raise FactoryNotStarted(
             "The {} factory has failed to confirm running status after {} attempts, which "
-            "took {:.2f} seconds({:.2f} seconds each)".format(
-                self,
-                current_attempt - 1,
-                time.time() - start_time,
-                start_timeout or self.start_timeout,
-            ),
+            "took {:.2f} seconds".format(self, current_attempt - 1, time.time() - start_time,),
             stdout=result.stdout,
             stderr=result.stderr,
             exitcode=result.exitcode,
@@ -500,7 +496,7 @@ class DaemonFactory(SubprocessFactoryBase):
     def run_start_checks(self, started_at, timeout_at):
         check_ports = set(self.get_check_ports())
         if not check_ports:
-            log.debug("No ports to check connection to")
+            log.debug("No ports to check connection to for %s", self)
             return True
         checks_start_time = time.time()
         while time.time() <= timeout_at:
@@ -511,9 +507,15 @@ class DaemonFactory(SubprocessFactoryBase):
                 break
             check_ports -= ports.get_connectable_ports(check_ports)
         else:
-            log.error("Failed to check ports after %1.2f seconds", time.time() - checks_start_time)
+            log.error(
+                "Failed to check ports after %1.2f seconds for %s",
+                time.time() - checks_start_time,
+                self,
+            )
             return False
-        log.debug("Successfuly connected to ports: %s", set(self.get_check_ports()))
+        log.debug(
+            "Successfuly connected to all ports(%s) for %s", set(self.get_check_ports()), self
+        )
         return True
 
     def _add_factory_to_stats_processes(self):
@@ -840,7 +842,7 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
 
         check_events = set(self.get_check_events())
         if not check_events:
-            log.debug("No events to listen to.")
+            log.debug("No events to listen to for %s", self)
             return True
         checks_start_time = time.time()
         while time.time() <= timeout_at:
@@ -851,9 +853,15 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
                 break
             check_events -= self.event_listener.get_events(check_events, after_time=started_at)
         else:
-            log.error("Failed to check events after %1.2f seconds", time.time() - checks_start_time)
+            log.error(
+                "Failed to check events after %1.2f seconds for %s",
+                time.time() - checks_start_time,
+                self,
+            )
             return False
-        log.debug("Successfuly checked for all events: %s", set(self.get_check_events()))
+        log.debug(
+            "Successfuly checked for all events(%s) for %s", set(self.get_check_events()), self
+        )
         return True
 
     def build_cmdline(self, *args):
