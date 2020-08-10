@@ -17,7 +17,9 @@ import salt.config
 import salt.utils.dictupdate
 import salt.utils.files
 
+from saltfactories.factories import cli
 from saltfactories.factories.base import SaltDaemonFactory
+from saltfactories.utils import cli_scripts
 from saltfactories.utils import ports
 
 log = logging.getLogger(__name__)
@@ -158,10 +160,20 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
                 **self.config
             )
 
-    # The following methods just route the calls to the right method in the factories manager
-    # while making sure the CLI tools are referring to this daemon
-    def get_salt_call_cli(self, **kwargs):
+    def get_salt_call_cli(self, factory_class=cli.call.SaltCallCliFactory, **factory_class_kwargs):
         """
-        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_call_cli`
+        Return a `salt-call` CLI process for this minion instance
         """
-        return self.factories_manager.get_salt_call_cli(self.id, **kwargs)
+        script_path = cli_scripts.generate_script(
+            self.factories_manager.scripts_dir,
+            "salt-call",
+            code_dir=self.factories_manager.code_dir,
+            inject_coverage=self.factories_manager.inject_coverage,
+            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+        )
+        return factory_class(
+            cli_script_name=script_path,
+            config=self.config.copy(),
+            base_script_args=["--proxyid={}".format(self.id)],
+            **factory_class_kwargs
+        )

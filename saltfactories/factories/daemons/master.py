@@ -15,8 +15,11 @@ import salt.config
 import salt.utils.dictupdate
 import salt.utils.files
 
+from saltfactories.factories import cli
 from saltfactories.factories.base import SaltDaemonFactory
+from saltfactories.utils import cli_scripts
 from saltfactories.utils import ports
+from saltfactories.utils import running_username
 
 
 @attr.s(kw_only=True, slots=True)
@@ -199,44 +202,169 @@ class SaltMasterFactory(SaltDaemonFactory):
             syndic_id, master_of_masters_id=self.id, **kwargs
         )
 
-    def get_salt_cloud_cli(self, **kwargs):
+    def get_salt_cloud_cli(
+        self,
+        config_defaults=None,
+        config_overrides=None,
+        factory_class=cli.cloud.SaltCloudFactory,
+        **factory_class_kwargs
+    ):
         """
-        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cloud_cli`
-        """
-        return self.factories_manager.get_salt_cloud_cli(self.id, **kwargs)
+        Return a salt-cloud CLI instance
 
-    def get_salt_cli(self, **kwargs):
-        """
-        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cli`
-        """
-        return self.factories_manager.get_salt_cli(self.id, **kwargs)
+        Args:
+            config_defaults(dict):
+                A dictionary of default configuration to use when configuring the minion
+            config_overrides(dict):
+                A dictionary of configuration overrides to use when configuring the minion
 
-    def get_salt_cp_cli(self, **kwargs):
+        Returns:
+            :py:class:`~saltfactories.factories.cli.cloud.SaltCloudFactory`:
+                The salt-cloud CLI script process class instance
         """
-        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_cp_cli`
-        """
-        return self.factories_manager.get_salt_cp_cli(self.id, **kwargs)
 
-    def get_salt_key_cli(self, **kwargs):
-        """
-        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_key_cli`
-        """
-        return self.factories_manager.get_salt_key_cli(self.id, **kwargs)
+        root_dir = pathlib.Path(self.config["root_dir"])
 
-    def get_salt_run_cli(self, **kwargs):
-        """
-        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_run_cli`
-        """
-        return self.factories_manager.get_salt_run_cli(self.id, **kwargs)
+        config = factory_class.configure(
+            self,
+            self.id,
+            root_dir=root_dir,
+            config_defaults=config_defaults,
+            config_overrides=config_overrides,
+        )
+        self.factories_manager.final_cloud_config_tweaks(config)
+        config = factory_class.write_config(config)
 
-    def get_salt_spm_cli(self, **kwargs):
-        """
-        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_spm_cli`
-        """
-        return self.factories_manager.get_salt_spm_cli(self.id, **kwargs)
+        script_path = cli_scripts.generate_script(
+            self.factories_manager.scripts_dir,
+            "salt-cloud",
+            code_dir=self.factories_manager.code_dir,
+            inject_coverage=self.factories_manager.inject_coverage,
+            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+        )
+        return factory_class(cli_script_name=script_path, config=config, **factory_class_kwargs)
 
-    def get_salt_ssh_cli(self, **kwargs):
+    def get_salt_cli(self, factory_class=cli.salt.SaltCliFactory, **factory_class_kwargs):
         """
-        Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_ssh_cli`
+        Return a `salt` CLI process for this master instance
         """
-        return self.factories_manager.get_salt_ssh_cli(self.id, **kwargs)
+        script_path = cli_scripts.generate_script(
+            self.factories_manager.scripts_dir,
+            "salt",
+            code_dir=self.factories_manager.code_dir,
+            inject_coverage=self.factories_manager.inject_coverage,
+            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+        )
+        return factory_class(
+            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+        )
+
+    def get_salt_cp_cli(self, factory_class=cli.cp.SaltCpCliFactory, **factory_class_kwargs):
+        """
+        Return a `salt-cp` CLI process for this master instance
+        """
+        script_path = cli_scripts.generate_script(
+            self.factories_manager.scripts_dir,
+            "salt-cp",
+            code_dir=self.factories_manager.code_dir,
+            inject_coverage=self.factories_manager.inject_coverage,
+            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+        )
+        return factory_class(
+            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+        )
+
+    def get_salt_key_cli(self, factory_class=cli.key.SaltKeyCliFactory, **factory_class_kwargs):
+        """
+        Return a `salt-key` CLI process for this master instance
+        """
+        script_path = cli_scripts.generate_script(
+            self.factories_manager.scripts_dir,
+            "salt-key",
+            code_dir=self.factories_manager.code_dir,
+            inject_coverage=self.factories_manager.inject_coverage,
+            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+        )
+        return factory_class(
+            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+        )
+
+    def get_salt_run_cli(self, factory_class=cli.run.SaltRunCliFactory, **factory_class_kwargs):
+        """
+        Return a `salt-run` CLI process for this master instance
+        """
+        script_path = cli_scripts.generate_script(
+            self.factories_manager.scripts_dir,
+            "salt-run",
+            code_dir=self.factories_manager.code_dir,
+            inject_coverage=self.factories_manager.inject_coverage,
+            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+        )
+        return factory_class(
+            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+        )
+
+    def get_salt_spm_cli(self, factory_class=cli.spm.SpmCliFactory, **factory_class_kwargs):
+        """
+        Return a `spm` CLI process for this master instance
+        """
+        script_path = cli_scripts.generate_script(
+            self.factories_manager.scripts_dir,
+            "spm",
+            code_dir=self.factories_manager.code_dir,
+            inject_coverage=self.factories_manager.inject_coverage,
+            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+        )
+        return factory_class(
+            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+        )
+
+    def get_salt_ssh_cli(
+        self,
+        factory_class=cli.ssh.SaltSshCliFactory,
+        roster_file=None,
+        target_host=None,
+        client_key=None,
+        ssh_user=None,
+        **factory_class_kwargs
+    ):
+        """
+        Return a `salt-ssh` CLI process for this master instance
+
+        Args:
+            roster_file(str):
+                The roster file to use
+            target_host(str):
+                The target host address to connect to
+            client_key(str):
+                The path to the private ssh key to use to connect
+            ssh_user(str):
+                The remote username to connect as
+        """
+        script_path = cli_scripts.generate_script(
+            self.factories_manager.scripts_dir,
+            "salt-ssh",
+            code_dir=self.factories_manager.code_dir,
+            inject_coverage=self.factories_manager.inject_coverage,
+            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+        )
+        return factory_class(
+            cli_script_name=script_path,
+            config=self.config.copy(),
+            roster_file=roster_file,
+            target_host=target_host,
+            client_key=client_key,
+            ssh_user=ssh_user or running_username(),
+            **factory_class_kwargs
+        )
+
+    def get_salt_client(
+        self, functions_known_to_return_none=None, factory_class=cli.client.SaltClientFactory,
+    ):
+        """
+        Return a local salt client object
+        """
+        return factory_class(
+            master_config=self.config.copy(),
+            functions_known_to_return_none=functions_known_to_return_none,
+        )
