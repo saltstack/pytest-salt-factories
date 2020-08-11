@@ -17,7 +17,6 @@ import attr
 import saltfactories
 from saltfactories.factories import daemons
 from saltfactories.utils import cli_scripts
-from saltfactories.utils import event_listener
 from saltfactories.utils import running_username
 
 log = logging.getLogger(__name__)
@@ -80,11 +79,11 @@ class FactoriesManager:
     environ = attr.ib(default=None)
     slow_stop = attr.ib(default=True)
     start_timeout = attr.ib(default=None)
-    stats_processes = attr.ib(default=None)
+    stats_processes = attr.ib(repr=False, default=None)
+    event_listener = attr.ib(repr=False)
 
     # Internal attributes
     scripts_dir = attr.ib(default=None, init=False, repr=False)
-    event_listener = attr.ib(default=None, init=False, repr=False)
 
     def __attrs_post_init__(self):
         self.root_dir = pathlib.Path(self.root_dir.strpath)
@@ -99,14 +98,6 @@ class FactoriesManager:
         # Setup the internal attributes
         self.scripts_dir = self.root_dir / "scripts"
         self.scripts_dir.mkdir(exist_ok=True)
-        self.event_listener = event_listener.EventListener()
-
-    def __enter__(self):
-        self.event_listener.start()
-        return self
-
-    def __exit__(self, *exc):
-        self.event_listener.stop()
 
     @staticmethod
     def get_salt_log_handlers_path():

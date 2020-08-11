@@ -1,6 +1,6 @@
 """
-saltfactories.utils.event_listener
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+saltfactories.plugins.event_listener
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 A "pseudo" event listener for salt factories pytest plugin
 """
@@ -14,6 +14,7 @@ from collections import deque
 
 import attr
 import msgpack
+import pytest
 import zmq
 
 from saltfactories.utils import ports
@@ -21,7 +22,7 @@ from saltfactories.utils import ports
 log = logging.getLogger(__name__)
 
 
-@attr.s(kw_only=True, slots=True)
+@attr.s(kw_only=True, slots=True, hash=True)
 class EventListener:
     timeout = attr.ib(default=60)
     address = attr.ib(init=False)
@@ -142,3 +143,20 @@ class EventListener:
 
     def unregister_auth_event_handler(self, master_id):
         self.auth_event_handlers.pop(master_id, None)
+
+
+def pytest_configure(config):
+    event_listener = EventListener()
+    config.pluginmanager.register(event_listener, "saltfactories-event-listener")
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionstart(session):
+    event_listener = session.config.pluginmanager.get_plugin("saltfactories-event-listener")
+    event_listener.start()
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_sessionfinish(session):
+    event_listener = session.config.pluginmanager.get_plugin("saltfactories-event-listener")
+    event_listener.stop()

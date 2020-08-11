@@ -102,11 +102,11 @@ def salt_factories(
         "Instantiating the Salt Factories Manager with the following keyword arguments:\n%s",
         pprint.pformat(factories_config),
     )
-    manager = FactoriesManager(
+    event_listener = pytestconfig.pluginmanager.get_plugin("saltfactories-event-listener")
+    return FactoriesManager(
         pytestconfig=pytestconfig,
         root_dir=tempdir,
         stats_processes=request.session.stats_processes,
+        event_listener=event_listener,
         **factories_config
     )
-    with manager:
-        yield manager

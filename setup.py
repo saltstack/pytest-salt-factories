@@ -79,6 +79,7 @@ setup(
             "salt-factories-markers = saltfactories.plugins.markers",
             "salt-factories-sysinfo = saltfactories.plugins.sysinfo",
             "salt-factories-sysstats = saltfactories.plugins.sysstats",
+            "salt-factories-event-listener = saltfactories.plugins.event_listener",
         ]
     },
 )
