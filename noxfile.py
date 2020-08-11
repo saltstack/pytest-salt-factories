@@ -105,17 +105,12 @@ def _tests(session):
     """
     Run tests
     """
-    if CI_RUN or IS_WINDOWS:
-        env = None
-    else:
-        env = {"PYTHONPATH": str(REPO_ROOT)}
     if SKIP_REQUIREMENTS_INSTALL is False:
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
-        if CI_RUN or IS_WINDOWS:
-            session.install("-e", ".", silent=PIP_INSTALL_SILENT)
+        session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
             session, "pip", "list", "--format=json", silent=True, log=False
         )
@@ -148,7 +143,7 @@ def _tests(session):
             if arg.startswith("--color") and args[0].startswith("--color"):
                 args.pop(0)
             args.append(arg)
-    session.run("coverage", "run", "-m", "pytest", *args, env=env)
+    session.run("coverage", "run", "-m", "pytest", *args)
     session.notify("coverage")
 
 
