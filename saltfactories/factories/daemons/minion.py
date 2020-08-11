@@ -29,16 +29,15 @@ log = logging.getLogger(__name__)
 class SaltMinionFactory(SaltDaemonFactory):
     @classmethod
     def default_config(
-        cls,
-        root_dir,
-        minion_id,
-        config_defaults=None,
-        config_overrides=None,
-        master_id=None,
-        master_port=None,
+        cls, root_dir, minion_id, config_defaults=None, config_overrides=None, master=None
     ):
         if config_defaults is None:
             config_defaults = {}
+
+        master_id = master_port = None
+        if master is not None:
+            master_id = master.id
+            master_port = master.config["ret_port"]
 
         conf_dir = root_dir / "conf"
         conf_dir.mkdir(parents=True, exist_ok=True)
@@ -89,20 +88,14 @@ class SaltMinionFactory(SaltDaemonFactory):
         root_dir=None,
         config_defaults=None,
         config_overrides=None,
-        master_id=None,
+        master=None,
     ):
-        master = master_port = None
-        if master_id is not None:
-            master = factories_manager.cache["masters"].get(master_id)
-            if master:
-                master_port = master.config.get("ret_port")
         return cls.default_config(
             root_dir,
             daemon_id,
             config_defaults=config_defaults,
             config_overrides=config_overrides,
-            master_port=master_port,
-            master_id=master_id,
+            master=master,
         )
 
     @classmethod

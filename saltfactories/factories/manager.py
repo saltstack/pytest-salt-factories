@@ -11,7 +11,6 @@ Salt Factories Manager
 import logging
 import pathlib
 import sys
-import weakref
 
 import attr
 
@@ -84,7 +83,6 @@ class FactoriesManager:
     stats_processes = attr.ib(default=None)
 
     # Internal attributes
-    cache = attr.ib(default=None, init=False, repr=False)
     scripts_dir = attr.ib(default=None, init=False, repr=False)
     event_listener = attr.ib(default=None, init=False, repr=False)
 
@@ -101,13 +99,6 @@ class FactoriesManager:
         # Setup the internal attributes
         self.scripts_dir = self.root_dir / "scripts"
         self.scripts_dir.mkdir(exist_ok=True)
-        self.cache = {
-            "api": weakref.WeakValueDictionary(),
-            "masters": weakref.WeakValueDictionary(),
-            "minions": weakref.WeakValueDictionary(),
-            "syndics": weakref.WeakValueDictionary(),
-            "proxy-minions": weakref.WeakValueDictionary(),
-        }
         self.event_listener = event_listener.EventListener()
 
     def __enter__(self):
@@ -187,7 +178,7 @@ class FactoriesManager:
         self,
         master_id,
         order_masters=False,
-        master_of_masters_id=None,
+        master_of_masters=None,
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
@@ -204,8 +195,9 @@ class FactoriesManager:
             order_masters(bool):
                 Boolean flag to set if this master is going to control other masters(ie, master of masters), like,
                 for example, in a :ref:`Syndic <salt:syndic>` topology scenario
-            master_of_masters_id(str):
-                The master of masters ID, like, for example, in a :ref:`Syndic <salt:syndic>` topology scenario
+            master_of_masters(:py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`):
+                A :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory` instance, like, for example,
+                in a :ref:`Syndic <salt:syndic>` topology scenario
             config_defaults(dict):
                 A dictionary of default configuration to use when configuring the master
             config_overrides(dict):
@@ -219,11 +211,7 @@ class FactoriesManager:
             :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`:
                 The master process class instance
         """
-        if master_id in self.cache["masters"]:
-            log.info("Returning cached salt master factory with the ID: %s", master_id)
-            return self.cache["masters"][master_id]
-
-        root_dir = self._get_root_dir_for_daemon(master_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(master_id, config_defaults=config_defaults)
         config = factory_class.configure(
             self,
             master_id,
@@ -231,6 +219,7 @@ class FactoriesManager:
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             order_masters=order_masters,
+            master_of_masters=master_of_masters,
         )
         self.final_master_config_tweaks(config)
         loaded_config = factory_class.write_config(config)
@@ -238,7 +227,6 @@ class FactoriesManager:
             "salt-master",
             loaded_config,
             factory_class,
-            "masters",
             master_id,
             max_start_attempts,
             start_timeout,
@@ -248,7 +236,7 @@ class FactoriesManager:
     def get_salt_minion_daemon(
         self,
         minion_id,
-        master_id=None,
+        master=None,
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
@@ -262,8 +250,9 @@ class FactoriesManager:
         Args:
             minion_id(str):
                 The minion ID
-            master_id(str):
-                The master ID this minion will connect to.
+            master(:py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`):
+                An instance of :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory` that
+                this minion will connect to.
             config_defaults(dict):
                 A dictionary of default configuration to use when configuring the minion
             config_overrides(dict):
@@ -277,11 +266,7 @@ class FactoriesManager:
             :py:class:`~saltfactories.factories.daemons.minion.SaltMinionFactory`:
                 The minion process class instance
         """
-        if minion_id in self.cache["minions"]:
-            log.info("Returning cached salt minion factory with the ID: %s", minion_id)
-            return self.cache["minions"][minion_id]
-
-        root_dir = self._get_root_dir_for_daemon(minion_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(minion_id, config_defaults=config_defaults)
 
         config = factory_class.configure(
             self,
@@ -289,7 +274,7 @@ class FactoriesManager:
             root_dir=root_dir,
             config_defaults=config_defaults,
             config_overrides=config_overrides,
-            master_id=master_id,
+            master=master,
         )
         self.final_minion_config_tweaks(config)
         loaded_config = factory_class.write_config(config)
@@ -297,7 +282,6 @@ class FactoriesManager:
             "salt-minion",
             loaded_config,
             factory_class,
-            "minions",
             minion_id,
             max_start_attempts,
             start_timeout,
@@ -307,13 +291,17 @@ class FactoriesManager:
     def get_salt_syndic_daemon(
         self,
         syndic_id,
-        master_of_masters_id=None,
+        master_of_masters=None,
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
         start_timeout=None,
         factory_class=daemons.syndic.SaltSyndicFactory,
+        master_config_defaults=None,
+        master_config_overrides=None,
         master_factory_class=daemons.master.SaltMasterFactory,
+        minion_config_defaults=None,
+        minion_config_overrides=None,
         minion_factory_class=daemons.minion.SaltMinionFactory,
         **factory_class_kwargs
     ):
@@ -324,9 +312,9 @@ class FactoriesManager:
             syndic_id(str):
                 The Syndic ID. This ID will be shared by the ``salt-master``, ``salt-minion`` and ``salt-syndic``
                 processes.
-            master_of_masters_id(str):
-                The master of masters ID that the master configured in this :ref:`Syndic <salt:syndic>` topology
-                scenario shall connect to.
+            master_of_masters(:py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`):
+                An instance of :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory` that the
+                master configured in this :ref:`Syndic <salt:syndic>` topology scenario shall connect to.
             config_defaults(dict):
                 A dictionary of default configurations with three top level keys, ``master``, ``minion`` and
                 ``syndic``, to use when configuring the  ``salt-master``, ``salt-minion`` and ``salt-syndic``
@@ -344,69 +332,27 @@ class FactoriesManager:
             :py:class:`~saltfactories.factories.daemons.syndic.SaltSyndicFactory`:
                 The syndic process class instance
         """
-        if syndic_id in self.cache["syndics"]:
-            log.info("Returning cached syndic factory with the ID: %s", syndic_id)
-            return self.cache["syndics"][syndic_id]
-        elif syndic_id in self.cache["masters"]:
-            raise RuntimeError(
-                "A master by the ID of '{}' was already configured".format(syndic_id)
-            )
-        elif syndic_id in self.cache["minions"]:
-            raise RuntimeError(
-                "A minion by the ID of '{}' was already configured".format(syndic_id)
-            )
 
-        defaults_and_overrides_top_level_keys = {"master", "minion", "syndic"}
-
-        if config_defaults:
-            if not set(config_defaults).issubset(defaults_and_overrides_top_level_keys):
-                raise RuntimeError(
-                    "The config_defaults keyword argument must only contain 3 top level keys: {}".format(
-                        ", ".join(defaults_and_overrides_top_level_keys)
-                    )
-                )
-
-        if config_overrides:
-            if not set(config_overrides).issubset(defaults_and_overrides_top_level_keys):
-                raise RuntimeError(
-                    "The config_overrides keyword argument must only contain 3 top level keys: {}".format(
-                        ", ".join(defaults_and_overrides_top_level_keys)
-                    )
-                )
-
-        root_dir = self._get_root_dir_for_daemon(
-            syndic_id, config_defaults=config_defaults.get("syndic") if config_defaults else None
-        )
-
-        master_of_masters = syndic_master_port = None
-        if master_of_masters_id is not None:
-            master_of_masters = self.cache["masters"].get(master_of_masters_id)
-            if master_of_masters is None:
-                raise RuntimeError("No config found for {}".format(master_of_masters_id))
-
-        syndic_setup_config = factory_class.default_config(
-            root_dir,
-            syndic_id=syndic_id,
-            config_defaults=config_defaults,
-            config_overrides=config_overrides,
-            syndic_master_port=syndic_master_port,
-            master_of_masters_id=master_of_masters_id,
-        )
+        root_dir = self.get_root_dir_for_daemon(syndic_id, config_defaults=config_defaults)
 
         master_config = master_factory_class.configure(
             self,
             syndic_id,
             root_dir=root_dir,
-            config_overrides=syndic_setup_config["master"],
-            master_of_masters_id=master_of_masters_id,
+            config_defaults=master_config_defaults,
+            config_overrides=master_config_overrides,
+            master_of_masters=master_of_masters,
         )
+        # Remove syndic related options
+        for key in list(master_config):
+            if key.startswith("syndic_"):
+                master_config.pop(key)
         self.final_master_config_tweaks(master_config)
         master_loaded_config = master_factory_class.write_config(master_config)
         master_factory = self._get_factory_class_instance(
             "salt-master",
             master_loaded_config,
             master_factory_class,
-            "masters",
             syndic_id,
             max_start_attempts,
             start_timeout,
@@ -416,8 +362,9 @@ class FactoriesManager:
             self,
             syndic_id,
             root_dir=root_dir,
-            config_overrides=syndic_setup_config["minion"],
-            master_id=syndic_id,
+            config_defaults=minion_config_defaults,
+            config_overrides=minion_config_overrides,
+            master=master_factory,
         )
         self.final_minion_config_tweaks(minion_config)
         minion_loaded_config = minion_factory_class.write_config(minion_config)
@@ -425,23 +372,29 @@ class FactoriesManager:
             "salt-minion",
             minion_loaded_config,
             minion_factory_class,
-            "minions",
             syndic_id,
             max_start_attempts,
             start_timeout,
         )
 
-        syndic_config = syndic_setup_config["syndic"]
+        syndic_config = factory_class.default_config(
+            root_dir,
+            syndic_id=syndic_id,
+            config_defaults=config_defaults,
+            config_overrides=config_overrides,
+            master_of_masters=master_of_masters,
+        )
         self.final_syndic_config_tweaks(syndic_config)
         syndic_loaded_config = factory_class.write_config(syndic_config)
         factory = self._get_factory_class_instance(
             "salt-syndic",
             syndic_loaded_config,
             factory_class,
-            "syndics",
             syndic_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
+            master=master_factory,
+            minion=minion_factory,
             **factory_class_kwargs
         )
 
@@ -453,7 +406,7 @@ class FactoriesManager:
     def get_salt_proxy_minion_daemon(
         self,
         proxy_minion_id,
-        master_id=None,
+        master=None,
         config_defaults=None,
         config_overrides=None,
         max_start_attempts=3,
@@ -467,8 +420,9 @@ class FactoriesManager:
         Args:
             proxy_minion_id(str):
                 The proxy minion ID
-            master_id(str):
-                The master ID this minion will connect to.
+            master(:py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`):
+                An instance of :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory` that this minion
+                will connect to.
             config_defaults(dict):
                 A dictionary of default configuration to use when configuring the proxy minion
             config_overrides(dict):
@@ -483,11 +437,7 @@ class FactoriesManager:
             :py:class:`~saltfactories.factories.daemons.proxy.SaltProxyMinionFactory`:
                 The proxy minion process class instance
         """
-        if proxy_minion_id in self.cache["proxy-minions"]:
-            log.info("Returning cached salt proxy minion factory with the ID: %s", proxy_minion_id)
-            return self.cache["proxy-minions"][proxy_minion_id]
-
-        root_dir = self._get_root_dir_for_daemon(proxy_minion_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(proxy_minion_id, config_defaults=config_defaults)
 
         config = factory_class.configure(
             self,
@@ -495,7 +445,7 @@ class FactoriesManager:
             root_dir=root_dir,
             config_defaults=config_defaults,
             config_overrides=config_overrides,
-            master_id=master_id,
+            master=master,
         )
         self.final_proxy_minion_config_tweaks(config)
         loaded_config = factory_class.write_config(config)
@@ -503,7 +453,6 @@ class FactoriesManager:
             "salt-proxy",
             loaded_config,
             factory_class,
-            "proxy-minions",
             proxy_minion_id,
             max_start_attempts,
             start_timeout,
@@ -512,11 +461,7 @@ class FactoriesManager:
 
     def get_salt_api_daemon(
         self,
-        master_id,
-        order_masters=False,
-        master_of_masters_id=None,
-        config_defaults=None,
-        config_overrides=None,
+        master,
         max_start_attempts=3,
         start_timeout=None,
         factory_class=daemons.api.SaltApiFactory,
@@ -532,25 +477,11 @@ class FactoriesManager:
             :py:class:`~saltfactories.factories.daemons.api.SaltApiFactory`:
                 The salt-api process class instance
         """
-        if master_id in self.cache["api"]:
-            log.info("Returning cached salt api factory with the ID: %s", master_id)
-            return self.cache["api"][master_id]
-
-        master = self.cache["masters"].get(master_id)
-        if master is None:
-            master = self.get_salt_master_daemon(
-                master_id,
-                order_masters=order_masters,
-                master_of_masters_id=master_of_masters_id,
-                config_defaults=config_defaults,
-                config_overrides=config_overrides,
-            )
         return self._get_factory_class_instance(
             "salt-api",
             master.config,
             factory_class,
-            "api",
-            master_id,
+            master.id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
             **factory_class_kwargs
@@ -594,7 +525,7 @@ class FactoriesManager:
                 The sshd process class instance
         """
         if config_dir is None:
-            config_dir = self._get_root_dir_for_daemon("sshd")
+            config_dir = self.get_root_dir_for_daemon("sshd")
         try:
             config_dir = pathlib.Path(config_dir.strpath).resolve()
         except AttributeError:
@@ -670,7 +601,6 @@ class FactoriesManager:
         script_name,
         daemon_config,
         factory_class,
-        cache_key,
         daemon_id,
         max_start_attempts,
         start_timeout,
@@ -698,10 +628,9 @@ class FactoriesManager:
             cli_script_name=script_path,
             **factory_class_kwargs
         )
-        self.cache[cache_key][daemon_id] = factory
         return factory
 
-    def _get_root_dir_for_daemon(self, daemon_id, config_defaults=None):
+    def get_root_dir_for_daemon(self, daemon_id, config_defaults=None):
         if config_defaults and "root_dir" in config_defaults:
             try:
                 root_dir = pathlib.Path(config_defaults["root_dir"].strpath).resolve()

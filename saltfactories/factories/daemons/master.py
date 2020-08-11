@@ -52,10 +52,20 @@ class SaltMasterFactory(SaltDaemonFactory):
         config_defaults=None,
         config_overrides=None,
         order_masters=False,
-        master_of_masters_id=None,
+        master_of_masters=None,
     ):
         if config_defaults is None:
             config_defaults = {}
+
+        if config_overrides is None:
+            config_overrides = {}
+        else:
+            config_overrides = config_overrides.copy()
+        master_of_masters_id = None
+        if master_of_masters:
+            master_of_masters_id = master_of_masters.id
+            config_overrides["syndic_master"] = master_of_masters.config["interface"]
+            config_overrides["syndic_master_port"] = master_of_masters.config["ret_port"]
 
         conf_dir = root_dir / "conf"
         conf_dir.mkdir(parents=True, exist_ok=True)
@@ -132,28 +142,18 @@ class SaltMasterFactory(SaltDaemonFactory):
         cls,
         factories_manager,
         daemon_id,
+        master_of_masters=None,
         root_dir=None,
         config_defaults=None,
         config_overrides=None,
         order_masters=False,
-        master_of_masters_id=None,
     ):
-        if config_overrides is None:
-            _config_overrides = {}
-        else:
-            _config_overrides = config_overrides.copy()
-        if master_of_masters_id is not None:
-            master_of_masters = factories_manager.cache["masters"].get(master_of_masters_id)
-            if master_of_masters is None:
-                raise RuntimeError("No config found for {}".format(master_of_masters_id))
-            master_of_masters_config = master_of_masters.config
-            _config_overrides["syndic_master"] = master_of_masters_config["interface"]
-            _config_overrides["syndic_master_port"] = master_of_masters_config["ret_port"]
         return cls.default_config(
             root_dir,
             daemon_id,
+            master_of_masters=master_of_masters,
             config_defaults=config_defaults,
-            config_overrides=_config_overrides,
+            config_overrides=config_overrides,
             order_masters=order_masters,
         )
 
@@ -210,35 +210,33 @@ class SaltMasterFactory(SaltDaemonFactory):
         Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_master_daemon`
         """
         return self.factories_manager.get_salt_master_daemon(
-            master_id, master_of_masters_id=self.id, **kwargs
+            master_id, master_of_masters=self, **kwargs
         )
 
     def get_salt_minion_daemon(self, minion_id, **kwargs):
         """
         Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.configure_salt_minion`
         """
-        return self.factories_manager.get_salt_minion_daemon(minion_id, master_id=self.id, **kwargs)
+        return self.factories_manager.get_salt_minion_daemon(minion_id, master=self, **kwargs)
 
     def get_salt_proxy_minion_daemon(self, minion_id, **kwargs):
         """
         Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_proxy_minion_daemon`
         """
-        return self.factories_manager.get_salt_proxy_minion_daemon(
-            minion_id, master_id=self.id, **kwargs
-        )
+        return self.factories_manager.get_salt_proxy_minion_daemon(minion_id, master=self, **kwargs)
 
     def get_salt_api_daemon(self, **kwargs):
         """
         Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_api_daemon`
         """
-        return self.factories_manager.get_salt_api_daemon(self.id, **kwargs)
+        return self.factories_manager.get_salt_api_daemon(self, **kwargs)
 
     def get_salt_syndic_daemon(self, syndic_id, **kwargs):
         """
         Please see the documentation in :py:class:`~saltfactories.factories.manager.FactoriesManager.get_salt_syndic_daemon`
         """
         return self.factories_manager.get_salt_syndic_daemon(
-            syndic_id, master_of_masters_id=self.id, **kwargs
+            syndic_id, master_of_masters=self, **kwargs
         )
 
     def get_salt_cloud_cli(
