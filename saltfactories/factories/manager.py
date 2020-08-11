@@ -108,14 +108,11 @@ class FactoriesManager:
             "syndics": weakref.WeakValueDictionary(),
             "proxy-minions": weakref.WeakValueDictionary(),
         }
-        self.event_listener = event_listener.EventListener(
-            auth_events_callback=self._handle_auth_event
-        )
-        self.event_listener.start()
+        self.event_listener = event_listener.EventListener()
 
     def __enter__(self):
         self.event_listener.start()
-        yield self
+        return self
 
     def __exit__(self, *exc):
         self.event_listener.stop()
@@ -721,12 +718,3 @@ class FactoriesManager:
             counter += 1
         root_dir.mkdir(parents=True, exist_ok=True)
         return root_dir
-
-    def _handle_auth_event(self, master_id, payload):
-        self.pytestconfig.hook.pytest_saltfactories_handle_key_auth_event(
-            factories_manager=self,
-            master=self.cache["masters"][master_id],
-            minion_id=payload["id"],
-            keystate=payload["act"],
-            payload=payload,
-        )

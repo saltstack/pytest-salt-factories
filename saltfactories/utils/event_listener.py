@@ -9,8 +9,10 @@ import fnmatch
 import logging
 import threading
 import time
+import weakref
 from collections import deque
 
+import attr
 import msgpack
 import zmq
 
@@ -19,15 +21,23 @@ from saltfactories.utils import ports
 log = logging.getLogger(__name__)
 
 
+@attr.s(kw_only=True, slots=True)
 class EventListener:
-    def __init__(self, timeout=60, auth_events_callback=None):
+    timeout = attr.ib(default=60)
+    address = attr.ib(init=False)
+    store = attr.ib(init=False, repr=False, hash=False)
+    sentinel = attr.ib(init=False, repr=False, hash=False)
+    running_event = attr.ib(init=False, repr=False, hash=False)
+    running_thread = attr.ib(init=False, repr=False, hash=False)
+    auth_event_handlers = attr.ib(init=False, repr=False, hash=False)
+
+    def __attrs_post_init__(self):
         self.store = deque(maxlen=10000)
         self.address = "tcp://127.0.0.1:{}".format(ports.get_unused_localhost_port())
-        self.timeout = timeout
-        self.auth_events_callback = auth_events_callback
         self.running_event = threading.Event()
         self.running_thread = threading.Thread(target=self._run)
         self.sentinel = msgpack.dumps(None)
+        self.auth_event_handlers = weakref.WeakValueDictionary()
 
     def _run(self):
         context = zmq.Context()
@@ -44,8 +54,10 @@ class EventListener:
             if payload is self.sentinel:
                 break
             master_id, tag, data = msgpack.loads(payload, **msgpack_kwargs)
-            if self.auth_events_callback is not None and tag == "salt/auth":
-                self.auth_events_callback(master_id, data)
+            if tag == "salt/auth":
+                auth_event_callback = self.auth_event_handlers.get(master_id)
+                if auth_event_callback:
+                    auth_event_callback(data)
             received = time.time()
             expire = received + self.timeout
             log.info("Received event from: MasterID: %r; Tag: %r; Data: %r", master_id, tag, data)
@@ -124,3 +136,9 @@ class EventListener:
                     log.debug("Found matching pattern: %s", pattern)
                     found_patterns.add(pattern)
         return found_patterns
+
+    def register_auth_event_handler(self, master_id, callback):
+        self.auth_event_handlers[master_id] = callback
+
+    def unregister_auth_event_handler(self, master_id):
+        self.auth_event_handlers.pop(master_id, None)

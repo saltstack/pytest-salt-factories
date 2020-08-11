@@ -27,14 +27,6 @@ saltfactories.exceptions module
    :undoc-members:
    :show-inheritance:
 
-saltfactories.hookspec module
------------------------------
-
-.. automodule:: saltfactories.hookspec
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 saltfactories.plugin module
 ---------------------------
 

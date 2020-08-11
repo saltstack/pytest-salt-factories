@@ -14,20 +14,12 @@ import pprint
 import pytest
 
 import saltfactories
-from saltfactories import hookspec
 from saltfactories.factories.manager import FactoriesManager
 from saltfactories.utils import ports
 from saltfactories.utils.log_server import log_server_listener
 
 
 log = logging.getLogger(__name__)
-
-
-def pytest_addhooks(pluginmanager):
-    """
-    Register our custom hooks
-    """
-    pluginmanager.add_hookspecs(hookspec)
 
 
 @pytest.fixture(scope="session")
@@ -99,8 +91,11 @@ def salt_factories(
 ):
     if not isinstance(salt_factories_config, dict):
         raise RuntimeError("The 'salt_factories_config' fixture MUST return a dictionary")
-    log.debug("Salt Factories Manager Default Config:\n%s", _salt_factories_config)
-    log.debug("Salt Factories Manager User Config:\n%s", salt_factories_config)
+    if salt_factories_config:
+        log.debug(
+            "Salt Factories Manager Default Config:\n%s", pprint.pformat(_salt_factories_config)
+        )
+        log.debug("Salt Factories Manager User Config:\n%s", pprint.pformat(salt_factories_config))
     factories_config = _salt_factories_config.copy()
     factories_config.update(salt_factories_config)
     log.debug(
@@ -115,15 +110,3 @@ def salt_factories(
     )
     with manager:
         yield manager
-
-
-def pytest_saltfactories_handle_key_auth_event(
-    factories_manager, master, minion_id, keystate, payload
-):
-    """
-    This hook is called for every auth event on the masters
-    """
-    salt_key_cli = master.get_salt_key_cli()
-    if keystate == "pend":
-        ret = salt_key_cli.run("--yes", "--accept", minion_id)
-        assert ret.exitcode == 0

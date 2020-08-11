@@ -9,6 +9,7 @@ saltfactories.factories.daemons.master
 Salt Master Factory
 """
 import pathlib
+from functools import partial
 
 import attr
 import salt.config
@@ -24,6 +25,25 @@ from saltfactories.utils import running_username
 
 @attr.s(kw_only=True, slots=True)
 class SaltMasterFactory(SaltDaemonFactory):
+    on_auth_event_callback = attr.ib(repr=False, default=None)
+
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+        if self.config.get("open_mode", False) is False:
+            # If the master is not configured to be in open mode, register an auth event callback
+            # If we were passed an auth event callback, it needs to get this master as the first
+            # argument
+            if self.on_auth_event_callback:
+                auth_event_callback = partial(self.on_auth_event_callback, self)
+            else:
+                auth_event_callback = self._on_auth_event
+            self.register_before_start_callback(
+                self.event_listener.register_auth_event_handler, self.id, auth_event_callback
+            )
+            self.register_after_terminate_callback(
+                self.event_listener.unregister_auth_event_handler, self.id
+            )
+
     @classmethod
     def default_config(
         cls,
@@ -164,6 +184,16 @@ class SaltMasterFactory(SaltDaemonFactory):
     @classmethod
     def load_config(cls, config_file, config):
         return salt.config.master_config(config_file)
+
+    def _on_auth_event(self, payload):
+        if self.config["open_mode"]:
+            return
+        minion_id = payload["id"]
+        keystate = payload["act"]
+        salt_key_cli = self.get_salt_key_cli()
+        if keystate == "pend":
+            ret = salt_key_cli.run("--yes", "--accept", minion_id)
+            assert ret.exitcode == 0
 
     def get_check_events(self):
         """
