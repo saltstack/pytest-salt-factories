@@ -53,7 +53,7 @@ def test_no_local_network(testdir):
         side_effect=[ports.get_unused_localhost_port(), ports.get_unused_localhost_port()],
     ):
         with mock.patch("socket.socket", return_value=mock_socket):
-            res = testdir.runpytest_inprocess()
+            res = testdir.runpytest_inprocess("-p", "no:salt-factories-log-server")
             res.assert_outcomes(skipped=1)
     try:
         res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")

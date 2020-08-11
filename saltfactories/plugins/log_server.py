@@ -1,28 +1,45 @@
 """
-    saltfactories.utils.log_server
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    saltfactories.plugins.log_server
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Tornado Log Server Fixture
+    Log Server Plugin
 """
 import logging
 import threading
 import time
-from contextlib import contextmanager
 
+import attr
 import msgpack
+import pytest
 import zmq
 
+from saltfactories.utils import ports
 
 log = logging.getLogger(__name__)
 
 
-@contextmanager
-def log_server_listener(log_server_host, log_server_port):
+@attr.s(kw_only=True, slots=True, hash=True)
+class LogServer:
+    log_host = attr.ib(default="0.0.0.0")
+    log_port = attr.ib(default=attr.Factory(ports.get_unused_localhost_port))
+    log_level = attr.ib()
+    running_event = attr.ib(init=False, repr=False, hash=False)
+    process_queue_thread = attr.ib(init=False, repr=False, hash=False)
 
-    address = "tcp://{}:{}".format(log_server_host, log_server_port)
-    log.info("Processing logs at %s", address)
+    def start(self):
+        log.info("Starting log server at %s:%d", self.log_host, self.log_port)
+        self.running_event = threading.Event()
+        self.process_queue_thread = threading.Thread(target=self.process_logs)
+        self.process_queue_thread.start()
+        # Wait for the thread to start
+        if self.running_event.wait(5) is not True:
+            self.running_event.clear()
+            raise RuntimeError("Failed to start the log server")
+        log.info("Log Server Started")
 
-    def stop_server(address):
+    def stop(self):
+        log.info("Stopping the logging server")
+        address = "tcp://{}:{}".format(self.log_host, self.log_port)
         log.debug("Stopping the multiprocessing logging queue listener at %s", address)
         context = zmq.Context()
         sender = context.socket(zmq.PUSH)
@@ -34,7 +51,22 @@ def log_server_listener(log_server_host, log_server_port):
             sender.close(1000)
             context.term()
 
-    def process_logs(address, running_event):
+        # Clear the running even, the log process thread know it should stop
+        self.running_event.clear()
+        log.info("Joining the logging server process thread")
+        self.process_queue_thread.join(7)
+        if not self.process_queue_thread.is_alive():
+            log.debug("Stopped the log server")
+        else:
+            log.warning("The logging server thread is still running. Waiting a little longer...")
+            self.process_queue_thread.join(5)
+            if not self.process_queue_thread.is_alive():
+                log.debug("Stopped the log server")
+            else:
+                log.warning("The logging server thread is still running...")
+
+    def process_logs(self):
+        address = "tcp://{}:{}".format(self.log_host, self.log_port)
         context = zmq.Context()
         puller = context.socket(zmq.PULL)
         exit_timeout_seconds = 5
@@ -45,9 +77,9 @@ def log_server_listener(log_server_host, log_server_port):
             log.exception("Unable to bind to puller at %s", address)
             return
         try:
-            running_event.set()
+            self.running_event.set()
             while True:
-                if not running_event.is_set():
+                if not self.running_event.is_set():
                     if exit_timeout is None:
                         log.debug(
                             "Waiting %d seconds to process any remaning log messages "
@@ -108,30 +140,39 @@ def log_server_listener(log_server_host, log_server_port):
             puller.close(1)
             context.term()
 
-    running_event = threading.Event()
-    process_queue_thread = threading.Thread(target=process_logs, args=(address, running_event))
-    process_queue_thread.start()
 
-    # Wait for the thread to start
-    if running_event.wait(5) is not True:
-        running_event.clear()
-        raise RuntimeError("Failed to start the log server")
+@pytest.hookimpl(trylast=True)
+def pytest_configure(config):
+    # If PyTest has no logging configured, default to ERROR level
+    levels = [logging.ERROR]
+    logging_plugin = config.pluginmanager.get_plugin("logging-plugin")
+    try:
+        level = logging_plugin.log_cli_handler.level
+        if level is not None:
+            levels.append(level)
+    except AttributeError:
+        # PyTest CLI logging not configured
+        pass
+    try:
+        level = logging_plugin.log_file_level
+        if level is not None:
+            levels.append(level)
+    except AttributeError:
+        # PyTest Log File logging not configured
+        pass
 
-    # Work it!
-    yield
+    log_level = logging.getLevelName(min(levels))
+    log_server = LogServer(log_level=log_level)
+    config.pluginmanager.register(log_server, "saltfactories-log-server")
 
-    log.info("Stopping the logging server process thread")
-    stop_server(address)
-    # Clear the running even, the log process thread know it should stop
-    running_event.clear()
-    log.info("Joining the logging server process thread")
-    process_queue_thread.join(7)
-    if not process_queue_thread.is_alive():
-        log.debug("Stopped the log server")
-    else:
-        log.warning("The logging server thread is still running. Waiting a little longer...")
-        process_queue_thread.join(5)
-        if not process_queue_thread.is_alive():
-            log.debug("Stopped the log server")
-        else:
-            log.warning("The logging server thread is still running...")
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_sessionstart(session):
+    log_server = session.config.pluginmanager.get_plugin("saltfactories-log-server")
+    log_server.start()
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_sessionfinish(session):
+    log_server = session.config.pluginmanager.get_plugin("saltfactories-log-server")
+    log_server.stop()

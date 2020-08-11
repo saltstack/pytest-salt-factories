@@ -15,68 +15,24 @@ import pytest
 
 import saltfactories
 from saltfactories.factories.manager import FactoriesManager
-from saltfactories.utils import ports
-from saltfactories.utils.log_server import log_server_listener
 
 
 log = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
-def log_server_host():
-    return "0.0.0.0"
-
-
-@pytest.fixture(scope="session")
-def log_server_port():
-    return ports.get_unused_localhost_port()
-
-
-@pytest.fixture(scope="session")
-def log_server_level(request):
-    # If PyTest has no logging configured, default to ERROR level
-    levels = [logging.ERROR]
-    logging_plugin = request.config.pluginmanager.get_plugin("logging-plugin")
-    try:
-        level = logging_plugin.log_cli_handler.level
-        if level is not None:
-            levels.append(level)
-    except AttributeError:
-        # PyTest CLI logging not configured
-        pass
-    try:
-        level = logging_plugin.log_file_level
-        if level is not None:
-            levels.append(level)
-    except AttributeError:
-        # PyTest Log File logging not configured
-        pass
-
-    level_str = logging.getLevelName(min(levels))
-    return level_str
-
-
-@pytest.fixture(scope="session")
-def log_server(log_server_host, log_server_port):
-    log.info("Starting log server at %s:%d", log_server_host, log_server_port)
-    with log_server_listener(log_server_host, log_server_port):
-        log.info("Log Server Started")
-        # Run tests
-        yield
-
-
-@pytest.fixture(scope="session")
-def _salt_factories_config(log_server_host, log_server_port, log_server_level):
+def _salt_factories_config(request):
     """
     Return a dictionary with the keyword arguments for FactoriesManager
     """
+    log_server = request.config.pluginmanager.get_plugin("saltfactories-log-server")
     return {
         "code_dir": saltfactories.CODE_ROOT_DIR.parent,
         "inject_coverage": True,
         "inject_sitecustomize": True,
-        "log_server_host": log_server_host,
-        "log_server_port": log_server_port,
-        "log_server_level": log_server_level,
+        "log_server_host": log_server.log_host,
+        "log_server_port": log_server.log_port,
+        "log_server_level": log_server.log_level,
     }
 
 
@@ -86,9 +42,7 @@ def salt_factories_config():
 
 
 @pytest.fixture(scope="session")
-def salt_factories(
-    request, pytestconfig, tempdir, log_server, salt_factories_config, _salt_factories_config
-):
+def salt_factories(request, pytestconfig, tempdir, salt_factories_config, _salt_factories_config):
     if not isinstance(salt_factories_config, dict):
         raise RuntimeError("The 'salt_factories_config' fixture MUST return a dictionary")
     if salt_factories_config:

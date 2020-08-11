@@ -80,6 +80,7 @@ setup(
             "salt-factories-sysinfo = saltfactories.plugins.sysinfo",
             "salt-factories-sysstats = saltfactories.plugins.sysstats",
             "salt-factories-event-listener = saltfactories.plugins.event_listener",
+            "salt-factories-log-server = saltfactories.plugins.log_server",
         ]
     },
 )
