@@ -62,12 +62,8 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
             "log_file": "logs/proxy.log",
             "log_level_logfile": "debug",
             "loop_interval": 0.05,
-            #'multiprocessing': False,
             "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-            "hash_type": "sha256",
-            "transport": "zeromq",
-            "add_proxymodule_to_opts": False,
             "proxy": {"proxytype": "dummy"},
             "pytest-minion": {
                 "master-id": master_id,

@@ -59,11 +59,8 @@ class SaltMinionFactory(SaltDaemonFactory):
             "log_file": "logs/minion.log",
             "log_level_logfile": "debug",
             "loop_interval": 0.05,
-            #'multiprocessing': False,
             "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-            "hash_type": "sha256",
-            "transport": "zeromq",
             "pytest-minion": {
                 "master-id": master_id,
                 "log": {"prefix": "{}(id={!r})".format(cls.__name__, minion_id)},
