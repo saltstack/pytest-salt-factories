@@ -29,10 +29,9 @@ class SshdDaemonFactory(DaemonFactory):
     authorized_keys = attr.ib(default=None)
     sshd_config_dict = attr.ib(default=None, repr=False)
     client_key = attr.ib(default=None, init=False, repr=False)
-    _sshd_config = attr.ib(default=None, init=False, repr=False)
+    sshd_config = attr.ib(default=None, init=False)
 
     def __attrs_post_init__(self):
-        super().__attrs_post_init__()
         if self.authorized_keys is None:
             self.authorized_keys = []
         if self.sshd_config_dict is None:
@@ -41,6 +40,7 @@ class SshdDaemonFactory(DaemonFactory):
             self.listen_address = "127.0.0.1"
         if self.listen_port is None:
             self.listen_port = ports.get_unused_localhost_port()
+        self.check_ports = [self.listen_port]
         if isinstance(self.config_dir, str):
             self.config_dir = pathlib.Path(self.config_dir)
         elif not isinstance(self.config_dir, pathlib.Path):
@@ -66,7 +66,6 @@ class SshdDaemonFactory(DaemonFactory):
             log.debug("AuthorizedKeysFile contents:\n%s", rfh.read())
 
         _default_config = {
-            "Port": self.listen_port,
             "ListenAddress": self.listen_address,
             "PermitRootLogin": "no",
             "ChallengeResponseAuthentication": "no",
@@ -76,28 +75,24 @@ class SshdDaemonFactory(DaemonFactory):
             "PidFile": self.config_dir / "sshd.pid",
             "AuthorizedKeysFile": authorized_keys_file,
         }
-        _default_config.update(self.sshd_config_dict)
-        self._sshd_config = _default_config
+        if self.sshd_config_dict:
+            _default_config.update(self.sshd_config_dict)
+        self.sshd_config = _default_config
         self._write_config()
+        super().__attrs_post_init__()
 
     def get_base_script_args(self):
         """
         Returns any additional arguments to pass to the CLI script
         """
-        return ["-D", "-e", "-f", str(self.config_dir / "sshd_config")]
-
-    def get_check_ports(self):
-        """
-        Return a list of ports to check against to ensure the daemon is running
-        """
-        return [self.listen_port]
+        return ["-D", "-e", "-f", str(self.config_dir / "sshd_config"), "-p", str(self.listen_port)]
 
     def _write_config(self):
         sshd_config_file = self.config_dir / "sshd_config"
         if not sshd_config_file.exists():
             # Let's write a default config file
             config_lines = []
-            for key, value in self._sshd_config.items():
+            for key, value in self.sshd_config.items():
                 if isinstance(value, list):
                     for item in value:
                         config_lines.append("{} {}\n".format(key, item))
