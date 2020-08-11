@@ -161,7 +161,12 @@ def pytest_configure(config):
         # PyTest Log File logging not configured
         pass
 
+    if logging.NOTSET in levels:
+        # We don't want the NOTSET level on the levels
+        levels.pop(levels.index(logging.NOTSET))
+
     log_level = logging.getLevelName(min(levels))
+
     log_server = LogServer(log_level=log_level)
     config.pluginmanager.register(log_server, "saltfactories-log-server")
 
