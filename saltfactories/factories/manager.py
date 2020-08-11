@@ -34,8 +34,6 @@ class FactoriesManager:
     If process statistics are enabled, it also adds the started daemons to those statistics.
 
     Args:
-        pytestconfig (:fixture:`pytestconfig`):
-            PyTest `pytestconfig` fixture
         root_dir:
         log_server_port(int):
             The port the log server should listen at
@@ -67,7 +65,6 @@ class FactoriesManager:
             hook accessible at `stats_processes` on the `session` attribute of the :fixture:`request`.
     """
 
-    pytestconfig = attr.ib(repr=False)
     root_dir = attr.ib()
     log_server_port = attr.ib()
     log_server_level = attr.ib()

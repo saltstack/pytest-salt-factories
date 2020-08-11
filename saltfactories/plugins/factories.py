@@ -42,7 +42,7 @@ def salt_factories_config():
 
 
 @pytest.fixture(scope="session")
-def salt_factories(request, pytestconfig, tempdir, salt_factories_config, _salt_factories_config):
+def salt_factories(request, tempdir, salt_factories_config, _salt_factories_config):
     if not isinstance(salt_factories_config, dict):
         raise RuntimeError("The 'salt_factories_config' fixture MUST return a dictionary")
     if salt_factories_config:
@@ -56,9 +56,8 @@ def salt_factories(request, pytestconfig, tempdir, salt_factories_config, _salt_
         "Instantiating the Salt Factories Manager with the following keyword arguments:\n%s",
         pprint.pformat(factories_config),
     )
-    event_listener = pytestconfig.pluginmanager.get_plugin("saltfactories-event-listener")
+    event_listener = request.config.pluginmanager.get_plugin("saltfactories-event-listener")
     return FactoriesManager(
-        pytestconfig=pytestconfig,
         root_dir=tempdir,
         stats_processes=request.session.stats_processes,
         event_listener=event_listener,
