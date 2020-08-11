@@ -11,7 +11,7 @@ def sshd(salt_factories):
     # Set StrictModes to no because our config directory lives in /tmp and those permissions
     # are not acceptable by sshd strict paranoia.
     sshd_config_dict = {"StrictModes": "no"}
-    factory = salt_factories.get_sshd_daemon("sshd", sshd_config_dict=sshd_config_dict)
+    factory = salt_factories.get_sshd_daemon(sshd_config_dict=sshd_config_dict)
     with factory.started():
         yield factory
 

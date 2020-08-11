@@ -107,7 +107,6 @@ class FactoriesManager:
             "minions": weakref.WeakValueDictionary(),
             "syndics": weakref.WeakValueDictionary(),
             "proxy-minions": weakref.WeakValueDictionary(),
-            "factories": weakref.WeakValueDictionary(),
         }
         self.event_listener = event_listener.EventListener(
             auth_events_callback=self._handle_auth_event
@@ -562,12 +561,12 @@ class FactoriesManager:
 
     def get_sshd_daemon(
         self,
-        daemon_id,
         config_dir=None,
         listen_address=None,
         listen_port=None,
         sshd_config_dict=None,
         display_name=None,
+        cli_script_name="sshd",
         max_start_attempts=3,
         start_timeout=None,
         factory_class=daemons.sshd.SshdDaemonFactory,
@@ -577,10 +576,6 @@ class FactoriesManager:
         Start an sshd daemon
 
         Args:
-            request(:fixture:`request`):
-                The PyTest test execution request
-            daemon_id(str):
-                An ID so we know about the sshd server by ID
             max_start_attempts(int):
                 How many attempts should be made to start the proxy minion in case of failure to validate that
                 its running
@@ -592,6 +587,8 @@ class FactoriesManager:
                 The port where the sshd server will listen to connections
             sshd_config_dict(dict):
                 A dictionary of key-value pairs to construct the sshd config file
+            cli_script_name(str):
+                The name or path to the binary to run. Defaults to ``sshd``.
             factory_class_kwargs(dict):
                 Extra keyword arguments to pass to :py:class:`~saltfactories.factories.daemons.sshd.SshdDaemonFactory`
 
@@ -600,20 +597,20 @@ class FactoriesManager:
                 The sshd process class instance
         """
         if config_dir is None:
-            config_dir = self._get_root_dir_for_daemon(daemon_id)
+            config_dir = self._get_root_dir_for_daemon("sshd")
         try:
             config_dir = pathlib.Path(config_dir.strpath).resolve()
         except AttributeError:
             config_dir = pathlib.Path(config_dir).resolve()
 
-        factory = factory_class(
+        return factory_class(
             start_timeout=start_timeout or self.start_timeout,
             slow_stop=self.slow_stop,
             environ=self.environ,
             cwd=self.cwd,
             max_start_attempts=max_start_attempts,
             factories_manager=self,
-            cli_script_name="sshd",
+            cli_script_name=cli_script_name,
             display_name=display_name or "SSHD",
             config_dir=config_dir,
             listen_address=listen_address,
@@ -621,8 +618,6 @@ class FactoriesManager:
             sshd_config_dict=sshd_config_dict,
             **factory_class_kwargs
         )
-        self.cache["factories"][daemon_id] = factory
-        return factory
 
     def get_container(
         self,
@@ -661,7 +656,7 @@ class FactoriesManager:
             :py:class:`~saltfactories.factories.daemons.container.ContainerFactory`:
                 The factory instance
         """
-        factory = factory_class(
+        return factory_class(
             name=container_name,
             image=image_name,
             docker_client=docker_client,
@@ -672,8 +667,6 @@ class FactoriesManager:
             max_start_attempts=max_start_attempts,
             **factory_class_kwargs
         )
-        self.cache["factories"][container_name] = factory
-        return factory
 
     def _get_factory_class_instance(
         self,
