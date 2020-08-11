@@ -9,10 +9,26 @@ saltfactories.plugins package
 Submodules
 ----------
 
+saltfactories.plugins.event\_listener module
+--------------------------------------------
+
+.. automodule:: saltfactories.plugins.event_listener
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 saltfactories.plugins.factories module
 --------------------------------------
 
 .. automodule:: saltfactories.plugins.factories
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+saltfactories.plugins.log\_server module
+----------------------------------------
+
+.. automodule:: saltfactories.plugins.log_server
    :members:
    :undoc-members:
    :show-inheritance:

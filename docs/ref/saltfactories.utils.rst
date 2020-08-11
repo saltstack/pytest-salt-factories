@@ -33,22 +33,6 @@ saltfactories.utils.compat module
    :undoc-members:
    :show-inheritance:
 
-saltfactories.utils.event\_listener module
-------------------------------------------
-
-.. automodule:: saltfactories.utils.event_listener
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-saltfactories.utils.log\_server module
---------------------------------------
-
-.. automodule:: saltfactories.utils.log_server
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 saltfactories.utils.markers module
 ----------------------------------
 
