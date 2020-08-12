@@ -770,6 +770,13 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
     def __attrs_post_init__(self):
         DaemonFactory.__attrs_post_init__(self)
         SaltFactory.__attrs_post_init__(self)
+        for arg in self.extra_cli_arguments_after_first_start_failure:
+            if arg in ("-l", "--log-level"):
+                break
+            if arg.startswith("--log-level="):
+                break
+        else:
+            self.extra_cli_arguments_after_first_start_failure.append("--log-level=debug")
 
     @classmethod
     def configure(
