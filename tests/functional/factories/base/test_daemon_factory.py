@@ -1,4 +1,5 @@
 import functools
+import logging
 import pprint
 import re
 import sys
@@ -332,3 +333,52 @@ def test_context_manager_returns_class_instance(tempfiles):
         started = d.is_running()
     assert d.is_running() is False
     assert started is True
+
+
+@pytest.mark.parametrize("max_start_attempts", [1, 2, 3])
+def test_exact_max_start_attempts(tempfiles, caplog, max_start_attempts):
+    """
+    This test asserts that we properly report max_start_attempts
+    """
+    script = tempfiles.makepyfile(
+        r"""
+        # coding=utf-8
+
+        import sys
+        import time
+        import multiprocessing
+
+        def main():
+            time.sleep(0.125)
+            sys.exit(1)
+
+        # Support for windows test runs
+        if __name__ == '__main__':
+            multiprocessing.freeze_support()
+            main()
+        """,
+        executable=True,
+    )
+    daemon = DaemonFactory(
+        cli_script_name=sys.executable,
+        base_script_args=[script],
+        start_timeout=0.1,
+        max_start_attempts=max_start_attempts,
+        check_ports=[12345],
+    )
+    with caplog.at_level(logging.INFO):
+        with pytest.raises(FactoryNotStarted) as exc:
+            daemon.start()
+        assert "confirm running status after {} attempts".format(max_start_attempts) in str(
+            exc.value
+        )
+    start_attempts = [
+        "Attempt: {} of {}".format(n, max_start_attempts) for n in range(1, max_start_attempts + 1)
+    ]
+    for record in caplog.records:
+        if not record.message.startswith("Starting DaemonFactory"):
+            continue
+        for idx, start_attempt in enumerate(list(start_attempts)):
+            if start_attempt in record.message:
+                start_attempts.pop(idx)
+    assert not start_attempts

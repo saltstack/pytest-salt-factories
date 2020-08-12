@@ -406,9 +406,11 @@ class DaemonFactory(SubprocessFactoryBase):
         start_time = time.time()
         start_attempts = max_start_attempts or self.max_start_attempts
         current_attempt = 0
-        while current_attempt <= start_attempts:
-            current_attempt += 1
+        while True:
             if process_running:
+                break
+            current_attempt += 1
+            if current_attempt > start_attempts:
                 break
             log.info("Starting %s. Attempt: %d of %d", self, current_attempt, start_attempts)
             current_start_time = time.time()
