@@ -38,12 +38,10 @@ def test_extra_cli_arguments_after_first_failure(
         # coding=utf-8
 
         import sys
-        import time
         import multiprocessing
 
         def main():
-            time.sleep(0.125)
-            with open("{}", "a") as wfh:
+            with open({!r}, "a") as wfh:
                 wfh.write(" ".join(sys.argv))
                 wfh.write("\n")
             sys.exit(1)
@@ -60,7 +58,7 @@ def test_extra_cli_arguments_after_first_failure(
     daemon = SaltDaemonFactory(
         cli_script_name=script,
         config=config,
-        start_timeout=0.1,
+        start_timeout=0.25,
         max_start_attempts=2,
         check_ports=[12345],
         extra_cli_arguments_after_first_start_failure=["--log-level=debug"],
