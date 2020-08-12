@@ -66,6 +66,8 @@ class SaltMasterFactory(SaltDaemonFactory):
             master_of_masters_id = master_of_masters.id
             config_overrides["syndic_master"] = master_of_masters.config["interface"]
             config_overrides["syndic_master_port"] = master_of_masters.config["ret_port"]
+            # Match transport if not set
+            config_defaults.setdefault("transport", master_of_masters.config["transport"])
 
         conf_dir = root_dir / "conf"
         conf_dir.mkdir(parents=True, exist_ok=True)

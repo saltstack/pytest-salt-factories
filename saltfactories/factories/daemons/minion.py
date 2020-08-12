@@ -38,6 +38,8 @@ class SaltMinionFactory(SaltDaemonFactory):
         if master is not None:
             master_id = master.id
             master_port = master.config["ret_port"]
+            # Match transport if not set
+            config_defaults.setdefault("transport", master.config["transport"])
 
         conf_dir = root_dir / "conf"
         conf_dir.mkdir(parents=True, exist_ok=True)
