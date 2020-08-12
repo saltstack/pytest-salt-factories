@@ -350,6 +350,7 @@ class DaemonFactory(SubprocessFactoryBase):
     before_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     after_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     after_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
+    extra_cli_arguments_after_first_start_failure = attr.ib(hash=False, default=attr.Factory(list))
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
@@ -406,6 +407,7 @@ class DaemonFactory(SubprocessFactoryBase):
         start_time = time.time()
         start_attempts = max_start_attempts or self.max_start_attempts
         current_attempt = 0
+        run_arguments = list(extra_cli_arguments)
         while True:
             if process_running:
                 break
@@ -415,7 +417,11 @@ class DaemonFactory(SubprocessFactoryBase):
             log.info("Starting %s. Attempt: %d of %d", self, current_attempt, start_attempts)
             current_start_time = time.time()
             start_running_timeout = current_start_time + (start_timeout or self.start_timeout)
-            self._run(*extra_cli_arguments)
+            if current_attempt > 1 and self.extra_cli_arguments_after_first_start_failure:
+                run_arguments = list(extra_cli_arguments) + list(
+                    self.extra_cli_arguments_after_first_start_failure
+                )
+            self._run(*run_arguments)
             if not self.is_running():
                 # A little breathe time to allow the process to start if not started already
                 time.sleep(0.5)
