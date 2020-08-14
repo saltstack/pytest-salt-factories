@@ -33,6 +33,7 @@ PIP_INSTALL_SILENT = (
 ) is None
 CI_RUN = PIP_INSTALL_SILENT is False
 SKIP_REQUIREMENTS_INSTALL = "SKIP_REQUIREMENTS_INSTALL" in os.environ
+EXTRA_REQUIREMENTS_INSTALL = os.environ.get("EXTRA_REQUIREMENTS_INSTALL")
 
 # Paths
 REPO_ROOT = pathlib.Path(__file__).resolve().parent
@@ -123,6 +124,17 @@ def _tests(session):
                     session.install("msgpack=={}".format(requirement["version"]))
                     break
         session.install("-r", os.path.join("requirements", "tests.txt"), silent=PIP_INSTALL_SILENT)
+
+        if EXTRA_REQUIREMENTS_INSTALL:
+            session.log(
+                "Installing the following extra requirements because the EXTRA_REQUIREMENTS_INSTALL "
+                "environment variable was set: EXTRA_REQUIREMENTS_INSTALL='%s'",
+                EXTRA_REQUIREMENTS_INSTALL,
+            )
+            install_command = ["--progress-bar=off"]
+            install_command += [req.strip() for req in EXTRA_REQUIREMENTS_INSTALL.split()]
+            session.install(*install_command, silent=PIP_INSTALL_SILENT)
+
     session.run("coverage", "erase")
     args = [
         "--rootdir",
