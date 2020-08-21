@@ -584,6 +584,18 @@ class FactoriesManager:
             **factory_class_kwargs
         )
 
+    def get_salt_script_path(self, script_name):
+        """
+        Return the path to the customized script path, generating one if needed.
+        """
+        return cli_scripts.generate_script(
+            self.scripts_dir,
+            script_name,
+            code_dir=self.code_dir,
+            inject_coverage=self.inject_coverage,
+            inject_sitecustomize=self.inject_sitecustomize,
+        )
+
     def _get_factory_class_instance(
         self,
         script_name,
@@ -597,13 +609,6 @@ class FactoriesManager:
         """
         Helper method to instantiate daemon factories
         """
-        script_path = cli_scripts.generate_script(
-            self.scripts_dir,
-            script_name,
-            code_dir=self.code_dir,
-            inject_coverage=self.inject_coverage,
-            inject_sitecustomize=self.inject_sitecustomize,
-        )
         factory = factory_class(
             config=daemon_config,
             start_timeout=start_timeout or self.start_timeout,
@@ -613,7 +618,7 @@ class FactoriesManager:
             max_start_attempts=max_start_attempts,
             event_listener=self.event_listener,
             factories_manager=self,
-            cli_script_name=script_path,
+            cli_script_name=self.get_salt_script_path(script_name),
             **factory_class_kwargs
         )
         return factory
