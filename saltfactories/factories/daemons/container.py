@@ -150,16 +150,36 @@ class ContainerFactory(Factory):
                 # Don't know why, but if self.container wasn't previously in a running
                 # state, and now it is, we have to re-set the self.container attribute
                 # so that it gives valid status information
-                self.container = self.docker_client.containers.get(self.container.id)
+                self.container = self.docker_client.containers.get(self.name)
                 if self.container.status != "running":
                     time.sleep(0.25)
                     continue
 
+                self.container = self.docker_client.containers.get(self.name)
+                logs = self.container.logs(stdout=True, stderr=True, stream=False)
+                if isinstance(logs, bytes):
+                    stdout = logs.decode()
+                    stderr = None
+                else:
+                    stdout = logs[0].decode()
+                    stderr = logs[1].decode()
+                if stdout and stderr:
+                    log.info("Running Container Logs:\n%s\n%s", stdout, stderr)
+                elif stdout:
+                    log.info("Running Container Logs:\n%s", stdout)
+
                 # If we reached this far it means that we got the running status above, and
                 # now that the container has started, run start checks
-                if self.run_start_checks(current_start_time, start_running_timeout) is False:
-                    time.sleep(0.5)
-                    continue
+                try:
+                    if (
+                        self.run_container_start_checks(current_start_time, start_running_timeout)
+                        is False
+                    ):
+                        time.sleep(0.5)
+                        continue
+                except FactoryNotStarted:
+                    self.terminate()
+                    break
                 log.info(
                     "The %s factory is running after %d attempts. Took %1.2f seconds",
                     self,
@@ -235,14 +255,17 @@ class ContainerFactory(Factory):
         stdout = stderr = None
         try:
             if self.container is not None:
-                container = self.docker_client.containers.get(self.container.id)
+                container = self.docker_client.containers.get(self.name)
                 logs = container.logs(stdout=True, stderr=True, stream=False)
                 if isinstance(logs, bytes):
                     stdout = logs.decode()
                 else:
                     stdout = logs[0].decode()
                     stderr = logs[1].decode()
-                log.warning("Running Container Logs:\n%s\n%s", stdout, stderr)
+                if stdout and stderr:
+                    log.info("Stopped Container Logs:\n%s\n%s", stdout, stderr)
+                elif stdout:
+                    log.info("Stopped Container Logs:\n%s", stdout)
                 if container.status == "running":
                     container.remove(force=True)
                     container.wait()
@@ -272,6 +295,8 @@ class ContainerFactory(Factory):
     def is_running(self):
         if self.container is None:
             return False
+
+        self.container = self.docker_client.containers.get(self.name)
         return self.container.status == "running"
 
     def run(self, *cmd, **kwargs):
@@ -279,7 +304,8 @@ class ContainerFactory(Factory):
             cmd = cmd[0]
         log.info("%s is running %r ...", self, cmd)
         # We force dmux to True so that we always get back both stdout and stderr
-        ret = self.container.exec_run(cmd, demux=True, **kwargs)
+        container = self.docker_client.containers.get(self.name)
+        ret = container.exec_run(cmd, demux=True, **kwargs)
         exitcode = ret.exit_code
         stdout = stderr = None
         if ret.output:
@@ -299,21 +325,38 @@ class ContainerFactory(Factory):
         except (APIError, RequestsConnectionError, PyWinTypesError) as exc:
             return "The docker client failed to ping the docker server: {}".format(exc)
 
-    def run_start_checks(self, started_at, timeout_at):
-        check_ports = set(self.get_check_ports())
-        if not check_ports:
-            return True
+    def run_container_start_checks(self, started_at, timeout_at):
         checks_start_time = time.time()
         while time.time() <= timeout_at:
             if not self.is_running():
-                log.info("%s is no longer running", self)
-                return False
+                raise FactoryNotStarted("{} is no longer running".format(self))
+            if self._container_start_checks():
+                break
+        else:
+            log.error(
+                "Failed to run container start checks after %1.2f seconds",
+                time.time() - checks_start_time,
+            )
+            return False
+        check_ports = set(self.get_check_ports())
+        if not check_ports:
+            return True
+        while time.time() <= timeout_at:
+            if not self.is_running():
+                raise FactoryNotStarted("{} is no longer running".format(self))
             if not check_ports:
                 break
             check_ports -= ports.get_connectable_ports(check_ports)
+            if check_ports:
+                time.sleep(0.5)
         else:
-            log.error("Failed to check ports after %1.2f seconds", time.time() - checks_start_time)
+            log.error(
+                "Failed to check ports after %1.2f seconds", time.time() - checks_start_time,
+            )
             return False
+        return True
+
+    def _container_start_checks(self):
         return True
 
     def __enter__(self):
@@ -332,22 +375,29 @@ class ContainerFactory(Factory):
 @attr.s(kw_only=True)
 class SaltDaemonContainerFactory(SaltDaemonFactory, ContainerFactory):
     def __attrs_post_init__(self):
+        self.daemon_started = self.daemon_starting = False
         if self.python_executable is None:
             # Default to whatever is the default python in the container
             self.python_executable = "python"
         SaltDaemonFactory.__attrs_post_init__(self)
         ContainerFactory.__attrs_post_init__(self)
-        # There are some volumes which NEED to exist on the container
-        # so that configs are in the right place and also our custom
-        # salt plugins
+        # There are some volumes which NEED to exist on the container so
+        # that configs are in the right place and also our custom salt
+        # plugins along with the custom scripts to start the daemons.
         root_dir = os.path.dirname(self.config["root_dir"])
+        config_dir = str(self.config_dir)
+        scripts_dir = str(self.factories_manager.scripts_dir)
         volumes = {
             root_dir: {"bind": root_dir, "mode": "z"},
+            scripts_dir: {"bind": scripts_dir, "mode": "z"},
+            config_dir: {"bind": self.config_dir, "mode": "z"},
             str(CODE_ROOT_DIR): {"bind": str(CODE_ROOT_DIR), "mode": "z"},
         }
         if "volumes" not in self.container_run_kwargs:
             self.container_run_kwargs["volumes"] = {}
         self.container_run_kwargs["volumes"].update(volumes)
+        self.container_run_kwargs.setdefault("hostname", self.name)
+        self.container_run_kwargs.setdefault("auto_remove", True)
 
     def build_cmdline(self, *args):
         return ["docker", "exec", "-i", self.name] + super().build_cmdline(*args)
@@ -357,18 +407,29 @@ class SaltDaemonContainerFactory(SaltDaemonFactory, ContainerFactory):
         ContainerFactory.start(
             self, max_start_attempts=max_start_attempts, start_timeout=start_timeout
         )
+        self.daemon_starting = True
         # Now that the container is up, let's start the daemon
-        return SaltDaemonFactory.start(
+        self.daemon_started = SaltDaemonFactory.start(
             self,
             *extra_cli_arguments,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout
         )
+        return self.daemon_started
 
     def terminate(self):
+        self.daemon_started = self.daemon_starting = False
         ret = SaltDaemonFactory.terminate(self)
         ContainerFactory.terminate(self)
         return ret
+
+    def is_running(self):
+        running = ContainerFactory.is_running(self)
+        if running is False:
+            return running
+        if self.daemon_starting or self.daemon_started:
+            return SaltDaemonFactory.is_running(self)
+        return running
 
     def get_check_events(self):
         """
@@ -388,3 +449,6 @@ class SaltMinionContainerFactory(SaltDaemonContainerFactory, SaltMinionFactory):
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         return SaltMinionFactory.get_check_events(self)
+
+    def run_start_checks(self, started_at, timeout_at):
+        return SaltMinionFactory.run_start_checks(self, started_at, timeout_at)
