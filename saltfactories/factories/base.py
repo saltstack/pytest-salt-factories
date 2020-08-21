@@ -515,6 +515,8 @@ class DaemonFactory(SubprocessFactoryBase):
             if not check_ports:
                 break
             check_ports -= ports.get_connectable_ports(check_ports)
+            if check_ports:
+                time.sleep(0.5)
         else:
             log.error(
                 "Failed to check ports after %1.2f seconds for %s",
@@ -855,6 +857,7 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         if not super().run_start_checks(started_at, timeout_at):
             return False
         if not self.event_listener:
+            log.debug("The 'event_listener' attribute is not set. Not checking events...")
             return True
 
         check_events = set(self.get_check_events())
@@ -869,6 +872,8 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
             if not check_events:
                 break
             check_events -= self.event_listener.get_events(check_events, after_time=started_at)
+            if check_events:
+                time.sleep(0.5)
         else:
             log.error(
                 "Failed to check events after %1.2f seconds for %s",
