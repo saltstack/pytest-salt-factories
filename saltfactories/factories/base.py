@@ -430,9 +430,13 @@ class DaemonFactory(SubprocessFactoryBase):
                     log.warning("%s is no longer running", self)
                     self.terminate()
                     break
-                if self.run_start_checks(current_start_time, start_running_timeout) is False:
-                    time.sleep(1)
-                    continue
+                try:
+                    if self.run_start_checks(current_start_time, start_running_timeout) is False:
+                        time.sleep(1)
+                        continue
+                except FactoryNotStarted:
+                    self.terminate()
+                    break
                 log.info(
                     "The %s factory is running after %d attempts. Took %1.2f seconds",
                     self,
@@ -510,8 +514,7 @@ class DaemonFactory(SubprocessFactoryBase):
         checks_start_time = time.time()
         while time.time() <= timeout_at:
             if not self.is_running():
-                log.warning("%s is no longer running", self)
-                return False
+                raise FactoryNotStarted("{} is no longer running".format(self))
             if not check_ports:
                 break
             check_ports -= ports.get_connectable_ports(check_ports)
@@ -867,8 +870,7 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         checks_start_time = time.time()
         while time.time() <= timeout_at:
             if not self.is_running():
-                log.info("%s is no longer running", self)
-                return False
+                raise FactoryNotStarted("{} is no longer running".format(self))
             if not check_events:
                 break
             check_events -= self.event_listener.get_events(check_events, after_time=started_at)
