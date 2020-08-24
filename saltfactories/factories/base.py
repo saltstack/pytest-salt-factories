@@ -33,6 +33,7 @@ from saltfactories.utils.processes import Popen
 from saltfactories.utils.processes import ProcessResult
 from saltfactories.utils.processes import ShellResult
 from saltfactories.utils.processes import terminate_process
+from saltfactories.utils.processes import terminate_process_list
 
 log = logging.getLogger(__name__)
 
@@ -351,12 +352,16 @@ class DaemonFactory(SubprocessFactoryBase):
     after_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     after_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     extra_cli_arguments_after_first_start_failure = attr.ib(hash=False, default=attr.Factory(list))
+    listen_ports = attr.ib(init=False, repr=False, hash=False, default=attr.Factory(list))
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
         if self.check_ports and not isinstance(self.check_ports, (list, tuple)):
             self.check_ports = [self.check_ports]
+        if self.check_ports:
+            self.listen_ports.extend(self.check_ports)
         self.register_after_start_callback(self._add_factory_to_stats_processes)
+        self.register_after_terminate_callback(self._terminate_processes_matching_listen_ports)
         self.register_after_terminate_callback(self._remove_factory_from_stats_processes)
 
     def register_before_start_callback(self, callback, *args, **kwargs):
@@ -541,6 +546,26 @@ class DaemonFactory(SubprocessFactoryBase):
         if self.factories_manager and self.factories_manager.stats_processes is not None:
             display_name = self.get_display_name()
             self.factories_manager.stats_processes.pop(display_name, None)
+
+    def _terminate_processes_matching_listen_ports(self):
+        if not self.listen_ports:
+            return
+        # If any processes were not terminated and are listening on the ports
+        # we have set on listen_ports, terminate those processes.
+        found_processes = []
+        for process in psutil.process_iter(["connections"]):
+            for connection in process.connections():
+                if connection.laddr.port in self.check_ports:
+                    found_processes.append(process)
+                    # We already found one connection, no need to check the others
+                    break
+        if found_processes:
+            log.debug(
+                "The following processes were found listening on ports %s: %s",
+                ", ".join(self.listen_ports),
+                found_processes,
+            )
+            terminate_process_list(found_processes, kill=True, slow_stop=False)
 
     def __enter__(self):
         if not self.is_running():
