@@ -53,6 +53,12 @@ class FactoryFailure(SaltFactoriesException):
 
 class FactoryNotStarted(FactoryFailure):
     """
+    Exception raised when a factory failed to start
+    """
+
+
+class ProcessNotStarted(FactoryFailure):
+    """
     Exception raised when a process failed to start
     """
 
