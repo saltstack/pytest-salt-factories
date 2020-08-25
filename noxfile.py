@@ -143,6 +143,7 @@ def _tests(session):
         "--log-file-level=debug",
         "--show-capture=no",
         "--junitxml={}".format(JUNIT_REPORT),
+        "--showlocals",
         "-ra",
         "-s",
     ]
