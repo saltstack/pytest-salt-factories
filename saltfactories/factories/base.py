@@ -399,16 +399,6 @@ class DaemonFactory(SubprocessFactoryBase):
             log.warning("%s is already running.", self)
             return True
         process_running = False
-        for callback, args, kwargs in self.before_start_callbacks:
-            try:
-                callback(*args, **kwargs)
-            except Exception as exc:  # pylint: disable=broad-except
-                log.info(
-                    "Exception raised when running %s: %s",
-                    self._format_callback(callback, args, kwargs),
-                    exc,
-                    exc_info=True,
-                )
         start_time = time.time()
         start_attempts = max_start_attempts or self.max_start_attempts
         current_attempt = 0
@@ -420,6 +410,16 @@ class DaemonFactory(SubprocessFactoryBase):
             if current_attempt > start_attempts:
                 break
             log.info("Starting %s. Attempt: %d of %d", self, current_attempt, start_attempts)
+            for callback, args, kwargs in self.before_start_callbacks:
+                try:
+                    callback(*args, **kwargs)
+                except Exception as exc:  # pylint: disable=broad-except
+                    log.info(
+                        "Exception raised when running %s: %s",
+                        self._format_callback(callback, args, kwargs),
+                        exc,
+                        exc_info=True,
+                    )
             current_start_time = time.time()
             start_running_timeout = current_start_time + (start_timeout or self.start_timeout)
             if current_attempt > 1 and self.extra_cli_arguments_after_first_start_failure:
