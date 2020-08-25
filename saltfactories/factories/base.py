@@ -555,6 +555,9 @@ class DaemonFactory(SubprocessFactoryBase):
         found_processes = []
         for process in psutil.process_iter(["connections"]):
             for connection in process.connections():
+                if connection.status != psutil.CONN_LISTEN:
+                    # We only care about listening services
+                    continue
                 if connection.laddr.port in self.check_ports:
                     found_processes.append(process)
                     # We already found one connection, no need to check the others
@@ -562,10 +565,15 @@ class DaemonFactory(SubprocessFactoryBase):
         if found_processes:
             log.debug(
                 "The following processes were found listening on ports %s: %s",
-                ", ".join(self.listen_ports),
+                ", ".join([str(port) for port in self.listen_ports]),
                 found_processes,
             )
             terminate_process_list(found_processes, kill=True, slow_stop=False)
+        else:
+            log.debug(
+                "No astray processes were found listening on ports: %s",
+                ", ".join([str(port) for port in self.listen_ports]),
+            )
 
     def __enter__(self):
         if not self.is_running():
