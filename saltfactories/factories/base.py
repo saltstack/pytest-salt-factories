@@ -385,7 +385,7 @@ class DaemonFactory(SubprocessFactoryBase):
     def _format_callback(self, callback, args, kwargs):
         callback_str = "{}(".format(callback.__name__)
         if args:
-            callback_str += ", ".join(args)
+            callback_str += ", ".join([repr(arg) for arg in args])
         if kwargs:
             callback_str += ", ".join(["{}={!r}".format(k, v) for (k, v) in kwargs.items()])
         callback_str += ")"
