@@ -554,14 +554,18 @@ class DaemonFactory(SubprocessFactoryBase):
         # we have set on listen_ports, terminate those processes.
         found_processes = []
         for process in psutil.process_iter(["connections"]):
-            for connection in process.connections():
-                if connection.status != psutil.CONN_LISTEN:
-                    # We only care about listening services
-                    continue
-                if connection.laddr.port in self.check_ports:
-                    found_processes.append(process)
-                    # We already found one connection, no need to check the others
-                    break
+            try:
+                for connection in process.connections():
+                    if connection.status != psutil.CONN_LISTEN:
+                        # We only care about listening services
+                        continue
+                    if connection.laddr.port in self.check_ports:
+                        found_processes.append(process)
+                        # We already found one connection, no need to check the others
+                        break
+            except psutil.AccessDenied:
+                # We've been denied access to this process connections. Carry on.
+                continue
         if found_processes:
             log.debug(
                 "The following processes were found listening on ports %s: %s",
