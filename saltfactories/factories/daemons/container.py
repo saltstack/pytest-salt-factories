@@ -7,7 +7,6 @@
 import atexit
 import logging
 import os
-import time
 
 import attr
 
@@ -18,6 +17,7 @@ from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.factories.daemons.minion import SaltMinionFactory
 from saltfactories.utils import ports
 from saltfactories.utils import random_string
+from saltfactories.utils import time
 from saltfactories.utils.processes import ProcessResult
 
 try:

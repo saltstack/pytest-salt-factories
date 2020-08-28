@@ -6,7 +6,6 @@
 """
 import logging
 import threading
-import time
 
 import attr
 import msgpack
@@ -14,6 +13,7 @@ import pytest
 import zmq
 
 from saltfactories.utils import ports
+from saltfactories.utils import time
 
 log = logging.getLogger(__name__)
 

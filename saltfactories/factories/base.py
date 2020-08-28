@@ -14,7 +14,6 @@ import logging
 import os
 import pprint
 import sys
-import time
 
 import attr
 import psutil
@@ -29,6 +28,7 @@ from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.exceptions import FactoryTimeout
 from saltfactories.utils import ports
 from saltfactories.utils import running_username
+from saltfactories.utils import time
 from saltfactories.utils.processes import Popen
 from saltfactories.utils.processes import ProcessResult
 from saltfactories.utils.processes import ShellResult

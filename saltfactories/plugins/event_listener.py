@@ -8,7 +8,6 @@ import copy
 import fnmatch
 import logging
 import threading
-import time
 import weakref
 from collections import deque
 
@@ -18,6 +17,7 @@ import pytest
 import zmq
 
 from saltfactories.utils import ports
+from saltfactories.utils import time
 
 log = logging.getLogger(__name__)
 

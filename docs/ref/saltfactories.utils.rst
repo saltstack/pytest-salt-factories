@@ -56,3 +56,11 @@ saltfactories.utils.ports module
    :members:
    :undoc-members:
    :show-inheritance:
+
+saltfactories.utils.time module
+-------------------------------
+
+.. automodule:: saltfactories.utils.time
+   :members:
+   :undoc-members:
+   :show-inheritance:

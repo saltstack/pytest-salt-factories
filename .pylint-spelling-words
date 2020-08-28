@@ -49,6 +49,7 @@ linenum
 localhost
 msg
 msgpack
+namespace
 ng
 nodeid
 nox
