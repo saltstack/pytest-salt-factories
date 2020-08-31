@@ -30,9 +30,7 @@ def test_skipped(testdir):
         from _pytest.outcomes import Failed
 
         with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(
-                ["*PytestUnknownMarkWarning*",]
-            )
+            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
 
 
 def test_not_skipped(testdir):
@@ -56,9 +54,7 @@ def test_not_skipped(testdir):
         from _pytest.outcomes import Failed
 
         with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(
-                ["*PytestUnknownMarkWarning*",]
-            )
+            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
 
 
 def test_skip_reason(testdir):

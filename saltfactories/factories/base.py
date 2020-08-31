@@ -376,9 +376,7 @@ class ProcessFactory(SubprocessFactoryBase):
             try:
                 json_out = json.loads(stdout)
             except ValueError:
-                log.debug(
-                    "%s failed to load JSON from the following output:\n%r", self, stdout,
-                )
+                log.debug("%s failed to load JSON from the following output:\n%r", self, stdout)
                 json_out = None
         else:
             json_out = None
@@ -516,7 +514,11 @@ class DaemonFactory(SubprocessFactoryBase):
         result = self.terminate()
         raise FactoryNotStarted(
             "The {} factory has failed to confirm running status after {} attempts, which "
-            "took {:.2f} seconds".format(self, current_attempt - 1, time.time() - start_time,),
+            "took {:.2f} seconds".format(
+                self,
+                current_attempt - 1,
+                time.time() - start_time,
+            ),
             stdout=result.stdout,
             stderr=result.stderr,
             exitcode=result.exitcode,

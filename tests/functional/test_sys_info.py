@@ -46,9 +46,11 @@ def test_no_sysinfo(testdir):
         from _pytest.outcomes import Failed
 
         with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(
-                ["*>> System Information >>*",]
-            )
+            res.stdout.fnmatch_lines(["*>> System Information >>*"])
     res.stdout.fnmatch_lines(
-        ["collect*", "* PASSED*", "* 1 passed in *",]
+        [
+            "collect*",
+            "* PASSED*",
+            "* 1 passed in *",
+        ]
     )

@@ -241,7 +241,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
     def format(self, record):
         msg = super(ZMQHandler, self).format(record)
         if self.log_prefix:
-            msg = u"[{}] {}".format(to_unicode(self.log_prefix), to_unicode(msg),)
+            msg = "[{}] {}".format(to_unicode(self.log_prefix), to_unicode(msg))
         return msg
 
     def prepare(self, record):

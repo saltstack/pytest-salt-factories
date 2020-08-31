@@ -111,7 +111,11 @@ SCRIPT_TEMPLATES = {
 
 
 def generate_script(
-    bin_dir, script_name, code_dir=None, inject_coverage=False, inject_sitecustomize=False,
+    bin_dir,
+    script_name,
+    code_dir=None,
+    inject_coverage=False,
+    inject_sitecustomize=False,
 ):
     """
     Generate script

@@ -107,7 +107,9 @@ autodoc_mock_imports = ["salt"]
 
 def setup(app):
     app.add_crossref_type(
-        directivename="fixture", rolename="fixture", indextemplate="pair: %s; fixture",
+        directivename="fixture",
+        rolename="fixture",
+        indextemplate="pair: %s; fixture",
     )
     # Allow linking to pytest's confvals.
     app.add_object_type(

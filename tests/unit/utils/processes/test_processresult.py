@@ -72,7 +72,10 @@ def test_str_formatting():
         {}
            <<<<< STDERR <<<<<
     """.format(
-            cmdline, exitcode, stdout, stderr,
+            cmdline,
+            exitcode,
+            stdout,
+            stderr,
         )
     )
     assert str(ret) == expected

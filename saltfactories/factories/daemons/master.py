@@ -394,7 +394,9 @@ class SaltMasterFactory(SaltDaemonFactory):
         )
 
     def get_salt_client(
-        self, functions_known_to_return_none=None, factory_class=cli.client.SaltClientFactory,
+        self,
+        functions_known_to_return_none=None,
+        factory_class=cli.client.SaltClientFactory,
     ):
         """
         Return a local salt client object

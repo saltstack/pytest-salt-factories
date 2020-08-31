@@ -31,9 +31,7 @@ def test_has_local_network(testdir):
         from _pytest.outcomes import Failed
 
         with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(
-                ["*PytestUnknownMarkWarning*",]
-            )
+            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
 
 
 def test_no_local_network(testdir):
@@ -62,6 +60,4 @@ def test_no_local_network(testdir):
         from _pytest.outcomes import Failed
 
         with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(
-                ["*PytestUnknownMarkWarning*",]
-            )
+            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])

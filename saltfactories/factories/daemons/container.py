@@ -350,9 +350,7 @@ class ContainerFactory(Factory):
             if check_ports:
                 time.sleep(0.5)
         else:
-            log.error(
-                "Failed to check ports after %1.2f seconds", time.time() - checks_start_time,
-            )
+            log.error("Failed to check ports after %1.2f seconds", time.time() - checks_start_time)
             return False
         return True
 

@@ -36,7 +36,7 @@ def pytest_addoption(parser):
 
 @pytest.hookimpl(hookwrapper=True, trylast=True)
 def pytest_sessionstart(session):
-    """ called after the ``Session`` object has been created and before performing collection
+    """called after the ``Session`` object has been created and before performing collection
     and entering the run test loop.
 
     :param _pytest.main.Session session: the pytest session object

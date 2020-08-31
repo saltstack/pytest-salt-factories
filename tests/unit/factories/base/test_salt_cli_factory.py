@@ -285,7 +285,7 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
             minion_id,
         ]
         + flag_overrides_args
-        + ["test.ping",]
+        + ["test.ping"]
     )
     proc = SaltCliFactory(
         cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
@@ -325,7 +325,7 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
             minion_id,
         ]
         + flag_overrides_args
-        + ["test.ping",]
+        + ["test.ping"]
     )
     proc = SaltCliFactory(
         cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
@@ -358,9 +358,15 @@ def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name
     args = flag_overrides_args + ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
     expected = (
-        [sys.executable, cli_script_name, "--out=json", "--log-level=quiet", minion_id,]
+        [
+            sys.executable,
+            cli_script_name,
+            "--out=json",
+            "--log-level=quiet",
+            minion_id,
+        ]
         + flag_overrides_args
-        + ["test.ping",]
+        + ["test.ping"]
     )
     proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
     cmdline = proc.build_cmdline(*args, **kwargs)

@@ -69,7 +69,7 @@ class SaltCloudFactory(SaltCliFactory):
         **configure_kwargs
     ):
         return cls.default_config(
-            root_dir, daemon_id, config_defaults=config_defaults, config_overrides=config_overrides,
+            root_dir, daemon_id, config_defaults=config_defaults, config_overrides=config_overrides
         )
 
     @classmethod

@@ -459,58 +459,76 @@ def pytest_configure(config):
     )
     # Platform Skip Markers
     config.addinivalue_line(
-        "markers", "skip_on_windows: Skip test on Windows",
+        "markers",
+        "skip_on_windows: Skip test on Windows",
     )
     config.addinivalue_line(
-        "markers", "skip_unless_on_windows: Skip test unless on Windows",
+        "markers",
+        "skip_unless_on_windows: Skip test unless on Windows",
     )
     config.addinivalue_line(
-        "markers", "skip_on_linux: Skip test on Linux",
+        "markers",
+        "skip_on_linux: Skip test on Linux",
     )
     config.addinivalue_line(
-        "markers", "skip_unless_on_linux: Skip test unless on Linux",
+        "markers",
+        "skip_unless_on_linux: Skip test unless on Linux",
     )
     config.addinivalue_line(
-        "markers", "skip_on_darwin: Skip test on Darwin",
+        "markers",
+        "skip_on_darwin: Skip test on Darwin",
     )
     config.addinivalue_line(
-        "markers", "skip_unless_on_darwin: Skip test unless on Darwin",
+        "markers",
+        "skip_unless_on_darwin: Skip test unless on Darwin",
     )
     config.addinivalue_line(
-        "markers", "skip_on_sunos: Skip test on SunOS",
+        "markers",
+        "skip_on_sunos: Skip test on SunOS",
     )
     config.addinivalue_line(
-        "markers", "skip_unless_on_sunos: Skip test unless on SunOS",
+        "markers",
+        "skip_unless_on_sunos: Skip test unless on SunOS",
     )
     config.addinivalue_line(
-        "markers", "skip_on_smartos: Skip test on SmartOS",
+        "markers",
+        "skip_on_smartos: Skip test on SmartOS",
     )
     config.addinivalue_line(
-        "markers", "skip_unless_on_smartos: Skip test unless on SmartOS",
+        "markers",
+        "skip_unless_on_smartos: Skip test unless on SmartOS",
     )
     config.addinivalue_line(
-        "markers", "skip_on_freebsd: Skip test on FreeBSD",
+        "markers",
+        "skip_on_freebsd: Skip test on FreeBSD",
     )
     config.addinivalue_line(
-        "markers", "skip_unless_on_freebsd: Skip test unless on FreeBSD",
+        "markers",
+        "skip_unless_on_freebsd: Skip test unless on FreeBSD",
     )
     config.addinivalue_line(
-        "markers", "skip_on_netbsd: Skip test on NetBSD",
+        "markers",
+        "skip_on_netbsd: Skip test on NetBSD",
     )
     config.addinivalue_line(
-        "markers", "skip_unless_on_netbsd: Skip test unless on NetBSD",
+        "markers",
+        "skip_unless_on_netbsd: Skip test unless on NetBSD",
     )
     config.addinivalue_line(
-        "markers", "skip_on_openbsd: Skip test on OpenBSD",
+        "markers",
+        "skip_on_openbsd: Skip test on OpenBSD",
     )
     config.addinivalue_line(
-        "markers", "skip_unless_on_openbsd: Skip test unless on OpenBSD",
+        "markers",
+        "skip_unless_on_openbsd: Skip test unless on OpenBSD",
     )
     config.addinivalue_line(
-        "markers", "skip_on_aix: Skip test on AIX",
+        "markers",
+        "skip_on_aix: Skip test on AIX",
     )
     config.addinivalue_line(
-        "markers", "skip_unless_on_aix: Skip test unless on AIX",
+        "markers",
+        "skip_unless_on_aix: Skip test unless on AIX",
     )
     config.addinivalue_line(
         "markers",
