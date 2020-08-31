@@ -8,13 +8,13 @@ import copy
 import fnmatch
 import logging
 import threading
-import time
 from collections import deque
 
 import msgpack
 import zmq
 
 from saltfactories.utils import ports
+from saltfactories.utils import time
 
 log = logging.getLogger(__name__)
 

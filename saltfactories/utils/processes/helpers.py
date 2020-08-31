@@ -9,13 +9,13 @@ import logging
 import pprint
 import signal
 import sys
-import time
 import weakref
 
 import psutil
 
 from saltfactories.exceptions import ProcessNotStarted
 from saltfactories.utils import ports
+from saltfactories.utils import time
 
 
 log = logging.getLogger(__name__)

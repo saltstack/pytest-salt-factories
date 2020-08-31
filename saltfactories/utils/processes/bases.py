@@ -12,7 +12,6 @@ import pprint
 import subprocess
 import sys
 import tempfile
-import time
 import weakref
 from collections import namedtuple
 from operator import itemgetter
@@ -28,6 +27,7 @@ except ImportError:  # pragma: no cover
     # import error, but its safe to pass
     pass
 
+from saltfactories.utils import time
 from saltfactories.utils.processes.helpers import terminate_process
 from saltfactories.exceptions import ProcessTimeout
 

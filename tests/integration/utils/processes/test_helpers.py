@@ -4,12 +4,11 @@
 
     Integration tests for saltfactories.utils.processes.helpers
 """
-import time
-
 import pytest
 
 from saltfactories.exceptions import ProcessNotStarted
 from saltfactories.utils import cli_scripts
+from saltfactories.utils import time
 from saltfactories.utils.processes.salts import SaltMaster
 
 

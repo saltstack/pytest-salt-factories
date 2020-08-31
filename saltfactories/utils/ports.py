@@ -7,7 +7,8 @@ Ports related utility functions
 import contextlib
 import logging
 import socket
-import time
+
+from saltfactories.utils import time
 
 log = logging.getLogger(__name__)
 
