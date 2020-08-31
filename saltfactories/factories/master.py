@@ -24,8 +24,7 @@ class MasterFactory:
         root_dir, master_id, config_defaults=None, config_overrides=None, order_masters=False,
     ):
         if config_defaults is None:
-            config_defaults = salt.config.DEFAULT_MASTER_OPTS.copy()
-            config_defaults.pop("user", None)
+            config_defaults = {}
 
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_file = conf_dir.join("master").strpath
@@ -47,11 +46,9 @@ class MasterFactory:
             "tcp_master_pull_port": ports.get_unused_localhost_port(),
             "tcp_master_publish_pull": ports.get_unused_localhost_port(),
             "tcp_master_workers": ports.get_unused_localhost_port(),
-            "worker_threads": 3,
             "pidfile": "run/master.pid",
             "pki_dir": "pki",
             "cachedir": "cache",
-            "timeout": 3,
             "sock_dir": "run/master",
             "fileserver_list_cache_time": 0,
             "fileserver_backend": ["roots"],
@@ -59,6 +56,7 @@ class MasterFactory:
             "peer": {".*": ["test.*"]},
             "log_file": "logs/master.log",
             "log_level_logfile": "debug",
+            "api_logfile": "logs/api.log",
             "key_logfile": "logs/key.log",
             "token_dir": "tokens",
             "token_file": root_dir.join("ksfjhdgiuebfgnkefvsikhfjdgvkjahcsidk").strpath,
@@ -67,8 +65,6 @@ class MasterFactory:
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "file_roots": {"base": state_tree_root_base, "prod": state_tree_root_prod},
             "pillar_roots": {"base": pillar_tree_root_base, "prod": pillar_tree_root_prod},
-            "hash_type": "sha256",
-            "transport": "zeromq",
             "order_masters": order_masters,
             "max_open_files": 10240,
             "pytest-master": {"log": {"prefix": "{{cli_name}}({})".format(master_id)},},

@@ -24,9 +24,7 @@ class ProxyMinionFactory:
         root_dir, proxy_minion_id, config_defaults=None, config_overrides=None, master_port=None,
     ):
         if config_defaults is None:
-            config_defaults = salt.config.DEFAULT_MINION_OPTS.copy()
-            config_defaults.update(salt.config.DEFAULT_PROXY_MINION_OPTS.copy())
-            config_defaults.pop("user", None)
+            config_defaults = {}
 
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_file = conf_dir.join("proxy").strpath
@@ -47,12 +45,8 @@ class ProxyMinionFactory:
             "log_file": "logs/proxy.log",
             "log_level_logfile": "debug",
             "loop_interval": 0.05,
-            #'multiprocessing': False,
             "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-            "hash_type": "sha256",
-            "transport": "zeromq",
-            "add_proxymodule_to_opts": False,
             "proxy": {"proxytype": "dummy"},
             "pytest-minion": {"log": {"prefix": "{{cli_name}}({})".format(proxy_minion_id)},},
         }

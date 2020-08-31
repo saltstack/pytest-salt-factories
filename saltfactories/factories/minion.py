@@ -24,8 +24,7 @@ class MinionFactory:
         root_dir, minion_id, config_defaults=None, config_overrides=None, master_port=None
     ):
         if config_defaults is None:
-            config_defaults = salt.config.DEFAULT_MINION_OPTS.copy()
-            config_defaults.pop("user", None)
+            config_defaults = {}
 
         conf_dir = root_dir.join("conf").ensure(dir=True)
         conf_file = conf_dir.join("minion").strpath
@@ -46,7 +45,6 @@ class MinionFactory:
             "log_file": "logs/minion.log",
             "log_level_logfile": "debug",
             "loop_interval": 0.05,
-            #'multiprocessing': False,
             "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "hash_type": "sha256",
