@@ -9,11 +9,14 @@ saltfactories.factories.base
 Factories base classes
 """
 import atexit
+import contextlib
 import json
 import logging
 import os
 import pprint
+import subprocess
 import sys
+import tempfile
 
 import attr
 import psutil
@@ -26,10 +29,10 @@ from salt.utils.immutabletypes import freeze
 
 from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.exceptions import FactoryTimeout
+from saltfactories.utils import platform
 from saltfactories.utils import ports
 from saltfactories.utils import running_username
 from saltfactories.utils import time
-from saltfactories.utils.processes import Popen
 from saltfactories.utils.processes import ProcessResult
 from saltfactories.utils.processes import ShellResult
 from saltfactories.utils.processes import terminate_process
@@ -96,6 +99,8 @@ class SubprocessFactoryBase(Factory):
     slow_stop = attr.ib(default=True)
 
     _terminal = attr.ib(repr=False, init=False, default=None)
+    _terminal_stdout = attr.ib(repr=False, init=False, default=None)
+    _terminal_stderr = attr.ib(repr=False, init=False, default=None)
     _terminal_result = attr.ib(repr=False, init=False, default=None)
     _terminal_timeout = attr.ib(repr=False, init=False, default=None)
     _children = attr.ib(repr=False, init=False, default=attr.Factory(list))
@@ -158,19 +163,37 @@ class SubprocessFactoryBase(Factory):
         an initial listing of child processes which will be used when terminating the
         terminal
         """
-        self._terminal = Popen(cmdline, **kwargs)
+        for key in ("stdin", "stdout", "stderr", "close_fds", "shell", "cwd"):
+            if key in kwargs:
+                raise RuntimeError(
+                    "{}.{}.init_terminal() does not accept {} as a valid keyword argument".format(
+                        __name__, self.__class__.__name__, key
+                    )
+                )
+        self._terminal_stdout = tempfile.SpooledTemporaryFile(512000)
+        self._terminal_stderr = tempfile.SpooledTemporaryFile(512000)
+        self._terminal = subprocess.Popen(
+            cmdline,
+            stdout=self._terminal_stdout,
+            stderr=self._terminal_stderr,
+            shell=False,
+            cwd=self.cwd,
+            universal_newlines=True,
+            close_fds=platform.is_windows() is False,
+        )
         # Reset the previous _terminal_result if set
         self._terminal_result = None
-        # A little sleep to allow the subprocess to start
-        time.sleep(0.125)
         try:
-            for child in psutil.Process(self._terminal.pid).children(recursive=True):
-                if child not in self._children:
-                    self._children.append(child)
-        except psutil.NoSuchProcess:
-            # The terminal process is gone
-            pass
-        atexit.register(self.terminate)
+            # Check if the process starts properly
+            self._terminal.wait(timeout=0.05)
+            # If TimeoutExpired is not raised, it means the process failed to start
+        except subprocess.TimeoutExpired:
+            # We're good
+            with contextlib.suppress(psutil.NoSuchProcess):
+                for child in psutil.Process(self._terminal.pid).children(recursive=True):
+                    if child not in self._children:
+                        self._children.append(child)
+            atexit.register(self.terminate)
         return self._terminal
 
     def is_running(self):
@@ -190,25 +213,61 @@ class SubprocessFactoryBase(Factory):
         atexit.unregister(self.terminate)
         log.info("Stopping %s", self)
         # Collect any child processes information before terminating the process
-        try:
+        with contextlib.suppress(psutil.NoSuchProcess):
             for child in psutil.Process(self._terminal.pid).children(recursive=True):
                 if child not in self._children:
                     self._children.append(child)
-        except psutil.NoSuchProcess:
-            # The terminal process is gone
-            pass
 
-        # poll the terminal before trying to terminate it, running or not, so that
-        # the right returncode is set on the popen object
-        self._terminal.poll()
-        # Lets log and kill any child processes left behind
-        terminate_process(
-            pid=self._terminal.pid,
-            kill_children=True,
-            children=self._children,
-            slow_stop=self.slow_stop,
-        )
-        stdout, stderr = self._terminal.communicate()
+        with self._terminal:
+            if self.slow_stop:
+                self._terminal.terminate()
+            else:
+                self._terminal.kill()
+            try:
+                # Allow the process to exit by itself in case slow_stop is True
+                self._terminal.wait(5)
+            except subprocess.TimeoutExpired:
+                # The process failed to stop, no worries, we'll make sure it exit along with it's
+                # child processes bellow
+                pass
+            # Lets log and kill any child processes left behind, including the main subprocess
+            # if it failed to properly stop
+            terminate_process(
+                pid=self._terminal.pid,
+                kill_children=True,
+                children=self._children,
+                slow_stop=self.slow_stop,
+            )
+            # Wait for the process to terminate, to avoid zombies.
+            self._terminal.wait()
+            # poll the terminal so the right returncode is set on the popen object
+            self._terminal.poll()
+            # This call shouldn't really be necessary
+            self._terminal.communicate()
+
+            self._terminal_stdout.flush()
+            self._terminal_stdout.seek(0)
+            if sys.version_info < (3, 6):
+                stdout = self._terminal._translate_newlines(
+                    self._terminal_stdout.read(), __salt_system_encoding__
+                )
+            else:
+                stdout = self._terminal._translate_newlines(
+                    self._terminal_stdout.read(), __salt_system_encoding__, sys.stdout.errors
+                )
+            self._terminal_stdout.close()
+
+            self._terminal_stderr.flush()
+            self._terminal_stderr.seek(0)
+            if sys.version_info < (3, 6):
+                stderr = self._terminal._translate_newlines(
+                    self._terminal_stderr.read(), __salt_system_encoding__
+                )
+            else:
+                stderr = self._terminal._translate_newlines(
+                    self._terminal_stderr.read(), __salt_system_encoding__, sys.stderr.errors
+                )
+            self._terminal_stderr.close()
         try:
             log_message = "Terminated {}.".format(self)
             if stdout or stderr:
@@ -229,6 +288,8 @@ class SubprocessFactoryBase(Factory):
             return self._terminal_result
         finally:
             self._terminal = None
+            self._terminal_stdout = None
+            self._terminal_stderr = None
             self._terminal_timeout = None
             self._children = []
 
@@ -243,16 +304,8 @@ class SubprocessFactoryBase(Factory):
         Run the given command synchronously
         """
         cmdline = self.build_cmdline(*args, **kwargs)
-
         log.info("%s is running %r in CWD: %s ...", self, cmdline, self.cwd)
-
-        terminal = self.init_terminal(cmdline, cwd=self.cwd, env=self.environ)
-        try:
-            self._children.extend(psutil.Process(self.pid).children(recursive=True))
-        except psutil.NoSuchProcess:
-            # Process already died?!
-            pass
-        return terminal
+        return self.init_terminal(cmdline, env=self.environ)
 
 
 @attr.s(kw_only=True)
@@ -286,31 +339,26 @@ class ProcessFactory(SubprocessFactoryBase):
         self._terminal_timeout = _timeout or self.default_timeout
         self._terminal_timeout_set_explicitly = _timeout is not None
         timeout_expire = time.time() + self._terminal_timeout
-        running = self._run(*args, **kwargs)
-
         timmed_out = False
-        while True:
-            if timeout_expire < time.time():
-                timmed_out = True
-                break
-            if self._terminal.poll() is not None:
-                break
-            time.sleep(0.25)
+        try:
+            self._run(*args, **kwargs)
+            self._terminal.communicate(timeout=self._terminal_timeout)
+        except subprocess.TimeoutExpired:
+            timmed_out = True
 
         result = self.terminate()
+        cmdline = result.cmdline
+        exitcode = result.exitcode
         if timmed_out:
             raise FactoryTimeout(
                 "{} Failed to run: {}; Error: Timed out after {:.2f} seconds!".format(
-                    self, result.cmdline, time.time() - start_time
+                    self, cmdline, time.time() - start_time
                 ),
                 stdout=result.stdout,
                 stderr=result.stderr,
-                cmdline=result.cmdline,
-                exitcode=result.exitcode,
+                cmdline=cmdline,
+                exitcode=exitcode,
             )
-
-        cmdline = result.cmdline
-        exitcode = result.exitcode
         stdout, stderr, json_out = self.process_output(
             result.stdout, result.stderr, cmdline=cmdline
         )

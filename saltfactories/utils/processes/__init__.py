@@ -15,52 +15,8 @@ import weakref
 import attr
 import psutil
 
-from saltfactories.exceptions import FactoryTimeout
 
 log = logging.getLogger(__name__)
-
-
-class Popen(subprocess.Popen):
-    def __init__(self, *args, **kwargs):
-        for key in ("stdout", "stderr"):
-            if key in kwargs:
-                raise RuntimeError(
-                    "{}.Popen() does not accept {} as a valid keyword argument".format(
-                        __name__, key
-                    )
-                )
-        stdout = tempfile.SpooledTemporaryFile(512000)
-        kwargs["stdout"] = stdout
-        stderr = tempfile.SpooledTemporaryFile(512000)
-        kwargs["stderr"] = stderr
-        super().__init__(*args, **kwargs)
-        self.__stdout = stdout
-        self.__stderr = stderr
-        weakref.finalize(self, stdout.close)
-        weakref.finalize(self, stderr.close)
-
-    def communicate(self, input=None):  # pylint: disable=arguments-differ
-        super().communicate(input)
-        stdout = stderr = None
-        if self.__stdout:
-            self.__stdout.flush()
-            self.__stdout.seek(0)
-            stdout = self.__stdout.read()
-
-            # We want str type on Py3 and Unicode type on Py2
-            # pylint: disable=undefined-variable
-            stdout = stdout.decode(__salt_system_encoding__)
-            # pylint: enable=undefined-variable
-        if self.__stderr:
-            self.__stderr.flush()
-            self.__stderr.seek(0)
-            stderr = self.__stderr.read()
-
-            # We want str type on Py3 and Unicode type on Py2
-            # pylint: disable=undefined-variable
-            stderr = stderr.decode(__salt_system_encoding__)
-            # pylint: enable=undefined-variable
-        return stdout, stderr
 
 
 @attr.s(frozen=True)

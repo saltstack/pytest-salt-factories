@@ -1,4 +1,3 @@
-import os
 import sys
 
 import pytest
@@ -104,7 +103,7 @@ def test_stderr_output(tempfiles):
     )
     result = shell.run(script)
     assert result.exitcode == 1
-    assert result.stderr.replace(os.linesep, "\n") == input_str + "\n"
+    assert result.stderr == input_str + "\n"
 
 
 def test_unicode_output(tempfiles):
@@ -125,3 +124,16 @@ def test_unicode_output(tempfiles):
     assert result.exitcode == 0, str(result)
     assert result.stdout == "STDOUT Fátima"
     assert result.stderr == "STDERR Fátima"
+
+
+def test_process_failed_to_start(tempfiles):
+    shell = ProcessFactory(cli_script_name=sys.executable)
+    script = tempfiles.makepyfile(
+        """
+        # coding=utf-8
+        1/0
+        """
+    )
+    result = shell.run(script)
+    assert result.exitcode == 1
+    assert "ZeroDivisionError: division by zero" in result.stderr
