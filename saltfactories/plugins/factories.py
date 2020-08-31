@@ -69,6 +69,10 @@ def log_server_level(request):
         # PyTest Log File logging not configured
         pass
 
+    if logging.NOTSET in levels:
+        # We don't want the NOTSET level on the levels
+        levels.pop(levels.index(logging.NOTSET))
+
     level_str = logging.getLevelName(min(levels))
     return level_str
 
