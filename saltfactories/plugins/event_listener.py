@@ -24,7 +24,7 @@ log = logging.getLogger(__name__)
 
 @attr.s(kw_only=True, slots=True, hash=True)
 class EventListener:
-    timeout = attr.ib(default=60)
+    timeout = attr.ib(default=240)
     address = attr.ib(init=False)
     store = attr.ib(init=False, repr=False, hash=False)
     sentinel = attr.ib(init=False, repr=False, hash=False)
@@ -71,7 +71,9 @@ class EventListener:
                     to_remove.append((received, expire, master_id, tag, data))
 
             for entry in to_remove:
+                log.debug("Removing from event store: %s", entry)
                 self.store.remove(entry)
+            log.debug("Event store size: %s", len(self.store))
 
     def start(self):
         if self.running_event.is_set():
