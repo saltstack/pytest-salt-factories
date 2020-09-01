@@ -8,8 +8,6 @@ import errno
 import logging
 import pprint
 import signal
-import subprocess
-import tempfile
 import weakref
 
 import attr

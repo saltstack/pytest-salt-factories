@@ -6,14 +6,6 @@ saltfactories.utils package
    :undoc-members:
    :show-inheritance:
 
-Subpackages
------------
-
-.. toctree::
-   :maxdepth: 4
-
-   saltfactories.utils.processes
-
 Submodules
 ----------
 
@@ -53,6 +45,14 @@ saltfactories.utils.ports module
 --------------------------------
 
 .. automodule:: saltfactories.utils.ports
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+saltfactories.utils.processes module
+------------------------------------
+
+.. automodule:: saltfactories.utils.processes
    :members:
    :undoc-members:
    :show-inheritance:
