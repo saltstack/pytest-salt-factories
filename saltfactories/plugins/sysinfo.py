@@ -9,7 +9,6 @@
     System Information Plugin
 """
 import io
-import os
 import pathlib
 import tempfile
 
@@ -50,7 +49,7 @@ def pytest_sessionstart(session):
         terminal_reporter.section("System Information", sep=">")
         terminal_reporter.section("Salt Versions Report", sep="-", bold=True)
         terminal_reporter.write(
-            os.linesep.join(
+            "\n".join(
                 "  {}".format(line.rstrip()) for line in salt.version.versions_report()
             ).rstrip()
             + "\n"
@@ -79,7 +78,7 @@ def pytest_sessionstart(session):
         grains_output_file.seek(0)
         terminal_reporter.section("System Grains Report", sep="-")
         terminal_reporter.write(
-            os.linesep.join(
+            "\n".join(
                 "  {}".format(line.rstrip()) for line in grains_output_file.read().splitlines()
             ).rstrip()
             + "\n"
