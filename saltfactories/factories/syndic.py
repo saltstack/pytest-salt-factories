@@ -122,7 +122,6 @@ class SyndicFactory:
             "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "hash_type": "sha256",
-            "transport": "zeromq",
             "pytest-minion": {"log": {"prefix": "{{cli_name}}({})".format(minion_id)},},
         }
         # Merge in the initial default options with the internal _config_defaults
@@ -184,8 +183,6 @@ class SyndicFactory:
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "file_roots": {"base": state_tree_root_base, "prod": state_tree_root_prod},
             "pillar_roots": {"base": pillar_tree_root_base, "prod": pillar_tree_root_prod},
-            "hash_type": "sha256",
-            "transport": "zeromq",
             "order_masters": False,
             "max_open_files": 10240,
             "pytest-master": {"log": {"prefix": "{{cli_name}}({})".format(master_id)},},
