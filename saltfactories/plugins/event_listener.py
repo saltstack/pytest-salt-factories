@@ -121,6 +121,12 @@ class EventListener:
         return True
 
     def get_events(self, patterns, after_time=None):
+        log.debug(
+            "%s is checking for event patterns happening after %s: %s",
+            self,
+            after_time,
+            set(patterns),
+        )
         found_patterns = set()
         patterns = set(patterns)
         if after_time is None:
@@ -136,6 +142,17 @@ class EventListener:
                 if fnmatch.fnmatch(tag, _pattern):
                     log.debug("Found matching pattern: %s", pattern)
                     found_patterns.add(pattern)
+        if found_patterns:
+            log.debug(
+                "%s found the following patterns happening after %s: %s",
+                self,
+                after_time,
+                found_patterns,
+            )
+        else:
+            log.debug(
+                "%s did not find any matching event patterns happening after %s", self, after_time
+            )
         return found_patterns
 
     def register_auth_event_handler(self, master_id, callback):
