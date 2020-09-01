@@ -10,6 +10,7 @@ import logging
 import threading
 import weakref
 from collections import deque
+from datetime import datetime
 
 import attr
 import msgpack
@@ -24,12 +25,13 @@ log = logging.getLogger(__name__)
 
 @attr.s(kw_only=True, slots=True, hash=True)
 class EventListener:
-    timeout = attr.ib(default=240)
+    timeout = attr.ib(default=120)
     address = attr.ib(init=False)
     store = attr.ib(init=False, repr=False, hash=False)
     sentinel = attr.ib(init=False, repr=False, hash=False)
     running_event = attr.ib(init=False, repr=False, hash=False)
     running_thread = attr.ib(init=False, repr=False, hash=False)
+    cleaning_thread = attr.ib(init=False, repr=False, hash=False)
     auth_event_handlers = attr.ib(init=False, repr=False, hash=False)
 
     def __attrs_post_init__(self):
@@ -37,6 +39,8 @@ class EventListener:
         self.address = "tcp://127.0.0.1:{}".format(ports.get_unused_localhost_port())
         self.running_event = threading.Event()
         self.running_thread = threading.Thread(target=self._run)
+        self.cleaning_thread = threading.Thread(target=self._cleanup)
+        self.cleaning_thread.daemon = True
         self.sentinel = msgpack.dumps(None)
         self.auth_event_handlers = weakref.WeakValueDictionary()
 
@@ -53,16 +57,27 @@ class EventListener:
         while self.running_event.is_set():
             payload = puller.recv()
             if payload is self.sentinel:
+                log.info("Received stop sentinel...")
                 break
             master_id, tag, data = msgpack.loads(payload, **msgpack_kwargs)
-            if tag == "salt/auth":
-                auth_event_callback = self.auth_event_handlers.get(master_id)
-                if auth_event_callback:
-                    auth_event_callback(data)
             received = time.time()
             expire = received + self.timeout
             log.info("Received event from: MasterID: %r; Tag: %r; Data: %r", master_id, tag, data)
             self.store.append((received, expire, master_id, tag, data))
+            if tag == "salt/auth":
+                auth_event_callback = self.auth_event_handlers.get(master_id)
+                if auth_event_callback:
+                    auth_event_callback(data)
+
+    def _cleanup(self):
+        cleanup_at = time.time() + 30
+        while self.running_event.is_set():
+            if time.time() < cleanup_at:
+                time.sleep(1)
+                continue
+
+            # Reset cleanup time
+            cleanup_at = time.time() + 30
 
             # Cleanup expired events
             to_remove = []
@@ -80,10 +95,12 @@ class EventListener:
             return
         self.running_event.set()
         self.running_thread.start()
+        self.cleaning_thread.start()
 
     def stop(self):
         if self.running_event.is_set() is False:
             return
+        self.store.clear()
         self.running_event.clear()
         context = zmq.Context()
         push = context.socket(zmq.PUSH)
@@ -91,6 +108,7 @@ class EventListener:
         push.send(self.sentinel)
         push.close(1500)
         context.term()
+        self.running_thread.join()
 
     def wait_for_events(self, patterns, timeout=30, after_time=None):
         start_time = time.time()
@@ -123,10 +141,11 @@ class EventListener:
         return True
 
     def get_events(self, patterns, after_time=None):
+        after_time_iso = datetime.fromtimestamp(after_time).isoformat()
         log.debug(
             "%s is checking for event patterns happening after %s: %s",
             self,
-            after_time,
+            after_time_iso,
             set(patterns),
         )
         found_patterns = set()
@@ -148,12 +167,14 @@ class EventListener:
             log.debug(
                 "%s found the following patterns happening after %s: %s",
                 self,
-                after_time,
+                after_time_iso,
                 found_patterns,
             )
         else:
             log.debug(
-                "%s did not find any matching event patterns happening after %s", self, after_time
+                "%s did not find any matching event patterns happening after %s",
+                self,
+                after_time_iso,
             )
         return found_patterns
 

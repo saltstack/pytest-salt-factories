@@ -9,6 +9,7 @@ when a daemon is up and running
 import atexit
 import logging
 
+import attr
 import zmq
 
 try:
@@ -53,24 +54,34 @@ def __virtual__():
 
 
 def start():
-    pytest_engine = PyTestEngine(__opts__)  # pylint: disable=undefined-variable
-    pytest_engine.start()
+    opts = __opts__  # pylint: disable=undefined-variable
+    try:
+        pytest_engine = PyTestEventForwardEngine(opts=opts)
+        pytest_engine.start()
+    except Exception:  # pylint: disable=broad-except
+        log.error("Failed to start PyTestEventForwardEngine", exc_info=True)
+        raise
 
 
-class PyTestEngine:
-    def __init__(self, opts):
-        self.opts = opts
-        self.id = opts["id"]
-        self.role = opts["__role"]
-        self.returner_address = opts["pytest-{}".format(self.role)]["returner_address"]
+@attr.s(kw_only=True, slots=True)
+class PyTestEventForwardEngine:
+    opts = attr.ib(repr=False, hash=False)
+    id = attr.ib(init=False)
+    role = attr.ib(init=False)
+    returner_address = attr.ib(init=False)
+    # Internal attributes
+    io_loop = attr.ib(init=False, repr=False, hash=False)
+    context = attr.ib(init=False, repr=False, hash=False)
+    push = attr.ib(init=False, repr=False, hash=False)
+    event = attr.ib(init=False, repr=False, hash=False)
+
+    def __attrs_post_init__(self):
+        self.id = self.opts["id"]
+        self.role = self.opts["__role"]
+        self.returner_address = self.opts["pytest-{}".format(self.role)]["returner_address"]
 
     def start(self):
-        log.info(
-            "Starting Pytest Event Forwarder Engine(forwarding to %s) on daemon with role %r and ID %r",
-            self.returner_address,
-            self.role,
-            self.id,
-        )
+        log.info("Starting %s", self)
         self.io_loop = ioloop.IOLoop()
         self.io_loop.make_current()
         self.io_loop.add_callback(self._start)
@@ -96,6 +107,7 @@ class PyTestEngine:
         self.event.fire_event(load, event_tag)
 
     def stop(self):
+        log.info("Stopping %s", self)
         push = self.push
         context = self.context
         event = self.event
@@ -106,11 +118,19 @@ class PyTestEngine:
         if push and context:
             push.close(1000)
             context.term()
+            self.io_loop.add_callback(log.info, "Stopped %s", self)
             self.io_loop.add_callback(self.io_loop.stop)
+        else:
+            log.info("Stopped %s", self)
 
     @gen.coroutine
     def handle_event(self, payload):
         tag, data = salt.utils.event.SaltEvent.unpack(payload)
         log.debug("Received Event; TAG: %r DATA: %r", tag, data)
-        forward = msgpack.dumps((self.id, tag, data), use_bin_type=True)
-        yield self.push.send(forward)
+        forward = (self.id, tag, data)
+        try:
+            dumped = msgpack.dumps(forward, use_bin_type=True)
+            yield self.push.send(dumped)
+            log.info("%s forwarded event: %r", self, forward)
+        except Exception:  # pylint: disable=broad-except
+            log.error("%s failed to forward event: %r", self, forward, exc_info=True)
