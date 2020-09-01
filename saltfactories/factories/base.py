@@ -562,10 +562,12 @@ class DaemonFactory(SubprocessFactoryBase):
                     )
 
     def run_start_checks(self, started_at, timeout_at):
+        log.debug("%s is running start checks", self)
         check_ports = set(self.get_check_ports())
         if not check_ports:
             log.debug("No ports to check connection to for %s", self)
             return True
+        log.debug("Listening ports to check for %s: %s", self, set(self.get_check_ports()))
         checks_start_time = time.time()
         while time.time() <= timeout_at:
             if not self.is_running():
@@ -577,14 +579,13 @@ class DaemonFactory(SubprocessFactoryBase):
                 time.sleep(0.5)
         else:
             log.error(
-                "Failed to check ports after %1.2f seconds for %s",
+                "Failed to check ports after %1.2f seconds for %s. Remaining ports to check: %s",
                 time.time() - checks_start_time,
                 self,
+                check_ports,
             )
             return False
-        log.debug(
-            "Successfuly connected to all ports(%s) for %s", set(self.get_check_ports()), self
-        )
+        log.debug("All listening ports checked for %s: %s", self, set(self.get_check_ports()))
         return True
 
     def _add_factory_to_stats_processes(self):
@@ -954,6 +955,7 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         if not check_events:
             log.debug("No events to listen to for %s", self)
             return True
+        log.debug("Events to check for %s: %s", self, set(self.get_check_events()))
         checks_start_time = time.time()
         while time.time() <= timeout_at:
             if not self.is_running():
@@ -965,14 +967,13 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
                 time.sleep(0.5)
         else:
             log.error(
-                "Failed to check events after %1.2f seconds for %s",
+                "Failed to check events after %1.2f seconds for %s. Remaining events to check: %s",
                 time.time() - checks_start_time,
                 self,
+                check_events,
             )
             return False
-        log.debug(
-            "Successfuly checked for all events(%s) for %s", set(self.get_check_events()), self
-        )
+        log.debug("All events checked for %s: %s", self, set(self.get_check_events()))
         return True
 
     def build_cmdline(self, *args):
