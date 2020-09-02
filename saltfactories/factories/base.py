@@ -576,7 +576,7 @@ class DaemonFactory(SubprocessFactoryBase):
                 break
             check_ports -= ports.get_connectable_ports(check_ports)
             if check_ports:
-                time.sleep(0.5)
+                time.sleep(1.5)
         else:
             log.error(
                 "Failed to check ports after %1.2f seconds for %s. Remaining ports to check: %s",
@@ -964,7 +964,7 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
                 break
             check_events -= self.event_listener.get_events(check_events, after_time=started_at)
             if check_events:
-                time.sleep(0.5)
+                time.sleep(1.5)
         else:
             log.error(
                 "Failed to check events after %1.2f seconds for %s. Remaining events to check: %s",
