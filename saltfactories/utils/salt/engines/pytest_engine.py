@@ -130,7 +130,7 @@ class PyTestEventForwardEngine:
         forward = (self.id, tag, data)
         try:
             dumped = msgpack.dumps(forward, use_bin_type=True)
-            yield self.push.send(dumped)
+            self.push.send(dumped)
             log.info("%s forwarded event: %r", self, forward)
         except Exception:  # pylint: disable=broad-except
             log.error("%s failed to forward event: %r", self, forward, exc_info=True)
