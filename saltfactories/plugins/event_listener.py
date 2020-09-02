@@ -46,16 +46,17 @@ class EventListener:
 
     def _run(self):
         context = zmq.Context()
-        puller = context.socket(zmq.PULL)
-        puller.set_hwm(10000)
-        log.debug("Binding PULL socket to %s", self.address)
-        puller.bind(self.address)
+        sock = context.socket(zmq.REP)
+        sock.set_hwm(10000)
+        log.debug("Binding REP socket to %s", self.address)
+        sock.bind(self.address)
         if msgpack.version >= (0, 5, 2):
             msgpack_kwargs = {"raw": False}
         else:
             msgpack_kwargs = {"encoding": "utf-8"}
         while self.running_event.is_set():
-            payload = puller.recv()
+            payload = sock.recv()
+            sock.send_string("ACK")
             if payload is self.sentinel:
                 log.info("Received stop sentinel...")
                 break
@@ -67,7 +68,11 @@ class EventListener:
             if tag == "salt/auth":
                 auth_event_callback = self.auth_event_handlers.get(master_id)
                 if auth_event_callback:
-                    auth_event_callback(data)
+                    try:
+                        auth_event_callback(data)
+                    except Exception as exc:  # pylint: disable=broad-except
+                        log.error("Error calling %r: %s", auth_event_callback, exc, exc_info=True)
+            log.debug("Event store size after event received: %d", len(self.store))
 
     def _cleanup(self):
         cleanup_at = time.time() + 30
@@ -103,10 +108,11 @@ class EventListener:
         self.store.clear()
         self.running_event.clear()
         context = zmq.Context()
-        push = context.socket(zmq.PUSH)
-        push.connect(self.address)
-        push.send(self.sentinel)
-        push.close(1500)
+        sock = context.socket(zmq.REQ)
+        sock.connect(self.address)
+        sock.send(self.sentinel)
+        ack = sock.recv_string()
+        sock.close(1500)
         context.term()
         self.running_thread.join()
 
