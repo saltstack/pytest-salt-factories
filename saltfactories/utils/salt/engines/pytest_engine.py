@@ -8,24 +8,12 @@ when a daemon is up and running
 """
 import atexit
 import logging
+import threading
 
 import attr
+import salt.utils.event
 import zmq
 
-try:
-    from salt.ext.tornado import gen
-    from salt.ext.tornado import ioloop
-except ImportError:
-    # This likely due to running backwards compatibility tests against older minions
-    from tornado import gen
-    from tornado import ioloop
-
-try:
-    import salt.utils.asynchronous
-
-    HAS_SALT_ASYNC = True
-except ImportError:
-    HAS_SALT_ASYNC = False
 try:
     import msgpack
 
@@ -70,67 +58,56 @@ class PyTestEventForwardEngine:
     role = attr.ib(init=False)
     returner_address = attr.ib(init=False)
     # Internal attributes
-    io_loop = attr.ib(init=False, repr=False, hash=False)
-    context = attr.ib(init=False, repr=False, hash=False)
-    push = attr.ib(init=False, repr=False, hash=False)
-    event = attr.ib(init=False, repr=False, hash=False)
+    running_event = attr.ib(init=False, repr=False, hash=False)
 
     def __attrs_post_init__(self):
         self.id = self.opts["id"]
         self.role = self.opts["__role"]
         self.returner_address = self.opts["pytest-{}".format(self.role)]["returner_address"]
+        self.running_event = threading.Event()
 
     def start(self):
-        log.info("Starting %s", self)
-        self.io_loop = ioloop.IOLoop()
-        self.io_loop.make_current()
-        self.io_loop.add_callback(self._start)
+        if self.running_event.is_set():
+            return
+        log.info("%s is starting", self)
         atexit.register(self.stop)
-        self.io_loop.start()
 
-    @gen.coroutine
-    def _start(self):
-        self.context = zmq.Context()
-        self.push = self.context.socket(zmq.PUSH)
-        log.debug("Connecting PUSH socket to %s", self.returner_address)
-        self.push.connect(self.returner_address)
-        minion_opts = self.opts.copy()
-        minion_opts["file_client"] = "local"
-        self.event = salt.utils.event.get_event(
-            "master", opts=minion_opts, io_loop=self.io_loop, listen=True
-        )
-        self.event.subscribe("")
-        self.event.set_event_handler(self.handle_event)
-        event_tag = "salt/master/{}/start".format(self.id)
-        log.info("Firing event on engine start. Tag: %s", event_tag)
-        load = {"id": self.id, "tag": event_tag, "data": {}}
-        self.event.fire_event(load, event_tag)
+        self.running_event.set()
+        context = zmq.Context()
+        push = context.socket(zmq.PUSH)
+        log.debug("%s connecting PUSH socket to %s", self, self.returner_address)
+        push.connect(self.returner_address)
+        opts = self.opts.copy()
+        opts["file_client"] = "local"
+        with salt.utils.event.get_event(
+            "master", sock_dir=opts["sock_dir"], transport=opts["transport"], opts=opts, listen=True
+        ) as eventbus:
+            event_tag = "salt/master/{}/start".format(self.id)
+            log.info("%s firing event on engine start. Tag: %s", self, event_tag)
+            load = {"id": self.id, "tag": event_tag, "data": {}}
+            eventbus.fire_event(load, event_tag)
+            log.info("%s started", self)
+            while self.running_event.is_set():
+                for event in eventbus.iter_events(full=True, auto_reconnect=True):
+                    if not event:
+                        continue
+                    tag = event["tag"]
+                    data = event["data"]
+                    log.debug("%s Received Event; TAG: %r DATA: %r", self, tag, data)
+                    forward = (self.id, tag, data)
+                    try:
+                        dumped = msgpack.dumps(forward, use_bin_type=True)
+                        push.send(dumped)
+                        log.info("%s forwarded event: %r", self, forward)
+                    except Exception:  # pylint: disable=broad-except
+                        log.error("%s failed to forward event: %r", self, forward, exc_info=True)
+        push.close(1500)
+        context.term()
 
     def stop(self):
-        log.info("Stopping %s", self)
-        push = self.push
-        context = self.context
-        event = self.event
-        self.push = self.context = self.event = None
-        if event:
-            event.unsubscribe("")
-            event.destroy()
-        if push and context:
-            push.close(1000)
-            context.term()
-            self.io_loop.add_callback(log.info, "Stopped %s", self)
-            self.io_loop.add_callback(self.io_loop.stop)
-        else:
-            log.info("Stopped %s", self)
+        if self.running_event.is_set() is False:
+            return
 
-    @gen.coroutine
-    def handle_event(self, payload):
-        tag, data = salt.utils.event.SaltEvent.unpack(payload)
-        log.debug("Received Event; TAG: %r DATA: %r", tag, data)
-        forward = (self.id, tag, data)
-        try:
-            dumped = msgpack.dumps(forward, use_bin_type=True)
-            self.push.send(dumped)
-            log.info("%s forwarded event: %r", self, forward)
-        except Exception:  # pylint: disable=broad-except
-            log.error("%s failed to forward event: %r", self, forward, exc_info=True)
+        log.info("Stopping %s", self)
+        self.running_event.clear()
+        log.info("%s stopped", self)
