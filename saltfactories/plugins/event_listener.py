@@ -40,34 +40,44 @@ class EventListener:
         self.running_event = threading.Event()
         self.running_thread = threading.Thread(target=self._run)
         self.cleaning_thread = threading.Thread(target=self._cleanup)
-        self.cleaning_thread.daemon = True
         self.sentinel = msgpack.dumps(None)
         self.auth_event_handlers = weakref.WeakValueDictionary()
 
     def _run(self):
         context = zmq.Context()
         puller = context.socket(zmq.PULL)
-        puller.set_hwm(10000)
-        log.debug("Binding PULL socket to %s", self.address)
+        log.debug("%s Binding PULL socket to %s", self, self.address)
         puller.bind(self.address)
         if msgpack.version >= (0, 5, 2):
             msgpack_kwargs = {"raw": False}
         else:
             msgpack_kwargs = {"encoding": "utf-8"}
+        log.debug("%s started", self)
         while self.running_event.is_set():
             payload = puller.recv()
             if payload is self.sentinel:
-                log.info("Received stop sentinel...")
+                log.info("%s Received stop sentinel...", self)
                 break
             master_id, tag, data = msgpack.loads(payload, **msgpack_kwargs)
             received = time.time()
             expire = received + self.timeout
-            log.info("Received event from: MasterID: %r; Tag: %r; Data: %r", master_id, tag, data)
+            log.info(
+                "%s received event from: MasterID: %r; Tag: %r Data: %r", self, master_id, tag, data
+            )
             self.store.append((received, expire, master_id, tag, data))
             if tag == "salt/auth":
                 auth_event_callback = self.auth_event_handlers.get(master_id)
                 if auth_event_callback:
-                    auth_event_callback(data)
+                    try:
+                        auth_event_callback(data)
+                    except Exception as exc:  # pylint: disable=broad-except
+                        log.error(
+                            "%s Error calling %r: %s", self, auth_event_callback, exc, exc_info=True
+                        )
+            log.debug("%s store size after event received: %d", self, len(self.store))
+        puller.close(1500)
+        context.term()
+        log.debug("%s is no longer running", self)
 
     def _cleanup(self):
         cleanup_at = time.time() + 30
@@ -86,13 +96,14 @@ class EventListener:
                     to_remove.append((received, expire, master_id, tag, data))
 
             for entry in to_remove:
-                log.debug("Removing from event store: %s", entry)
+                log.debug("%s Removing from event store: %s", self, entry)
                 self.store.remove(entry)
-            log.debug("Event store size: %s", len(self.store))
+            log.debug("%s store size after cleanup: %s", self, len(self.store))
 
     def start(self):
         if self.running_event.is_set():
             return
+        log.debug("%s is starting", self)
         self.running_event.set()
         self.running_thread.start()
         self.cleaning_thread.start()
@@ -100,45 +111,19 @@ class EventListener:
     def stop(self):
         if self.running_event.is_set() is False:
             return
+        log.debug("%s is stopping", self)
         self.store.clear()
-        self.running_event.clear()
+        self.auth_event_handlers.clear()
         context = zmq.Context()
         push = context.socket(zmq.PUSH)
         push.connect(self.address)
         push.send(self.sentinel)
         push.close(1500)
+        self.running_event.clear()
         context.term()
         self.running_thread.join()
-
-    def wait_for_events(self, patterns, timeout=30, after_time=None):
-        start_time = time.time()
-        patterns = set(patterns)
-        log.info("Waiting at most %.2f seconds for event patterns: %s", timeout, patterns)
-        if after_time is None:
-            after_time = time.time()
-        expire = start_time + timeout
-        while time.time() <= expire:
-            if not patterns:
-                break
-
-            for received, expire, master_id, tag, data in copy.copy(self.store):
-                if received < after_time:
-                    # Too old, carry on
-                    continue
-                for _master_id, _pattern in set(patterns):
-                    if _master_id != master_id:
-                        continue
-                    if fnmatch.fnmatch(tag, _pattern):
-                        patterns.remove((_master_id, _pattern))
-            time.sleep(0.125)
-        else:
-            log.info(
-                "Timmed out after %.2f seconds waiting for event patterns: %s",
-                time.time() - start_time,
-                patterns,
-            )
-            return False
-        return True
+        self.cleaning_thread.join()
+        log.debug("%s stopped", self)
 
     def get_events(self, patterns, after_time=None):
         after_time_iso = datetime.fromtimestamp(after_time).isoformat()
@@ -161,7 +146,7 @@ class EventListener:
                 if _master_id != master_id:
                     continue
                 if fnmatch.fnmatch(tag, _pattern):
-                    log.debug("Found matching pattern: %s", pattern)
+                    log.debug("%s Found matching pattern: %s", self, pattern)
                     found_patterns.add(pattern)
         if found_patterns:
             log.debug(
