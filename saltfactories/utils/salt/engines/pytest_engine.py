@@ -72,7 +72,7 @@ class PyTestEventForwardEngine:
     # Internal attributes
     io_loop = attr.ib(init=False, repr=False, hash=False)
     context = attr.ib(init=False, repr=False, hash=False)
-    zmqsock = attr.ib(init=False, repr=False, hash=False)
+    push = attr.ib(init=False, repr=False, hash=False)
     event = attr.ib(init=False, repr=False, hash=False)
 
     def __attrs_post_init__(self):
@@ -91,9 +91,9 @@ class PyTestEventForwardEngine:
     @gen.coroutine
     def _start(self):
         self.context = zmq.Context()
-        self.zmqsock = self.context.socket(zmq.REQ)
-        log.debug("Connecting REQ socket to %s", self.returner_address)
-        self.zmqsock.connect(self.returner_address)
+        self.push = self.context.socket(zmq.PUSH)
+        log.debug("Connecting PUSH socket to %s", self.returner_address)
+        self.push.connect(self.returner_address)
         minion_opts = self.opts.copy()
         minion_opts["file_client"] = "local"
         self.event = salt.utils.event.get_event(
@@ -108,15 +108,15 @@ class PyTestEventForwardEngine:
 
     def stop(self):
         log.info("Stopping %s", self)
-        zmqsock = self.zmqsock
+        push = self.push
         context = self.context
         event = self.event
         self.push = self.context = self.event = None
         if event:
             event.unsubscribe("")
             event.destroy()
-        if zmqsock and context:
-            zmqsock.close(1000)
+        if push and context:
+            push.close(1000)
             context.term()
             self.io_loop.add_callback(log.info, "Stopped %s", self)
             self.io_loop.add_callback(self.io_loop.stop)
@@ -130,11 +130,7 @@ class PyTestEventForwardEngine:
         forward = (self.id, tag, data)
         try:
             dumped = msgpack.dumps(forward, use_bin_type=True)
-            self.zmqsock.send(dumped)
-            ack = self.zmqsock.recv_string()
-            if ack == "ACK":
-                log.info("%s forwarded event: %r", self, forward)
-            else:
-                log.warning("%s, failed to forward event: %r", self, forward)
+            self.push.send(dumped)
+            log.info("%s forwarded event: %r", self, forward)
         except Exception:  # pylint: disable=broad-except
             log.error("%s failed to forward event: %r", self, forward, exc_info=True)
