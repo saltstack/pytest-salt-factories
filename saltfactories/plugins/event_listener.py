@@ -55,26 +55,54 @@ class EventListener:
         log.debug("%s started", self)
         while self.running_event.is_set():
             payload = puller.recv()
-            if payload is self.sentinel:
+            try:
+                decoded = msgpack.loads(payload, **msgpack_kwargs)
+            except ValueError:
+                log.error(
+                    "%s Failed to msgpack.load message with payload: %s",
+                    self,
+                    payload,
+                    exc_info=True,
+                )
+                continue
+            if payload == self.sentinel:
                 log.info("%s Received stop sentinel...", self)
                 break
-            master_id, tag, data = msgpack.loads(payload, **msgpack_kwargs)
-            received = time.time()
-            expire = received + self.timeout
-            log.info(
-                "%s received event from: MasterID: %r; Tag: %r Data: %r", self, master_id, tag, data
-            )
-            self.store.append((received, expire, master_id, tag, data))
-            if tag == "salt/auth":
-                auth_event_callback = self.auth_event_handlers.get(master_id)
-                if auth_event_callback:
-                    try:
-                        auth_event_callback(data)
-                    except Exception as exc:  # pylint: disable=broad-except
-                        log.error(
-                            "%s Error calling %r: %s", self, auth_event_callback, exc, exc_info=True
-                        )
-            log.debug("%s store size after event received: %d", self, len(self.store))
+            try:
+                master_id, tag, data = decoded
+                received = time.time()
+                expire = received + self.timeout
+                log.info(
+                    "%s received event from: MasterID: %r; Tag: %r Data: %r",
+                    self,
+                    master_id,
+                    tag,
+                    data,
+                )
+                self.store.append((received, expire, master_id, tag, data))
+                if tag == "salt/auth":
+                    auth_event_callback = self.auth_event_handlers.get(master_id)
+                    if auth_event_callback:
+                        try:
+                            auth_event_callback(data)
+                        except Exception as exc:  # pylint: disable=broad-except
+                            log.error(
+                                "%s Error calling %r: %s",
+                                self,
+                                auth_event_callback,
+                                exc,
+                                exc_info=True,
+                            )
+                log.debug("%s store size after event received: %d", self, len(self.store))
+            except Exception:  # pylint: disable=broad-except
+                log.error("%s Something funky happened", self, exc_info=True)
+                puller.close(0)
+                context.term()
+                # We need to keep these events stored, restart zmq socket
+                context = zmq.Context()
+                puller = context.socket(zmq.PULL)
+                log.debug("%s Binding PULL socket to %s", self, self.address)
+                puller.bind(self.address)
         puller.close(1500)
         context.term()
         log.debug("%s is no longer running", self)
