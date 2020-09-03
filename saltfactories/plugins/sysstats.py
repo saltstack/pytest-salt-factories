@@ -23,7 +23,10 @@ class SystemStatsReporter:
     sys_stats_mem_type = attr.ib(init=False)
 
     def __attrs_post_init__(self):
-        self.show_sys_stats = self.config.getoption("--sys-stats") is True
+        self.show_sys_stats = (
+            self.config.getoption("--sys-stats") is True
+            and self.config.getoption("--no-sys-stats") is False
+        )
         self.sys_stats_no_children = self.config.getoption("--sys-stats-no-children") is True
         if self.config.getoption("--sys-stats-uss-mem") is True:
             self.sys_stats_mem_type = "uss"
@@ -127,6 +130,12 @@ def pytest_addoption(parser):
         help="Print System CPU and MEM statistics after each test execution.",
     )
     output_options_group.addoption(
+        "--no-sys-stats",
+        default=False,
+        action="store_true",
+        help="Do not print System CPU and MEM statistics after each test execution.",
+    )
+    output_options_group.addoption(
         "--sys-stats-no-children",
         default=False,
         action="store_true",
@@ -143,7 +152,10 @@ def pytest_addoption(parser):
 
 @pytest.hookimpl(trylast=True)
 def pytest_sessionstart(session):
-    if session.config.getoption("--sys-stats") is True:
+    if (
+        session.config.getoption("--sys-stats") is True
+        and session.config.getoption("--no-sys-stats") is False
+    ):
         stats_processes = OrderedDict((("Test Suite Run", psutil.Process(os.getpid())),))
     else:
         stats_processes = None
