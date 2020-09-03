@@ -41,24 +41,47 @@ class EventListener:
             msgpack_kwargs = {"encoding": "utf-8"}
         while self.running_event.is_set():
             payload = puller.recv()
-            if payload is self.sentinel:
+            if payload == self.sentinel:
                 break
-            master_id, tag, data = msgpack.loads(payload, **msgpack_kwargs)
-            if self.auth_events_callback is not None and tag == "salt/auth":
-                self.auth_events_callback(master_id, data)
-            received = time.time()
-            expire = received + self.timeout
-            log.info("Received event from: MasterID: %r; Tag: %r; Data: %r", master_id, tag, data)
-            self.store.append((received, expire, master_id, tag, data))
+            try:
+                decoded = msgpack.loads(payload, **msgpack_kwargs)
+            except ValueError:
+                log.error(
+                    "%s Failed to msgpack.load message with payload: %s",
+                    self,
+                    payload,
+                    exc_info=True,
+                )
+                continue
 
-            # Cleanup expired events
-            to_remove = []
-            for received, expire, master_id, tag, data in self.store:
-                if time.time() > expire:
-                    to_remove.append((received, expire, master_id, tag, data))
+            try:
+                master_id, tag, data = decoded
+                if self.auth_events_callback is not None and tag == "salt/auth":
+                    self.auth_events_callback(master_id, data)
+                received = time.time()
+                expire = received + self.timeout
+                log.info(
+                    "Received event from: MasterID: %r; Tag: %r; Data: %r", master_id, tag, data
+                )
+                self.store.append((received, expire, master_id, tag, data))
 
-            for entry in to_remove:
-                self.store.remove(entry)
+                # Cleanup expired events
+                to_remove = []
+                for received, expire, master_id, tag, data in self.store:
+                    if time.time() > expire:
+                        to_remove.append((received, expire, master_id, tag, data))
+
+                for entry in to_remove:
+                    self.store.remove(entry)
+            except Exception:  # pylint: disable=broad-except
+                log.error("%s Something funky happened", self, exc_info=True)
+                puller.close(0)
+                context.term()
+                # We need to keep these events stored, restart zmq socket
+                context = zmq.Context()
+                puller = context.socket(zmq.PULL)
+                log.debug("%s Binding PULL socket to %s", self, self.address)
+                puller.bind(self.address)
 
     def start(self):
         if self.running_event.is_set():
@@ -69,12 +92,12 @@ class EventListener:
     def stop(self):
         if self.running_event.is_set() is False:
             return
-        self.running_event.clear()
         context = zmq.Context()
         push = context.socket(zmq.PUSH)
         push.connect(self.address)
         push.send(self.sentinel)
         push.close(1500)
+        self.running_event.clear()
         context.term()
 
     def wait_for_events(self, patterns, timeout=30, after_time=None):
