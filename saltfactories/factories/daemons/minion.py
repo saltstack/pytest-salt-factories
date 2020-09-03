@@ -63,12 +63,13 @@ class SaltMinionFactory(SaltDaemonFactory):
             "loop_interval": 0.05,
             "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
             "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+            "enable_legacy_startup_events": False,
+            "acceptance_wait_time": 0.5,
+            "acceptance_wait_time_max": 5,
             "pytest-minion": {
                 "master-id": master_id,
                 "log": {"prefix": "{}(id={!r})".format(cls.__name__, minion_id)},
             },
-            "acceptance_wait_time": 0.5,
-            "acceptance_wait_time_max": 5,
         }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)

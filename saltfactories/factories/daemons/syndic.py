@@ -67,6 +67,7 @@ class SaltSyndicFactory(SaltDaemonFactory):
             "syndic_log_file": "logs/syndic.log",
             "syndic_log_level_logfile": "debug",
             "syndic_dir": "cache/syndics",
+            "enable_legacy_startup_events": False,
             "pytest-syndic": {
                 "master-id": master_of_masters_id,
                 "log": {"prefix": "{}(id={!r})".format(cls.__name__, syndic_id)},

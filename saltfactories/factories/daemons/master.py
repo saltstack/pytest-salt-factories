@@ -121,6 +121,7 @@ class SaltMasterFactory(SaltDaemonFactory):
             },
             "order_masters": order_masters,
             "max_open_files": 10240,
+            "enable_legacy_startup_events": False,
             "pytest-master": {
                 "master-id": master_of_masters_id,
                 "log": {"prefix": "{}(id={!r})".format(cls.__name__, master_id)},
