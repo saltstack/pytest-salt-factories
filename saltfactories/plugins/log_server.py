@@ -24,10 +24,12 @@ class LogServer:
     log_port = attr.ib(default=attr.Factory(ports.get_unused_localhost_port))
     log_level = attr.ib()
     running_event = attr.ib(init=False, repr=False, hash=False)
+    sentinel_event = attr.ib(init=False, repr=False, hash=False)
     process_queue_thread = attr.ib(init=False, repr=False, hash=False)
 
     def start(self):
-        log.info("Starting log server at %s:%d", self.log_host, self.log_port)
+        log.info("%s starting...", self)
+        self.sentinel_event = threading.Event()
         self.running_event = threading.Event()
         self.process_queue_thread = threading.Thread(target=self.process_logs)
         self.process_queue_thread.start()
@@ -35,35 +37,41 @@ class LogServer:
         if self.running_event.wait(5) is not True:
             self.running_event.clear()
             raise RuntimeError("Failed to start the log server")
-        log.info("Log Server Started")
+        log.info("%s started", self)
 
     def stop(self):
-        log.info("Stopping the logging server")
+        log.info("%s stopping...", self)
         address = "tcp://{}:{}".format(self.log_host, self.log_port)
-        log.debug("Stopping the multiprocessing logging queue listener at %s", address)
         context = zmq.Context()
         sender = context.socket(zmq.PUSH)
         sender.connect(address)
         try:
             sender.send(msgpack.dumps(None))
-            log.info("Sent sentinel to trigger log server shutdown")
+            log.debug("%s Sent sentinel to trigger log server shutdown", self)
+            if self.sentinel_event.wait(5) is not True:
+                log.warning(
+                    "%s Failed to wait for the reception of the stop sentinel message. Stopping anyway.",
+                    self,
+                )
         finally:
             sender.close(1000)
             context.term()
 
         # Clear the running even, the log process thread know it should stop
         self.running_event.clear()
-        log.info("Joining the logging server process thread")
+        log.info("%s Joining the logging server process thread", self)
         self.process_queue_thread.join(7)
         if not self.process_queue_thread.is_alive():
-            log.debug("Stopped the log server")
+            log.debug("%s Stopped", self)
         else:
-            log.warning("The logging server thread is still running. Waiting a little longer...")
+            log.warning(
+                "%s The logging server thread is still running. Waiting a little longer...", self
+            )
             self.process_queue_thread.join(5)
             if not self.process_queue_thread.is_alive():
-                log.debug("Stopped the log server")
+                log.debug("%s Stopped", self)
             else:
-                log.warning("The logging server thread is still running...")
+                log.warning("%s The logging server thread is still running...", self)
 
     def process_logs(self):
         address = "tcp://{}:{}".format(self.log_host, self.log_port)
@@ -74,7 +82,7 @@ class LogServer:
         try:
             puller.bind(address)
         except zmq.ZMQError as exc:
-            log.exception("Unable to bind to puller at %s", address)
+            log.exception("%s Unable to bind to puller at %s", self, address)
             return
         try:
             self.running_event.set()
@@ -82,15 +90,17 @@ class LogServer:
                 if not self.running_event.is_set():
                     if exit_timeout is None:
                         log.debug(
-                            "Waiting %d seconds to process any remaning log messages "
+                            "%s Waiting %d seconds to process any remaning log messages "
                             "before exiting...",
+                            self,
                             exit_timeout_seconds,
                         )
                         exit_timeout = time.time() + exit_timeout_seconds
 
                     if time.time() >= exit_timeout:
                         log.debug(
-                            "Unable to process remaining log messages in time. " "Exiting anyway."
+                            "%s Unable to process remaining log messages in time. Exiting anyway.",
+                            self,
                         )
                         break
                 try:
@@ -107,7 +117,8 @@ class LogServer:
                         record_dict = msgpack.loads(msg, encoding="utf-8")
                     if record_dict is None:
                         # A sentinel to stop processing the queue
-                        log.info("Received the sentinel to shutdown the log server")
+                        log.info("%s Received the sentinel to shutdown", self)
+                        self.sentinel_event.set()
                         break
                     try:
                         record_dict["message"]
@@ -132,13 +143,15 @@ class LogServer:
                     break
                 except Exception as exc:  # pylint: disable=broad-except
                     log.warning(
-                        "An exception occurred in the log server processing queue thread: %s",
+                        "%s An exception occurred in the processing queue thread: %s",
+                        self,
                         exc,
                         exc_info=True,
                     )
         finally:
             puller.close(1)
             context.term()
+        log.debug("%s Process log thread terminated", self)
 
 
 @pytest.hookimpl(trylast=True)

@@ -29,9 +29,10 @@ class EventListener:
     address = attr.ib(init=False)
     store = attr.ib(init=False, repr=False, hash=False)
     sentinel = attr.ib(init=False, repr=False, hash=False)
+    sentinel_event = attr.ib(init=False, repr=False, hash=False)
     running_event = attr.ib(init=False, repr=False, hash=False)
     running_thread = attr.ib(init=False, repr=False, hash=False)
-    cleaning_thread = attr.ib(init=False, repr=False, hash=False)
+    cleanup_thread = attr.ib(init=False, repr=False, hash=False)
     auth_event_handlers = attr.ib(init=False, repr=False, hash=False)
 
     def __attrs_post_init__(self):
@@ -39,8 +40,9 @@ class EventListener:
         self.address = "tcp://127.0.0.1:{}".format(ports.get_unused_localhost_port())
         self.running_event = threading.Event()
         self.running_thread = threading.Thread(target=self._run)
-        self.cleaning_thread = threading.Thread(target=self._cleanup)
+        self.cleanup_thread = threading.Thread(target=self._cleanup)
         self.sentinel = msgpack.dumps(None)
+        self.sentinel_event = threading.Event()
         self.auth_event_handlers = weakref.WeakValueDictionary()
 
     def _run(self):
@@ -53,8 +55,13 @@ class EventListener:
         else:
             msgpack_kwargs = {"encoding": "utf-8"}
         log.debug("%s started", self)
+        self.running_event.set()
         while self.running_event.is_set():
             payload = puller.recv()
+            if payload == self.sentinel:
+                log.info("%s Received stop sentinel...", self)
+                self.sentinel_event.set()
+                break
             try:
                 decoded = msgpack.loads(payload, **msgpack_kwargs)
             except ValueError:
@@ -65,8 +72,9 @@ class EventListener:
                     exc_info=True,
                 )
                 continue
-            if payload == self.sentinel:
+            if decoded is None:
                 log.info("%s Received stop sentinel...", self)
+                self.sentinel_event.set()
                 break
             try:
                 master_id, tag, data = decoded
@@ -132,9 +140,12 @@ class EventListener:
         if self.running_event.is_set():
             return
         log.debug("%s is starting", self)
-        self.running_event.set()
         self.running_thread.start()
-        self.cleaning_thread.start()
+        # Wait for the thread to start
+        if self.running_event.wait(5) is not True:
+            self.running_event.clear()
+            raise RuntimeError("Failed to start the event listener")
+        self.cleanup_thread.start()
 
     def stop(self):
         if self.running_event.is_set() is False:
@@ -145,12 +156,38 @@ class EventListener:
         context = zmq.Context()
         push = context.socket(zmq.PUSH)
         push.connect(self.address)
-        push.send(self.sentinel)
-        push.close(1500)
+        try:
+            push.send(self.sentinel)
+            log.debug("%s Sent sentinel to trigger log server shutdown", self)
+            if self.sentinel_event.wait(5) is not True:
+                log.warning(
+                    "%s Failed to wait for the reception of the stop sentinel message. Stopping anyway.",
+                    self,
+                )
+        finally:
+            push.close(1500)
+            context.term()
         self.running_event.clear()
-        context.term()
-        self.running_thread.join()
-        self.cleaning_thread.join()
+        log.debug("%s Joining running thread...", self)
+        self.running_thread.join(7)
+        if self.running_thread.is_alive():
+            log.debug("%s The running thread is still alive. Waiting a little longer...", self)
+            self.running_thread.join(5)
+            if self.running_thread.is_alive():
+                log.debug(
+                    "%s The running thread is still alive. Exiting anyway and let GC take care of it",
+                    self,
+                )
+        log.debug("%s Joining cleanup thread...", self)
+        self.cleanup_thread.join(7)
+        if self.cleanup_thread.is_alive():
+            log.debug("%s The cleanup thread is still alive. Waiting a little longer...", self)
+            self.cleanup_thread.join(5)
+            if self.cleanup_thread.is_alive():
+                log.debug(
+                    "%s The cleanup thread is still alive. Exiting anyway and let GC take care of it",
+                    self,
+                )
         log.debug("%s stopped", self)
 
     def get_events(self, patterns, after_time=None):
