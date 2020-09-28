@@ -385,6 +385,26 @@ def test_process_output(cli_script_name, config_file):
     assert json_out is None
 
 
+def test_non_string_cli_flags(minion_id, config_dir, config_file, cli_script_name):
+    config = {"conf_file": config_file, "id": "the-id"}
+    args = ["test.ping"]
+    foo = ["the", "foo", "list"]
+    kwargs = {"minion_tgt": minion_id, "foo": foo}
+    expected = [
+        sys.executable,
+        cli_script_name,
+        "--config-dir={}".format(config_dir.strpath),
+        "--out=json",
+        "--log-level=quiet",
+        minion_id,
+        "test.ping",
+        "foo={}".format(json.dumps(foo)),
+    ]
+    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
+    cmdline = proc.build_cmdline(*args, **kwargs)
+    assert cmdline == expected
+
+
 def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]

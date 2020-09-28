@@ -744,6 +744,8 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
 
         # Handle the config directory flag
         for arg in args:
+            if not isinstance(arg, str):
+                continue
             if arg.startswith("--config-dir="):
                 break
             if arg in ("-c", "--config-dir"):
@@ -755,6 +757,8 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
         if self.__cli_timeout_supported__:
             salt_cli_timeout_next = False
             for arg in args:
+                if not isinstance(arg, str):
+                    continue
                 if arg.startswith("--timeout="):
                     # Let's actually change the _terminal_timeout value which is used to
                     # calculate when the run() method should actually timeout
@@ -789,6 +793,8 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
         # Handle the output flag
         if self.__cli_output_supported__:
             for arg in args:
+                if not isinstance(arg, str):
+                    continue
                 if arg in ("--out", "--output"):
                     break
                 if arg.startswith(("--out=", "--output=")):
@@ -800,6 +806,8 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
         if self.__cli_log_level_supported__:
             # Handle the logging flag
             for arg in args:
+                if not isinstance(arg, str):
+                    continue
                 if arg in ("-l", "--log-level"):
                     break
                 if arg.startswith("--log-level="):
@@ -980,6 +988,8 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         _args = []
         # Handle the config directory flag
         for arg in args:
+            if not isinstance(arg, str):
+                continue
             if arg.startswith("--config-dir="):
                 break
             if arg in ("-c", "--config-dir"):
@@ -988,6 +998,8 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
             _args.append("--config-dir={}".format(self.config_dir))
         # Handle the logging flag
         for arg in args:
+            if not isinstance(arg, str):
+                continue
             if arg in ("-l", "--log-level"):
                 break
             if arg.startswith("--log-level="):
