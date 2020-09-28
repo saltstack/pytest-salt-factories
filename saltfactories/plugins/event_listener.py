@@ -11,6 +11,7 @@ import threading
 import weakref
 from collections import deque
 from datetime import datetime
+from datetime import timedelta
 
 import attr
 import msgpack
@@ -21,6 +22,34 @@ from saltfactories.utils import ports
 from saltfactories.utils import time
 
 log = logging.getLogger(__name__)
+
+
+def _convert_stamp(stamp):
+    try:
+        return datetime.fromisoformat(stamp)
+    except AttributeError:
+        # Python < 3.7
+        return datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%S.%f")
+
+
+@attr.s(kw_only=True, slots=True, hash=True, frozen=True)
+class Event:
+    master_id = attr.ib()
+    tag = attr.ib()
+    stamp = attr.ib(converter=_convert_stamp)
+    data = attr.ib(hash=False)
+    expire_seconds = attr.ib(hash=False)
+    _expire_at = attr.ib(init=False, hash=False)
+
+    @_expire_at.default
+    def _set_expire_at(self):
+        return self.stamp + timedelta(seconds=self.expire_seconds)
+
+    @property
+    def expired(self):
+        if datetime.utcnow() < self._expire_at:
+            return False
+        return True
 
 
 @attr.s(kw_only=True, slots=True, hash=True)
@@ -78,16 +107,15 @@ class EventListener:
                 break
             try:
                 master_id, tag, data = decoded
-                received = time.time()
-                expire = received + self.timeout
-                log.info(
-                    "%s received event from: MasterID: %r; Tag: %r Data: %r",
-                    self,
-                    master_id,
-                    tag,
-                    data,
+                event = Event(
+                    master_id=master_id,
+                    tag=tag,
+                    stamp=data["_stamp"],
+                    data=data,
+                    expire_seconds=self.timeout,
                 )
-                self.store.append((received, expire, master_id, tag, data))
+                log.info("%s received event: %s", self, event)
+                self.store.append(event)
                 if tag == "salt/auth":
                     auth_event_callback = self.auth_event_handlers.get(master_id)
                     if auth_event_callback:
@@ -127,13 +155,13 @@ class EventListener:
 
             # Cleanup expired events
             to_remove = []
-            for received, expire, master_id, tag, data in self.store:
-                if time.time() > expire:
-                    to_remove.append((received, expire, master_id, tag, data))
+            for event in self.store:
+                if event.expired:
+                    to_remove.append(event)
 
-            for entry in to_remove:
-                log.debug("%s Removing from event store: %s", self, entry)
-                self.store.remove(entry)
+            for event in to_remove:
+                log.debug("%s Removing from event store: %s", self, event)
+                self.store.remove(event)
             log.debug("%s store size after cleanup: %s", self, len(self.store))
 
     def start(self):
@@ -191,34 +219,38 @@ class EventListener:
         log.debug("%s stopped", self)
 
     def get_events(self, patterns, after_time=None):
-        after_time_iso = datetime.fromtimestamp(after_time).isoformat()
+        if after_time is None:
+            after_time = datetime.utcnow()
+        elif isinstance(after_time, float):
+            after_time = datetime.utcfromtimestamp(after_time)
+        after_time_iso = after_time.isoformat()
         log.debug(
             "%s is checking for event patterns happening after %s: %s",
             self,
             after_time_iso,
             set(patterns),
         )
-        found_patterns = set()
+        found_events = set()
         patterns = set(patterns)
-        if after_time is None:
-            after_time = time.time()
-        for received, expire, master_id, tag, data in copy.copy(self.store):
-            if received < after_time:
+        for event in copy.copy(self.store):
+            if event.expired:
                 # Too old, carry on
+                continue
+            if event.stamp < after_time:
                 continue
             for pattern in set(patterns):
                 _master_id, _pattern = pattern
-                if _master_id != master_id:
+                if event.master_id != _master_id:
                     continue
-                if fnmatch.fnmatch(tag, _pattern):
+                if fnmatch.fnmatch(event.tag, _pattern):
                     log.debug("%s Found matching pattern: %s", self, pattern)
-                    found_patterns.add(pattern)
-        if found_patterns:
+                    found_events.add(event)
+        if found_events:
             log.debug(
                 "%s found the following patterns happening after %s: %s",
                 self,
                 after_time_iso,
-                found_patterns,
+                found_events,
             )
         else:
             log.debug(
@@ -226,7 +258,7 @@ class EventListener:
                 self,
                 after_time_iso,
             )
-        return found_patterns
+        return found_events
 
     def register_auth_event_handler(self, master_id, callback):
         self.auth_event_handlers[master_id] = callback
