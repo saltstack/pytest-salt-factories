@@ -260,6 +260,44 @@ class EventListener:
             )
         return found_events
 
+    def wait_for_events(self, patterns, timeout=30, after_time=None):
+        if after_time is None:
+            after_time = datetime.utcnow()
+        elif isinstance(after_time, float):
+            after_time = datetime.utcfromtimestamp(after_time)
+        after_time_iso = after_time.isoformat()
+        log.debug(
+            "%s is waiting for event patterns happening after %s: %s",
+            self,
+            after_time_iso,
+            set(patterns),
+        )
+        found_events = set()
+        patterns = set(patterns)
+        timeout_at = time.time() + timeout
+        while True:
+            if not patterns:
+                return True
+            for event in copy.copy(self.store):
+                if event.expired:
+                    # Too old, carry on
+                    continue
+                if event.stamp < after_time:
+                    continue
+                for pattern in set(patterns):
+                    _master_id, _pattern = pattern
+                    if event.master_id != _master_id:
+                        continue
+                    if fnmatch.fnmatch(event.tag, _pattern):
+                        log.debug("%s Found matching pattern: %s", self, pattern)
+                        patterns.remove((event.master_id, _pattern))
+            if not patterns:
+                break
+            if time.time() > timeout_at:
+                break
+            time.sleep(0.5)
+        return not patterns
+
     def register_auth_event_handler(self, master_id, callback):
         self.auth_event_handlers[master_id] = callback
 
