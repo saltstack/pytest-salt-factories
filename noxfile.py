@@ -37,26 +37,26 @@ EXTRA_REQUIREMENTS_INSTALL = os.environ.get("EXTRA_REQUIREMENTS_INSTALL")
 
 # Paths
 REPO_ROOT = pathlib.Path(__file__).resolve().parent
+# Change current directory to REPO_ROOT
+os.chdir(str(REPO_ROOT))
+
 SITECUSTOMIZE_DIR = str(REPO_ROOT / "saltfactories" / "utils" / "coverage")
-ARTEFACTS_DIR = REPO_ROOT / "artefacts"
-# Make sure the artefacts directory exists
-ARTEFACTS_DIR.mkdir(parents=True, exist_ok=True)
-RUNTESTS_LOGFILE = ARTEFACTS_DIR / "runtests-{}.log".format(
+ARTIFACTS_DIR = REPO_ROOT / "artifacts"
+# Make sure the artifacts directory exists
+ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+RUNTESTS_LOGFILE = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "runtests-{}.log".format(
     datetime.datetime.now().strftime("%Y%m%d%H%M%S.%f")
 )
-COVERAGE_REPORT_DB = ARTEFACTS_DIR / ".coverage"
-COVERAGE_REPORT_SALTFACTORIES = ARTEFACTS_DIR / "coverage-saltfactories.xml"
-COVERAGE_REPORT_TESTS = ARTEFACTS_DIR / "coverage-tests.xml"
-JUNIT_REPORT = ARTEFACTS_DIR / "junit-report.xml"
+COVERAGE_REPORT_DB = REPO_ROOT / ".coverage"
+COVERAGE_REPORT_SALTFACTORIES = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-saltfactories.xml"
+COVERAGE_REPORT_TESTS = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-tests.xml"
+JUNIT_REPORT = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "junit-report.xml"
 
 # Nox options
 #  Reuse existing virtualenvs
 nox.options.reuse_existing_virtualenvs = True
 #  Don't fail on missing interpreters
 nox.options.error_on_missing_interpreters = False
-
-# Change current directory to REPO_ROOT
-os.chdir(str(REPO_ROOT))
 
 
 def _patch_session(session):
@@ -239,8 +239,8 @@ def coverage(session):
             "--show-missing",
         )
     finally:
-        if os.path.exists(".coverage"):
-            shutil.copyfile(".coverage", str(COVERAGE_REPORT_DB))
+        if COVERAGE_REPORT_DB.exists():
+            shutil.copyfile(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / ".coverage"))
 
 
 @nox.session(python="3.7")

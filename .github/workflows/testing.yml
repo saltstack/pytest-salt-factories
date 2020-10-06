@@ -118,7 +118,7 @@ jobs:
       run: |
         curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
           python - \
-          --include='artefacts/junit-report.xml' \
+          --include='artifacts/junit-report.xml' \
           --framework=pytest \
           --merge ".*" \
           --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
@@ -136,7 +136,7 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
-        REPORT_PATH: artefacts/coverage-saltfactories.xml
+        REPORT_PATH: artifacts/coverage-saltfactories.xml
       run: |
         if [ ! -f codecov.sh ]; then
           n=0
@@ -168,7 +168,7 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
-        REPORT_PATH: artefacts/coverage-tests.xml
+        REPORT_PATH: artifacts/coverage-tests.xml
       run: |
         if [ ! -f codecov.sh ]; then
           n=0
@@ -198,7 +198,7 @@ jobs:
       uses: actions/upload-artifact@main
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
-        path: artefacts/runtests-*.log
+        path: artifacts/runtests-*.log
 
   Windows:
     runs-on: windows-latest
@@ -268,7 +268,7 @@ jobs:
       run: |
         curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
           python - \
-          --include='artefacts/junit-report.xml' \
+          --include='artifacts/junit-report.xml' \
           --framework=pytest \
           --merge ".*" \
           --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
@@ -286,7 +286,7 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
-        REPORT_PATH: artefacts/coverage-saltfactories.xml
+        REPORT_PATH: artifacts/coverage-saltfactories.xml
       run: |
         if [ ! -f codecov.sh ]; then
           n=0
@@ -318,7 +318,7 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
-        REPORT_PATH: artefacts/coverage-tests.xml
+        REPORT_PATH: artifacts/coverage-tests.xml
       run: |
         if [ ! -f codecov.sh ]; then
           n=0
@@ -348,7 +348,7 @@ jobs:
       uses: actions/upload-artifact@main
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
-        path: artefacts/runtests-*.log
+        path: artifacts/runtests-*.log
 
   macOS:
     runs-on: macOS-latest
@@ -414,7 +414,7 @@ jobs:
       run: |
         curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
           python - \
-          --include='artefacts/junit-report.xml' \
+          --include='artifacts/junit-report.xml' \
           --framework=pytest \
           --merge ".*" \
           --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
@@ -432,7 +432,7 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
-        REPORT_PATH: artefacts/coverage-saltfactories.xml
+        REPORT_PATH: artifacts/coverage-saltfactories.xml
       run: |
         if [ ! -f codecov.sh ]; then
           n=0
@@ -464,7 +464,7 @@ jobs:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
         REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
-        REPORT_PATH: artefacts/coverage-tests.xml
+        REPORT_PATH: artifacts/coverage-tests.xml
       run: |
         if [ ! -f codecov.sh ]; then
           n=0
@@ -494,4 +494,4 @@ jobs:
       uses: actions/upload-artifact@main
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
-        path: artefacts/runtests-*.log
+        path: artifacts/runtests-*.log
