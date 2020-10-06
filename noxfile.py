@@ -37,6 +37,7 @@ EXTRA_REQUIREMENTS_INSTALL = os.environ.get("EXTRA_REQUIREMENTS_INSTALL")
 
 # Paths
 REPO_ROOT = pathlib.Path(__file__).resolve().parent
+SITECUSTOMIZE_DIR = str(REPO_ROOT / "saltfactories" / "utils" / "coverage")
 ARTEFACTS_DIR = REPO_ROOT / "artefacts"
 # Make sure the artefacts directory exists
 ARTEFACTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -136,6 +137,27 @@ def _tests(session):
             session.install(*install_command, silent=PIP_INSTALL_SILENT)
 
     session.run("coverage", "erase")
+
+    python_path_env_var = os.environ.get("PYTHONPATH") or None
+    if python_path_env_var is None:
+        python_path_env_var = SITECUSTOMIZE_DIR
+    else:
+        python_path_entries = python_path_env_var.split(os.pathsep)
+        if SITECUSTOMIZE_DIR in python_path_entries:
+            python_path_entries.remove(SITECUSTOMIZE_DIR)
+        python_path_entries.insert(0, SITECUSTOMIZE_DIR)
+        python_path_env_var = os.pathsep.join(python_path_entries)
+
+    env = {
+        # The updated python path so that sitecustomize is importable
+        "PYTHONPATH": python_path_env_var,
+        # The full path to the .coverage data file. Makes sure we always write
+        # them to the same directory
+        "COVERAGE_FILE": str(COVERAGE_REPORT_DB),
+        # Instruct sub processes to also run under coverage
+        "COVERAGE_PROCESS_START": str(REPO_ROOT / ".coveragerc"),
+    }
+
     args = [
         "--rootdir",
         str(REPO_ROOT),
@@ -156,7 +178,7 @@ def _tests(session):
             if arg.startswith("--color") and args[0].startswith("--color"):
                 args.pop(0)
             args.append(arg)
-    session.run("coverage", "run", "-m", "pytest", *args)
+    session.run("coverage", "run", "-m", "pytest", *args, env=env)
     session.notify("coverage")
 
 
@@ -184,6 +206,13 @@ def coverage(session):
     """
     _patch_session(session)
     session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+    # Always combine and generate the XML coverage report
+    try:
+        session.run("coverage", "combine")
+    except CommandFailed:
+        # Sometimes some of the coverage files are corrupt which would
+        # trigger a CommandFailed exception
+        pass
     # Generate report for saltfactories code coverage
     session.run(
         "coverage",
