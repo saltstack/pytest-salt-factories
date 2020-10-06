@@ -9,6 +9,7 @@ saltfactories.plugins.factories
 Salt Daemon Factories PyTest Plugin
 """
 import logging
+import os
 import pprint
 
 import pytest
@@ -33,6 +34,7 @@ def _salt_factories_config(request):
         "log_server_host": log_server.log_host,
         "log_server_port": log_server.log_port,
         "log_server_level": log_server.log_level,
+        "system_install": "SALT_FACTORIES_SYSTEM_INSTALL" in os.environ,
     }
 
 

@@ -36,6 +36,7 @@ class SaltSyndicFactory(SaltDaemonFactory):
         config_defaults=None,
         config_overrides=None,
         master_of_masters=None,
+        system_install=False,
     ):
         if config_defaults is None:
             config_defaults = {}
@@ -50,29 +51,59 @@ class SaltSyndicFactory(SaltDaemonFactory):
             # Match transport if not set
             config_defaults.setdefault("transport", master_of_masters.config["transport"])
 
-        conf_dir = root_dir / "conf"
-        conf_dir.mkdir(parents=True, exist_ok=True)
-        conf_d_dir = conf_dir / "master.d"
-        conf_d_dir.mkdir(exist_ok=True)
-        conf_file = str(conf_d_dir / "syndic.conf")
+        if system_install is True:
+            conf_dir = root_dir / "etc" / "salt"
+            conf_dir.mkdir(parents=True, exist_ok=True)
+            conf_d_dir = conf_dir / "master.d"
+            conf_d_dir.mkdir(exist_ok=True)
+            conf_file = str(conf_d_dir / "syndic.conf")
+            pki_dir = conf_dir / "pki" / "master"
 
-        _config_defaults = {
-            "id": syndic_id,
-            "master_id": syndic_id,
-            "conf_file": conf_file,
-            "root_dir": str(root_dir),
-            "syndic_master": "127.0.0.1",
-            "syndic_master_port": syndic_master_port or ports.get_unused_localhost_port(),
-            "syndic_pidfile": "run/syndic.pid",
-            "syndic_log_file": "logs/syndic.log",
-            "syndic_log_level_logfile": "debug",
-            "syndic_dir": "cache/syndics",
-            "enable_legacy_startup_events": False,
-            "pytest-syndic": {
-                "master-id": master_of_masters_id,
-                "log": {"prefix": "{}(id={!r})".format(cls.__name__, syndic_id)},
-            },
-        }
+            pidfile_dir = root_dir / "var" / "run"
+
+            logs_dir = root_dir / "var" / "log" / "salt"
+            logs_dir.mkdir(parents=True, exist_ok=True)
+
+            _config_defaults = {
+                "id": syndic_id,
+                "master_id": syndic_id,
+                "conf_file": conf_file,
+                "root_dir": str(root_dir),
+                "syndic_master": "127.0.0.1",
+                "syndic_master_port": syndic_master_port
+                or salt.config.DEFAULT_MASTER_OPTS["ret_port"],
+                "syndic_pidfile": str(pidfile_dir / "syndic.pid"),
+                "syndic_log_file": str(logs_dir / "syndic.log"),
+                "syndic_log_level_logfile": "debug",
+                "pytest-syndic": {
+                    "master-id": master_of_masters_id,
+                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, syndic_id)},
+                },
+            }
+        else:
+            conf_dir = root_dir / "conf"
+            conf_dir.mkdir(parents=True, exist_ok=True)
+            conf_d_dir = conf_dir / "master.d"
+            conf_d_dir.mkdir(exist_ok=True)
+            conf_file = str(conf_d_dir / "syndic.conf")
+
+            _config_defaults = {
+                "id": syndic_id,
+                "master_id": syndic_id,
+                "conf_file": conf_file,
+                "root_dir": str(root_dir),
+                "syndic_master": "127.0.0.1",
+                "syndic_master_port": syndic_master_port or ports.get_unused_localhost_port(),
+                "syndic_pidfile": "run/syndic.pid",
+                "syndic_log_file": "logs/syndic.log",
+                "syndic_log_level_logfile": "debug",
+                "syndic_dir": "cache/syndics",
+                "enable_legacy_startup_events": False,
+                "pytest-syndic": {
+                    "master-id": master_of_masters_id,
+                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, syndic_id)},
+                },
+            }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
 
@@ -97,6 +128,7 @@ class SaltSyndicFactory(SaltDaemonFactory):
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             master_of_masters=master_of_masters,
+            system_install=factories_manager.system_install,
         )
 
     @classmethod

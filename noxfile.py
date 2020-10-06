@@ -17,6 +17,7 @@ SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000.1"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
 USE_SYSTEM_PYTHON = "USE_SYSTEM_PYTHON" in os.environ
+SALT_FACTORIES_SYSTEM_INSTALL = "SALT_FACTORIES_SYSTEM_INSTALL" in os.environ
 IS_WINDOWS = sys.platform.lower().startswith("win")
 
 if not IS_WINDOWS:
@@ -111,7 +112,8 @@ def _tests(session):
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
-        session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+        if session.python is not False and SALT_FACTORIES_SYSTEM_INSTALL is False:
+            session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
             session, "pip", "list", "--format=json", silent=True, log=False, stderr=None

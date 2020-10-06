@@ -653,6 +653,9 @@ class SaltFactory:
             The Salt config dictionary
         python_executable(str):
             The path to the python executable to use
+        system_install(bool):
+            If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
+            salt system paths apply.
     """
 
     id = attr.ib(default=None, init=False)
@@ -660,10 +663,11 @@ class SaltFactory:
     config_dir = attr.ib(init=False, default=None)
     config_file = attr.ib(init=False, default=None)
     python_executable = attr.ib(default=None)
+    system_install = attr.ib(repr=False, default=False)
     display_name = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
-        if self.python_executable is None:
+        if self.python_executable is None and self.system_install is False:
             self.python_executable = sys.executable
         # We really do not want buffered output
         self.environ.setdefault("PYTHONUNBUFFERED", "1")
@@ -871,13 +875,15 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
     def __attrs_post_init__(self):
         DaemonFactory.__attrs_post_init__(self)
         SaltFactory.__attrs_post_init__(self)
-        for arg in self.extra_cli_arguments_after_first_start_failure:
-            if arg in ("-l", "--log-level"):
-                break
-            if arg.startswith("--log-level="):
-                break
-        else:
-            self.extra_cli_arguments_after_first_start_failure.append("--log-level=debug")
+
+        if self.system_install is False:
+            for arg in self.extra_cli_arguments_after_first_start_failure:
+                if arg in ("-l", "--log-level"):
+                    break
+                if arg.startswith("--log-level="):
+                    break
+            else:
+                self.extra_cli_arguments_after_first_start_failure.append("--log-level=debug")
 
     @classmethod
     def configure(

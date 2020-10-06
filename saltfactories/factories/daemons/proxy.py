@@ -32,7 +32,13 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
 
     @classmethod
     def default_config(
-        cls, root_dir, proxy_minion_id, config_defaults=None, config_overrides=None, master=None
+        cls,
+        root_dir,
+        proxy_minion_id,
+        config_defaults=None,
+        config_overrides=None,
+        master=None,
+        system_install=False,
     ):
         if config_defaults is None:
             config_defaults = {}
@@ -44,37 +50,68 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
             # Match transport if not set
             config_defaults.setdefault("transport", master.config["transport"])
 
-        conf_dir = root_dir / "conf"
-        conf_dir.mkdir(parents=True, exist_ok=True)
-        conf_file = str(conf_dir / "proxy")
+        if system_install is True:
+            conf_dir = root_dir / "etc" / "salt"
+            conf_dir.mkdir(parents=True, exist_ok=True)
+            conf_file = str(conf_dir / "minion")
+            pki_dir = conf_dir / "pki" / "minion"
 
-        _config_defaults = {
-            "id": proxy_minion_id,
-            "conf_file": conf_file,
-            "root_dir": str(root_dir),
-            "interface": "127.0.0.1",
-            "master": "127.0.0.1",
-            "master_port": master_port or ports.get_unused_localhost_port(),
-            "tcp_pub_port": ports.get_unused_localhost_port(),
-            "tcp_pull_port": ports.get_unused_localhost_port(),
-            "pidfile": "run/proxy.pid",
-            "pki_dir": "pki",
-            "cachedir": "cache",
-            "sock_dir": "run/proxy",
-            "log_file": "logs/proxy.log",
-            "log_level_logfile": "debug",
-            "loop_interval": 0.05,
-            "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-            "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-            "proxy": {"proxytype": "dummy"},
-            "enable_legacy_startup_events": False,
-            "acceptance_wait_time": 0.5,
-            "acceptance_wait_time_max": 5,
-            "pytest-minion": {
-                "master-id": master_id,
-                "log": {"prefix": "{}(id={!r})".format(cls.__name__, proxy_minion_id)},
-            },
-        }
+            logs_dir = root_dir / "var" / "log" / "salt"
+            logs_dir.mkdir(parents=True, exist_ok=True)
+
+            _config_defaults = {
+                "id": proxy_minion_id,
+                "conf_file": conf_file,
+                "root_dir": str(root_dir),
+                "interface": "127.0.0.1",
+                "master": "127.0.0.1",
+                "master_port": master_port or salt.config.DEFAULT_MINION_OPTS["master_port"],
+                "tcp_pub_port": salt.config.DEFAULT_MINION_OPTS["tcp_pub_port"],
+                "tcp_pull_port": salt.config.DEFAULT_MINION_OPTS["tcp_pull_port"],
+                "pki_dir": str(pki_dir),
+                "log_file": str(logs_dir / "proxy.log"),
+                "log_level_logfile": "debug",
+                "loop_interval": 0.05,
+                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "proxy": {"proxytype": "dummy"},
+                "pytest-minion": {
+                    "master-id": master_id,
+                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, proxy_minion_id)},
+                },
+            }
+        else:
+            conf_dir = root_dir / "conf"
+            conf_dir.mkdir(parents=True, exist_ok=True)
+            conf_file = str(conf_dir / "proxy")
+
+            _config_defaults = {
+                "id": proxy_minion_id,
+                "conf_file": conf_file,
+                "root_dir": str(root_dir),
+                "interface": "127.0.0.1",
+                "master": "127.0.0.1",
+                "master_port": master_port or ports.get_unused_localhost_port(),
+                "tcp_pub_port": ports.get_unused_localhost_port(),
+                "tcp_pull_port": ports.get_unused_localhost_port(),
+                "pidfile": "run/proxy.pid",
+                "pki_dir": "pki",
+                "cachedir": "cache",
+                "sock_dir": "run/proxy",
+                "log_file": "logs/proxy.log",
+                "log_level_logfile": "debug",
+                "loop_interval": 0.05,
+                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "proxy": {"proxytype": "dummy"},
+                "enable_legacy_startup_events": False,
+                "acceptance_wait_time": 0.5,
+                "acceptance_wait_time_max": 5,
+                "pytest-minion": {
+                    "master-id": master_id,
+                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, proxy_minion_id)},
+                },
+            }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
 

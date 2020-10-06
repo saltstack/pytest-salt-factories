@@ -10,6 +10,7 @@ Salt Minion Factory
 """
 import logging
 import pathlib
+import shutil
 import sys
 
 import attr
@@ -29,7 +30,13 @@ log = logging.getLogger(__name__)
 class SaltMinionFactory(SaltDaemonFactory):
     @classmethod
     def default_config(
-        cls, root_dir, minion_id, config_defaults=None, config_overrides=None, master=None
+        cls,
+        root_dir,
+        minion_id,
+        config_defaults=None,
+        config_overrides=None,
+        master=None,
+        system_install=False,
     ):
         if config_defaults is None:
             config_defaults = {}
@@ -41,36 +48,66 @@ class SaltMinionFactory(SaltDaemonFactory):
             # Match transport if not set
             config_defaults.setdefault("transport", master.config["transport"])
 
-        conf_dir = root_dir / "conf"
-        conf_dir.mkdir(parents=True, exist_ok=True)
-        conf_file = str(conf_dir / "minion")
+        if system_install is True:
 
-        _config_defaults = {
-            "id": minion_id,
-            "conf_file": conf_file,
-            "root_dir": str(root_dir),
-            "interface": "127.0.0.1",
-            "master": "127.0.0.1",
-            "master_port": master_port or ports.get_unused_localhost_port(),
-            "tcp_pub_port": ports.get_unused_localhost_port(),
-            "tcp_pull_port": ports.get_unused_localhost_port(),
-            "pidfile": "run/minion.pid",
-            "pki_dir": "pki",
-            "cachedir": "cache",
-            "sock_dir": "run/minion",
-            "log_file": "logs/minion.log",
-            "log_level_logfile": "debug",
-            "loop_interval": 0.05,
-            "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-            "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-            "enable_legacy_startup_events": False,
-            "acceptance_wait_time": 0.5,
-            "acceptance_wait_time_max": 5,
-            "pytest-minion": {
-                "master-id": master_id,
-                "log": {"prefix": "{}(id={!r})".format(cls.__name__, minion_id)},
-            },
-        }
+            conf_dir = root_dir / "etc" / "salt"
+            conf_dir.mkdir(parents=True, exist_ok=True)
+            conf_file = str(conf_dir / "minion")
+            pki_dir = conf_dir / "pki" / "minion"
+
+            logs_dir = root_dir / "var" / "log" / "salt"
+            logs_dir.mkdir(parents=True, exist_ok=True)
+
+            _config_defaults = {
+                "id": master_id,
+                "conf_file": conf_file,
+                "root_dir": str(root_dir),
+                "interface": "127.0.0.1",
+                "master": "127.0.0.1",
+                "master_port": master_port or salt.config.DEFAULT_MINION_OPTS["master_port"],
+                "tcp_pub_port": salt.config.DEFAULT_MINION_OPTS["tcp_pub_port"],
+                "tcp_pull_port": salt.config.DEFAULT_MINION_OPTS["tcp_pull_port"],
+                "pki_dir": str(pki_dir),
+                "log_file": str(logs_dir / "minion.log"),
+                "log_level_logfile": "debug",
+                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "pytest-minion": {
+                    "master-id": master_id,
+                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, minion_id)},
+                },
+            }
+        else:
+            conf_dir = root_dir / "conf"
+            conf_dir.mkdir(parents=True, exist_ok=True)
+            conf_file = str(conf_dir / "minion")
+
+            _config_defaults = {
+                "id": minion_id,
+                "conf_file": conf_file,
+                "root_dir": str(root_dir),
+                "interface": "127.0.0.1",
+                "master": "127.0.0.1",
+                "master_port": master_port or ports.get_unused_localhost_port(),
+                "tcp_pub_port": ports.get_unused_localhost_port(),
+                "tcp_pull_port": ports.get_unused_localhost_port(),
+                "pidfile": "run/minion.pid",
+                "pki_dir": "pki",
+                "cachedir": "cache",
+                "sock_dir": "run/minion",
+                "log_file": "logs/minion.log",
+                "log_level_logfile": "debug",
+                "loop_interval": 0.05,
+                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "enable_legacy_startup_events": False,
+                "acceptance_wait_time": 0.5,
+                "acceptance_wait_time_max": 5,
+                "pytest-minion": {
+                    "master-id": master_id,
+                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, minion_id)},
+                },
+            }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
 
@@ -96,6 +133,7 @@ class SaltMinionFactory(SaltDaemonFactory):
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             master=master,
+            system_install=factories_manager.system_install,
         )
 
     @classmethod
@@ -147,13 +185,16 @@ class SaltMinionFactory(SaltDaemonFactory):
         """
         Return a `salt-call` CLI process for this minion instance
         """
-        script_path = cli_scripts.generate_script(
-            self.factories_manager.scripts_dir,
-            "salt-call",
-            code_dir=self.factories_manager.code_dir,
-            inject_coverage=self.factories_manager.inject_coverage,
-            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-        )
+        if self.system_install is False:
+            script_path = cli_scripts.generate_script(
+                self.factories_manager.scripts_dir,
+                "salt-call",
+                code_dir=self.factories_manager.code_dir,
+                inject_coverage=self.factories_manager.inject_coverage,
+                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+            )
+        else:
+            script_path = shutil.which("salt-call")
         return factory_class(
             cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
         )

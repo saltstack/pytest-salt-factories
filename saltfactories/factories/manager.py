@@ -63,6 +63,9 @@ class FactoriesManager:
         stats_processes(:py:class:`~collections.OrderedDict`):
             This will be an `OrderedDict` instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
             hook accessible at `stats_processes` on the `session` attribute of the :fixture:`request`.
+        system_install(bool):
+            If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
+            salt system paths apply.
     """
 
     root_dir = attr.ib()
@@ -77,14 +80,18 @@ class FactoriesManager:
     slow_stop = attr.ib(default=True)
     start_timeout = attr.ib(default=None)
     stats_processes = attr.ib(repr=False, default=None)
+    system_install = attr.ib(repr=False, default=False)
     event_listener = attr.ib(repr=False)
 
     # Internal attributes
     scripts_dir = attr.ib(default=None, init=False, repr=False)
 
     def __attrs_post_init__(self):
-        self.root_dir = pathlib.Path(self.root_dir.strpath)
-        self.root_dir.mkdir(exist_ok=True)
+        if self.system_install is False:
+            self.root_dir = pathlib.Path(self.root_dir.strpath)
+            self.root_dir.mkdir(exist_ok=True)
+        else:
+            self.root_dir = pathlib.Path("/")
         if self.start_timeout is None:
             if not sys.platform.startswith(("win", "darwin")):
                 self.start_timeout = 30
@@ -92,9 +99,10 @@ class FactoriesManager:
                 # Windows and macOS are just slower
                 self.start_timeout = 120
 
-        # Setup the internal attributes
-        self.scripts_dir = self.root_dir / "scripts"
-        self.scripts_dir.mkdir(exist_ok=True)
+        if self.system_install is False:
+            # Setup the internal attributes
+            self.scripts_dir = self.root_dir / "scripts"
+            self.scripts_dir.mkdir(exist_ok=True)
 
     @staticmethod
     def get_salt_log_handlers_path():
@@ -588,6 +596,8 @@ class FactoriesManager:
         """
         Return the path to the customized script path, generating one if needed.
         """
+        if self.system_install is True:
+            return script_name
         return cli_scripts.generate_script(
             self.scripts_dir,
             script_name,
@@ -609,6 +619,10 @@ class FactoriesManager:
         """
         Helper method to instantiate daemon factories
         """
+        if self.system_install:
+            script_path = script_name
+        else:
+            script_path = self.get_salt_script_path(script_name)
         factory = factory_class(
             config=daemon_config,
             start_timeout=start_timeout or self.start_timeout,
@@ -618,12 +632,15 @@ class FactoriesManager:
             max_start_attempts=max_start_attempts,
             event_listener=self.event_listener,
             factories_manager=self,
-            cli_script_name=self.get_salt_script_path(script_name),
+            cli_script_name=script_path,
+            system_install=self.system_install,
             **factory_class_kwargs
         )
         return factory
 
     def get_root_dir_for_daemon(self, daemon_id, config_defaults=None):
+        if self.system_install is True:
+            return self.root_dir
         if config_defaults and "root_dir" in config_defaults:
             try:
                 root_dir = pathlib.Path(config_defaults["root_dir"].strpath).resolve()
