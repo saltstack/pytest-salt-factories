@@ -113,7 +113,7 @@ def _tests(session):
         session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
-            session, "pip", "list", "--format=json", silent=True, log=False
+            session, "pip", "list", "--format=json", silent=True, log=False, stderr=None
         )
         if pip_list:
             for requirement in json.loads(pip_list.splitlines()[0]):
