@@ -379,6 +379,7 @@ class FactoriesManager:
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             master_of_masters=master_of_masters,
+            system_install=self.system_install,
         )
         self.final_syndic_config_tweaks(syndic_config)
         syndic_loaded_config = factory_class.write_config(syndic_config)

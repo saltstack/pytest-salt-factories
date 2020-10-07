@@ -84,13 +84,13 @@ class SaltMasterFactory(SaltDaemonFactory):
             pidfile_dir = root_dir / "var" / "run"
 
             state_tree_root = root_dir / "srv" / "salt"
-            state_tree_root.mkdir(exist_ok=True)
+            state_tree_root.mkdir(parents=True, exist_ok=True)
             state_tree_root_base = state_tree_root / "base"
             state_tree_root_base.mkdir(exist_ok=True)
             state_tree_root_prod = state_tree_root / "prod"
             state_tree_root_prod.mkdir(exist_ok=True)
             pillar_tree_root = root_dir / "srv" / "pillar"
-            pillar_tree_root.mkdir(exist_ok=True)
+            pillar_tree_root.mkdir(parents=True, exist_ok=True)
             pillar_tree_root_base = pillar_tree_root / "base"
             pillar_tree_root_base.mkdir(exist_ok=True)
             pillar_tree_root_prod = pillar_tree_root / "prod"

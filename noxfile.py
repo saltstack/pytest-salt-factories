@@ -17,7 +17,6 @@ SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000.1"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
 USE_SYSTEM_PYTHON = "USE_SYSTEM_PYTHON" in os.environ
-SALT_FACTORIES_SYSTEM_INSTALL = "SALT_FACTORIES_SYSTEM_INSTALL" in os.environ
 IS_WINDOWS = sys.platform.lower().startswith("win")
 
 if not IS_WINDOWS:
@@ -74,7 +73,7 @@ def _patch_session(session):
         #   https://github.com/theacodes/nox/pull/181
         session._runner.global_config.install_only = False
         sys_prefix = session.run(
-            "python",
+            "python{}".format(session._runner.func.python or "3"),
             "-c" 'import sys; sys.stdout.write("{}".format(sys.prefix))',
             silent=True,
             log=False,
@@ -108,11 +107,20 @@ def _tests(session):
     """
     Run tests
     """
+    env = {}
+    system_install = False
+    if session.python is False:
+        # This is running against the system
+        logger.warning(
+            "Adding SALT_FACTORIES_SYSTEM_INSTALL=1 to the environ so that tests run against the sytem python"
+        )
+        env["SALT_FACTORIES_SYSTEM_INSTALL"] = "1"
+        system_install = True
     if SKIP_REQUIREMENTS_INSTALL is False:
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
-        if session.python is not False and SALT_FACTORIES_SYSTEM_INSTALL is False:
+        if session.python is not False and system_install is False:
             session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
@@ -150,15 +158,17 @@ def _tests(session):
         python_path_entries.insert(0, SITECUSTOMIZE_DIR)
         python_path_env_var = os.pathsep.join(python_path_entries)
 
-    env = {
-        # The updated python path so that sitecustomize is importable
-        "PYTHONPATH": python_path_env_var,
-        # The full path to the .coverage data file. Makes sure we always write
-        # them to the same directory
-        "COVERAGE_FILE": str(COVERAGE_REPORT_DB),
-        # Instruct sub processes to also run under coverage
-        "COVERAGE_PROCESS_START": str(REPO_ROOT / ".coveragerc"),
-    }
+    env.update(
+        {
+            # The updated python path so that sitecustomize is importable
+            "PYTHONPATH": python_path_env_var,
+            # The full path to the .coverage data file. Makes sure we always write
+            # them to the same directory
+            "COVERAGE_FILE": str(COVERAGE_REPORT_DB),
+            # Instruct sub processes to also run under coverage
+            "COVERAGE_PROCESS_START": str(REPO_ROOT / ".coveragerc"),
+        }
+    )
 
     args = [
         "--rootdir",
@@ -192,12 +202,11 @@ def tests(session):
     _tests(session)
 
 
-@nox.session(python=False, name="tests-system-python")
+@nox.session(venv_backend="none", name="tests-system-python")
 def tests_system_python(session):
     """
     Run tests
     """
-    _patch_session(session)
     _tests(session)
 
 
@@ -234,12 +243,10 @@ def coverage(session):
         "--include=tests/*",
     )
     try:
-        session.run(
-            "coverage",
-            "report",
-            "--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT),
-            "--show-missing",
-        )
+        args = ["coverage", "report", "--show-missing"]
+        if session.python is not False:
+            args.append("--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT))
+        session.run(*args)
     finally:
         if COVERAGE_REPORT_DB.exists():
             shutil.copyfile(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / ".coverage"))

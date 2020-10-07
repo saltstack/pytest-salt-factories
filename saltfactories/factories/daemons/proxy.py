@@ -10,6 +10,7 @@ Salt Proxy Minion Factory
 """
 import logging
 import pathlib
+import shutil
 import sys
 
 import attr
@@ -192,13 +193,16 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
         """
         Return a `salt-call` CLI process for this minion instance
         """
-        script_path = cli_scripts.generate_script(
-            self.factories_manager.scripts_dir,
-            "salt-call",
-            code_dir=self.factories_manager.code_dir,
-            inject_coverage=self.factories_manager.inject_coverage,
-            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-        )
+        if self.system_install is False:
+            script_path = cli_scripts.generate_script(
+                self.factories_manager.scripts_dir,
+                "salt-call",
+                code_dir=self.factories_manager.code_dir,
+                inject_coverage=self.factories_manager.inject_coverage,
+                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+            )
+        else:
+            script_path = shutil.which("salt-call")
         return factory_class(
             cli_script_name=script_path,
             config=self.config.copy(),

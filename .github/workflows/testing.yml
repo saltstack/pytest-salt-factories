@@ -73,11 +73,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-#    - uses: actions/checkout@v2
-#      with:
-#        repository: s0undt3ch/salt
-#        ref: hotfix/version-parsing
-#        path: salt-checkout
 
     - name: Set up Python 3.7 For Nox
       uses: actions/setup-python@v1
@@ -200,6 +195,150 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
 
+  Linux-System-Install:
+    runs-on: ubuntu-latest
+    needs: Pre-Commit
+
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Nox
+      run: |
+        sudo -E apt-get update
+        sudo -E apt-get install -y python3-setuptools
+        sudo -E python3 -m pip install --upgrade pip
+        sudo -E python3 -m pip install nox
+        sudo mv /usr/bin/pip /usr/bin/pip2
+        sudo ln -sf /usr/bin/pip3 /usr/bin/pip
+
+    - name: Get Python Version
+      if: always()
+      id: python-version
+      run: |
+        echo ::set-output name=long::$(python -c "import sys; print('Py{}.{}'.format(*sys.version_info))")
+        echo ::set-output name=short::$(python -c "import sys; print('{}{}'.format(*sys.version_info))")
+
+    - name: Install Salt
+      run: |
+        curl -L https://bootstrap.saltstack.com | sudo sh -s -- -M -X -x python3 stable
+        sudo apt-get install -y salt-api salt-ssh salt-syndic salt-cloud python3-pip
+        # We need to upgrade pyzmq or we'll get coredumps
+        sudo python3 -m pip install --ignore-installed -U pyzmq==19.0.0
+        for service in $(sudo systemctl list-unit-files | grep salt | grep -v @ | awk '{ print $1 }'); do sudo systemctl stop $service; done
+
+    - name: Install Test Requirements
+      env:
+        USE_SYSTEM_PYTHON: 1
+        SALT_FACTORIES_SYSTEM_INSTALL: 1
+        EXTRA_REQUIREMENTS_INSTALL: git+https://github.com/s0undt3ch/pytest-tesults.git
+      run: |
+        sudo -E nox --force-color -e tests-system-python --install-only
+
+    - name: Test
+      env:
+        USE_SYSTEM_PYTHON: 1
+        SALT_FACTORIES_SYSTEM_INSTALL: 1
+        SKIP_REQUIREMENTS_INSTALL: YES
+        TESULTS_TARGET: ${{ secrets.TESULTS_LINUX_TARGET }}
+        TESULTS_BUILD_NAME: ${{ github.job }}-${{ github.run_number }}
+      run: |
+        sudo -E nox --force-color -e tests-system-python -- -vv --tesults-target=${TESULTS_TARGET} --tesults-build-name=${TESULTS_BUILD_NAME} tests/
+
+    - name: Upload Test Results
+      if: always()
+      shell: bash
+      env:
+        REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
+      run: |
+        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
+          python - \
+          --include='artifacts/junit-report.xml' \
+          --framework=pytest \
+          --merge ".*" \
+          --name="${{ runner.os }} ${{ steps.python-version.outputs.long }}" || echo "Failed to upload test results"
+
+    - name: Create CodeCov Flags
+      if: always()
+      id: codecov-flags
+      run: |
+        echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), 'system'))")
+
+    - name: Upload Salt Factories Code Coverage
+      if: always()
+      shell: bash
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
+        REPORT_NAME: ${{ runner.os }}-${{ steps.python-version.outputs.long }}-system-factories
+        REPORT_PATH: artifacts/coverage-saltfactories.xml
+      run: |
+        if [ ! -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
+              break
+          fi
+            n=$((n+1))
+            sleep 15
+          done
+        fi
+        if [ -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                break
+            fi
+            n=$((n+1))
+            sleep 15
+          done
+        fi
+
+    - name: Upload Salt Factories Tests Code Coverage
+      if: always()
+      shell: bash
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},tests
+        REPORT_NAME: ${{ runner.os }}-${{ steps.python-version.outputs.long }}-system-tests
+        REPORT_PATH: artifacts/coverage-tests.xml
+      run: |
+        if [ ! -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
+              break
+          fi
+            n=$((n+1))
+            sleep 15
+          done
+        fi
+        if [ -f codecov.sh ]; then
+          n=0
+          until [ "$n" -ge 5 ]
+          do
+            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                break
+            fi
+            n=$((n+1))
+            sleep 15
+          done
+        fi
+
+    - name: Upload Logs
+      if: always()
+      uses: actions/upload-artifact@main
+      with:
+        name: runtests-${{ runner.os }}-py${{ steps.python-version.outputs.short }}-system.log
+        path: artifacts/runtests-*.log
+
   Windows:
     runs-on: windows-latest
     needs: Pre-Commit
@@ -219,11 +358,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-#    - uses: actions/checkout@v2
-#      with:
-#        repository: s0undt3ch/salt
-#        ref: hotfix/version-parsing
-#        path: salt-checkout
 
     - name: Set up Python 3.7 For Nox
       uses: actions/setup-python@v1
@@ -369,11 +503,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-#    - uses: actions/checkout@v2
-#      with:
-#        repository: s0undt3ch/salt
-#        ref: hotfix/version-parsing
-#        path: salt-checkout
 
     - name: Set up Python 3.7 For Nox
       uses: actions/setup-python@v1
