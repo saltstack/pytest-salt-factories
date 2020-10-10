@@ -22,7 +22,7 @@ repos:
         files: ^\.pylint-spelling-words$
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.7.0
+    rev: v2.7.2
     hooks:
       - id: pyupgrade
         name: Rewrite Code to be Py3.5+
@@ -30,7 +30,7 @@ repos:
         exclude: (^saltfactories/utils/salt/.*\.py)
 
   - repo: https://github.com/asottile/reorder_python_imports
-    rev: v1.9.0
+    rev: v2.3.5
     hooks:
       - id: reorder-python-imports
         args: [
