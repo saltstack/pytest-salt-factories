@@ -13,6 +13,14 @@ repos:
       - id: check-merge-conflict  # Check for files that contain merge conflict strings.
       - id: check-ast             # Simply check whether files parse as valid python.
 
+  - repo: local
+    hooks:
+      - id: sort-pylint-spelling-words
+        name: Sort PyLint Spelling Words File
+        entry: .pre-commit-hooks/sort-pylint-spelling-words.py
+        language: script
+        files: ^\.pylint-spelling-words$
+
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.7.0
     hooks:
