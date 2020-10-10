@@ -31,14 +31,7 @@ def test_skipped(testdir, platform):
     ):
         res = testdir.runpytest_inprocess()
         res.assert_outcomes(skipped=1)
-    try:
-        res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
-    except AttributeError:  # pragma: no cover
-        # PyTest 4.6.x
-        from _pytest.outcomes import Failed
-
-        with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
+    res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
 @pytest.mark.parametrize(
@@ -63,14 +56,7 @@ def test_not_skipped(testdir, platform):
     ):
         res = testdir.runpytest_inprocess()
         res.assert_outcomes(passed=1)
-    try:
-        res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
-    except AttributeError:  # pragma: no cover
-        # PyTest 4.6.x
-        from _pytest.outcomes import Failed
-
-        with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
+    res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
 def test_skip_reason(testdir):

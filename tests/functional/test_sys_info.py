@@ -39,14 +39,7 @@ def test_no_sysinfo(testdir):
     )
     res = testdir.runpytest("-vv")
     res.assert_outcomes(passed=1)
-    try:
-        res.stdout.no_fnmatch_line("*>> System Information >>*")
-    except AttributeError:  # pragma: no cover
-        # PyTest 4.6.x
-        from _pytest.outcomes import Failed
-
-        with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(["*>> System Information >>*"])
+    res.stdout.no_fnmatch_line("*>> System Information >>*")
     res.stdout.fnmatch_lines(
         [
             "collect*",

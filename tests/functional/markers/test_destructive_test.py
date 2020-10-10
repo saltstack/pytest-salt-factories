@@ -4,7 +4,6 @@
 
     Test the ``@pytest.mark.destructive_test`` marker
 """
-import pytest
 
 
 def test_run_destructive_skipped(testdir):
@@ -19,14 +18,7 @@ def test_run_destructive_skipped(testdir):
     )
     res = testdir.runpytest()
     res.assert_outcomes(skipped=1)
-    try:
-        res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
-    except AttributeError:  # pragma: no cover
-        # PyTest 4.6.x
-        from _pytest.outcomes import Failed
-
-        with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
+    res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
 def test_run_destructive_not_skipped(testdir):
@@ -41,11 +33,4 @@ def test_run_destructive_not_skipped(testdir):
     )
     res = testdir.runpytest("--run-destructive")
     res.assert_outcomes(passed=1)
-    try:
-        res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
-    except AttributeError:  # pragma: no cover
-        # PyTest 4.6.x
-        from _pytest.outcomes import Failed
-
-        with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
+    res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")

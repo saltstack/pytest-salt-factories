@@ -7,8 +7,6 @@
 import socket
 from unittest import mock
 
-import pytest
-
 from saltfactories.utils import ports
 
 
@@ -24,14 +22,7 @@ def test_has_local_network(testdir):
     )
     res = testdir.runpytest()
     res.assert_outcomes(passed=1)
-    try:
-        res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
-    except AttributeError:  # pragma: no cover
-        # PyTest 4.6.x
-        from _pytest.outcomes import Failed
-
-        with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
+    res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
 def test_no_local_network(testdir):
@@ -53,11 +44,4 @@ def test_no_local_network(testdir):
         with mock.patch("socket.socket", return_value=mock_socket):
             res = testdir.runpytest_inprocess("-p", "no:salt-factories-log-server")
             res.assert_outcomes(skipped=1)
-    try:
-        res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
-    except AttributeError:  # pragma: no cover
-        # PyTest 4.6.x
-        from _pytest.outcomes import Failed
-
-        with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
+    res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
