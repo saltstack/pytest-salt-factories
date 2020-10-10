@@ -29,11 +29,14 @@ ebuild
 env
 environ
 factorydaemonscriptbase
+favicon
+favicons
 formatter
 getsockname
 gettempdir
 hookspec
 hostname
+ico
 ie
 illumos
 ini
@@ -47,6 +50,7 @@ json
 kwargs
 linenum
 localhost
+minify
 msg
 msgpack
 namespace
@@ -57,6 +61,7 @@ ordereddict
 os
 osx
 pid
+png
 popen
 pragma
 prepend
@@ -68,8 +73,10 @@ pytest
 pytest's
 pytestconfig
 rc
+repo
 ret
 returncode
+rst
 saltapifactory
 saltcloudfactory
 saltfactories
@@ -85,6 +92,7 @@ shellresult
 sigterm
 sitecustomise
 sitecustomize
+sitevars
 sls
 spm
 sshd
@@ -102,6 +110,7 @@ sysstats
 testname
 tmp
 tmpdir
+toc
 unix
 uss
 utils
