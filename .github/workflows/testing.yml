@@ -237,7 +237,7 @@ jobs:
         SALT_FACTORIES_SYSTEM_INSTALL: 1
         EXTRA_REQUIREMENTS_INSTALL: git+https://github.com/s0undt3ch/pytest-tesults.git
       run: |
-        sudo -E nox --force-color -e tests-system-python --install-only
+        sudo -E nox --force-color -e tests --no-venv --install-only
 
     - name: Test
       env:
@@ -247,7 +247,7 @@ jobs:
         TESULTS_TARGET: ${{ secrets.TESULTS_LINUX_TARGET }}
         TESULTS_BUILD_NAME: ${{ github.job }}-${{ github.run_number }}
       run: |
-        sudo -E nox --force-color -e tests-system-python -- -vv --tesults-target=${TESULTS_TARGET} --tesults-build-name=${TESULTS_BUILD_NAME} tests/
+        sudo -E nox --force-color -e tests --no-venv -- -vv --tesults-target=${TESULTS_TARGET} --tesults-build-name=${TESULTS_BUILD_NAME} tests/
 
     - name: Upload Test Results
       if: always()

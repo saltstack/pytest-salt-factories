@@ -9,7 +9,6 @@ import tempfile
 import nox
 from nox.command import CommandFailed
 from nox.logger import logger
-from nox.virtualenv import VirtualEnv
 
 
 COVERAGE_VERSION_REQUIREMENT = "coverage==5.2"
@@ -57,33 +56,6 @@ JUNIT_REPORT = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "junit-report.xml"
 nox.options.reuse_existing_virtualenvs = True
 #  Don't fail on missing interpreters
 nox.options.error_on_missing_interpreters = False
-
-
-def _patch_session(session):
-    if USE_SYSTEM_PYTHON is False:
-        session.log("NOT Patching nox to install against the system python")
-        return
-
-    session.log("Patching nox to install against the system python")
-    # Let's get sys.prefix
-    old_install_only_value = session._runner.global_config.install_only
-    try:
-        # Force install only to be false for the following chunk of code
-        # For additional information as to why see:
-        #   https://github.com/theacodes/nox/pull/181
-        session._runner.global_config.install_only = False
-        sys_prefix = session.run(
-            "python{}".format(session._runner.func.python or "3"),
-            "-c" 'import sys; sys.stdout.write("{}".format(sys.prefix))',
-            silent=True,
-            log=False,
-        )
-        # Let's patch nox to make it run and in particular, install, to the system python
-        session._runner.venv = VirtualEnv(
-            sys_prefix, interpreter=session._runner.func.python, reuse_existing=True
-        )
-    finally:
-        session._runner.global_config.install_only = old_install_only_value
 
 
 def session_run_always(session, *command, **kwargs):
@@ -202,20 +174,11 @@ def tests(session):
     _tests(session)
 
 
-@nox.session(venv_backend="none", name="tests-system-python")
-def tests_system_python(session):
-    """
-    Run tests
-    """
-    _tests(session)
-
-
 @nox.session
 def coverage(session):
     """
     Coverage analysis.
     """
-    _patch_session(session)
     session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
     # Always combine and generate the XML coverage report
     try:
@@ -252,41 +215,7 @@ def coverage(session):
             shutil.copyfile(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / ".coverage"))
 
 
-@nox.session(python="3.7")
-def blacken(session):
-    """
-    Run black code formatter.
-    """
-    _patch_session(session)
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "lint.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    if session.posargs:
-        files = session.posargs
-    else:
-        files = ["saltfactories", "tests", "noxfile.py", "setup.py"]
-    session.run("black", "-l 100", "--exclude=saltfactories/_version.py", *files)
-
-    if session.posargs:
-        files = session.posargs
-    else:
-        files = ["noxfile.py", "setup.py"]
-        for directory in ("saltfactories", "tests"):
-            for (dirpath, dirnames, filenames) in os.walk(directory):
-                for filename in filenames:
-                    if not filename.endswith(".py"):
-                        continue
-                    if filename == "_version.py":
-                        continue
-                    files.append(os.path.join(dirpath, filename))
-    session.run("reorder-python-imports", "--py3-plus", *files)
-
-
 def _lint(session, rcfile, flags, paths):
-    _patch_session(session)
     session.install(
         "--progress-bar=off",
         "-r",
@@ -320,7 +249,7 @@ def _lint(session, rcfile, flags, paths):
         stdout.close()
 
 
-@nox.session(python="3.5")
+@nox.session(python="3")
 def lint(session):
     """
     Run PyLint against Salt and it's test suite. Set PYLINT_REPORT to a path to capture output.
@@ -329,7 +258,7 @@ def lint(session):
     session.notify("lint-tests-{}".format(session.python))
 
 
-@nox.session(python="3.5", name="lint-code")
+@nox.session(python="3", name="lint-code")
 def lint_code(session):
     """
     Run PyLint against the code. Set PYLINT_REPORT to a path to capture output.
@@ -342,7 +271,7 @@ def lint_code(session):
     _lint(session, ".pylintrc", flags, paths)
 
 
-@nox.session(python="3.5", name="lint-tests")
+@nox.session(python="3", name="lint-tests")
 def lint_tests(session):
     """
     Run PyLint against Salt and it's test suite. Set PYLINT_REPORT to a path to capture output.
@@ -360,7 +289,6 @@ def docs(session):
     """
     Build Docs
     """
-    _patch_session(session)
     session.install(
         "--progress-bar=off",
         "-r",
@@ -369,41 +297,15 @@ def docs(session):
     )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
-    session.notify("docs-linkcheck")
-    session.notify("docs-coverage")
-    session.notify("docs-html")
-
-
-@nox.session(name="docs-html", python="3")
-def docs_html(session):
-    """
-    Build Salt's HTML Documentation
-    """
-    _patch_session(session)
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "docs.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    os.chdir("docs/")
-    session.run("make", "html", "SPHINXOPTS=-W", external=True)
-
-
-@nox.session(name="docs-linkcheck", python="3")
-def docs_linkcheck(session):
-    """
-    Report Docs Link Check
-    """
-    _patch_session(session)
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "docs.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    os.chdir("docs/")
     session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
+    session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
+    docs_coverage_file = os.path.join("_build", "html", "python.txt")
+    if os.path.exists(docs_coverage_file):
+        with open(docs_coverage_file) as rfh:
+            contents = rfh.readlines()[2:]
+            if contents:
+                session.error("\n" + "".join(contents))
+    session.run("make", "html", "SPHINXOPTS=-W", external=True)
     os.chdir("..")
 
 
@@ -412,7 +314,6 @@ def docs_crosslink_info(session):
     """
     Report intersphinx cross links information
     """
-    _patch_session(session)
     session.install(
         "--progress-bar=off",
         "-r",
@@ -449,37 +350,11 @@ def docs_crosslink_info(session):
     os.chdir("..")
 
 
-@nox.session(name="docs-coverage", python="3")
-def docs_coverage(session):
-    """
-    Report Docs Coverage
-    """
-    _patch_session(session)
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "docs.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    os.chdir("docs/")
-    session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
-    docs_coverage_file = os.path.join("_build", "html", "python.txt")
-    if os.path.exists(docs_coverage_file):
-        with open(docs_coverage_file) as rfh:
-            contents = rfh.readlines()[2:]
-            if contents:
-                session.error("\n" + "".join(contents))
-        return
-    session.log("Docs coverage file, {}, does not exit.".format(docs_coverage_file))
-    os.chdir("..")
-
-
 @nox.session(name="gen-api-docs", python="3")
-def gen_api_docs_(session):
+def gen_api_docs(session):
     """
     Generate API Docs
     """
-    _patch_session(session)
     session.install(
         "--progress-bar=off",
         "-r",
