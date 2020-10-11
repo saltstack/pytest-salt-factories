@@ -67,7 +67,7 @@ class SshdDaemonFactory(DaemonFactory):
 
         _default_config = {
             "ListenAddress": self.listen_address,
-            "PermitRootLogin": "no",
+            "PermitRootLogin": "yes" if running_username() == "root" else "no",
             "ChallengeResponseAuthentication": "no",
             "PasswordAuthentication": "no",
             "PubkeyAuthentication": "yes",
