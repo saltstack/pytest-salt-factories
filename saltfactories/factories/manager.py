@@ -16,6 +16,7 @@ import attr
 
 import saltfactories
 from saltfactories.factories import daemons
+from saltfactories.factories.base import SaltFactory
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import running_username
 
@@ -69,6 +70,7 @@ class FactoriesManager:
     """
 
     root_dir = attr.ib()
+    tmp_root_dir = attr.ib(init=False)
     log_server_port = attr.ib()
     log_server_level = attr.ib()
     log_server_host = attr.ib()
@@ -87,9 +89,10 @@ class FactoriesManager:
     scripts_dir = attr.ib(default=None, init=False, repr=False)
 
     def __attrs_post_init__(self):
+        self.tmp_root_dir = pathlib.Path(self.root_dir.strpath)
+        self.tmp_root_dir.mkdir(exist_ok=True)
         if self.system_install is False:
-            self.root_dir = pathlib.Path(self.root_dir.strpath)
-            self.root_dir.mkdir(exist_ok=True)
+            self.root_dir = self.tmp_root_dir
         else:
             self.root_dir = pathlib.Path("/")
         if self.start_timeout is None:
@@ -207,7 +210,9 @@ class FactoriesManager:
             :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`:
                 The master process class instance
         """
-        root_dir = self.get_root_dir_for_daemon(master_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(
+            master_id, config_defaults=config_defaults, factory_class=factory_class
+        )
         config = factory_class.configure(
             self,
             master_id,
@@ -262,7 +267,9 @@ class FactoriesManager:
             :py:class:`~saltfactories.factories.daemons.minion.SaltMinionFactory`:
                 The minion process class instance
         """
-        root_dir = self.get_root_dir_for_daemon(minion_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(
+            minion_id, config_defaults=config_defaults, factory_class=factory_class
+        )
 
         config = factory_class.configure(
             self,
@@ -329,7 +336,9 @@ class FactoriesManager:
                 The syndic process class instance
         """
 
-        root_dir = self.get_root_dir_for_daemon(syndic_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(
+            syndic_id, config_defaults=config_defaults, factory_class=factory_class
+        )
 
         master_config = master_factory_class.configure(
             self,
@@ -434,7 +443,9 @@ class FactoriesManager:
             :py:class:`~saltfactories.factories.daemons.proxy.SaltProxyMinionFactory`:
                 The proxy minion process class instance
         """
-        root_dir = self.get_root_dir_for_daemon(proxy_minion_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(
+            proxy_minion_id, config_defaults=config_defaults, factory_class=factory_class
+        )
 
         config = factory_class.configure(
             self,
@@ -522,7 +533,7 @@ class FactoriesManager:
                 The sshd process class instance
         """
         if config_dir is None:
-            config_dir = self.get_root_dir_for_daemon("sshd")
+            config_dir = self.get_root_dir_for_daemon("sshd", factory_class=factory_class)
         try:
             config_dir = pathlib.Path(config_dir.strpath).resolve()
         except AttributeError:
@@ -639,9 +650,7 @@ class FactoriesManager:
         )
         return factory
 
-    def get_root_dir_for_daemon(self, daemon_id, config_defaults=None):
-        if self.system_install is True:
-            return self.root_dir
+    def get_root_dir_for_daemon(self, daemon_id, config_defaults=None, factory_class=None):
         if config_defaults and "root_dir" in config_defaults:
             try:
                 root_dir = pathlib.Path(config_defaults["root_dir"].strpath).resolve()
@@ -649,8 +658,14 @@ class FactoriesManager:
                 root_dir = pathlib.Path(config_defaults["root_dir"]).resolve()
             root_dir.mkdir(parents=True, exist_ok=True)
             return root_dir
+        if self.system_install is True and issubclass(factory_class, SaltFactory):
+            return self.root_dir
+        elif self.system_install is True:
+            root_dir = self.tmp_root_dir
+        else:
+            root_dir = self.root_dir
         counter = 1
-        root_dir = self.root_dir / daemon_id
+        root_dir = root_dir / daemon_id
         while True:
             if not root_dir.is_dir():
                 break
