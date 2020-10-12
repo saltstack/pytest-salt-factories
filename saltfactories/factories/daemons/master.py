@@ -15,7 +15,6 @@ from functools import partial
 import attr
 import salt.config
 import salt.utils.dictupdate
-import salt.utils.files
 
 from saltfactories.factories import cli
 from saltfactories.factories.base import SaltDaemonFactory

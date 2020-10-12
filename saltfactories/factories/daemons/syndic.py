@@ -14,7 +14,6 @@ import pathlib
 import attr
 import salt.config
 import salt.utils.dictupdate
-import salt.utils.files
 
 from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.utils import ports
