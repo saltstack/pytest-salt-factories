@@ -50,19 +50,6 @@ def test_master(master):
     assert master.is_running()
 
 
-def test_multiple_start_stops(salt_factories):
-    factory = salt_factories.get_salt_master_daemon(random_string("master-"))
-    assert factory.is_running() is False
-    pid = None
-    with factory.started():
-        assert factory.is_running() is True
-        pid = factory.pid
-    assert factory.is_running() is False
-    with factory.started():
-        assert factory.is_running() is True
-        assert factory.pid != pid
-
-
 def test_salt_run(master, salt_run):
     max_open_files_config_value = master.config["max_open_files"]
     ret = salt_run.run("config.get", "max_open_files")
@@ -132,6 +119,7 @@ def test_salt_cp_no_match(master, minion, salt_cp, tempfiles):
             os.unlink(dest)
 
 
+@pytest.mark.skip_on_salt_system_install
 def test_salt_key(master, minion, minion_3, salt_key):
     ret = salt_key.run("--list-all")
     assert ret.exitcode == 0, ret
@@ -144,6 +132,7 @@ def test_salt_key(master, minion, minion_3, salt_key):
 
 
 @pytest.mark.skip_on_windows
+@pytest.mark.skip_on_salt_system_install
 def test_exit_status_unknown_user(request, salt_factories):
     master = salt_factories.get_salt_master_daemon(
         "set-exitcodes", config_overrides={"user": "unknown-user"}
