@@ -75,7 +75,8 @@ def session_run_always(session, *command, **kwargs):
             session._runner.global_config.install_only = old_install_only_value
 
 
-def _tests(session):
+@nox.session(python=("3", "3.5", "3.6", "3.7", "3.8", "3.9"))
+def tests(session):
     """
     Run tests
     """
@@ -162,24 +163,9 @@ def _tests(session):
             if arg.startswith("--color") and args[0].startswith("--color"):
                 args.pop(0)
             args.append(arg)
+
     session.run("coverage", "run", "-m", "pytest", *args, env=env)
-    session.notify("coverage")
 
-
-@nox.session(python=("3", "3.5", "3.6", "3.7", "3.8", "3.9"))
-def tests(session):
-    """
-    Run tests
-    """
-    _tests(session)
-
-
-@nox.session
-def coverage(session):
-    """
-    Coverage analysis.
-    """
-    session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
     # Always combine and generate the XML coverage report
     try:
         session.run("coverage", "combine")
