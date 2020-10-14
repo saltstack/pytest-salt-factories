@@ -160,8 +160,8 @@ def tests(session):
         args.append("tests/")
     else:
         for arg in session.posargs:
-            if arg.startswith("--color") and args[0].startswith("--color"):
-                args.pop(0)
+            if arg.startswith("--color") and session._runner.global_config.forcecolor:
+                args.remove("--color=yes")
             args.append(arg)
 
     session.run("coverage", "run", "-m", "pytest", *args, env=env)
@@ -192,10 +192,10 @@ def tests(session):
         "--include=tests/*",
     )
     try:
-        args = ["coverage", "report", "--show-missing"]
-        if session.python is not False:
-            args.append("--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT))
-        session.run(*args)
+        cmdline = ["coverage", "report", "--show-missing", "--include=saltfactories/*,tests/*"]
+        if system_install is False:
+            cmdline.append("--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT))
+        session.run(*cmdline)
     finally:
         if COVERAGE_REPORT_DB.exists():
             shutil.copyfile(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / ".coverage"))
