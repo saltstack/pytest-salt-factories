@@ -53,7 +53,7 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
         if system_install is True:
             conf_dir = root_dir / "etc" / "salt"
             conf_dir.mkdir(parents=True, exist_ok=True)
-            conf_file = str(conf_dir / "minion")
+            conf_file = str(conf_dir / "proxy")
             pki_dir = conf_dir / "pki" / "minion"
 
             logs_dir = root_dir / "var" / "log" / "salt"
@@ -137,6 +137,7 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             master=master,
+            system_install=factories_manager.system_install,
         )
 
     @classmethod

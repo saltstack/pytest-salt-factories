@@ -977,6 +977,158 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
 
 
 @attr.s(kw_only=True)
+class SystemdSaltDaemonFactoryImpl(DaemonFactoryImpl):
+    """
+    Daemon systemd interaction implementation
+    """
+
+    _process = attr.ib(init=False, repr=False, default=None)
+    _service_name = attr.ib(init=False, repr=False, default=None)
+
+    def build_cmdline(self, *args):
+        """
+        Construct a list of arguments to use when starting the subprocess
+
+        Args:
+            args:
+                Additional arguments to use when starting the subprocess
+        """
+        if args:
+            log.debug(
+                "%s.run() is ignoring the passed in arguments: %r", self.__class__.__name__, args
+            )
+        return ("systemctl", "start", self.get_service_name())
+
+    def get_service_name(self):
+        if self._service_name is None:
+            script_path = self.factory.get_script_path()
+            if os.path.isabs(script_path):
+                script_path = os.path.basename(script_path)
+            self._service_name = script_path
+        return self._service_name
+
+    def is_running(self):
+        """
+        Returns true if the sub-process is alive
+        """
+        if self._process is None:
+            ret = self.internal_run("systemctl", "show", "-p", "MainPID", self.get_service_name())
+            _, mainpid = ret.stdout.split("=")
+            if mainpid == "0":
+                return False
+            self._process = psutil.Process(int(mainpid))
+        return self._process.is_running()
+
+    def internal_run(self, *args, **kwargs):
+        """
+        Run the given command synchronously
+        """
+        result = subprocess.run(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            check=False,
+            **kwargs
+        )
+        stdout = result.stdout.strip()
+        stderr = result.stderr.strip()
+        log_message = "Completed Command: {}".format(result.args)
+        if stdout or stderr:
+            log_message += " Process Output:"
+            if stdout:
+                log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(stdout.strip())
+            if stderr:
+                log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(stderr.strip())
+            log_message += "\n"
+        log.info(log_message)
+        return ProcessResult(result.returncode, stdout, stderr, cmdline=result.args)
+
+    def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
+        try:
+            return super().start(
+                *extra_cli_arguments,
+                max_start_attempts=max_start_attempts,
+                start_timeout=start_timeout
+            )
+        except FactoryNotStarted:  # pylint: disable=try-except-raise
+            raise
+        else:
+            atexit.register(self.terminate)
+
+    def _terminate(self):
+        """
+        This method actually terminates the started daemon
+        """
+        if self._process is None:
+            return self._terminal_result
+        atexit.unregister(self.terminate)
+        log.info("Stopping %s", self.factory)
+        # Collect any child processes information before terminating the process
+        with contextlib.suppress(psutil.NoSuchProcess):
+            for child in psutil.Process(self.pid).children(recursive=True):
+                if child not in self._children:
+                    self._children.append(child)
+
+        pid = self.pid
+        cmdline = self._process.cmdline()
+        self.internal_run("systemctl", "stop", self.get_service_name())
+        if self._process.is_running():
+            try:
+                self._process.wait()
+            except psutil.TimeoutExpired:
+                self._process.terminate()
+                try:
+                    self._process.wait()
+                except psutil.TimeoutExpired:
+                    pass
+        exitcode = self._process.wait() or 0
+
+        self._process = None
+        # Lets log and kill any child processes left behind, including the main subprocess
+        # if it failed to properly stop
+        terminate_process(
+            pid=pid,
+            kill_children=True,
+            children=self._children,
+            slow_stop=self.factory.slow_stop,
+        )
+
+        self._terminal_stdout.close()
+        self._terminal_stderr.close()
+        stdout = ""
+        ret = self.internal_run("journalctl", "--no-pager", "-u", self.get_service_name())
+        stderr = ret.stdout
+        try:
+            log_message = "Terminated {}.".format(self.factory)
+            if stdout or stderr:
+                log_message += " Process Output:"
+                if stdout:
+                    log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(
+                        stdout.strip()
+                    )
+                if stderr:
+                    log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(
+                        stderr.strip()
+                    )
+                log_message += "\n"
+            log.info(log_message)
+            self._terminal_result = ProcessResult(exitcode, stdout, stderr, cmdline=cmdline)
+            return self._terminal_result
+        finally:
+            self._terminal = None
+            self._terminal_stdout = None
+            self._terminal_stderr = None
+            self._terminal_timeout = None
+            self._children = []
+
+    @property
+    def pid(self):
+        if self.is_running():
+            return self._process.pid
+
+
+@attr.s(kw_only=True)
 class SaltDaemonFactory(SaltFactory, DaemonFactory):
     """
     Base factory for salt daemon's
@@ -990,7 +1142,12 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         DaemonFactory.__attrs_post_init__(self)
         SaltFactory.__attrs_post_init__(self)
 
-        if self.system_install is False:
+        if self.system_install is True and self.extra_cli_arguments_after_first_start_failure:
+            raise RuntimeError(
+                "You cannot pass `extra_cli_arguments_after_first_start_failure` to a salt "
+                "system installation setup."
+            )
+        elif self.system_install is False:
             for arg in self.extra_cli_arguments_after_first_start_failure:
                 if arg in ("-l", "--log-level"):
                     break
@@ -998,6 +1155,11 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
                     break
             else:
                 self.extra_cli_arguments_after_first_start_failure.append("--log-level=debug")
+
+    def _get_impl_class(self):
+        if self.system_install:
+            return SystemdSaltDaemonFactoryImpl
+        return super()._get_impl_class()
 
     @classmethod
     def configure(
