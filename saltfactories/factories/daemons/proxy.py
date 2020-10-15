@@ -220,5 +220,6 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
             cli_script_name=script_path,
             config=self.config.copy(),
             base_script_args=["--proxyid={}".format(self.id)],
+            system_install=self.factories_manager.system_install,
             **factory_class_kwargs
         )

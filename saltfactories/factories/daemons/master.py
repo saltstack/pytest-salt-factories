@@ -349,7 +349,12 @@ class SaltMasterFactory(SaltDaemonFactory):
             )
         else:
             script_path = shutil.which("salt-cloud")
-        return factory_class(cli_script_name=script_path, config=config, **factory_class_kwargs)
+        return factory_class(
+            cli_script_name=script_path,
+            config=config,
+            system_install=self.factories_manager.system_install,
+            **factory_class_kwargs
+        )
 
     def get_salt_cli(self, factory_class=cli.salt.SaltCliFactory, **factory_class_kwargs):
         """
@@ -366,7 +371,10 @@ class SaltMasterFactory(SaltDaemonFactory):
         else:
             script_path = shutil.which("salt")
         return factory_class(
-            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+            cli_script_name=script_path,
+            config=self.config.copy(),
+            system_install=self.factories_manager.system_install,
+            **factory_class_kwargs
         )
 
     def get_salt_cp_cli(self, factory_class=cli.cp.SaltCpCliFactory, **factory_class_kwargs):
@@ -384,7 +392,10 @@ class SaltMasterFactory(SaltDaemonFactory):
         else:
             script_path = shutil.which("salt-cp")
         return factory_class(
-            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+            cli_script_name=script_path,
+            config=self.config.copy(),
+            system_install=self.factories_manager.system_install,
+            **factory_class_kwargs
         )
 
     def get_salt_key_cli(self, factory_class=cli.key.SaltKeyCliFactory, **factory_class_kwargs):
@@ -402,7 +413,10 @@ class SaltMasterFactory(SaltDaemonFactory):
         else:
             script_path = shutil.which("salt-key")
         return factory_class(
-            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+            cli_script_name=script_path,
+            config=self.config.copy(),
+            system_install=self.factories_manager.system_install,
+            **factory_class_kwargs
         )
 
     def get_salt_run_cli(self, factory_class=cli.run.SaltRunCliFactory, **factory_class_kwargs):
@@ -420,7 +434,10 @@ class SaltMasterFactory(SaltDaemonFactory):
         else:
             script_path = shutil.which("salt-run")
         return factory_class(
-            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+            cli_script_name=script_path,
+            config=self.config.copy(),
+            system_install=self.factories_manager.system_install,
+            **factory_class_kwargs
         )
 
     def get_salt_spm_cli(self, factory_class=cli.spm.SpmCliFactory, **factory_class_kwargs):
@@ -438,7 +455,10 @@ class SaltMasterFactory(SaltDaemonFactory):
         else:
             script_path = shutil.which("spm")
         return factory_class(
-            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+            cli_script_name=script_path,
+            config=self.config.copy(),
+            system_install=self.factories_manager.system_install,
+            **factory_class_kwargs
         )
 
     def get_salt_ssh_cli(
@@ -480,6 +500,7 @@ class SaltMasterFactory(SaltDaemonFactory):
             target_host=target_host,
             client_key=client_key,
             ssh_user=ssh_user or running_username(),
+            system_install=self.factories_manager.system_install,
             **factory_class_kwargs
         )
 

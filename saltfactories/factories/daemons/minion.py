@@ -195,5 +195,8 @@ class SaltMinionFactory(SaltDaemonFactory):
         else:
             script_path = shutil.which("salt-call")
         return factory_class(
-            cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
+            cli_script_name=script_path,
+            config=self.config.copy(),
+            system_install=self.factories_manager.system_install,
+            **factory_class_kwargs
         )
