@@ -19,16 +19,29 @@ import salt.utils.dictupdate
 
 from saltfactories.factories import cli
 from saltfactories.factories.base import SaltDaemonFactory
+from saltfactories.factories.base import SystemdSaltDaemonFactoryImpl
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import ports
 
 log = logging.getLogger(__name__)
 
 
+class SystemdSaltProxyFactoryImpl(SystemdSaltDaemonFactoryImpl):
+    def get_service_name(self):
+        if self._service_name is None:
+            self._service_name = "{}@{}".format(super().get_service_name(), self.factory.id)
+        return self._service_name
+
+
 @attr.s(kw_only=True, slots=True)
 class SaltProxyMinionFactory(SaltDaemonFactory):
 
     include_proxyid_cli_flag = attr.ib(default=True, repr=False)
+
+    def _get_impl_class(self):
+        if self.system_install:
+            return SystemdSaltProxyFactoryImpl
+        return super()._get_impl_class()
 
     @classmethod
     def default_config(
