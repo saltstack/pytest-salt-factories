@@ -29,6 +29,14 @@ repos:
         args: [--py3-plus]
         exclude: (^saltfactories/utils/salt/.*\.py)
 
+  - repo: https://github.com/hakancelik96/unimport
+    rev: "31cc123640880e385159c719d2f12b5cf8586495"
+    hooks:
+      - id: unimport
+        name: Remove unused imports
+        args: [--remove]
+        exclude: ^(versioneer\.py|docs/.*\.py|saltfactories/factories/(cli|daemons)/__init__\.py)$
+
   - repo: https://github.com/asottile/reorder_python_imports
     rev: v2.3.5
     hooks:

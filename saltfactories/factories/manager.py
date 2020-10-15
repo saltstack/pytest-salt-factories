@@ -16,6 +16,7 @@ import attr
 
 import saltfactories
 from saltfactories.factories import daemons
+from saltfactories.factories.base import SaltFactory
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import running_username
 
@@ -63,9 +64,13 @@ class FactoriesManager:
         stats_processes(:py:class:`~collections.OrderedDict`):
             This will be an `OrderedDict` instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
             hook accessible at `stats_processes` on the `session` attribute of the :fixture:`request`.
+        system_install(bool):
+            If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
+            salt system paths apply.
     """
 
     root_dir = attr.ib()
+    tmp_root_dir = attr.ib(init=False)
     log_server_port = attr.ib()
     log_server_level = attr.ib()
     log_server_host = attr.ib()
@@ -77,14 +82,19 @@ class FactoriesManager:
     slow_stop = attr.ib(default=True)
     start_timeout = attr.ib(default=None)
     stats_processes = attr.ib(repr=False, default=None)
+    system_install = attr.ib(repr=False, default=False)
     event_listener = attr.ib(repr=False)
 
     # Internal attributes
     scripts_dir = attr.ib(default=None, init=False, repr=False)
 
     def __attrs_post_init__(self):
-        self.root_dir = pathlib.Path(self.root_dir.strpath)
-        self.root_dir.mkdir(exist_ok=True)
+        self.tmp_root_dir = pathlib.Path(self.root_dir.strpath)
+        self.tmp_root_dir.mkdir(exist_ok=True)
+        if self.system_install is False:
+            self.root_dir = self.tmp_root_dir
+        else:
+            self.root_dir = pathlib.Path("/")
         if self.start_timeout is None:
             if not sys.platform.startswith(("win", "darwin")):
                 self.start_timeout = 30
@@ -92,9 +102,10 @@ class FactoriesManager:
                 # Windows and macOS are just slower
                 self.start_timeout = 120
 
-        # Setup the internal attributes
-        self.scripts_dir = self.root_dir / "scripts"
-        self.scripts_dir.mkdir(exist_ok=True)
+        if self.system_install is False:
+            # Setup the internal attributes
+            self.scripts_dir = self.root_dir / "scripts"
+            self.scripts_dir.mkdir(exist_ok=True)
 
     @staticmethod
     def get_salt_log_handlers_path():
@@ -199,7 +210,9 @@ class FactoriesManager:
             :py:class:`saltfactories.factories.daemons.master.SaltMasterFactory`:
                 The master process class instance
         """
-        root_dir = self.get_root_dir_for_daemon(master_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(
+            master_id, config_defaults=config_defaults, factory_class=factory_class
+        )
         config = factory_class.configure(
             self,
             master_id,
@@ -254,7 +267,9 @@ class FactoriesManager:
             :py:class:`~saltfactories.factories.daemons.minion.SaltMinionFactory`:
                 The minion process class instance
         """
-        root_dir = self.get_root_dir_for_daemon(minion_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(
+            minion_id, config_defaults=config_defaults, factory_class=factory_class
+        )
 
         config = factory_class.configure(
             self,
@@ -321,7 +336,9 @@ class FactoriesManager:
                 The syndic process class instance
         """
 
-        root_dir = self.get_root_dir_for_daemon(syndic_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(
+            syndic_id, config_defaults=config_defaults, factory_class=factory_class
+        )
 
         master_config = master_factory_class.configure(
             self,
@@ -371,6 +388,7 @@ class FactoriesManager:
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             master_of_masters=master_of_masters,
+            system_install=self.system_install,
         )
         self.final_syndic_config_tweaks(syndic_config)
         syndic_loaded_config = factory_class.write_config(syndic_config)
@@ -425,7 +443,9 @@ class FactoriesManager:
             :py:class:`~saltfactories.factories.daemons.proxy.SaltProxyMinionFactory`:
                 The proxy minion process class instance
         """
-        root_dir = self.get_root_dir_for_daemon(proxy_minion_id, config_defaults=config_defaults)
+        root_dir = self.get_root_dir_for_daemon(
+            proxy_minion_id, config_defaults=config_defaults, factory_class=factory_class
+        )
 
         config = factory_class.configure(
             self,
@@ -513,7 +533,7 @@ class FactoriesManager:
                 The sshd process class instance
         """
         if config_dir is None:
-            config_dir = self.get_root_dir_for_daemon("sshd")
+            config_dir = self.get_root_dir_for_daemon("sshd", factory_class=factory_class)
         try:
             config_dir = pathlib.Path(config_dir.strpath).resolve()
         except AttributeError:
@@ -588,6 +608,8 @@ class FactoriesManager:
         """
         Return the path to the customized script path, generating one if needed.
         """
+        if self.system_install is True:
+            return script_name
         return cli_scripts.generate_script(
             self.scripts_dir,
             script_name,
@@ -609,6 +631,10 @@ class FactoriesManager:
         """
         Helper method to instantiate daemon factories
         """
+        if self.system_install:
+            script_path = script_name
+        else:
+            script_path = self.get_salt_script_path(script_name)
         factory = factory_class(
             config=daemon_config,
             start_timeout=start_timeout or self.start_timeout,
@@ -618,12 +644,13 @@ class FactoriesManager:
             max_start_attempts=max_start_attempts,
             event_listener=self.event_listener,
             factories_manager=self,
-            cli_script_name=self.get_salt_script_path(script_name),
+            cli_script_name=script_path,
+            system_install=self.system_install,
             **factory_class_kwargs
         )
         return factory
 
-    def get_root_dir_for_daemon(self, daemon_id, config_defaults=None):
+    def get_root_dir_for_daemon(self, daemon_id, config_defaults=None, factory_class=None):
         if config_defaults and "root_dir" in config_defaults:
             try:
                 root_dir = pathlib.Path(config_defaults["root_dir"].strpath).resolve()
@@ -631,8 +658,14 @@ class FactoriesManager:
                 root_dir = pathlib.Path(config_defaults["root_dir"]).resolve()
             root_dir.mkdir(parents=True, exist_ok=True)
             return root_dir
+        if self.system_install is True and issubclass(factory_class, SaltFactory):
+            return self.root_dir
+        elif self.system_install is True:
+            root_dir = self.tmp_root_dir
+        else:
+            root_dir = self.root_dir
         counter = 1
-        root_dir = self.root_dir / daemon_id
+        root_dir = root_dir / daemon_id
         while True:
             if not root_dir.is_dir():
                 break

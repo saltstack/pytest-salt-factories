@@ -34,19 +34,6 @@ def test_minion(minion, salt_cli):
     assert ret.json is True
 
 
-def test_multiple_start_stops(master):
-    factory = master.get_salt_minion_daemon(random_string("minion-"))
-    assert factory.is_running() is False
-    pid = None
-    with factory.started():
-        assert factory.is_running() is True
-        pid = factory.pid
-    assert factory.is_running() is False
-    with factory.started():
-        assert factory.is_running() is True
-        assert factory.pid != pid
-
-
 def test_no_match(minion, salt_cli):
     assert minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt="minion-2")

@@ -8,10 +8,8 @@ saltfactories.utils
 
 Utility functions
 """
-import os
 import random
 import string
-import sys
 from functools import lru_cache
 
 import salt.utils.user

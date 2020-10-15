@@ -9,12 +9,12 @@ saltfactories.factories.daemons.master
 Salt Master Factory
 """
 import pathlib
+import shutil
 from functools import partial
 
 import attr
 import salt.config
 import salt.utils.dictupdate
-import salt.utils.files
 
 from saltfactories.factories import cli
 from saltfactories.factories.base import SaltDaemonFactory
@@ -53,6 +53,7 @@ class SaltMasterFactory(SaltDaemonFactory):
         config_overrides=None,
         order_masters=False,
         master_of_masters=None,
+        system_install=False,
     ):
         if config_defaults is None:
             config_defaults = {}
@@ -69,64 +70,130 @@ class SaltMasterFactory(SaltDaemonFactory):
             # Match transport if not set
             config_defaults.setdefault("transport", master_of_masters.config["transport"])
 
-        conf_dir = root_dir / "conf"
-        conf_dir.mkdir(parents=True, exist_ok=True)
-        conf_file = str(conf_dir / "master")
-        state_tree_root = root_dir / "state-tree"
-        state_tree_root.mkdir(exist_ok=True)
-        state_tree_root_base = state_tree_root / "base"
-        state_tree_root_base.mkdir(exist_ok=True)
-        state_tree_root_prod = state_tree_root / "prod"
-        state_tree_root_prod.mkdir(exist_ok=True)
-        pillar_tree_root = root_dir / "pillar-tree"
-        pillar_tree_root.mkdir(exist_ok=True)
-        pillar_tree_root_base = pillar_tree_root / "base"
-        pillar_tree_root_base.mkdir(exist_ok=True)
-        pillar_tree_root_prod = pillar_tree_root / "prod"
-        pillar_tree_root_prod.mkdir(exist_ok=True)
+        if system_install is True:
 
-        _config_defaults = {
-            "id": master_id,
-            "conf_file": conf_file,
-            "root_dir": str(root_dir),
-            "interface": "127.0.0.1",
-            "publish_port": ports.get_unused_localhost_port(),
-            "ret_port": ports.get_unused_localhost_port(),
-            "tcp_master_pub_port": ports.get_unused_localhost_port(),
-            "tcp_master_pull_port": ports.get_unused_localhost_port(),
-            "tcp_master_publish_pull": ports.get_unused_localhost_port(),
-            "tcp_master_workers": ports.get_unused_localhost_port(),
-            "pidfile": "run/master.pid",
-            "api_pidfile": "run/api.pid",
-            "pki_dir": "pki",
-            "cachedir": "cache",
-            "sock_dir": "run/master",
-            "fileserver_list_cache_time": 0,
-            "fileserver_backend": ["roots"],
-            "pillar_opts": False,
-            "peer": {".*": ["test.*"]},
-            "log_file": "logs/master.log",
-            "log_level_logfile": "debug",
-            "api_logfile": "logs/api.log",
-            "key_logfile": "logs/key.log",
-            "token_dir": "tokens",
-            "token_file": str(root_dir / "ksfjhdgiuebfgnkefvsikhfjdgvkjahcsidk"),
-            "file_buffer_size": 8192,
-            "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-            "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-            "file_roots": {"base": str(state_tree_root_base), "prod": str(state_tree_root_prod)},
-            "pillar_roots": {
-                "base": str(pillar_tree_root_base),
-                "prod": str(pillar_tree_root_prod),
-            },
-            "order_masters": order_masters,
-            "max_open_files": 10240,
-            "enable_legacy_startup_events": False,
-            "pytest-master": {
-                "master-id": master_of_masters_id,
-                "log": {"prefix": "{}(id={!r})".format(cls.__name__, master_id)},
-            },
-        }
+            conf_dir = root_dir / "etc" / "salt"
+            conf_dir.mkdir(parents=True, exist_ok=True)
+            conf_file = str(conf_dir / "master")
+            pki_dir = conf_dir / "pki" / "master"
+
+            logs_dir = root_dir / "var" / "log" / "salt"
+            logs_dir.mkdir(parents=True, exist_ok=True)
+
+            pidfile_dir = root_dir / "var" / "run"
+
+            state_tree_root = root_dir / "srv" / "salt"
+            state_tree_root.mkdir(parents=True, exist_ok=True)
+            state_tree_root_base = state_tree_root / "base"
+            state_tree_root_base.mkdir(exist_ok=True)
+            state_tree_root_prod = state_tree_root / "prod"
+            state_tree_root_prod.mkdir(exist_ok=True)
+            pillar_tree_root = root_dir / "srv" / "pillar"
+            pillar_tree_root.mkdir(parents=True, exist_ok=True)
+            pillar_tree_root_base = pillar_tree_root / "base"
+            pillar_tree_root_base.mkdir(exist_ok=True)
+            pillar_tree_root_prod = pillar_tree_root / "prod"
+            pillar_tree_root_prod.mkdir(exist_ok=True)
+
+            _config_defaults = {
+                "id": master_id,
+                "conf_file": conf_file,
+                "root_dir": str(root_dir),
+                "interface": "127.0.0.1",
+                "publish_port": salt.config.DEFAULT_MASTER_OPTS["publish_port"],
+                "ret_port": salt.config.DEFAULT_MASTER_OPTS["ret_port"],
+                "tcp_master_pub_port": salt.config.DEFAULT_MASTER_OPTS["tcp_master_pub_port"],
+                "tcp_master_pull_port": salt.config.DEFAULT_MASTER_OPTS["tcp_master_pull_port"],
+                "tcp_master_publish_pull": salt.config.DEFAULT_MASTER_OPTS[
+                    "tcp_master_publish_pull"
+                ],
+                "tcp_master_workers": salt.config.DEFAULT_MASTER_OPTS["tcp_master_workers"],
+                "api_pidfile": str(pidfile_dir / "api.pid"),
+                "pki_dir": str(pki_dir),
+                "fileserver_backend": ["roots"],
+                "log_file": str(logs_dir / "master.log"),
+                "log_level_logfile": "debug",
+                "api_logfile": str(logs_dir / "api.log"),
+                "key_logfile": str(logs_dir / "key.log"),
+                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "file_roots": {
+                    "base": str(state_tree_root_base),
+                    "prod": str(state_tree_root_prod),
+                },
+                "pillar_roots": {
+                    "base": str(pillar_tree_root_base),
+                    "prod": str(pillar_tree_root_prod),
+                },
+                "order_masters": order_masters,
+                "max_open_files": 10240,
+                "pytest-master": {
+                    "master-id": master_of_masters_id,
+                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, master_id)},
+                },
+            }
+        else:
+            conf_dir = root_dir / "conf"
+            conf_dir.mkdir(parents=True, exist_ok=True)
+            conf_file = str(conf_dir / "master")
+            state_tree_root = root_dir / "state-tree"
+            state_tree_root.mkdir(exist_ok=True)
+            state_tree_root_base = state_tree_root / "base"
+            state_tree_root_base.mkdir(exist_ok=True)
+            state_tree_root_prod = state_tree_root / "prod"
+            state_tree_root_prod.mkdir(exist_ok=True)
+            pillar_tree_root = root_dir / "pillar-tree"
+            pillar_tree_root.mkdir(exist_ok=True)
+            pillar_tree_root_base = pillar_tree_root / "base"
+            pillar_tree_root_base.mkdir(exist_ok=True)
+            pillar_tree_root_prod = pillar_tree_root / "prod"
+            pillar_tree_root_prod.mkdir(exist_ok=True)
+
+            _config_defaults = {
+                "id": master_id,
+                "conf_file": conf_file,
+                "root_dir": str(root_dir),
+                "interface": "127.0.0.1",
+                "publish_port": ports.get_unused_localhost_port(),
+                "ret_port": ports.get_unused_localhost_port(),
+                "tcp_master_pub_port": ports.get_unused_localhost_port(),
+                "tcp_master_pull_port": ports.get_unused_localhost_port(),
+                "tcp_master_publish_pull": ports.get_unused_localhost_port(),
+                "tcp_master_workers": ports.get_unused_localhost_port(),
+                "pidfile": "run/master.pid",
+                "api_pidfile": "run/api.pid",
+                "pki_dir": "pki",
+                "cachedir": "cache",
+                "sock_dir": "run/master",
+                "fileserver_list_cache_time": 0,
+                "fileserver_backend": ["roots"],
+                "pillar_opts": False,
+                "peer": {".*": ["test.*"]},
+                "log_file": "logs/master.log",
+                "log_level_logfile": "debug",
+                "api_logfile": "logs/api.log",
+                "key_logfile": "logs/key.log",
+                "token_dir": "tokens",
+                "token_file": str(root_dir / "ksfjhdgiuebfgnkefvsikhfjdgvkjahcsidk"),
+                "file_buffer_size": 8192,
+                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "file_roots": {
+                    "base": str(state_tree_root_base),
+                    "prod": str(state_tree_root_prod),
+                },
+                "pillar_roots": {
+                    "base": str(pillar_tree_root_base),
+                    "prod": str(pillar_tree_root_prod),
+                },
+                "order_masters": order_masters,
+                "max_open_files": 10240,
+                "enable_legacy_startup_events": False,
+                "pytest-master": {
+                    "master-id": master_of_masters_id,
+                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, master_id)},
+                },
+            }
         # Merge in the initial default options with the internal _config_defaults
         salt.utils.dictupdate.update(config_defaults, _config_defaults, merge_lists=True)
 
@@ -154,6 +221,7 @@ class SaltMasterFactory(SaltDaemonFactory):
             config_defaults=config_defaults,
             config_overrides=config_overrides,
             order_masters=order_masters,
+            system_install=factories_manager.system_install,
         )
 
     @classmethod
@@ -271,26 +339,32 @@ class SaltMasterFactory(SaltDaemonFactory):
         self.factories_manager.final_cloud_config_tweaks(config)
         config = factory_class.write_config(config)
 
-        script_path = cli_scripts.generate_script(
-            self.factories_manager.scripts_dir,
-            "salt-cloud",
-            code_dir=self.factories_manager.code_dir,
-            inject_coverage=self.factories_manager.inject_coverage,
-            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-        )
+        if self.system_install is False:
+            script_path = cli_scripts.generate_script(
+                self.factories_manager.scripts_dir,
+                "salt-cloud",
+                code_dir=self.factories_manager.code_dir,
+                inject_coverage=self.factories_manager.inject_coverage,
+                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+            )
+        else:
+            script_path = shutil.which("salt-cloud")
         return factory_class(cli_script_name=script_path, config=config, **factory_class_kwargs)
 
     def get_salt_cli(self, factory_class=cli.salt.SaltCliFactory, **factory_class_kwargs):
         """
         Return a `salt` CLI process for this master instance
         """
-        script_path = cli_scripts.generate_script(
-            self.factories_manager.scripts_dir,
-            "salt",
-            code_dir=self.factories_manager.code_dir,
-            inject_coverage=self.factories_manager.inject_coverage,
-            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-        )
+        if self.system_install is False:
+            script_path = cli_scripts.generate_script(
+                self.factories_manager.scripts_dir,
+                "salt",
+                code_dir=self.factories_manager.code_dir,
+                inject_coverage=self.factories_manager.inject_coverage,
+                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+            )
+        else:
+            script_path = shutil.which("salt")
         return factory_class(
             cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
         )
@@ -299,13 +373,16 @@ class SaltMasterFactory(SaltDaemonFactory):
         """
         Return a `salt-cp` CLI process for this master instance
         """
-        script_path = cli_scripts.generate_script(
-            self.factories_manager.scripts_dir,
-            "salt-cp",
-            code_dir=self.factories_manager.code_dir,
-            inject_coverage=self.factories_manager.inject_coverage,
-            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-        )
+        if self.system_install is False:
+            script_path = cli_scripts.generate_script(
+                self.factories_manager.scripts_dir,
+                "salt-cp",
+                code_dir=self.factories_manager.code_dir,
+                inject_coverage=self.factories_manager.inject_coverage,
+                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+            )
+        else:
+            script_path = shutil.which("salt-cp")
         return factory_class(
             cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
         )
@@ -314,13 +391,16 @@ class SaltMasterFactory(SaltDaemonFactory):
         """
         Return a `salt-key` CLI process for this master instance
         """
-        script_path = cli_scripts.generate_script(
-            self.factories_manager.scripts_dir,
-            "salt-key",
-            code_dir=self.factories_manager.code_dir,
-            inject_coverage=self.factories_manager.inject_coverage,
-            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-        )
+        if self.system_install is False:
+            script_path = cli_scripts.generate_script(
+                self.factories_manager.scripts_dir,
+                "salt-key",
+                code_dir=self.factories_manager.code_dir,
+                inject_coverage=self.factories_manager.inject_coverage,
+                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+            )
+        else:
+            script_path = shutil.which("salt-key")
         return factory_class(
             cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
         )
@@ -329,13 +409,16 @@ class SaltMasterFactory(SaltDaemonFactory):
         """
         Return a `salt-run` CLI process for this master instance
         """
-        script_path = cli_scripts.generate_script(
-            self.factories_manager.scripts_dir,
-            "salt-run",
-            code_dir=self.factories_manager.code_dir,
-            inject_coverage=self.factories_manager.inject_coverage,
-            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-        )
+        if self.system_install is False:
+            script_path = cli_scripts.generate_script(
+                self.factories_manager.scripts_dir,
+                "salt-run",
+                code_dir=self.factories_manager.code_dir,
+                inject_coverage=self.factories_manager.inject_coverage,
+                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+            )
+        else:
+            script_path = shutil.which("salt-run")
         return factory_class(
             cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
         )
@@ -344,13 +427,16 @@ class SaltMasterFactory(SaltDaemonFactory):
         """
         Return a `spm` CLI process for this master instance
         """
-        script_path = cli_scripts.generate_script(
-            self.factories_manager.scripts_dir,
-            "spm",
-            code_dir=self.factories_manager.code_dir,
-            inject_coverage=self.factories_manager.inject_coverage,
-            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-        )
+        if self.system_install is False:
+            script_path = cli_scripts.generate_script(
+                self.factories_manager.scripts_dir,
+                "spm",
+                code_dir=self.factories_manager.code_dir,
+                inject_coverage=self.factories_manager.inject_coverage,
+                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+            )
+        else:
+            script_path = shutil.which("spm")
         return factory_class(
             cli_script_name=script_path, config=self.config.copy(), **factory_class_kwargs
         )
@@ -377,13 +463,16 @@ class SaltMasterFactory(SaltDaemonFactory):
             ssh_user(str):
                 The remote username to connect as
         """
-        script_path = cli_scripts.generate_script(
-            self.factories_manager.scripts_dir,
-            "salt-ssh",
-            code_dir=self.factories_manager.code_dir,
-            inject_coverage=self.factories_manager.inject_coverage,
-            inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-        )
+        if self.system_install is False:
+            script_path = cli_scripts.generate_script(
+                self.factories_manager.scripts_dir,
+                "salt-ssh",
+                code_dir=self.factories_manager.code_dir,
+                inject_coverage=self.factories_manager.inject_coverage,
+                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
+            )
+        else:
+            script_path = shutil.which("salt-ssh")
         return factory_class(
             cli_script_name=script_path,
             config=self.config.copy(),

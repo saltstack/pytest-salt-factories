@@ -1,6 +1,7 @@
 import functools
 import logging
 import os
+import pathlib
 import stat
 import tempfile
 import textwrap
@@ -12,6 +13,8 @@ import salt.version
 log = logging.getLogger(__name__)
 
 pytest_plugins = ["pytester"]
+
+TESTS_PATH = pathlib.Path(__file__).resolve().parent
 
 
 def pytest_report_header():
@@ -86,3 +89,39 @@ def tempfiles(request):
 @pytest.fixture(scope="session")
 def salt_version():
     return pkg_resources.get_distribution("salt").version
+
+
+@pytest.mark.trylast
+def pytest_configure(config):
+    """
+    called after command line options have been parsed
+    and all plugins and initial conftest files been loaded.
+    """
+    # Expose the markers we use to pytest CLI
+    config.addinivalue_line(
+        "markers",
+        "skip_on_salt_system_install: Marker to skip tests when testing"
+        "against salt installed in the system.",
+    )
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_setup(item):
+    salt_factories_fixture = item._request.getfixturevalue("salt_factories")
+    if salt_factories_fixture.system_install is False:
+        return
+    system_install_skip_paths = (
+        # There's no point on running these tests against a system install of salt
+        str(TESTS_PATH / "unit"),
+        str(TESTS_PATH / "functional"),
+        str(TESTS_PATH / "integration" / "factories" / "daemons" / "sshd"),
+        str(TESTS_PATH / "integration" / "factories" / "daemons" / "container"),
+    )
+    if str(item.fspath).startswith(system_install_skip_paths):
+        item._skipped_by_mark = True
+        pytest.skip("Test should not run against system install of Salt")
+
+    skip_on_salt_system_install_marker = item.get_closest_marker("skip_on_salt_system_install")
+    if skip_on_salt_system_install_marker is not None:
+        item._skipped_by_mark = True
+        pytest.skip("Test should not run against system install of Salt")

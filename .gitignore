@@ -112,5 +112,5 @@ venv.bak/
 # Ignore CI salt-checkout directory
 salt-checkout/
 
-# Ignore CI artefacts
-artefacts/
+# Ignore CI artifacts
+artifacts/

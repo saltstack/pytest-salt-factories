@@ -6,8 +6,6 @@
 """
 from unittest import mock
 
-import pytest
-
 
 def test_skipped(testdir):
     testdir.makepyfile(
@@ -23,14 +21,7 @@ def test_skipped(testdir):
     with mock.patch("saltfactories.utils.platform.is_darwin", return_value=return_value):
         res = testdir.runpytest_inprocess()
         res.assert_outcomes(skipped=1)
-    try:
-        res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
-    except AttributeError:  # pragma: no cover
-        # PyTest 4.6.x
-        from _pytest.outcomes import Failed
-
-        with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
+    res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
 def test_not_skipped(testdir):
@@ -47,14 +38,7 @@ def test_not_skipped(testdir):
     with mock.patch("saltfactories.utils.platform.is_darwin", return_value=return_value):
         res = testdir.runpytest_inprocess()
         res.assert_outcomes(passed=1)
-    try:
-        res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
-    except AttributeError:  # pragma: no cover
-        # PyTest 4.6.x
-        from _pytest.outcomes import Failed
-
-        with pytest.raises(Failed):
-            res.stdout.fnmatch_lines(["*PytestUnknownMarkWarning*"])
+    res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
 def test_skip_reason(testdir):

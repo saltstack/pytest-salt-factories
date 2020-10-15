@@ -138,7 +138,7 @@ def test_default_cli_flags_with_timeout(minion_id, config_dir, config_file, cli_
     proc.__cli_timeout_supported__ = True
     # We set the _terminal_timeout attribute just to test. This attribute would be set when calling
     # SaltScriptBase.run() but we don't really want to call it
-    proc._terminal_timeout = proc.default_timeout
+    proc.impl._terminal_timeout = proc.default_timeout
     cmdline = proc.build_cmdline(*args, **kwargs)
     assert cmdline == expected
 
@@ -175,16 +175,16 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
     proc = SaltCliFactory(
         cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
     )
-    with mock.patch.object(proc, "init_terminal", popen_mock), mock.patch.object(
+    with mock.patch.object(proc.impl, "init_terminal", popen_mock), mock.patch.object(
         proc, "terminate", terminate_mock
     ):
-        proc._terminal = popen_mock
+        proc.impl._terminal = popen_mock
         # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         ret = proc.run(*args, **kwargs)
         assert proc._terminal_timeout_set_explicitly is True
-        assert proc._terminal_timeout == explicit_timeout
+        assert proc.impl._terminal_timeout == explicit_timeout
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
     # To confirm behavior, let's NOT pass --timeout in args
@@ -213,16 +213,16 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
     proc = SaltCliFactory(
         cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
     )
-    with mock.patch.object(proc, "init_terminal", popen_mock), mock.patch.object(
+    with mock.patch.object(proc.impl, "init_terminal", popen_mock), mock.patch.object(
         proc, "terminate", terminate_mock
     ):
-        proc._terminal = popen_mock
+        proc.impl._terminal = popen_mock
         # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         ret = proc.run(*args, **kwargs)
         assert proc._terminal_timeout_set_explicitly is True
-        assert proc._terminal_timeout == explicit_timeout
+        assert proc.impl._terminal_timeout == explicit_timeout
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
     # To confirm behavior, let's NOT pass --timeout in args nor _timeout in kwargs
@@ -250,16 +250,16 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
     proc = SaltCliFactory(
         cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
     )
-    with mock.patch.object(proc, "init_terminal", popen_mock), mock.patch.object(
+    with mock.patch.object(proc.impl, "init_terminal", popen_mock), mock.patch.object(
         proc, "terminate", terminate_mock
     ):
-        proc._terminal = popen_mock
+        proc.impl._terminal = popen_mock
         # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         ret = proc.run(*args, **kwargs)
         assert proc._terminal_timeout_set_explicitly is False
-        assert proc._terminal_timeout == default_timeout
+        assert proc.impl._terminal_timeout == default_timeout
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
 
@@ -295,12 +295,12 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
     proc.__cli_timeout_supported__ = True
     # We set the _terminal_timeout attribute just to test. This attribute would be set when calling
     # SaltScriptBase.run() but we don't really want to call it
-    proc._terminal_timeout = flag_value
+    proc.impl._terminal_timeout = flag_value
     cmdline = proc.build_cmdline(*args, **kwargs)
     assert cmdline == expected
     # Let's also confirm that we also parsed the timeout flag value and set the SaltScriptBase
     # _terminal_timeout to that value plus 5
-    assert proc._terminal_timeout == flag_value + 5
+    assert proc.impl._terminal_timeout == flag_value + 5
 
 
 @pytest.mark.parametrize("flag", ["-t", "--timeout", "--timeout="])
@@ -335,12 +335,12 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
     proc.__cli_timeout_supported__ = True
     # We set the _terminal_timeout attribute just to test. This attribute would be set when calling
     # SaltScriptBase.run() but we don't really want to call it
-    proc._terminal_timeout = flag_value
+    proc.impl._terminal_timeout = flag_value
     cmdline = proc.build_cmdline(*args, **kwargs)
     assert cmdline == expected
     # Let's confirm that even though we tried to parse the timeout flag value, it was a bad value and the
     # SaltScriptBase _terminal_timeout attribute was not update
-    assert proc._terminal_timeout == flag_value
+    assert proc.impl._terminal_timeout == flag_value
 
 
 @pytest.mark.parametrize("flag", ["-c", "--config-dir", "--config-dir=", None])

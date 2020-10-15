@@ -9,7 +9,6 @@ import tempfile
 import nox
 from nox.command import CommandFailed
 from nox.logger import logger
-from nox.virtualenv import VirtualEnv
 
 
 COVERAGE_VERSION_REQUIREMENT = "coverage==5.2"
@@ -37,52 +36,26 @@ EXTRA_REQUIREMENTS_INSTALL = os.environ.get("EXTRA_REQUIREMENTS_INSTALL")
 
 # Paths
 REPO_ROOT = pathlib.Path(__file__).resolve().parent
-ARTEFACTS_DIR = REPO_ROOT / "artefacts"
-# Make sure the artefacts directory exists
-ARTEFACTS_DIR.mkdir(parents=True, exist_ok=True)
-RUNTESTS_LOGFILE = ARTEFACTS_DIR / "runtests-{}.log".format(
+# Change current directory to REPO_ROOT
+os.chdir(str(REPO_ROOT))
+
+SITECUSTOMIZE_DIR = str(REPO_ROOT / "saltfactories" / "utils" / "coverage")
+ARTIFACTS_DIR = REPO_ROOT / "artifacts"
+# Make sure the artifacts directory exists
+ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
+RUNTESTS_LOGFILE = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "runtests-{}.log".format(
     datetime.datetime.now().strftime("%Y%m%d%H%M%S.%f")
 )
-COVERAGE_REPORT_DB = ARTEFACTS_DIR / ".coverage"
-COVERAGE_REPORT_SALTFACTORIES = ARTEFACTS_DIR / "coverage-saltfactories.xml"
-COVERAGE_REPORT_TESTS = ARTEFACTS_DIR / "coverage-tests.xml"
-JUNIT_REPORT = ARTEFACTS_DIR / "junit-report.xml"
+COVERAGE_REPORT_DB = REPO_ROOT / ".coverage"
+COVERAGE_REPORT_SALTFACTORIES = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-saltfactories.xml"
+COVERAGE_REPORT_TESTS = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-tests.xml"
+JUNIT_REPORT = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "junit-report.xml"
 
 # Nox options
 #  Reuse existing virtualenvs
 nox.options.reuse_existing_virtualenvs = True
 #  Don't fail on missing interpreters
 nox.options.error_on_missing_interpreters = False
-
-# Change current directory to REPO_ROOT
-os.chdir(str(REPO_ROOT))
-
-
-def _patch_session(session):
-    if USE_SYSTEM_PYTHON is False:
-        session.log("NOT Patching nox to install against the system python")
-        return
-
-    session.log("Patching nox to install against the system python")
-    # Let's get sys.prefix
-    old_install_only_value = session._runner.global_config.install_only
-    try:
-        # Force install only to be false for the following chunk of code
-        # For additional information as to why see:
-        #   https://github.com/theacodes/nox/pull/181
-        session._runner.global_config.install_only = False
-        sys_prefix = session.run(
-            "python",
-            "-c" 'import sys; sys.stdout.write("{}".format(sys.prefix))',
-            silent=True,
-            log=False,
-        )
-        # Let's patch nox to make it run and in particular, install, to the system python
-        session._runner.venv = VirtualEnv(
-            sys_prefix, interpreter=session._runner.func.python, reuse_existing=True
-        )
-    finally:
-        session._runner.global_config.install_only = old_install_only_value
 
 
 def session_run_always(session, *command, **kwargs):
@@ -102,15 +75,26 @@ def session_run_always(session, *command, **kwargs):
             session._runner.global_config.install_only = old_install_only_value
 
 
-def _tests(session):
+@nox.session(python=("3", "3.5", "3.6", "3.7", "3.8", "3.9"))
+def tests(session):
     """
     Run tests
     """
+    env = {}
+    system_install = False
+    if session.python is False:
+        # This is running against the system
+        logger.warning(
+            "Adding SALT_FACTORIES_SYSTEM_INSTALL=1 to the environ so that tests run against the sytem python"
+        )
+        env["SALT_FACTORIES_SYSTEM_INSTALL"] = "1"
+        system_install = True
     if SKIP_REQUIREMENTS_INSTALL is False:
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
-        session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+        if session.python is not False and system_install is False:
+            session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
             session, "pip", "list", "--format=json", silent=True, log=False, stderr=None
@@ -136,6 +120,29 @@ def _tests(session):
             session.install(*install_command, silent=PIP_INSTALL_SILENT)
 
     session.run("coverage", "erase")
+
+    python_path_env_var = os.environ.get("PYTHONPATH") or None
+    if python_path_env_var is None:
+        python_path_env_var = SITECUSTOMIZE_DIR
+    else:
+        python_path_entries = python_path_env_var.split(os.pathsep)
+        if SITECUSTOMIZE_DIR in python_path_entries:
+            python_path_entries.remove(SITECUSTOMIZE_DIR)
+        python_path_entries.insert(0, SITECUSTOMIZE_DIR)
+        python_path_env_var = os.pathsep.join(python_path_entries)
+
+    env.update(
+        {
+            # The updated python path so that sitecustomize is importable
+            "PYTHONPATH": python_path_env_var,
+            # The full path to the .coverage data file. Makes sure we always write
+            # them to the same directory
+            "COVERAGE_FILE": str(COVERAGE_REPORT_DB),
+            # Instruct sub processes to also run under coverage
+            "COVERAGE_PROCESS_START": str(REPO_ROOT / ".coveragerc"),
+        }
+    )
+
     args = [
         "--rootdir",
         str(REPO_ROOT),
@@ -153,37 +160,19 @@ def _tests(session):
         args.append("tests/")
     else:
         for arg in session.posargs:
-            if arg.startswith("--color") and args[0].startswith("--color"):
-                args.pop(0)
+            if arg.startswith("--color") and session._runner.global_config.forcecolor:
+                args.remove("--color=yes")
             args.append(arg)
-    session.run("coverage", "run", "-m", "pytest", *args)
-    session.notify("coverage")
 
+    session.run("coverage", "run", "-m", "pytest", *args, env=env)
 
-@nox.session(python=("3.5", "3.6", "3.7", "3.8", "3.9"))
-def tests(session):
-    """
-    Run tests
-    """
-    _tests(session)
-
-
-@nox.session(python=False, name="tests-system-python")
-def tests_system_python(session):
-    """
-    Run tests
-    """
-    _patch_session(session)
-    _tests(session)
-
-
-@nox.session
-def coverage(session):
-    """
-    Coverage analysis.
-    """
-    _patch_session(session)
-    session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+    # Always combine and generate the XML coverage report
+    try:
+        session.run("coverage", "combine")
+    except CommandFailed:
+        # Sometimes some of the coverage files are corrupt which would
+        # trigger a CommandFailed exception
+        pass
     # Generate report for saltfactories code coverage
     session.run(
         "coverage",
@@ -203,52 +192,16 @@ def coverage(session):
         "--include=tests/*",
     )
     try:
-        session.run(
-            "coverage",
-            "report",
-            "--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT),
-            "--show-missing",
-        )
+        cmdline = ["coverage", "report", "--show-missing", "--include=saltfactories/*,tests/*"]
+        if system_install is False:
+            cmdline.append("--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT))
+        session.run(*cmdline)
     finally:
-        if os.path.exists(".coverage"):
-            shutil.copyfile(".coverage", str(COVERAGE_REPORT_DB))
-
-
-@nox.session(python="3.7")
-def blacken(session):
-    """
-    Run black code formatter.
-    """
-    _patch_session(session)
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "lint.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    if session.posargs:
-        files = session.posargs
-    else:
-        files = ["saltfactories", "tests", "noxfile.py", "setup.py"]
-    session.run("black", "-l 100", "--exclude=saltfactories/_version.py", *files)
-
-    if session.posargs:
-        files = session.posargs
-    else:
-        files = ["noxfile.py", "setup.py"]
-        for directory in ("saltfactories", "tests"):
-            for (dirpath, dirnames, filenames) in os.walk(directory):
-                for filename in filenames:
-                    if not filename.endswith(".py"):
-                        continue
-                    if filename == "_version.py":
-                        continue
-                    files.append(os.path.join(dirpath, filename))
-    session.run("reorder-python-imports", "--py3-plus", *files)
+        if COVERAGE_REPORT_DB.exists():
+            shutil.copyfile(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / ".coverage"))
 
 
 def _lint(session, rcfile, flags, paths):
-    _patch_session(session)
     session.install(
         "--progress-bar=off",
         "-r",
@@ -282,7 +235,7 @@ def _lint(session, rcfile, flags, paths):
         stdout.close()
 
 
-@nox.session(python="3.5")
+@nox.session(python="3")
 def lint(session):
     """
     Run PyLint against Salt and it's test suite. Set PYLINT_REPORT to a path to capture output.
@@ -291,7 +244,7 @@ def lint(session):
     session.notify("lint-tests-{}".format(session.python))
 
 
-@nox.session(python="3.5", name="lint-code")
+@nox.session(python="3", name="lint-code")
 def lint_code(session):
     """
     Run PyLint against the code. Set PYLINT_REPORT to a path to capture output.
@@ -304,7 +257,7 @@ def lint_code(session):
     _lint(session, ".pylintrc", flags, paths)
 
 
-@nox.session(python="3.5", name="lint-tests")
+@nox.session(python="3", name="lint-tests")
 def lint_tests(session):
     """
     Run PyLint against Salt and it's test suite. Set PYLINT_REPORT to a path to capture output.
@@ -322,7 +275,6 @@ def docs(session):
     """
     Build Docs
     """
-    _patch_session(session)
     session.install(
         "--progress-bar=off",
         "-r",
@@ -331,41 +283,15 @@ def docs(session):
     )
     os.chdir("docs/")
     session.run("make", "clean", external=True)
-    session.notify("docs-linkcheck")
-    session.notify("docs-coverage")
-    session.notify("docs-html")
-
-
-@nox.session(name="docs-html", python="3")
-def docs_html(session):
-    """
-    Build Salt's HTML Documentation
-    """
-    _patch_session(session)
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "docs.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    os.chdir("docs/")
-    session.run("make", "html", "SPHINXOPTS=-W", external=True)
-
-
-@nox.session(name="docs-linkcheck", python="3")
-def docs_linkcheck(session):
-    """
-    Report Docs Link Check
-    """
-    _patch_session(session)
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "docs.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    os.chdir("docs/")
     session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
+    session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
+    docs_coverage_file = os.path.join("_build", "html", "python.txt")
+    if os.path.exists(docs_coverage_file):
+        with open(docs_coverage_file) as rfh:
+            contents = rfh.readlines()[2:]
+            if contents:
+                session.error("\n" + "".join(contents))
+    session.run("make", "html", "SPHINXOPTS=-W", external=True)
     os.chdir("..")
 
 
@@ -374,7 +300,6 @@ def docs_crosslink_info(session):
     """
     Report intersphinx cross links information
     """
-    _patch_session(session)
     session.install(
         "--progress-bar=off",
         "-r",
@@ -411,37 +336,11 @@ def docs_crosslink_info(session):
     os.chdir("..")
 
 
-@nox.session(name="docs-coverage", python="3")
-def docs_coverage(session):
-    """
-    Report Docs Coverage
-    """
-    _patch_session(session)
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "docs.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    os.chdir("docs/")
-    session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
-    docs_coverage_file = os.path.join("_build", "html", "python.txt")
-    if os.path.exists(docs_coverage_file):
-        with open(docs_coverage_file) as rfh:
-            contents = rfh.readlines()[2:]
-            if contents:
-                session.error("\n" + "".join(contents))
-        return
-    session.log("Docs coverage file, {}, does not exit.".format(docs_coverage_file))
-    os.chdir("..")
-
-
 @nox.session(name="gen-api-docs", python="3")
-def gen_api_docs_(session):
+def gen_api_docs(session):
     """
     Generate API Docs
     """
-    _patch_session(session)
     session.install(
         "--progress-bar=off",
         "-r",

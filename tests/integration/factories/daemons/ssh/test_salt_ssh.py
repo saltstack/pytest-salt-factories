@@ -1,8 +1,11 @@
+import logging
 import textwrap
 
 import pytest
 
 from saltfactories.utils import random_string
+
+log = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="module")
@@ -23,21 +26,22 @@ def master(request, salt_factories):
 
 @pytest.fixture(scope="module")
 def salt_ssh_cli(sshd, salt_factories, master):
-    roster_file_path = salt_factories.root_dir / "salt_ssh_roster"
+    roster_file_path = salt_factories.tmp_root_dir / "salt_ssh_roster"
     with open(str(roster_file_path), "w") as wfh:
-        wfh.write(
-            textwrap.dedent(
-                """\
-            localhost:
-              host: 127.0.0.1
-              port: {}
-              mine_functions:
-                test.arg: ['itworked']
-            """.format(
-                    sshd.listen_port
-                )
+        contents = textwrap.dedent(
+            """\
+        localhost:
+          host: 127.0.0.1
+          port: {}
+          mine_functions:
+            test.arg: ['itworked']
+        """.format(
+                sshd.listen_port
             )
         )
+        wfh.write(contents)
+        log.debug("Wrote '%s' with contents:\n%s", roster_file_path, contents)
+        log.warning("")
     try:
         yield master.get_salt_ssh_cli(
             roster_file=str(roster_file_path), client_key=str(sshd.client_key)

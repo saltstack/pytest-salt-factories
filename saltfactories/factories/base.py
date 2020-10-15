@@ -75,6 +75,190 @@ class Factory:
 
 
 @attr.s(kw_only=True)
+class SubprocessFactoryImpl:
+    """
+    Subprocess interaction implementation
+    """
+
+    factory = attr.ib()
+
+    _terminal = attr.ib(repr=False, init=False, default=None)
+    _terminal_stdout = attr.ib(repr=False, init=False, default=None)
+    _terminal_stderr = attr.ib(repr=False, init=False, default=None)
+    _terminal_result = attr.ib(repr=False, init=False, default=None)
+    _terminal_timeout = attr.ib(repr=False, init=False, default=None)
+    _children = attr.ib(repr=False, init=False, default=attr.Factory(list))
+
+    def build_cmdline(self, *args):
+        """
+        Construct a list of arguments to use when starting the subprocess
+
+        Args:
+            args:
+                Additional arguments to use when starting the subprocess
+        """
+        return self.factory.build_cmdline(*args)
+
+    def init_terminal(self, cmdline, **kwargs):
+        """
+        Instantiate a terminal with the passed cmdline and kwargs and return it.
+
+        Additionally, it sets a reference to it in self._terminal and also collects
+        an initial listing of child processes which will be used when terminating the
+        terminal
+        """
+        for key in ("stdin", "stdout", "stderr", "close_fds", "shell", "cwd"):
+            if key in kwargs:
+                raise RuntimeError(
+                    "{}.{}.init_terminal() does not accept {} as a valid keyword argument".format(
+                        __name__, self.__class__.__name__, key
+                    )
+                )
+        self._terminal_stdout = tempfile.SpooledTemporaryFile(512000)
+        self._terminal_stderr = tempfile.SpooledTemporaryFile(512000)
+        self._terminal = subprocess.Popen(
+            cmdline,
+            stdout=self._terminal_stdout,
+            stderr=self._terminal_stderr,
+            shell=False,
+            cwd=self.factory.cwd,
+            universal_newlines=True,
+            close_fds=platform.is_windows() is False,
+        )
+        # Reset the previous _terminal_result if set
+        self._terminal_result = None
+        try:
+            # Check if the process starts properly
+            self._terminal.wait(timeout=0.05)
+            # If TimeoutExpired is not raised, it means the process failed to start
+        except subprocess.TimeoutExpired:
+            # We're good
+            with contextlib.suppress(psutil.NoSuchProcess):
+                for child in psutil.Process(self._terminal.pid).children(recursive=True):
+                    if child not in self._children:
+                        self._children.append(child)
+            atexit.register(self.terminate)
+        return self._terminal
+
+    def is_running(self):
+        """
+        Returns true if the sub-process is alive
+        """
+        if not self._terminal:
+            return False
+        return self._terminal.poll() is None
+
+    def terminate(self):
+        """
+        Terminate the started daemon
+        """
+        return self._terminate()
+
+    def _terminate(self):
+        """
+        This method actually terminates the started daemon
+        """
+        if self._terminal is None:
+            return self._terminal_result
+        atexit.unregister(self.terminate)
+        log.info("Stopping %s", self.factory)
+        # Collect any child processes information before terminating the process
+        with contextlib.suppress(psutil.NoSuchProcess):
+            for child in psutil.Process(self._terminal.pid).children(recursive=True):
+                if child not in self._children:
+                    self._children.append(child)
+
+        with self._terminal:
+            if self.factory.slow_stop:
+                self._terminal.terminate()
+            else:
+                self._terminal.kill()
+            try:
+                # Allow the process to exit by itself in case slow_stop is True
+                self._terminal.wait(5)
+            except subprocess.TimeoutExpired:
+                # The process failed to stop, no worries, we'll make sure it exit along with it's
+                # child processes bellow
+                pass
+            # Lets log and kill any child processes left behind, including the main subprocess
+            # if it failed to properly stop
+            terminate_process(
+                pid=self._terminal.pid,
+                kill_children=True,
+                children=self._children,
+                slow_stop=self.factory.slow_stop,
+            )
+            # Wait for the process to terminate, to avoid zombies.
+            self._terminal.wait()
+            # poll the terminal so the right returncode is set on the popen object
+            self._terminal.poll()
+            # This call shouldn't really be necessary
+            self._terminal.communicate()
+
+            self._terminal_stdout.flush()
+            self._terminal_stdout.seek(0)
+            if sys.version_info < (3, 6):
+                stdout = self._terminal._translate_newlines(
+                    self._terminal_stdout.read(), __salt_system_encoding__
+                )
+            else:
+                stdout = self._terminal._translate_newlines(
+                    self._terminal_stdout.read(), __salt_system_encoding__, sys.stdout.errors
+                )
+            self._terminal_stdout.close()
+
+            self._terminal_stderr.flush()
+            self._terminal_stderr.seek(0)
+            if sys.version_info < (3, 6):
+                stderr = self._terminal._translate_newlines(
+                    self._terminal_stderr.read(), __salt_system_encoding__
+                )
+            else:
+                stderr = self._terminal._translate_newlines(
+                    self._terminal_stderr.read(), __salt_system_encoding__, sys.stderr.errors
+                )
+            self._terminal_stderr.close()
+        try:
+            log_message = "Terminated {}.".format(self.factory)
+            if stdout or stderr:
+                log_message += " Process Output:"
+                if stdout:
+                    log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(
+                        stdout.strip()
+                    )
+                if stderr:
+                    log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(
+                        stderr.strip()
+                    )
+                log_message += "\n"
+            log.info(log_message)
+            self._terminal_result = ProcessResult(
+                self._terminal.returncode, stdout, stderr, cmdline=self._terminal.args
+            )
+            return self._terminal_result
+        finally:
+            self._terminal = None
+            self._terminal_stdout = None
+            self._terminal_stderr = None
+            self._terminal_timeout = None
+            self._children = []
+
+    @property
+    def pid(self):
+        if not self._terminal:
+            return
+        return self._terminal.pid
+
+    def run(self, *args, **kwargs):
+        """
+        Run the given command synchronously
+        """
+        cmdline = self.build_cmdline(*args, **kwargs)
+        log.info("%s is running %r in CWD: %s ...", self.factory, cmdline, self.factory.cwd)
+        return self.init_terminal(cmdline, env=self.factory.environ)
+
+
+@attr.s(kw_only=True)
 class SubprocessFactoryBase(Factory):
     """
     Base CLI script/binary class
@@ -98,12 +282,15 @@ class SubprocessFactoryBase(Factory):
     base_script_args = attr.ib(default=None)
     slow_stop = attr.ib(default=True)
 
-    _terminal = attr.ib(repr=False, init=False, default=None)
-    _terminal_stdout = attr.ib(repr=False, init=False, default=None)
-    _terminal_stderr = attr.ib(repr=False, init=False, default=None)
-    _terminal_result = attr.ib(repr=False, init=False, default=None)
-    _terminal_timeout = attr.ib(repr=False, init=False, default=None)
-    _children = attr.ib(repr=False, init=False, default=attr.Factory(list))
+    impl = attr.ib(repr=False, init=False)
+
+    @impl.default
+    def _set_impl_default(self):
+        impl_class = self._get_impl_class()
+        return impl_class(factory=self)
+
+    def _get_impl_class(self):
+        return SubprocessFactoryImpl
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
@@ -155,157 +342,21 @@ class SubprocessFactoryBase(Factory):
             + list(args)
         )
 
-    def init_terminal(self, cmdline, **kwargs):
-        """
-        Instantiate a terminal with the passed cmdline and kwargs and return it.
-
-        Additionally, it sets a reference to it in self._terminal and also collects
-        an initial listing of child processes which will be used when terminating the
-        terminal
-        """
-        for key in ("stdin", "stdout", "stderr", "close_fds", "shell", "cwd"):
-            if key in kwargs:
-                raise RuntimeError(
-                    "{}.{}.init_terminal() does not accept {} as a valid keyword argument".format(
-                        __name__, self.__class__.__name__, key
-                    )
-                )
-        self._terminal_stdout = tempfile.SpooledTemporaryFile(512000)
-        self._terminal_stderr = tempfile.SpooledTemporaryFile(512000)
-        self._terminal = subprocess.Popen(
-            cmdline,
-            stdout=self._terminal_stdout,
-            stderr=self._terminal_stderr,
-            shell=False,
-            cwd=self.cwd,
-            universal_newlines=True,
-            close_fds=platform.is_windows() is False,
-        )
-        # Reset the previous _terminal_result if set
-        self._terminal_result = None
-        try:
-            # Check if the process starts properly
-            self._terminal.wait(timeout=0.05)
-            # If TimeoutExpired is not raised, it means the process failed to start
-        except subprocess.TimeoutExpired:
-            # We're good
-            with contextlib.suppress(psutil.NoSuchProcess):
-                for child in psutil.Process(self._terminal.pid).children(recursive=True):
-                    if child not in self._children:
-                        self._children.append(child)
-            atexit.register(self.terminate)
-        return self._terminal
-
     def is_running(self):
         """
         Returns true if the sub-process is alive
         """
-        if not self._terminal:
-            return False
-        return self._terminal.poll() is None
+        return self.impl.is_running()
 
     def terminate(self):
         """
         Terminate the started daemon
         """
-        if self._terminal is None:
-            return self._terminal_result
-        atexit.unregister(self.terminate)
-        log.info("Stopping %s", self)
-        # Collect any child processes information before terminating the process
-        with contextlib.suppress(psutil.NoSuchProcess):
-            for child in psutil.Process(self._terminal.pid).children(recursive=True):
-                if child not in self._children:
-                    self._children.append(child)
-
-        with self._terminal:
-            if self.slow_stop:
-                self._terminal.terminate()
-            else:
-                self._terminal.kill()
-            try:
-                # Allow the process to exit by itself in case slow_stop is True
-                self._terminal.wait(5)
-            except subprocess.TimeoutExpired:
-                # The process failed to stop, no worries, we'll make sure it exit along with it's
-                # child processes bellow
-                pass
-            # Lets log and kill any child processes left behind, including the main subprocess
-            # if it failed to properly stop
-            terminate_process(
-                pid=self._terminal.pid,
-                kill_children=True,
-                children=self._children,
-                slow_stop=self.slow_stop,
-            )
-            # Wait for the process to terminate, to avoid zombies.
-            self._terminal.wait()
-            # poll the terminal so the right returncode is set on the popen object
-            self._terminal.poll()
-            # This call shouldn't really be necessary
-            self._terminal.communicate()
-
-            self._terminal_stdout.flush()
-            self._terminal_stdout.seek(0)
-            if sys.version_info < (3, 6):
-                stdout = self._terminal._translate_newlines(
-                    self._terminal_stdout.read(), __salt_system_encoding__
-                )
-            else:
-                stdout = self._terminal._translate_newlines(
-                    self._terminal_stdout.read(), __salt_system_encoding__, sys.stdout.errors
-                )
-            self._terminal_stdout.close()
-
-            self._terminal_stderr.flush()
-            self._terminal_stderr.seek(0)
-            if sys.version_info < (3, 6):
-                stderr = self._terminal._translate_newlines(
-                    self._terminal_stderr.read(), __salt_system_encoding__
-                )
-            else:
-                stderr = self._terminal._translate_newlines(
-                    self._terminal_stderr.read(), __salt_system_encoding__, sys.stderr.errors
-                )
-            self._terminal_stderr.close()
-        try:
-            log_message = "Terminated {}.".format(self)
-            if stdout or stderr:
-                log_message += " Process Output:"
-                if stdout:
-                    log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(
-                        stdout.strip()
-                    )
-                if stderr:
-                    log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(
-                        stderr.strip()
-                    )
-                log_message += "\n"
-            log.info(log_message)
-            self._terminal_result = ProcessResult(
-                self._terminal.returncode, stdout, stderr, cmdline=self._terminal.args
-            )
-            return self._terminal_result
-        finally:
-            self._terminal = None
-            self._terminal_stdout = None
-            self._terminal_stderr = None
-            self._terminal_timeout = None
-            self._children = []
+        return self.impl.terminate()
 
     @property
     def pid(self):
-        if not self._terminal:
-            return
-        return self._terminal.pid
-
-    def _run(self, *args, **kwargs):
-        """
-        Run the given command synchronously
-        """
-        cmdline = self.build_cmdline(*args, **kwargs)
-        log.info("%s is running %r in CWD: %s ...", self, cmdline, self.cwd)
-        return self.init_terminal(cmdline, env=self.environ)
+        return self.impl.pid
 
 
 @attr.s(kw_only=True)
@@ -336,13 +387,13 @@ class ProcessFactory(SubprocessFactoryBase):
         # Build the cmdline to pass to the terminal
         # We set the _terminal_timeout attribute while calling build_cmdline in case it needs
         # access to that information to build the command line
-        self._terminal_timeout = _timeout or self.default_timeout
+        self.impl._terminal_timeout = _timeout or self.default_timeout
         self._terminal_timeout_set_explicitly = _timeout is not None
-        timeout_expire = time.time() + self._terminal_timeout
+        timeout_expire = time.time() + self.impl._terminal_timeout
         timmed_out = False
         try:
-            self._run(*args, **kwargs)
-            self._terminal.communicate(timeout=self._terminal_timeout)
+            self.impl.run(*args, **kwargs)
+            self.impl._terminal.communicate(timeout=self.impl._terminal_timeout)
         except subprocess.TimeoutExpired:
             timmed_out = True
 
@@ -384,31 +435,15 @@ class ProcessFactory(SubprocessFactoryBase):
 
 
 @attr.s(kw_only=True)
-class DaemonFactory(SubprocessFactoryBase):
+class DaemonFactoryImpl(SubprocessFactoryImpl):
     """
-    Base daemon factory
+    Daemon subprocess interaction implementation
     """
 
-    check_ports = attr.ib(default=None)
-    factories_manager = attr.ib(repr=False, hash=False, default=None)
-    start_timeout = attr.ib(repr=False)
-    max_start_attempts = attr.ib(repr=False, default=3)
     before_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     before_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     after_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     after_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
-    extra_cli_arguments_after_first_start_failure = attr.ib(hash=False, default=attr.Factory(list))
-    listen_ports = attr.ib(init=False, repr=False, hash=False, default=attr.Factory(list))
-
-    def __attrs_post_init__(self):
-        super().__attrs_post_init__()
-        if self.check_ports and not isinstance(self.check_ports, (list, tuple)):
-            self.check_ports = [self.check_ports]
-        if self.check_ports:
-            self.listen_ports.extend(self.check_ports)
-        self.register_after_start_callback(self._add_factory_to_stats_processes)
-        self.register_after_terminate_callback(self._terminate_processes_matching_listen_ports)
-        self.register_after_terminate_callback(self._remove_factory_from_stats_processes)
 
     def register_before_start_callback(self, callback, *args, **kwargs):
         self.before_start_callbacks.append((callback, args, kwargs))
@@ -421,12 +456,6 @@ class DaemonFactory(SubprocessFactoryBase):
 
     def register_after_terminate_callback(self, callback, *args, **kwargs):
         self.after_terminate_callbacks.append((callback, args, kwargs))
-
-    def get_check_ports(self):
-        """
-        Return a list of ports to check against to ensure the daemon is running
-        """
-        return self.check_ports or []
 
     def _format_callback(self, callback, args, kwargs):
         callback_str = "{}(".format(callback.__name__)
@@ -446,7 +475,7 @@ class DaemonFactory(SubprocessFactoryBase):
             return True
         process_running = False
         start_time = time.time()
-        start_attempts = max_start_attempts or self.max_start_attempts
+        start_attempts = max_start_attempts or self.factory.max_start_attempts
         current_attempt = 0
         run_arguments = list(extra_cli_arguments)
         while True:
@@ -455,7 +484,9 @@ class DaemonFactory(SubprocessFactoryBase):
             current_attempt += 1
             if current_attempt > start_attempts:
                 break
-            log.info("Starting %s. Attempt: %d of %d", self, current_attempt, start_attempts)
+            log.info(
+                "Starting %s. Attempt: %d of %d", self.factory, current_attempt, start_attempts
+            )
             for callback, args, kwargs in self.before_start_callbacks:
                 try:
                     callback(*args, **kwargs)
@@ -467,22 +498,27 @@ class DaemonFactory(SubprocessFactoryBase):
                         exc_info=True,
                     )
             current_start_time = time.time()
-            start_running_timeout = current_start_time + (start_timeout or self.start_timeout)
-            if current_attempt > 1 and self.extra_cli_arguments_after_first_start_failure:
+            start_running_timeout = current_start_time + (
+                start_timeout or self.factory.start_timeout
+            )
+            if current_attempt > 1 and self.factory.extra_cli_arguments_after_first_start_failure:
                 run_arguments = list(extra_cli_arguments) + list(
-                    self.extra_cli_arguments_after_first_start_failure
+                    self.factory.extra_cli_arguments_after_first_start_failure
                 )
-            self._run(*run_arguments)
+            self.run(*run_arguments)
             if not self.is_running():
                 # A little breathe time to allow the process to start if not started already
                 time.sleep(0.5)
             while time.time() <= start_running_timeout:
                 if not self.is_running():
-                    log.warning("%s is no longer running", self)
+                    log.warning("%s is no longer running", self.factory)
                     self.terminate()
                     break
                 try:
-                    if self.run_start_checks(current_start_time, start_running_timeout) is False:
+                    if (
+                        self.factory.run_start_checks(current_start_time, start_running_timeout)
+                        is False
+                    ):
                         time.sleep(1)
                         continue
                 except FactoryNotStarted:
@@ -490,7 +526,7 @@ class DaemonFactory(SubprocessFactoryBase):
                     break
                 log.info(
                     "The %s factory is running after %d attempts. Took %1.2f seconds",
-                    self,
+                    self.factory,
                     current_attempt,
                     time.time() - start_time,
                 )
@@ -515,7 +551,7 @@ class DaemonFactory(SubprocessFactoryBase):
         raise FactoryNotStarted(
             "The {} factory has failed to confirm running status after {} attempts, which "
             "took {:.2f} seconds".format(
-                self,
+                self.factory,
                 current_attempt - 1,
                 time.time() - start_time,
             ),
@@ -523,15 +559,6 @@ class DaemonFactory(SubprocessFactoryBase):
             stderr=result.stderr,
             exitcode=result.exitcode,
         )
-
-    def started(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
-        """
-        Start the daemon and return it's instance so it can be used as a context manager
-        """
-        self.start(
-            *extra_cli_arguments, max_start_attempts=max_start_attempts, start_timeout=start_timeout
-        )
-        return self
 
     def terminate(self):
         if self._terminal_result is not None:
@@ -560,6 +587,69 @@ class DaemonFactory(SubprocessFactoryBase):
                         exc,
                         exc_info=True,
                     )
+
+
+@attr.s(kw_only=True)
+class DaemonFactory(SubprocessFactoryBase):
+    """
+    Base daemon factory
+    """
+
+    check_ports = attr.ib(default=None)
+    factories_manager = attr.ib(repr=False, hash=False, default=None)
+    start_timeout = attr.ib(repr=False)
+    max_start_attempts = attr.ib(repr=False, default=3)
+    extra_cli_arguments_after_first_start_failure = attr.ib(hash=False, default=attr.Factory(list))
+    listen_ports = attr.ib(init=False, repr=False, hash=False, default=attr.Factory(list))
+
+    def _get_impl_class(self):
+        return DaemonFactoryImpl
+
+    def __attrs_post_init__(self):
+        super().__attrs_post_init__()
+        if self.check_ports and not isinstance(self.check_ports, (list, tuple)):
+            self.check_ports = [self.check_ports]
+        if self.check_ports:
+            self.listen_ports.extend(self.check_ports)
+
+        self.register_after_start_callback(self._add_factory_to_stats_processes)
+        self.register_after_terminate_callback(self._terminate_processes_matching_listen_ports)
+        self.register_after_terminate_callback(self._remove_factory_from_stats_processes)
+
+    def register_before_start_callback(self, callback, *args, **kwargs):
+        self.impl.before_start_callbacks.append((callback, args, kwargs))
+
+    def register_before_terminate_callback(self, callback, *args, **kwargs):
+        self.impl.before_terminate_callbacks.append((callback, args, kwargs))
+
+    def register_after_start_callback(self, callback, *args, **kwargs):
+        self.impl.after_start_callbacks.append((callback, args, kwargs))
+
+    def register_after_terminate_callback(self, callback, *args, **kwargs):
+        self.impl.after_terminate_callbacks.append((callback, args, kwargs))
+
+    def get_check_ports(self):
+        """
+        Return a list of ports to check against to ensure the daemon is running
+        """
+        return self.check_ports or []
+
+    def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
+        """
+        Start the daemon
+        """
+        return self.impl.start(
+            *extra_cli_arguments, max_start_attempts=max_start_attempts, start_timeout=start_timeout
+        )
+
+    def started(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
+        """
+        Start the daemon and return it's instance so it can be used as a context manager
+        """
+        self.start(
+            *extra_cli_arguments, max_start_attempts=max_start_attempts, start_timeout=start_timeout
+        )
+        return self
 
     def run_start_checks(self, started_at, timeout_at):
         log.debug("%s is running start checks", self)
@@ -653,6 +743,9 @@ class SaltFactory:
             The Salt config dictionary
         python_executable(str):
             The path to the python executable to use
+        system_install(bool):
+            If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
+            salt system paths apply.
     """
 
     id = attr.ib(default=None, init=False)
@@ -660,10 +753,11 @@ class SaltFactory:
     config_dir = attr.ib(init=False, default=None)
     config_file = attr.ib(init=False, default=None)
     python_executable = attr.ib(default=None)
+    system_install = attr.ib(repr=False, default=False)
     display_name = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
-        if self.python_executable is None:
+        if self.python_executable is None and self.system_install is False:
             self.python_executable = sys.executable
         # We really do not want buffered output
         self.environ.setdefault("PYTHONUNBUFFERED", "1")
@@ -681,6 +775,27 @@ class SaltFactory:
         if self.display_name is None:
             self.display_name = "{}(id={!r})".format(self.__class__.__name__, self.id)
         return super().get_display_name()
+
+
+@attr.s(kw_only=True)
+class SaltCliFactoryImpl(SubprocessFactoryImpl):
+    """
+    Subprocess interaction implementation
+    """
+
+    def build_cmdline(self, *args, minion_tgt=None, **kwargs):  # pylint: disable=arguments-differ
+        """
+        Construct a list of arguments to use when starting the subprocess
+
+        Args:
+            args:
+                Additional arguments to use when starting the subprocess
+            kwargs:
+                Keyword arguments will be converted into ``key=value`` pairs to be consumed by the salt CLI's
+            minion_tgt(str):
+                The minion ID to target
+        """
+        return self.factory.build_cmdline(*args, minion_tgt=minion_tgt, **kwargs)
 
 
 @attr.s(kw_only=True)
@@ -703,6 +818,9 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
     __cli_output_supported__ = attr.ib(repr=False, init=False, default=True)
     # Override the following to default to non-mandatory and to None
     display_name = attr.ib(init=False, default=None)
+
+    def _get_impl_class(self):
+        return SaltCliFactoryImpl
 
     def __attrs_post_init__(self):
         ProcessFactory.__attrs_post_init__(self)
@@ -765,7 +883,7 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                     if self._terminal_timeout_set_explicitly is False:
                         salt_cli_timeout = arg.split("--timeout=")[-1]
                         try:
-                            self._terminal_timeout = int(salt_cli_timeout) + 5
+                            self.impl._terminal_timeout = int(salt_cli_timeout) + 5
                         except ValueError:
                             # Not a number? Let salt do it's error handling
                             pass
@@ -773,7 +891,7 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                 if salt_cli_timeout_next:
                     if self._terminal_timeout_set_explicitly is False:
                         try:
-                            self._terminal_timeout = int(arg) + 5
+                            self.impl._terminal_timeout = int(arg) + 5
                         except ValueError:
                             # Not a number? Let salt do it's error handling
                             pass
@@ -782,7 +900,7 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                     salt_cli_timeout_next = True
                     continue
             else:
-                salt_cli_timeout = self._terminal_timeout
+                salt_cli_timeout = self.impl._terminal_timeout
                 if salt_cli_timeout and self._terminal_timeout_set_explicitly is False:
                     # Shave off a few seconds so that the salt command times out before the terminal does
                     salt_cli_timeout -= 5
@@ -859,6 +977,158 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
 
 
 @attr.s(kw_only=True)
+class SystemdSaltDaemonFactoryImpl(DaemonFactoryImpl):
+    """
+    Daemon systemd interaction implementation
+    """
+
+    _process = attr.ib(init=False, repr=False, default=None)
+    _service_name = attr.ib(init=False, repr=False, default=None)
+
+    def build_cmdline(self, *args):
+        """
+        Construct a list of arguments to use when starting the subprocess
+
+        Args:
+            args:
+                Additional arguments to use when starting the subprocess
+        """
+        if args:
+            log.debug(
+                "%s.run() is ignoring the passed in arguments: %r", self.__class__.__name__, args
+            )
+        return ("systemctl", "start", self.get_service_name())
+
+    def get_service_name(self):
+        if self._service_name is None:
+            script_path = self.factory.get_script_path()
+            if os.path.isabs(script_path):
+                script_path = os.path.basename(script_path)
+            self._service_name = script_path
+        return self._service_name
+
+    def is_running(self):
+        """
+        Returns true if the sub-process is alive
+        """
+        if self._process is None:
+            ret = self.internal_run("systemctl", "show", "-p", "MainPID", self.get_service_name())
+            _, mainpid = ret.stdout.split("=")
+            if mainpid == "0":
+                return False
+            self._process = psutil.Process(int(mainpid))
+        return self._process.is_running()
+
+    def internal_run(self, *args, **kwargs):
+        """
+        Run the given command synchronously
+        """
+        result = subprocess.run(
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            universal_newlines=True,
+            check=False,
+            **kwargs
+        )
+        stdout = result.stdout.strip()
+        stderr = result.stderr.strip()
+        log_message = "Completed Command: {}".format(result.args)
+        if stdout or stderr:
+            log_message += " Process Output:"
+            if stdout:
+                log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(stdout.strip())
+            if stderr:
+                log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(stderr.strip())
+            log_message += "\n"
+        log.info(log_message)
+        return ProcessResult(result.returncode, stdout, stderr, cmdline=result.args)
+
+    def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
+        try:
+            return super().start(
+                *extra_cli_arguments,
+                max_start_attempts=max_start_attempts,
+                start_timeout=start_timeout
+            )
+        except FactoryNotStarted:  # pylint: disable=try-except-raise
+            raise
+        else:
+            atexit.register(self.terminate)
+
+    def _terminate(self):
+        """
+        This method actually terminates the started daemon
+        """
+        if self._process is None:
+            return self._terminal_result
+        atexit.unregister(self.terminate)
+        log.info("Stopping %s", self.factory)
+        # Collect any child processes information before terminating the process
+        with contextlib.suppress(psutil.NoSuchProcess):
+            for child in psutil.Process(self.pid).children(recursive=True):
+                if child not in self._children:
+                    self._children.append(child)
+
+        pid = self.pid
+        cmdline = self._process.cmdline()
+        self.internal_run("systemctl", "stop", self.get_service_name())
+        if self._process.is_running():
+            try:
+                self._process.wait()
+            except psutil.TimeoutExpired:
+                self._process.terminate()
+                try:
+                    self._process.wait()
+                except psutil.TimeoutExpired:
+                    pass
+        exitcode = self._process.wait() or 0
+
+        self._process = None
+        # Lets log and kill any child processes left behind, including the main subprocess
+        # if it failed to properly stop
+        terminate_process(
+            pid=pid,
+            kill_children=True,
+            children=self._children,
+            slow_stop=self.factory.slow_stop,
+        )
+
+        self._terminal_stdout.close()
+        self._terminal_stderr.close()
+        stdout = ""
+        ret = self.internal_run("journalctl", "--no-pager", "-u", self.get_service_name())
+        stderr = ret.stdout
+        try:
+            log_message = "Terminated {}.".format(self.factory)
+            if stdout or stderr:
+                log_message += " Process Output:"
+                if stdout:
+                    log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(
+                        stdout.strip()
+                    )
+                if stderr:
+                    log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(
+                        stderr.strip()
+                    )
+                log_message += "\n"
+            log.info(log_message)
+            self._terminal_result = ProcessResult(exitcode, stdout, stderr, cmdline=cmdline)
+            return self._terminal_result
+        finally:
+            self._terminal = None
+            self._terminal_stdout = None
+            self._terminal_stderr = None
+            self._terminal_timeout = None
+            self._children = []
+
+    @property
+    def pid(self):
+        if self.is_running():
+            return self._process.pid
+
+
+@attr.s(kw_only=True)
 class SaltDaemonFactory(SaltFactory, DaemonFactory):
     """
     Base factory for salt daemon's
@@ -871,13 +1141,25 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
     def __attrs_post_init__(self):
         DaemonFactory.__attrs_post_init__(self)
         SaltFactory.__attrs_post_init__(self)
-        for arg in self.extra_cli_arguments_after_first_start_failure:
-            if arg in ("-l", "--log-level"):
-                break
-            if arg.startswith("--log-level="):
-                break
-        else:
-            self.extra_cli_arguments_after_first_start_failure.append("--log-level=debug")
+
+        if self.system_install is True and self.extra_cli_arguments_after_first_start_failure:
+            raise RuntimeError(
+                "You cannot pass `extra_cli_arguments_after_first_start_failure` to a salt "
+                "system installation setup."
+            )
+        elif self.system_install is False:
+            for arg in self.extra_cli_arguments_after_first_start_failure:
+                if arg in ("-l", "--log-level"):
+                    break
+                if arg.startswith("--log-level="):
+                    break
+            else:
+                self.extra_cli_arguments_after_first_start_failure.append("--log-level=debug")
+
+    def _get_impl_class(self):
+        if self.system_install:
+            return SystemdSaltDaemonFactoryImpl
+        return super()._get_impl_class()
 
     @classmethod
     def configure(
@@ -952,6 +1234,42 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         """
         raise NotImplementedError
 
+    def build_cmdline(self, *args):
+        """
+        Construct a list of arguments to use when starting the subprocess
+
+        Args:
+            args:
+                Additional arguments to use when starting the subprocess
+        """
+        _args = []
+        # Handle the config directory flag
+        for arg in args:
+            if not isinstance(arg, str):
+                continue
+            if arg.startswith("--config-dir="):
+                break
+            if arg in ("-c", "--config-dir"):
+                break
+        else:
+            _args.append("--config-dir={}".format(self.config_dir))
+        # Handle the logging flag
+        for arg in args:
+            if not isinstance(arg, str):
+                continue
+            if arg in ("-l", "--log-level"):
+                break
+            if arg.startswith("--log-level="):
+                break
+        else:
+            # Default to being quiet on console output
+            _args.append("--log-level=quiet")
+        cmdline = super().build_cmdline(*(_args + list(args)))
+        if self.python_executable:
+            if cmdline[0] != self.python_executable:
+                cmdline.insert(0, self.python_executable)
+        return cmdline
+
     def run_start_checks(self, started_at, timeout_at):
         if not super().run_start_checks(started_at, timeout_at):
             return False
@@ -986,32 +1304,3 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
             return False
         log.debug("All events checked for %s: %s", self, set(self.get_check_events()))
         return True
-
-    def build_cmdline(self, *args):
-        _args = []
-        # Handle the config directory flag
-        for arg in args:
-            if not isinstance(arg, str):
-                continue
-            if arg.startswith("--config-dir="):
-                break
-            if arg in ("-c", "--config-dir"):
-                break
-        else:
-            _args.append("--config-dir={}".format(self.config_dir))
-        # Handle the logging flag
-        for arg in args:
-            if not isinstance(arg, str):
-                continue
-            if arg in ("-l", "--log-level"):
-                break
-            if arg.startswith("--log-level="):
-                break
-        else:
-            # Default to being quiet on console output
-            _args.append("--log-level=quiet")
-        cmdline = super().build_cmdline(*(_args + list(args)))
-        if self.python_executable:
-            if cmdline[0] != self.python_executable:
-                cmdline.insert(0, self.python_executable)
-        return cmdline

@@ -2,7 +2,6 @@
 NG PyTest Salt Plugin
 """
 # pragma: no cover
-import os
 import pathlib
 import re
 import sys
