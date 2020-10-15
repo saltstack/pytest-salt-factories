@@ -84,16 +84,8 @@ class SaltMasterFactory(SaltDaemonFactory):
 
             state_tree_root = root_dir / "srv" / "salt"
             state_tree_root.mkdir(parents=True, exist_ok=True)
-            state_tree_root_base = state_tree_root / "base"
-            state_tree_root_base.mkdir(exist_ok=True)
-            state_tree_root_prod = state_tree_root / "prod"
-            state_tree_root_prod.mkdir(exist_ok=True)
             pillar_tree_root = root_dir / "srv" / "pillar"
             pillar_tree_root.mkdir(parents=True, exist_ok=True)
-            pillar_tree_root_base = pillar_tree_root / "base"
-            pillar_tree_root_base.mkdir(exist_ok=True)
-            pillar_tree_root_prod = pillar_tree_root / "prod"
-            pillar_tree_root_prod.mkdir(exist_ok=True)
 
             _config_defaults = {
                 "id": master_id,
@@ -118,12 +110,10 @@ class SaltMasterFactory(SaltDaemonFactory):
                 "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
                 "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
                 "file_roots": {
-                    "base": str(state_tree_root_base),
-                    "prod": str(state_tree_root_prod),
+                    "base": [str(state_tree_root)],
                 },
                 "pillar_roots": {
-                    "base": str(pillar_tree_root_base),
-                    "prod": str(pillar_tree_root_prod),
+                    "base": [str(pillar_tree_root)],
                 },
                 "order_masters": order_masters,
                 "max_open_files": 10240,
@@ -179,12 +169,12 @@ class SaltMasterFactory(SaltDaemonFactory):
                 "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
                 "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
                 "file_roots": {
-                    "base": str(state_tree_root_base),
-                    "prod": str(state_tree_root_prod),
+                    "base": [str(state_tree_root_base)],
+                    "prod": [str(state_tree_root_prod)],
                 },
                 "pillar_roots": {
-                    "base": str(pillar_tree_root_base),
-                    "prod": str(pillar_tree_root_prod),
+                    "base": [str(pillar_tree_root_base)],
+                    "prod": [str(pillar_tree_root_prod)],
                 },
                 "order_masters": order_masters,
                 "max_open_files": 10240,
@@ -242,10 +232,12 @@ class SaltMasterFactory(SaltDaemonFactory):
             # config['extension_modules'],
             config["sock_dir"],
         ]
-        verify_env_entries += config["file_roots"]["base"]
-        verify_env_entries += config["file_roots"]["prod"]
-        verify_env_entries += config["pillar_roots"]["base"]
-        verify_env_entries += config["pillar_roots"]["prod"]
+        verify_env_entries.extend(config["file_roots"]["base"])
+        if "prod" in config["file_roots"]:
+            verify_env_entries.extend(config["file_roots"]["prod"])
+        verify_env_entries.extend(config["pillar_roots"]["base"])
+        if "prod" in config["pillar_roots"]:
+            verify_env_entries.extend(config["pillar_roots"]["prod"])
         return verify_env_entries
 
     @classmethod
