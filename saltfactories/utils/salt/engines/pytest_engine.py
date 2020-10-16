@@ -10,7 +10,6 @@ import atexit
 import logging
 import threading
 
-import attr
 import salt.utils.event
 import zmq
 
@@ -51,16 +50,11 @@ def start():
         raise
 
 
-@attr.s(kw_only=True, slots=True)
 class PyTestEventForwardEngine:
-    opts = attr.ib(repr=False, hash=False)
-    id = attr.ib(init=False)
-    role = attr.ib(init=False)
-    returner_address = attr.ib(init=False)
-    # Internal attributes
-    running_event = attr.ib(init=False, repr=False, hash=False)
 
-    def __attrs_post_init__(self):
+    __slots__ = ("opts", "id", "role", "returner_address", "running_event")
+
+    def __init__(self, opts):
         self.id = self.opts["id"]
         self.role = self.opts["__role"]
         self.returner_address = self.opts["pytest-{}".format(self.role)]["returner_address"]
