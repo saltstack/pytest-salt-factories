@@ -55,6 +55,7 @@ class PyTestEventForwardEngine:
     __slots__ = ("opts", "id", "role", "returner_address", "running_event")
 
     def __init__(self, opts):
+        self.opts = opts
         self.id = self.opts["id"]
         self.role = self.opts["__role"]
         self.returner_address = self.opts["pytest-{}".format(self.role)]["returner_address"]
