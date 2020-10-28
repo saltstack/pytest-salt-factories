@@ -2,5 +2,11 @@ include requirements/base.txt
 include requirements/docs.txt
 include requirements/lint.txt
 include requirements/tests.txt
-include versioneer.py
 recursive-include saltfactories *.py
+exclude .coveragerc
+exclude .codecov.yml
+exclude .pre-commit-config.yaml
+exclude .pylint*
+exclude noxfile.py
+recursive-exclude .pre-commit-hooks *.*
+recursive-exclude .github *.*
