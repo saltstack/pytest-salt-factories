@@ -114,3 +114,6 @@ salt-checkout/
 
 # Ignore CI artifacts
 artifacts/
+
+# Ignore the setuptools_scm generated version file
+saltfactories/version.py

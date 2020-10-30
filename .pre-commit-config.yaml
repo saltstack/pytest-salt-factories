@@ -35,7 +35,7 @@ repos:
       - id: unimport
         name: Remove unused imports
         args: [--remove]
-        exclude: ^(versioneer\.py|docs/.*\.py|saltfactories/factories/(cli|daemons)/__init__\.py)$
+        exclude: ^(docs/.*\.py|saltfactories/factories/(cli|daemons)/__init__\.py)$
 
   - repo: https://github.com/asottile/reorder_python_imports
     rev: v2.3.5
@@ -44,7 +44,7 @@ repos:
         args: [
           --py3-plus,
         ]
-        exclude: (versioneer.py|saltfactories/_version.py)
+        exclude: saltfactories/version.py
 
   - repo: https://github.com/psf/black
     rev: 20.8b1
@@ -52,7 +52,7 @@ repos:
       - id: black
         args: [-l 100]
         language_version: python3.6
-        exclude: (versioneer.py|saltfactories/_version.py)
+        exclude: saltfactories/version.py
 
   - repo: https://github.com/asottile/blacken-docs
     rev: v1.7.0
@@ -68,7 +68,7 @@ repos:
       - id: pylint
         name: PyLint
         args: [--output-format=parseable, --rcfile=.pylintrc]
-        exclude: (versioneer.py|saltfactories/_version.py)
+        exclude: saltfactories/version.py
         additional_dependencies:
           - saltpylint
           - pyenchant
