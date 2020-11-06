@@ -23,8 +23,11 @@ containerfactory
 cp
 css
 cwd
+deepcopy
 dmux
 dns
+dunder
+dunders
 ebuild
 env
 environ
@@ -34,6 +37,7 @@ favicons
 formatter
 getsockname
 gettempdir
+globals
 hookspec
 hostname
 ico
