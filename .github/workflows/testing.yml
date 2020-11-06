@@ -92,7 +92,6 @@ jobs:
     - name: Install Test Requirements
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        EXTRA_REQUIREMENTS_INSTALL: git+https://github.com/s0undt3ch/pytest-tesults.git
       run: |
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
@@ -100,23 +99,8 @@ jobs:
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
-        TESULTS_TARGET: ${{ secrets.TESULTS_LINUX_TARGET }}
-        TESULTS_BUILD_NAME: ${{ github.job }}-${{ github.run_number }}
       run: |
-        nox --force-color -e tests-${{ matrix.python-version }} -- -vv --tesults-target=${TESULTS_TARGET} --tesults-build-name=${TESULTS_BUILD_NAME} tests/
-
-    - name: Upload Test Results
-      if: always()
-      shell: bash
-      env:
-        REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
-      run: |
-        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
-          python - \
-          --include='artifacts/junit-report.xml' \
-          --framework=pytest \
-          --merge ".*" \
-          --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
+        nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
     - name: Create CodeCov Flags
       if: always()
@@ -235,7 +219,6 @@ jobs:
       env:
         USE_SYSTEM_PYTHON: 1
         SALT_FACTORIES_SYSTEM_INSTALL: 1
-        EXTRA_REQUIREMENTS_INSTALL: git+https://github.com/s0undt3ch/pytest-tesults.git
       run: |
         sudo -E nox --force-color -e tests --no-venv --install-only
 
@@ -244,23 +227,8 @@ jobs:
         USE_SYSTEM_PYTHON: 1
         SALT_FACTORIES_SYSTEM_INSTALL: 1
         SKIP_REQUIREMENTS_INSTALL: YES
-        TESULTS_TARGET: ${{ secrets.TESULTS_LINUX_TARGET }}
-        TESULTS_BUILD_NAME: ${{ github.job }}-${{ github.run_number }}
       run: |
-        sudo -E nox --force-color -e tests --no-venv -- -vv --tesults-target=${TESULTS_TARGET} --tesults-build-name=${TESULTS_BUILD_NAME} tests/
-
-    - name: Upload Test Results
-      if: always()
-      shell: bash
-      env:
-        REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
-      run: |
-        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
-          python - \
-          --include='artifacts/junit-report.xml' \
-          --framework=pytest \
-          --merge ".*" \
-          --name="${{ runner.os }} ${{ steps.python-version.outputs.long }}" || echo "Failed to upload test results"
+        sudo -E nox --force-color -e tests --no-venv -- -vv tests/
 
     - name: Create CodeCov Flags
       if: always()
@@ -378,7 +346,6 @@ jobs:
       shell: bash
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        EXTRA_REQUIREMENTS_INSTALL: git+https://github.com/s0undt3ch/pytest-tesults.git
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
@@ -388,24 +355,9 @@ jobs:
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
-        TESULTS_TARGET: ${{ secrets.TESULTS_WINDOWS_TARGET }}
-        TESULTS_BUILD_NAME: ${{ github.job }}-${{ github.run_number }}
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
-        nox --force-color -e tests-${{ matrix.python-version }} -- -vv --tesults-target=${TESULTS_TARGET} --tesults-build-name=${TESULTS_BUILD_NAME} tests/
-
-    - name: Upload Test Results
-      if: always()
-      shell: bash
-      env:
-        REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
-      run: |
-        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
-          python - \
-          --include='artifacts/junit-report.xml' \
-          --framework=pytest \
-          --merge ".*" \
-          --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
+        nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
     - name: Create CodeCov Flags
       if: always()
@@ -522,7 +474,6 @@ jobs:
     - name: Install Test Requirements
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        EXTRA_REQUIREMENTS_INSTALL: git+https://github.com/s0undt3ch/pytest-tesults.git
       run: |
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
@@ -530,23 +481,8 @@ jobs:
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
-        TESULTS_TARGET: ${{ secrets.TESULTS_MACOS_TARGET }}
-        TESULTS_BUILD_NAME: ${{ github.job }}-${{ github.run_number }}
       run: |
-        nox --force-color -e tests-${{ matrix.python-version }} -- -vv --tesults-target=${TESULTS_TARGET} --tesults-build-name=${TESULTS_BUILD_NAME} tests/
-
-    - name: Upload Test Results
-      if: always()
-      shell: bash
-      env:
-        REPORT_CI_TOKEN: ${{ secrets.REPORT_CI_TOKEN }}
-      run: |
-        curl -s https://raw.githubusercontent.com/report-ci/scripts/master/upload.py | \
-          python - \
-          --include='artifacts/junit-report.xml' \
-          --framework=pytest \
-          --merge ".*" \
-          --name="${{ runner.os }} Py${{ matrix.python-version }}" || echo "Failed to upload test results"
+        nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
     - name: Create CodeCov Flags
       if: always()
