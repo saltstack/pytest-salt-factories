@@ -1,0 +1,22 @@
+import argparse
+import sys
+
+import saltfactories
+
+
+def main():
+    parser = argparse.ArgumentParser(description="PyTest Salt Factories")
+    parser.add_argument(
+        "--coverage",
+        action="store_true",
+        help="Prints the path to where the sitecustomize.py is to trigger coverage tracking on sub-processes.",
+    )
+    options = parser.parse_args()
+    if options.coverage:
+        print(str(saltfactories.CODE_ROOT_DIR / "utils" / "coverage"), file=sys.stdout, flush=True)
+        parser.exit(status=0)
+    parser.exit(status=1, message=parser.format_usage())
+
+
+if __name__ == "__main__":
+    main()
