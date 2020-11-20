@@ -57,6 +57,12 @@ class FactoryNotStarted(FactoryFailure):
     """
 
 
+class FactoryNotRunning(FactoryFailure):
+    """
+    Exception raised when trying to use a factory's `.stopped` context manager and the factory is not running
+    """
+
+
 class ProcessNotStarted(FactoryFailure):
     """
     Exception raised when a process failed to start

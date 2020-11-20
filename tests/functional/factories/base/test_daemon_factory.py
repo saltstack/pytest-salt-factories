@@ -8,6 +8,7 @@ import time
 import psutil
 import pytest
 
+from saltfactories.exceptions import FactoryNotRunning
 from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.factories.base import DaemonFactory
 from saltfactories.utils import platform
@@ -217,7 +218,7 @@ def test_daemon_process_termination_parent_killed(request, tempfiles):
 
 
 @pytest.mark.parametrize("start_timeout", [0.1, 0.3])
-def test_context_manager(request, tempfiles, start_timeout):
+def test_started_context_manager(request, tempfiles, start_timeout):
     script = tempfiles.makepyfile(
         r"""
         # coding=utf-8
@@ -274,6 +275,77 @@ def test_context_manager(request, tempfiles, start_timeout):
     # assert seconds > start_timeout
     ## Should not take more than start_timeout + 0.3 to start and fail
     # assert seconds < start_timeout + 0.3
+
+
+@pytest.fixture
+def factory_stopped_script(tempfiles):
+    return tempfiles.makepyfile(
+        r"""
+        # coding=utf-8
+
+        import os
+        import sys
+        import time
+        import socket
+        import multiprocessing
+
+        def main():
+
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(('127.0.0.1', 12345))
+            sock.listen(5)
+            try:
+                while True:
+                    connection, address = sock.accept()
+                    connection.close()
+            except (KeyboardInterrupt, SystemExit):
+                pass
+            finally:
+                sock.close()
+            sys.exit(0)
+
+        # Support for windows test runs
+        if __name__ == '__main__':
+            multiprocessing.freeze_support()
+            main()
+        """,
+        executable=True,
+    )
+
+
+def test_stopped_context_manager_raises_FactoryNotRunning(request, factory_stopped_script):
+    daemon = DaemonFactory(
+        cli_script_name=sys.executable,
+        base_script_args=[factory_stopped_script],
+        start_timeout=3,
+        max_start_attempts=1,
+        check_ports=[12345],
+    )
+    # Make sure the daemon is terminated no matter what
+    request.addfinalizer(daemon.terminate)
+
+    with pytest.raises(FactoryNotRunning):
+        with daemon.stopped():
+            pass
+
+
+def test_stopped_context_manager(request, factory_stopped_script):
+    daemon = DaemonFactory(
+        cli_script_name=sys.executable,
+        base_script_args=[factory_stopped_script],
+        start_timeout=3,
+        max_start_attempts=1,
+        check_ports=[12345],
+    )
+    # Make sure the daemon is terminated no matter what
+    request.addfinalizer(daemon.terminate)
+
+    with daemon.started():
+        assert daemon.is_running()
+        with daemon.stopped():
+            assert daemon.is_running() is False
+        assert daemon.is_running()
 
 
 def test_context_manager_returns_class_instance(tempfiles):

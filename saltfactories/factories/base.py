@@ -27,6 +27,7 @@ import salt.utils.verify
 import salt.utils.yaml
 from salt.utils.immutabletypes import freeze
 
+from saltfactories.exceptions import FactoryNotRunning
 from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.exceptions import FactoryTimeout
 from saltfactories.utils import platform
@@ -435,6 +436,13 @@ class ProcessFactory(SubprocessFactoryBase):
 
 
 @attr.s(kw_only=True)
+class StartDaemonCallArguments:
+
+    args = attr.ib()
+    kwargs = attr.ib()
+
+
+@attr.s(kw_only=True)
 class DaemonFactoryImpl(SubprocessFactoryImpl):
     """
     Daemon subprocess interaction implementation
@@ -444,6 +452,7 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
     before_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     after_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     after_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
+    _start_args_and_kwargs = attr.ib(init=False, repr=False, hash=False)
 
     def register_before_start_callback(self, callback, *args, **kwargs):
         self.before_start_callbacks.append((callback, args, kwargs))
@@ -473,6 +482,10 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
         if self.is_running():
             log.warning("%s is already running.", self)
             return True
+        self._start_args_and_kwargs = StartDaemonCallArguments(
+            args=extra_cli_arguments,
+            kwargs={"max_start_attempts": max_start_attempts, "start_timeout": start_timeout},
+        )
         process_running = False
         start_time = time.time()
         start_attempts = max_start_attempts or self.factory.max_start_attempts
@@ -588,6 +601,9 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
                         exc_info=True,
                     )
 
+    def get_start_arguments(self):
+        return self._start_args_and_kwargs
+
 
 @attr.s(kw_only=True)
 class DaemonFactory(SubprocessFactoryBase):
@@ -650,6 +666,34 @@ class DaemonFactory(SubprocessFactoryBase):
             *extra_cli_arguments, max_start_attempts=max_start_attempts, start_timeout=start_timeout
         )
         return self
+
+    @contextlib.contextmanager
+    def stopped(self):
+        """
+        This context manager will stop the factory while the context is in place, it re-starts it once out of
+        context.
+
+        For example:
+
+        .. code-block:: python
+
+            assert factory.is_running() is True
+
+            with factory.stopped():
+                assert factory.is_running() is False
+
+            assert factory.is_running() is True
+        """
+        if not self.is_running():
+            raise FactoryNotRunning("{} is not running ".format(self))
+        start_arguments = self.impl.get_start_arguments()
+        try:
+            self.terminate()
+            yield
+        except Exception:  # pylint: disable=broad-except,try-except-raise
+            raise
+        else:
+            return self.started(*start_arguments.args, **start_arguments.kwargs)
 
     def run_start_checks(self, started_at, timeout_at):
         log.debug("%s is running start checks", self)
