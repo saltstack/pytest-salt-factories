@@ -1,4 +1,4 @@
-name: Testing
+name: CI
 
 on: [push, pull_request]
 
@@ -69,25 +69,20 @@ jobs:
           - 3.7
           - 3.8
         salt-version:
-          - salt==3001
+          - salt==3002.2
 
     steps:
     - uses: actions/checkout@v2
-
-    - name: Set up Python 3.7 For Nox
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-
-    - name: Install Nox
-      run: |
-        python -m pip install --upgrade pip
-        pip install nox
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Install Nox
+      run: |
+        python -m pip install --upgrade pip
+        pip install nox
 
     - name: Install Test Requirements
       env:
@@ -318,29 +313,22 @@ jobs:
       max-parallel: 3
       matrix:
         python-version:
-#          - 3.5
-          - 3.6
           - 3.7
         salt-version:
-          - salt==3001
+          - salt==3002.2
 
     steps:
     - uses: actions/checkout@v2
-
-    - name: Set up Python 3.7 For Nox
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-
-    - name: Install Nox
-      run: |
-        python -m pip install --upgrade pip
-        pip install nox
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Install Nox
+      run: |
+        python -m pip install --upgrade pip
+        pip install nox
 
     - name: Install Test Requirements
       shell: bash
@@ -447,29 +435,22 @@ jobs:
       max-parallel: 3
       matrix:
         python-version:
-          - 3.5
-          - 3.6
           - 3.7
         salt-version:
-          - salt==3001
+          - salt==3002.2
 
     steps:
     - uses: actions/checkout@v2
-
-    - name: Set up Python 3.7 For Nox
-      uses: actions/setup-python@v1
-      with:
-        python-version: 3.7
-
-    - name: Install Nox
-      run: |
-        python -m pip install --upgrade pip
-        pip install nox
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+
+    - name: Install Nox
+      run: |
+        python -m pip install --upgrade pip
+        pip install nox
 
     - name: Install Test Requirements
       env:
