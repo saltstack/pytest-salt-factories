@@ -109,6 +109,7 @@ jobs:
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
     - name: Test
+      id: run-tests
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
@@ -192,6 +193,14 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
 
+    - name: Publish Test Report
+      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
+      uses: mikepenz/action-junit-report@v1.1.1
+      with:
+        check_name: Linux Test Results (${{ matrix.python-version}}, ${{ matrix.salt-version }})
+        report_paths: 'artifacts/junit-report.xml'
+        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+
   Linux-System-Install:
     runs-on: ubuntu-latest
     needs: Pre-Commit
@@ -236,6 +245,7 @@ jobs:
         sudo -E nox --force-color -e tests --no-venv --install-only
 
     - name: Test
+      id: run-tests
       env:
         USE_SYSTEM_PYTHON: 1
         SALT_FACTORIES_SYSTEM_INSTALL: 1
@@ -320,6 +330,14 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ steps.python-version.outputs.short }}-system.log
         path: artifacts/runtests-*.log
 
+    - name: Publish Test Report
+      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
+      uses: mikepenz/action-junit-report@v1.1.1
+      with:
+        check_name: Linux System Install Test Results
+        report_paths: 'artifacts/junit-report.xml'
+        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+
   Windows:
     runs-on: windows-latest
     needs: Pre-Commit
@@ -357,6 +375,7 @@ jobs:
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
     - name: Test
+      id: run-tests
       shell: bash
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
@@ -442,6 +461,14 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
 
+    - name: Publish Test Report
+      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
+      uses: mikepenz/action-junit-report@v1.1.1
+      with:
+        check_name: Windows Test Results (${{ matrix.python-version}}, ${{ matrix.salt-version }})
+        report_paths: 'artifacts/junit-report.xml'
+        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+
   macOS:
     runs-on: macOS-latest
     needs: Pre-Commit
@@ -477,6 +504,7 @@ jobs:
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
     - name: Test
+      id: run-tests
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
@@ -559,3 +587,11 @@ jobs:
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
+
+    - name: Publish Test Report
+      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
+      uses: mikepenz/action-junit-report@v1.1.1
+      with:
+        check_name: macOS Test Results (${{ matrix.python-version}}, ${{ matrix.salt-version }})
+        report_paths: 'artifacts/junit-report.xml'
+        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
