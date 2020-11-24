@@ -857,12 +857,13 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
     # Override the following to default to non-mandatory and to None
     display_name = attr.ib(init=False, default=None)
     _minion_tgt = attr.ib(repr=False, init=False, default=None)
+    merge_json_output = attr.ib(repr=False, default=True)
 
     __cli_timeout_supported__ = attr.ib(repr=False, init=False, default=False)
     __cli_log_level_supported__ = attr.ib(repr=False, init=False, default=True)
     __cli_output_supported__ = attr.ib(repr=False, init=False, default=True)
-    # Override the following to default to non-mandatory and to None
-    display_name = attr.ib(init=False, default=None)
+    __json_output__ = attr.ib(repr=False, init=False, default=False)
+    __merge_json_output__ = attr.ib(repr=False, init=False, default=True)
 
     def _get_impl_class(self):
         return SaltCliFactoryImpl
@@ -882,7 +883,9 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
     def get_minion_tgt(self, minion_tgt=None):
         return minion_tgt
 
-    def build_cmdline(self, *args, minion_tgt=None, **kwargs):  # pylint: disable=arguments-differ
+    def build_cmdline(
+        self, *args, minion_tgt=None, merge_json_output=None, **kwargs
+    ):  # pylint: disable=arguments-differ
         """
         Construct a list of arguments to use when starting the subprocess
 
@@ -893,6 +896,10 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                 Keyword arguments will be converted into ``key=value`` pairs to be consumed by the salt CLI's
             minion_tgt(str):
                 The minion ID to target
+            merge_json_output(bool):
+                The default behavior of salt outputters is to print one line per minion return, which makes
+                parsing the whole output as JSON impossible when targeting multiple minions. If this value
+                is ``True``, an attempt is made to merge each JSON line into a single dictionary.
         """
         log.debug(
             "Building cmdline. Minion target: %s; Input args: %s; Input kwargs: %s;",
@@ -901,6 +908,10 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
             kwargs,
         )
         minion_tgt = self._minion_tgt = self.get_minion_tgt(minion_tgt=minion_tgt)
+        if merge_json_output is None:
+            self.__merge_json_output__ = self.merge_json_output
+        else:
+            self.__merge_json_output__ = merge_json_output
         cmdline = []
 
         args = list(args)
@@ -955,16 +966,31 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
 
         # Handle the output flag
         if self.__cli_output_supported__:
-            for arg in args:
+            json_output = False
+            for idx, arg in enumerate(args):
                 if not isinstance(arg, str):
                     continue
                 if arg in ("--out", "--output"):
+                    self.__json_output__ = args[idx + 1] == "json"
                     break
                 if arg.startswith(("--out=", "--output=")):
+                    self.__json_output__ = arg.split("=")[-1].strip() == "json"
                     break
             else:
                 # No output was passed, the default output is JSON
                 cmdline.append("--out=json")
+                self.__json_output__ = True
+            if self.__json_output__:
+                for arg in args:
+                    if not isinstance(arg, str):
+                        continue
+                    if arg in ("--out-indent", "--output-indent"):
+                        break
+                    if arg.startswith(("--out-indent=", "--output-indent=")):
+                        break
+                else:
+                    # Default to one line per output
+                    cmdline.append("--out-indent=0")
 
         if self.__cli_log_level_supported__:
             # Handle the logging flag
@@ -999,12 +1025,23 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
         return cmdline
 
     def process_output(self, stdout, stderr, cmdline=None):
-        stdout, stderr, json_out = super().process_output(stdout, stderr, cmdline=cmdline)
+        json_out = None
+        if stdout and self.__json_output__:
+            try:
+                json_out = json.loads(stdout)
+            except ValueError:
+                if self.__merge_json_output__:
+                    try:
+                        json_out = json.loads(stdout.replace("}\n{", ", "))
+                    except ValueError:
+                        pass
+            if json_out is None:
+                log.debug("%s failed to load JSON from the following output:\n%r", self, stdout)
         if (
             self.__cli_output_supported__
             and json_out
             and isinstance(json_out, str)
-            and "--out=json" in cmdline
+            and self.__json_output__
         ):
             # Sometimes the parsed JSON is just a string, for example:
             #  OUTPUT: '"The salt master could not be contacted. Is master running?"\n'
