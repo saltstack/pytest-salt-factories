@@ -571,6 +571,7 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
             stdout=result.stdout,
             stderr=result.stderr,
             exitcode=result.exitcode,
+            cmdline=run_arguments,
         )
 
     def terminate(self):
