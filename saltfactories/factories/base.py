@@ -41,6 +41,8 @@ from saltfactories.utils.processes import terminate_process_list
 
 log = logging.getLogger(__name__)
 
+NO_MINION_TARGETED = object()
+
 
 @attr.s(kw_only=True)
 class Factory:
@@ -880,11 +882,21 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
             return super().get_script_args()
         return ["--hard-crash"]
 
-    def get_minion_tgt(self, minion_tgt=None):
+    def get_minion_tgt(self, minion_tgt=NO_MINION_TARGETED):
+        """
+        Return the minion to target.
+
+        Args:
+            minion_tgt(str):
+                The minion ID to target. If nothing is passed to this argument, then all, minions
+                are targeted, ie, ``"*"``
+        """
+        if minion_tgt is NO_MINION_TARGETED:
+            return "*"
         return minion_tgt
 
     def build_cmdline(
-        self, *args, minion_tgt=None, merge_json_output=None, **kwargs
+        self, *args, minion_tgt=NO_MINION_TARGETED, merge_json_output=None, **kwargs
     ):  # pylint: disable=arguments-differ
         """
         Construct a list of arguments to use when starting the subprocess
