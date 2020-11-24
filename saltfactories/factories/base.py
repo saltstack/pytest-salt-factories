@@ -1050,7 +1050,12 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
             # In this case, we assign the loaded JSON to stdout and reset json_out
             stdout = json_out
             json_out = None
-        if self.__cli_output_supported__ and json_out and self._minion_tgt:
+        if (
+            self.__cli_output_supported__
+            and json_out
+            and self._minion_tgt
+            and self._minion_tgt != "*"
+        ):
             try:
                 json_out = json_out[self._minion_tgt]
             except KeyError:
