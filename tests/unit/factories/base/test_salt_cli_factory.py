@@ -50,6 +50,7 @@ def test_default_cli_flags(minion_id, config_dir, config_file, cli_script_name):
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
+        "--out-indent=0",
         "--log-level=quiet",
         minion_id,
         "test.ping",
@@ -77,6 +78,7 @@ def test_override_log_level(minion_id, config_dir, config_file, cli_script_name,
             cli_script_name,
             "--config-dir={}".format(config_dir.strpath),
             "--out=json",
+            "--out-indent=0",
             minion_id,
         ]
         + flag_overrides_args
@@ -115,6 +117,37 @@ def test_override_output(minion_id, config_dir, config_file, cli_script_name, fl
     assert cmdline == expected
 
 
+@pytest.mark.parametrize(
+    "flag", ["--out-indent", "--output-indent", "--out-indent=", "--output-indent="]
+)
+def test_override_output_indent(minion_id, config_dir, config_file, cli_script_name, flag):
+    config = {"conf_file": config_file, "id": "the-id"}
+    args = []
+    if flag.endswith("="):
+        flag_overrides_args = [flag + "1"]
+    else:
+        flag_overrides_args = [flag, "1"]
+
+    args.extend(flag_overrides_args)
+    args.append("test.ping")
+    kwargs = {"minion_tgt": minion_id}
+    expected = (
+        [
+            sys.executable,
+            cli_script_name,
+            "--config-dir={}".format(config_dir.strpath),
+            "--out=json",
+            "--log-level=quiet",
+            minion_id,
+        ]
+        + flag_overrides_args
+        + ["test.ping"]
+    )
+    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
+    cmdline = proc.build_cmdline(*args, **kwargs)
+    assert cmdline == expected
+
+
 def test_default_cli_flags_with_timeout(minion_id, config_dir, config_file, cli_script_name):
     default_timeout = 10
     config = {"conf_file": config_file, "id": "the-id"}
@@ -126,6 +159,7 @@ def test_default_cli_flags_with_timeout(minion_id, config_dir, config_file, cli_
         "--config-dir={}".format(config_dir.strpath),
         "--timeout={}".format(default_timeout - 5),
         "--out=json",
+        "--out-indent=0",
         "--log-level=quiet",
         minion_id,
         "test.ping",
@@ -160,6 +194,7 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
+        "--out-indent=0",
         "--log-level=quiet",
         minion_id,
         "--timeout=6",
@@ -199,6 +234,7 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
         "--config-dir={}".format(config_dir.strpath),
         "--timeout={}".format(explicit_timeout),
         "--out=json",
+        "--out-indent=0",
         "--log-level=quiet",
         minion_id,
         "test.ping",
@@ -236,6 +272,7 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
         "--config-dir={}".format(config_dir.strpath),
         "--timeout={}".format(default_timeout - 5),
         "--out=json",
+        "--out-indent=0",
         "--log-level=quiet",
         minion_id,
         "test.ping",
@@ -281,6 +318,7 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
             cli_script_name,
             "--config-dir={}".format(config_dir.strpath),
             "--out=json",
+            "--out-indent=0",
             "--log-level=quiet",
             minion_id,
         ]
@@ -321,6 +359,7 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
             cli_script_name,
             "--config-dir={}".format(config_dir.strpath),
             "--out=json",
+            "--out-indent=0",
             "--log-level=quiet",
             minion_id,
         ]
@@ -362,6 +401,7 @@ def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name
             sys.executable,
             cli_script_name,
             "--out=json",
+            "--out-indent=0",
             "--log-level=quiet",
             minion_id,
         ]
@@ -379,6 +419,8 @@ def test_process_output(cli_script_name, config_file):
     cmdline = ["--out=json"]
     config = {"conf_file": config_file, "id": "the-id"}
     proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
+    # Call proc.build_cmdline() so that proc.__json_output__ is properly set
+    proc.build_cmdline()
     stdout, stderr, json_out = proc.process_output(in_stdout, in_stderr, cmdline=cmdline)
     assert stdout == json.loads(in_stdout)
     assert stderr == in_stderr
@@ -395,6 +437,7 @@ def test_non_string_cli_flags(minion_id, config_dir, config_file, cli_script_nam
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
+        "--out-indent=0",
         "--log-level=quiet",
         minion_id,
         "test.ping",
@@ -417,6 +460,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
+        "--out-indent=0",
         "--log-level=quiet",
         minion_id,
         "test.ping",
@@ -438,6 +482,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
+        "--out-indent=0",
         "--log-level=quiet",
         minion_id,
         "test.ping",
@@ -460,6 +505,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
+        "--out-indent=0",
         "--log-level=quiet",
         minion_id,
         "test.ping",
@@ -481,6 +527,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
+        "--out-indent=0",
         "--log-level=quiet",
         minion_id,
         "test.ping",
