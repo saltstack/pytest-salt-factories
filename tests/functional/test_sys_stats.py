@@ -27,6 +27,7 @@ def test_basic_sys_stats(testdir):
     )
 
 
+@pytest.mark.skip_on_freebsd
 def test_basic_sys_stats_uss(testdir):
     p = testdir.makepyfile(
         """

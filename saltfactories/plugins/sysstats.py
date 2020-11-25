@@ -5,6 +5,7 @@
     Process stats PyTest plugin interface
 """
 import os
+import sys
 from collections import OrderedDict
 
 import attr
@@ -30,6 +31,9 @@ class SystemStatsReporter:
         self.sys_stats_no_children = self.config.getoption("--sys-stats-no-children") is True
         if self.config.getoption("--sys-stats-uss-mem") is True:
             self.sys_stats_mem_type = "uss"
+            if sys.platform.startswith("freebsd"):
+                # FreeBSD doesn't apparently support uss
+                self.sys_stats_mem_type = "rss"
         else:
             self.sys_stats_mem_type = "rss"
 
