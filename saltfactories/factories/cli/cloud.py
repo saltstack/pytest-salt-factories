@@ -11,6 +11,7 @@ Salt Master Factory
 import logging
 import pathlib
 import pprint
+import urllib.parse
 
 import attr
 import salt.config
@@ -74,6 +75,12 @@ class SaltCloudFactory(SaltCliFactory):
 
     @classmethod
     def verify_config(cls, config):
+        prepend_root_dirs = []
+        for config_key in ("log_file",):
+            if urllib.parse.urlparse(config.get(config_key, "")).scheme == "":
+                prepend_root_dirs.append(config_key)
+        if prepend_root_dirs:
+            salt.config.prepend_root_dir(config, prepend_root_dirs)
         salt.utils.verify.verify_env(
             [str(pathlib.Path(config["log_file"]).parent)],
             running_username(),
