@@ -115,8 +115,8 @@ class SubprocessFactoryImpl:
                         __name__, self.__class__.__name__, key
                     )
                 )
-        self._terminal_stdout = tempfile.SpooledTemporaryFile(512000)
-        self._terminal_stderr = tempfile.SpooledTemporaryFile(512000)
+        self._terminal_stdout = tempfile.SpooledTemporaryFile(512000, buffering=0)
+        self._terminal_stderr = tempfile.SpooledTemporaryFile(512000, buffering=0)
         self._terminal = subprocess.Popen(
             cmdline,
             stdout=self._terminal_stdout,
