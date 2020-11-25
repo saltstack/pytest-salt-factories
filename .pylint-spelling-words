@@ -34,6 +34,7 @@ environ
 factorydaemonscriptbase
 favicon
 favicons
+fds
 formatter
 getsockname
 gettempdir

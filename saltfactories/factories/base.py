@@ -117,6 +117,15 @@ class SubprocessFactoryImpl:
                 )
         self._terminal_stdout = tempfile.SpooledTemporaryFile(512000, buffering=0)
         self._terminal_stderr = tempfile.SpooledTemporaryFile(512000, buffering=0)
+        if platform.is_windows():
+            # Windows does not support closing FDs
+            close_fds = False
+        elif platform.is_freebsd() and sys.version_info < (3, 9):
+            # Closing FDs in FreeBSD before Py3.9 can be slow
+            #   https://bugs.python.org/issue38061
+            close_fds = False
+        else:
+            close_fds = True
         self._terminal = subprocess.Popen(
             cmdline,
             stdout=self._terminal_stdout,
@@ -124,7 +133,7 @@ class SubprocessFactoryImpl:
             shell=False,
             cwd=self.factory.cwd,
             universal_newlines=True,
-            close_fds=platform.is_windows() is False,
+            close_fds=close_fds,
         )
         # Reset the previous _terminal_result if set
         self._terminal_result = None
