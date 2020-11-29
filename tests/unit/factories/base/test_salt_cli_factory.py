@@ -148,46 +148,16 @@ def test_override_output_indent(minion_id, config_dir, config_file, cli_script_n
     assert cmdline == expected
 
 
-def test_default_cli_flags_with_timeout(minion_id, config_dir, config_file, cli_script_name):
-    default_timeout = 10
-    config = {"conf_file": config_file, "id": "the-id"}
-    args = ["test.ping"]
-    kwargs = {"minion_tgt": minion_id}
-    expected = [
-        sys.executable,
-        cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
-        "--timeout={}".format(default_timeout - 5),
-        "--out=json",
-        "--out-indent=0",
-        "--log-level=quiet",
-        minion_id,
-        "test.ping",
-    ]
-    proc = SaltCliFactory(
-        cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
-    )
-    # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
-    # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
-    proc.__cli_timeout_supported__ = True
-    # We set the _terminal_timeout attribute just to test. This attribute would be set when calling
-    # SaltScriptBase.run() but we don't really want to call it
-    proc.impl._terminal_timeout = proc.default_timeout
-    cmdline = proc.build_cmdline(*args, **kwargs)
-    assert cmdline == expected
-
-
 def test_default_cli_flags_with_timeout_and_timeout_kwargs(
     minion_id, config_dir, config_file, cli_script_name
 ):
-    """
-    This test assures that when _timeout is passed as a keyword argument, that the _terminal_timeout property
-    does not get get updated to the value of --timeout
-    """
+    # Both --timeout and _timeout are passed, --timeout wins and _terminal_timeout matches the value of --timeout
+    # plus 5
     default_timeout = 10
     explicit_timeout = 60
+    cli_timeout = 6
     config = {"conf_file": config_file, "id": "the-id"}
-    args = ["--timeout=6", "test.ping"]
+    args = ["--timeout", str(cli_timeout), "test.ping"]
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
         sys.executable,
@@ -197,7 +167,8 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
         "--out-indent=0",
         "--log-level=quiet",
         minion_id,
-        "--timeout=6",
+        "--timeout",
+        "6",
         "test.ping",
     ]
 
@@ -218,11 +189,10 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         ret = proc.run(*args, **kwargs)
-        assert proc._terminal_timeout_set_explicitly is True
-        assert proc.impl._terminal_timeout == explicit_timeout
+        assert proc.impl._terminal_timeout == cli_timeout + 5
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
-    # To confirm behavior, let's NOT pass --timeout in args
+    # _timeout is passed, the value of --timeout is _timeout minus 5
     default_timeout = 10
     explicit_timeout = 60
     config = {"conf_file": config_file, "id": "the-id"}
@@ -232,7 +202,7 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
         sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
-        "--timeout={}".format(explicit_timeout),
+        "--timeout={}".format(explicit_timeout - 5),
         "--out=json",
         "--out-indent=0",
         "--log-level=quiet",
@@ -257,11 +227,10 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         ret = proc.run(*args, **kwargs)
-        assert proc._terminal_timeout_set_explicitly is True
         assert proc.impl._terminal_timeout == explicit_timeout
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
-    # To confirm behavior, let's NOT pass --timeout in args nor _timeout in kwargs
+    # Neither _timeout nor --timeout are passed, --timeout equals the default timeout minus 5
     default_timeout = 10
     config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
@@ -295,7 +264,6 @@ def test_default_cli_flags_with_timeout_and_timeout_kwargs(
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         ret = proc.run(*args, **kwargs)
-        assert proc._terminal_timeout_set_explicitly is False
         assert proc.impl._terminal_timeout == default_timeout
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 

@@ -380,7 +380,6 @@ class ProcessFactory(SubprocessFactoryBase):
     """
 
     default_timeout = attr.ib()
-    _terminal_timeout_set_explicitly = attr.ib(repr=False, init=False, default=False)
 
     @default_timeout.default
     def _set_default_timeout(self):
@@ -398,8 +397,6 @@ class ProcessFactory(SubprocessFactoryBase):
         # We set the _terminal_timeout attribute while calling build_cmdline in case it needs
         # access to that information to build the command line
         self.impl._terminal_timeout = _timeout or self.default_timeout
-        self._terminal_timeout_set_explicitly = _timeout is not None
-        timeout_expire = time.time() + self.impl._terminal_timeout
         timmed_out = False
         try:
             self.impl.run(*args, **kwargs)
@@ -945,28 +942,28 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                 if arg.startswith("--timeout="):
                     # Let's actually change the _terminal_timeout value which is used to
                     # calculate when the run() method should actually timeout
-                    if self._terminal_timeout_set_explicitly is False:
-                        salt_cli_timeout = arg.split("--timeout=")[-1]
-                        try:
-                            self.impl._terminal_timeout = int(salt_cli_timeout) + 5
-                        except ValueError:
-                            # Not a number? Let salt do it's error handling
-                            pass
+                    salt_cli_timeout = arg.split("--timeout=")[-1]
+                    try:
+                        self.impl._terminal_timeout = int(salt_cli_timeout) + 5
+                    except ValueError:
+                        # Not a number? Let salt do it's error handling
+                        pass
                     break
                 if salt_cli_timeout_next:
-                    if self._terminal_timeout_set_explicitly is False:
-                        try:
-                            self.impl._terminal_timeout = int(arg) + 5
-                        except ValueError:
-                            # Not a number? Let salt do it's error handling
-                            pass
+                    try:
+                        self.impl._terminal_timeout = int(arg) + 5
+                    except ValueError:
+                        # Not a number? Let salt do it's error handling
+                        pass
                     break
                 if arg == "-t" or arg.startswith("--timeout"):
                     salt_cli_timeout_next = True
                     continue
             else:
+                # Always shave off 5 seconds to the passed --timeout argument so that the salt command times out
+                # before the terminal does
                 salt_cli_timeout = self.impl._terminal_timeout
-                if salt_cli_timeout and self._terminal_timeout_set_explicitly is False:
+                if salt_cli_timeout:
                     # Shave off a few seconds so that the salt command times out before the terminal does
                     salt_cli_timeout -= 5
                 if salt_cli_timeout:
