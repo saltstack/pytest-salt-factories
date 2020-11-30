@@ -942,19 +942,22 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                 if arg.startswith("--timeout="):
                     # Let's actually change the _terminal_timeout value which is used to
                     # calculate when the run() method should actually timeout
-                    salt_cli_timeout = arg.split("--timeout=")[-1]
                     try:
-                        self.impl._terminal_timeout = int(salt_cli_timeout) + 5
+                        salt_cli_timeout = int(arg.split("--timeout=")[-1])
                     except ValueError:
                         # Not a number? Let salt do it's error handling
-                        pass
+                        break
+                    if salt_cli_timeout >= self.impl._terminal_timeout:
+                        self.impl._terminal_timeout = int(salt_cli_timeout) + 5
                     break
                 if salt_cli_timeout_next:
                     try:
-                        self.impl._terminal_timeout = int(arg) + 5
+                        salt_cli_timeout = int(arg)
                     except ValueError:
                         # Not a number? Let salt do it's error handling
-                        pass
+                        break
+                    if salt_cli_timeout >= self.impl._terminal_timeout:
+                        self.impl._terminal_timeout = int(salt_cli_timeout) + 5
                     break
                 if arg == "-t" or arg.startswith("--timeout"):
                     salt_cli_timeout_next = True
