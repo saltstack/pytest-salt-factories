@@ -7,7 +7,6 @@ SSHD daemon factory implementation
 import logging
 import pathlib
 import shutil
-import socket
 import subprocess
 from datetime import datetime
 
@@ -17,6 +16,7 @@ from saltfactories.exceptions import FactoryFailure
 from saltfactories.factories.base import DaemonFactory
 from saltfactories.utils import ports
 from saltfactories.utils import running_username
+from saltfactories.utils import socket
 
 log = logging.getLogger(__name__)
 

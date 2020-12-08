@@ -11,13 +11,13 @@ PyTest Markers related utilities
 import contextlib
 import logging
 import os
-import socket
 import sys
 
 import salt.utils.path
 import salt.utils.win_functions
 
 from saltfactories.utils import ports
+from saltfactories.utils import socket
 
 log = logging.getLogger(__name__)
 

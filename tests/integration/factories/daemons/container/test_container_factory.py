@@ -1,9 +1,8 @@
-import socket
-
 import pytest
 
 from saltfactories.factories.daemons.container import ContainerFactory
 from saltfactories.utils import ports
+from saltfactories.utils import socket
 
 docker = pytest.importorskip("docker")
 from docker.errors import DockerException

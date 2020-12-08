@@ -67,7 +67,8 @@ def test_get_unused_localhost_port_unique():
 
     # We'll get the unique ports
     with mock.patch(
-        "socket.socket", new_callable=functools.partial(MockedCreateSocket, ports)
+        "saltfactories.utils.socket.socket",
+        new_callable=functools.partial(MockedCreateSocket, ports),
     ) as mocked_socket:
         for _ in range(num_calls):
             got_ports.append(ports_utils.get_unused_localhost_port(cached_seconds=1))
@@ -76,7 +77,8 @@ def test_get_unused_localhost_port_unique():
 
     # Let's get ports again. Since not enough time has passed, we won't get any ports
     with mock.patch(
-        "socket.socket", new_callable=functools.partial(MockedCreateSocket, ports + ports)
+        "saltfactories.utils.socket.socket",
+        new_callable=functools.partial(MockedCreateSocket, ports + ports),
     ) as mocked_socket:
         for _ in range(num_calls):
             with pytest.raises(IndexError):
@@ -89,7 +91,8 @@ def test_get_unused_localhost_port_unique():
     # Now, if we sleep one second, the cached ports will be gone and we'll get repeated ports
     time.sleep(1)
     with mock.patch(
-        "socket.socket", new_callable=functools.partial(MockedCreateSocket, ports)
+        "saltfactories.utils.socket.socket",
+        new_callable=functools.partial(MockedCreateSocket, ports),
     ) as mocked_socket:
         for _ in range(num_calls):
             got_ports.append(ports_utils.get_unused_localhost_port(cached_seconds=1))
