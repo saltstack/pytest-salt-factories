@@ -1354,7 +1354,7 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
             if not check_events:
                 break
             check_events -= {
-                (event.master_id, event.tag)
+                (event.daemon_id, event.tag)
                 for event in self.event_listener.get_events(check_events, after_time=started_at)
             }
             if check_events:

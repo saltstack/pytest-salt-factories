@@ -61,6 +61,15 @@ class PyTestEventForwardEngine:
         self.returner_address = self.opts["pytest-{}".format(self.role)]["returner_address"]
         self.running_event = threading.Event()
 
+    def __repr__(self):
+        return "<{} role={!r} id={!r}, returner_address={!r} running={!r}>".format(
+            self.__class__.__name__,
+            self.role,
+            self.id,
+            self.returner_address,
+            self.running_event.is_set(),
+        )
+
     def start(self):
         if self.running_event.is_set():
             return
@@ -75,12 +84,17 @@ class PyTestEventForwardEngine:
         opts = self.opts.copy()
         opts["file_client"] = "local"
         with salt.utils.event.get_event(
-            "master", sock_dir=opts["sock_dir"], transport=opts["transport"], opts=opts, listen=True
+            self.role,
+            sock_dir=opts["sock_dir"],
+            transport=opts["transport"],
+            opts=opts,
+            listen=True,
         ) as eventbus:
-            event_tag = "salt/master/{}/start".format(self.id)
-            log.info("%s firing event on engine start. Tag: %s", self, event_tag)
-            load = {"id": self.id, "tag": event_tag, "data": {}}
-            eventbus.fire_event(load, event_tag)
+            if self.role == "master":
+                event_tag = "salt/master/{}/start".format(self.id)
+                log.info("%s firing event on engine start. Tag: %s", self, event_tag)
+                load = {"id": self.id, "tag": event_tag, "data": {}}
+                eventbus.fire_event(load, event_tag)
             log.info("%s started", self)
             while self.running_event.is_set():
                 for event in eventbus.iter_events(full=True, auto_reconnect=True):

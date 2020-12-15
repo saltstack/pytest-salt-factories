@@ -34,7 +34,7 @@ def _convert_stamp(stamp):
 
 @attr.s(kw_only=True, slots=True, hash=True, frozen=True)
 class Event:
-    master_id = attr.ib()
+    daemon_id = attr.ib()
     tag = attr.ib()
     stamp = attr.ib(converter=_convert_stamp)
     data = attr.ib(hash=False)
@@ -106,9 +106,9 @@ class EventListener:
                 self.sentinel_event.set()
                 break
             try:
-                master_id, tag, data = decoded
+                daemon_id, tag, data = decoded
                 event = Event(
-                    master_id=master_id,
+                    daemon_id=daemon_id,
                     tag=tag,
                     stamp=data["_stamp"],
                     data=data,
@@ -117,7 +117,7 @@ class EventListener:
                 log.info("%s received event: %s", self, event)
                 self.store.append(event)
                 if tag == "salt/auth":
-                    auth_event_callback = self.auth_event_handlers.get(master_id)
+                    auth_event_callback = self.auth_event_handlers.get(daemon_id)
                     if auth_event_callback:
                         try:
                             auth_event_callback(data)
@@ -239,8 +239,8 @@ class EventListener:
             if event.stamp < after_time:
                 continue
             for pattern in set(patterns):
-                _master_id, _pattern = pattern
-                if event.master_id != _master_id:
+                _daemon_id, _pattern = pattern
+                if event.daemon_id != _daemon_id:
                     continue
                 if fnmatch.fnmatch(event.tag, _pattern):
                     log.debug("%s Found matching pattern: %s", self, pattern)
@@ -285,12 +285,12 @@ class EventListener:
                 if event.stamp < after_time:
                     continue
                 for pattern in set(patterns):
-                    _master_id, _pattern = pattern
-                    if event.master_id != _master_id:
+                    _daemon_id, _pattern = pattern
+                    if event.daemon_id != _daemon_id:
                         continue
                     if fnmatch.fnmatch(event.tag, _pattern):
                         log.debug("%s Found matching pattern: %s", self, pattern)
-                        patterns.remove((event.master_id, _pattern))
+                        patterns.remove((event.daemon_id, _pattern))
             if not patterns:
                 break
             if time.time() > timeout_at:

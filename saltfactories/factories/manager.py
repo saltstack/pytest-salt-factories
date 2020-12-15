@@ -122,6 +122,10 @@ class FactoriesManager:
         return saltfactories.CODE_ROOT_DIR / "utils" / "salt" / "engines"
 
     def final_minion_config_tweaks(self, config):
+        pytest_key = "pytest-minion"
+        if pytest_key not in config:
+            config[pytest_key] = {}
+        config[pytest_key]["returner_address"] = self.event_listener.address
         self.final_common_config_tweaks(config, "minion")
 
     def final_master_config_tweaks(self, config):
