@@ -229,22 +229,10 @@ class SubprocessFactoryImpl:
                 )
             self._terminal_stderr.close()
         try:
-            log_message = "Terminated {}.".format(self.factory)
-            if stdout or stderr:
-                log_message += " Process Output:"
-                if stdout:
-                    log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(
-                        stdout.strip()
-                    )
-                if stderr:
-                    log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(
-                        stderr.strip()
-                    )
-                log_message += "\n"
-            log.info(log_message)
             self._terminal_result = ProcessResult(
                 self._terminal.returncode, stdout, stderr, cmdline=self._terminal.args
             )
+            log.info(self._terminal_result)
             return self._terminal_result
         finally:
             self._terminal = None
@@ -1129,16 +1117,9 @@ class SystemdSaltDaemonFactoryImpl(DaemonFactoryImpl):
         )
         stdout = result.stdout.strip()
         stderr = result.stderr.strip()
-        log_message = "Completed Command: {}".format(result.args)
-        if stdout or stderr:
-            log_message += " Process Output:"
-            if stdout:
-                log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(stdout.strip())
-            if stderr:
-                log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(stderr.strip())
-            log_message += "\n"
-        log.info(log_message)
-        return ProcessResult(result.returncode, stdout, stderr, cmdline=result.args)
+        process_result = ProcessResult(result.returncode, stdout, stderr, cmdline=result.args)
+        log.info(process_result)
+        return process_result
 
     def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
         try:
@@ -1196,20 +1177,8 @@ class SystemdSaltDaemonFactoryImpl(DaemonFactoryImpl):
         ret = self.internal_run("journalctl", "--no-pager", "-u", self.get_service_name())
         stderr = ret.stdout
         try:
-            log_message = "Terminated {}.".format(self.factory)
-            if stdout or stderr:
-                log_message += " Process Output:"
-                if stdout:
-                    log_message += "\n>>>>> STDOUT >>>>>\n{}\n<<<<< STDOUT <<<<<".format(
-                        stdout.strip()
-                    )
-                if stderr:
-                    log_message += "\n>>>>> STDERR >>>>>\n{}\n<<<<< STDERR <<<<<".format(
-                        stderr.strip()
-                    )
-                log_message += "\n"
-            log.info(log_message)
             self._terminal_result = ProcessResult(exitcode, stdout, stderr, cmdline=cmdline)
+            log.info(self._terminal_result)
             return self._terminal_result
         finally:
             self._terminal = None
