@@ -232,7 +232,7 @@ class SubprocessFactoryImpl:
             self._terminal_result = ProcessResult(
                 self._terminal.returncode, stdout, stderr, cmdline=self._terminal.args
             )
-            log.info(self._terminal_result)
+            log.info("%s %s", self.factory.__class__.__name__, self._terminal_result)
             return self._terminal_result
         finally:
             self._terminal = None
@@ -1118,7 +1118,7 @@ class SystemdSaltDaemonFactoryImpl(DaemonFactoryImpl):
         stdout = result.stdout.strip()
         stderr = result.stderr.strip()
         process_result = ProcessResult(result.returncode, stdout, stderr, cmdline=result.args)
-        log.info(process_result)
+        log.info("%s %s", self.factory.__class__.__name__, process_result)
         return process_result
 
     def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
@@ -1178,7 +1178,7 @@ class SystemdSaltDaemonFactoryImpl(DaemonFactoryImpl):
         stderr = ret.stdout
         try:
             self._terminal_result = ProcessResult(exitcode, stdout, stderr, cmdline=cmdline)
-            log.info(self._terminal_result)
+            log.info("%s %s", self.factory.__class__.__name__, self._terminal_result)
             return self._terminal_result
         finally:
             self._terminal = None
