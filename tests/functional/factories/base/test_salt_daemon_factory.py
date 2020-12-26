@@ -69,7 +69,7 @@ def test_extra_cli_arguments_after_first_failure(
         daemon.start()
     output_file_contents = output_file.read().splitlines()
     expected = [
-        "{} --config-dir={} --log-level=quiet".format(script, config_dir.strpath),
+        "{} --config-dir={} --log-level=critical".format(script, config_dir.strpath),
         "{} --config-dir={} --log-level=debug".format(script, config_dir.strpath),
     ]
     assert output_file_contents == expected

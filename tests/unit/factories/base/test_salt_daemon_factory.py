@@ -42,7 +42,7 @@ def test_default_cli_flags(config_dir, config_file, cli_script_name):
         sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir.strpath),
-        "--log-level=quiet",
+        "--log-level=critical",
     ]
     proc = SaltDaemonFactory(start_timeout=1, cli_script_name=cli_script_name, config=config)
     cmdline = proc.build_cmdline()
@@ -79,7 +79,7 @@ def test_override_config_dir(config_dir, config_file, cli_script_name, flag):
 
     default_timeout = 10
     config = {"conf_file": config_file, "id": "the-id"}
-    expected = [sys.executable, cli_script_name, "--log-level=quiet"] + args
+    expected = [sys.executable, cli_script_name, "--log-level=critical"] + args
     proc = SaltDaemonFactory(start_timeout=1, cli_script_name=cli_script_name, config=config)
     cmdline = proc.build_cmdline(*args)
     assert cmdline == expected

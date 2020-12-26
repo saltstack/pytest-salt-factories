@@ -51,7 +51,7 @@ def test_default_cli_flags(minion_id, config_dir, config_file, cli_script_name):
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "test.ping",
     ]
@@ -106,7 +106,7 @@ def test_override_output(minion_id, config_dir, config_file, cli_script_name, fl
             sys.executable,
             cli_script_name,
             "--config-dir={}".format(config_dir.strpath),
-            "--log-level=quiet",
+            "--log-level=critical",
             minion_id,
         ]
         + flag_overrides_args
@@ -137,7 +137,7 @@ def test_override_output_indent(minion_id, config_dir, config_file, cli_script_n
             cli_script_name,
             "--config-dir={}".format(config_dir.strpath),
             "--out=json",
-            "--log-level=quiet",
+            "--log-level=critical",
             minion_id,
         ]
         + flag_overrides_args
@@ -163,7 +163,7 @@ def test_cli_timeout_lesser_than_timeout_kw(minion_id, config_dir, config_file, 
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "--timeout",
         "6",
@@ -206,7 +206,7 @@ def test_cli_timeout_matches_timeout_kw(minion_id, config_dir, config_file, cli_
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "--timeout",
         "20",
@@ -249,7 +249,7 @@ def test_cli_timeout_greater_than_timeout_kw(minion_id, config_dir, config_file,
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "--timeout",
         "60",
@@ -293,7 +293,7 @@ def test_cli_timeout_updates_to_timeout_kw_minus_5(
         "--timeout={}".format(explicit_timeout - 5),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "test.ping",
     ]
@@ -334,7 +334,7 @@ def test_cli_timeout_updates_to_default_timeout_minus_5(
         "--timeout={}".format(default_timeout - 5),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "test.ping",
     ]
@@ -379,7 +379,7 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
             "--config-dir={}".format(config_dir.strpath),
             "--out=json",
             "--out-indent=0",
-            "--log-level=quiet",
+            "--log-level=critical",
             minion_id,
         ]
         + flag_overrides_args
@@ -420,7 +420,7 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
             "--config-dir={}".format(config_dir.strpath),
             "--out=json",
             "--out-indent=0",
-            "--log-level=quiet",
+            "--log-level=critical",
             minion_id,
         ]
         + flag_overrides_args
@@ -462,7 +462,7 @@ def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name
             cli_script_name,
             "--out=json",
             "--out-indent=0",
-            "--log-level=quiet",
+            "--log-level=critical",
             minion_id,
         ]
         + flag_overrides_args
@@ -498,7 +498,7 @@ def test_non_string_cli_flags(minion_id, config_dir, config_file, cli_script_nam
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "test.ping",
         "foo={}".format(json.dumps(foo)),
@@ -521,7 +521,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "test.ping",
     ]
@@ -543,7 +543,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "test.ping",
     ]
@@ -566,7 +566,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "test.ping",
     ]
@@ -588,7 +588,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         "--config-dir={}".format(config_dir.strpath),
         "--out=json",
         "--out-indent=0",
-        "--log-level=quiet",
+        "--log-level=critical",
         minion_id,
         "test.ping",
         "extra={}".format(json.dumps(extra_kwargs)),
