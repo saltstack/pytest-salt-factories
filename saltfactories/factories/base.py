@@ -999,8 +999,8 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                 if arg.startswith("--log-level="):
                     break
             else:
-                # Default to being quiet on console output
-                cmdline.append("--log-level=quiet")
+                # Default to being almost quiet on console output
+                cmdline.append("--log-level=critical")
 
         if minion_tgt:
             cmdline.append(minion_tgt)
@@ -1327,8 +1327,8 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
             if arg.startswith("--log-level="):
                 break
         else:
-            # Default to being quiet on console output
-            _args.append("--log-level=quiet")
+            # Default to being almost quiet on console output
+            _args.append("--log-level=critical")
         cmdline = super().build_cmdline(*(_args + list(args)))
         if self.python_executable:
             if cmdline[0] != self.python_executable:
