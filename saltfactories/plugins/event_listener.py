@@ -62,6 +62,9 @@ class MatchedEvents:
     def found_all_events(self):
         return (not self.missed) is True
 
+    def __iter__(self):
+        return iter(self.matches)
+
 
 @attr.s(kw_only=True, slots=True, hash=True)
 class EventListener:
