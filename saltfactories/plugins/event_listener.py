@@ -38,6 +38,7 @@ class Event:
     tag = attr.ib()
     stamp = attr.ib(converter=_convert_stamp)
     data = attr.ib(hash=False)
+    full_data = attr.ib(hash=False)
     expire_seconds = attr.ib(hash=False)
     _expire_at = attr.ib(init=False, hash=False)
 
@@ -107,11 +108,19 @@ class EventListener:
                 break
             try:
                 daemon_id, tag, data = decoded
+                # Salt's event data has some "private" keys, for example, "_stamp" which
+                # get in the way of direct assertions.
+                # We'll just store a full_data attribute and clean up the regular data of these keys
+                full_data = copy.deepcopy(data)
+                for key in list(data):
+                    if key.startswith("_"):
+                        data.pop(key)
                 event = Event(
                     daemon_id=daemon_id,
                     tag=tag,
-                    stamp=data["_stamp"],
+                    stamp=full_data["_stamp"],
                     data=data,
+                    full_data=full_data,
                     expire_seconds=self.timeout,
                 )
                 log.info("%s received event: %s", self, event)
