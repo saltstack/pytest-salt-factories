@@ -53,6 +53,16 @@ class Event:
         return True
 
 
+@attr.s(kw_only=True, slots=True, hash=True, frozen=True)
+class MatchedEvents:
+    matches = attr.ib()
+    missed = attr.ib()
+
+    @property
+    def found_all_events(self):
+        return (not self.missed) is True
+
+
 @attr.s(kw_only=True, slots=True, hash=True)
 class EventListener:
     timeout = attr.ib(default=120)
@@ -270,6 +280,13 @@ class EventListener:
         return found_events
 
     def wait_for_events(self, patterns, timeout=30, after_time=None):
+        """
+        Wait for a set of patterns to match or until timeout is reached.
+
+        Returns:
+            :py:class:`saltfactories.plugins.event_listener.MatchedEvents`:
+                An instance of ``MatchedEvents``.
+        """
         if after_time is None:
             after_time = datetime.utcnow()
         elif isinstance(after_time, float):
@@ -299,13 +316,14 @@ class EventListener:
                         continue
                     if fnmatch.fnmatch(event.tag, _pattern):
                         log.debug("%s Found matching pattern: %s", self, pattern)
+                        found_events.add(event)
                         patterns.remove((event.daemon_id, _pattern))
             if not patterns:
                 break
             if time.time() > timeout_at:
                 break
             time.sleep(0.5)
-        return not patterns
+        return MatchedEvents(matches=found_events, missed=patterns)
 
     def register_auth_event_handler(self, master_id, callback):
         self.auth_event_handlers[master_id] = callback
