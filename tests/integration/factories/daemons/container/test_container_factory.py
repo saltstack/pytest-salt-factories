@@ -52,7 +52,7 @@ def test_spawn_container(docker_container, echo_server_port):
         # Get any welcome message from the server
         while True:
             try:
-                data = client.recv(4096)
+                client.recv(4096)
             except socket.timeout:
                 break
         client.send(message)

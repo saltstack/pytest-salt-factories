@@ -213,12 +213,8 @@ def _lint(session, rcfile, flags, paths):
     cmd_args = ["pylint", "--rcfile={}".format(rcfile)] + list(flags) + list(paths)
 
     stdout = tempfile.TemporaryFile(mode="w+b")
-    lint_failed = False
     try:
         session.run(*cmd_args, stdout=stdout)
-    except CommandFailed:
-        lint_failed = True
-        raise
     finally:
         stdout.seek(0)
         contents = stdout.read()

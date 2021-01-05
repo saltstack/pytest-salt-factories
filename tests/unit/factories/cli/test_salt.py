@@ -45,7 +45,7 @@ def test_missing_minion_id_raises_exception(minion_id, config_dir, config_file, 
     args = ["test.ping"]
     proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
     with pytest.raises(RuntimeError) as exc:
-        cmdline = proc.build_cmdline(*args)
+        proc.build_cmdline(*args)
     assert (
         str(exc.value) == "The `minion_tgt` keyword argument is mandatory for the salt CLI factory"
     )

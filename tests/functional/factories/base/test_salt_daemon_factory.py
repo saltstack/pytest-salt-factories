@@ -65,7 +65,7 @@ def test_extra_cli_arguments_after_first_failure(
     )
     # Make sure the daemon is terminated no matter what
     request.addfinalizer(daemon.terminate)
-    with pytest.raises(FactoryNotStarted) as exc:
+    with pytest.raises(FactoryNotStarted):
         daemon.start()
     output_file_contents = output_file.read().splitlines()
     expected = [

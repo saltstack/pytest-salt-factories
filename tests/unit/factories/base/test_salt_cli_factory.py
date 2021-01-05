@@ -452,7 +452,6 @@ def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name
     else:
         flag_overrides_args = [flag, passed_config_dir]
 
-    default_timeout = 10
     config = {"conf_file": config_file, "id": "the-id"}
     args = flag_overrides_args + ["test.ping"]
     kwargs = {"minion_tgt": minion_id}

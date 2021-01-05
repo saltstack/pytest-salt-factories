@@ -77,7 +77,6 @@ def test_override_config_dir(config_dir, config_file, cli_script_name, flag):
     else:
         args = [flag, passed_config_dir]
 
-    default_timeout = 10
     config = {"conf_file": config_file, "id": "the-id"}
     expected = [sys.executable, cli_script_name, "--log-level=critical"] + args
     proc = SaltDaemonFactory(start_timeout=1, cli_script_name=cli_script_name, config=config)

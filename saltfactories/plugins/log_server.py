@@ -81,7 +81,7 @@ class LogServer:
         exit_timeout = None
         try:
             puller.bind(address)
-        except zmq.ZMQError as exc:
+        except zmq.ZMQError:
             log.exception("%s Unable to bind to puller at %s", self, address)
             return
         try:
@@ -139,7 +139,7 @@ class LogServer:
                     record = logging.makeLogRecord(record_dict)
                     logger = logging.getLogger(record.name)
                     logger.handle(record)
-                except (EOFError, KeyboardInterrupt, SystemExit) as exc:
+                except (EOFError, KeyboardInterrupt, SystemExit):
                     break
                 except Exception as exc:  # pylint: disable=broad-except
                     log.warning(
