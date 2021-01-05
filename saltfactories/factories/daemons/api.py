@@ -16,7 +16,6 @@ from saltfactories.factories.base import SaltDaemonFactory
 @attr.s(kw_only=True, slots=True)
 class SaltApiFactory(SaltDaemonFactory):
     def __attrs_post_init__(self):
-        super().__attrs_post_init__()
         if "rest_cherrypy" in self.config:
             self.check_ports = [self.config["rest_cherrypy"]["port"]]
         elif "rest_tornado" in self.config:
@@ -26,6 +25,7 @@ class SaltApiFactory(SaltDaemonFactory):
                 "The salt-master configuration for this salt-api instance does not seem to have "
                 "any api properly configured."
             )
+        super().__attrs_post_init__()
 
     @classmethod
     def _configure(
