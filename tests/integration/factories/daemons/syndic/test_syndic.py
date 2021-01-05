@@ -97,9 +97,7 @@ def syndic_master_salt_cli(syndic_master, syndic_minion, minion_2):
 
 
 @pytest.fixture(scope="module")
-def syndic(
-    request, salt_factories, master_of_masters, minion_1, syndic_master, syndic_minion, minion_2
-):
+def syndic(salt_factories, master_of_masters, minion_1, syndic_master, syndic_minion, minion_2):
     """
     This syndic will run in tandem with master-2, connected to the upstream
     master-of-masters master.

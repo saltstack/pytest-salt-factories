@@ -9,7 +9,7 @@ from saltfactories.utils import random_string
 
 
 @pytest.fixture(scope="module")
-def master(request, salt_factories):
+def master(salt_factories):
     factory = salt_factories.get_salt_master_daemon(
         random_string("master-"), config_overrides={"max_open_files": 4096}
     )
@@ -18,14 +18,14 @@ def master(request, salt_factories):
 
 
 @pytest.fixture(scope="module")
-def minion(request, master):
+def minion(master):
     factory = master.get_salt_minion_daemon(random_string("minion-1-"))
     with factory.started():
         yield factory
 
 
 @pytest.fixture
-def minion_3(request, master):
+def minion_3(master):
     factory = master.get_salt_minion_daemon(random_string("minion-3-"))
     with factory.started():
         yield factory
@@ -133,7 +133,7 @@ def test_salt_key(master, minion, minion_3, salt_key):
 
 @pytest.mark.skip_on_windows
 @pytest.mark.skip_on_salt_system_install
-def test_exit_status_unknown_user(request, salt_factories):
+def test_exit_status_unknown_user(salt_factories):
     master = salt_factories.get_salt_master_daemon(
         "set-exitcodes", config_overrides={"user": "unknown-user"}
     )

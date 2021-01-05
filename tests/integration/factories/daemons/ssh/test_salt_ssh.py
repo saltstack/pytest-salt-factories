@@ -20,7 +20,7 @@ def sshd(salt_factories):
 
 
 @pytest.fixture(scope="module")
-def master(request, salt_factories):
+def master(salt_factories):
     return salt_factories.get_salt_master_daemon(random_string("master-"))
 
 

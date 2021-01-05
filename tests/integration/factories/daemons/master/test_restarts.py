@@ -4,7 +4,7 @@ from saltfactories.utils import random_string
 
 
 @pytest.fixture(scope="module")
-def master(request, salt_factories):
+def master(salt_factories):
     factory = salt_factories.get_salt_master_daemon(
         random_string("master-"), config_overrides={"max_open_files": 4096}
     )
