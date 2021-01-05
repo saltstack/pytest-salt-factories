@@ -960,7 +960,6 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
 
         # Handle the output flag
         if self.__cli_output_supported__:
-            json_output = False
             for idx, arg in enumerate(args):
                 if arg in ("--out", "--output"):
                     self.__json_output__ = args[idx + 1] == "json"
@@ -1113,16 +1112,11 @@ class SystemdSaltDaemonFactoryImpl(DaemonFactoryImpl):
         return process_result
 
     def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
-        try:
-            return super().start(
-                *extra_cli_arguments,
-                max_start_attempts=max_start_attempts,
-                start_timeout=start_timeout
-            )
-        except FactoryNotStarted:  # pylint: disable=try-except-raise
-            raise
-        else:
-            atexit.register(self.terminate)
+        started = super().start(
+            *extra_cli_arguments, max_start_attempts=max_start_attempts, start_timeout=start_timeout
+        )
+        atexit.register(self.terminate)
+        return started
 
     def _terminate(self):
         """
