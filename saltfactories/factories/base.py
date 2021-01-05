@@ -908,12 +908,11 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
             self.__merge_json_output__ = merge_json_output
         cmdline = []
 
-        args = list(args)
+        # Convert all passed in arguments to strings
+        args = [str(arg) for arg in args]
 
         # Handle the config directory flag
         for arg in args:
-            if not isinstance(arg, str):
-                continue
             if arg.startswith("--config-dir="):
                 break
             if arg in ("-c", "--config-dir"):
@@ -925,8 +924,6 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
         if self.__cli_timeout_supported__:
             salt_cli_timeout_next = False
             for arg in args:
-                if not isinstance(arg, str):
-                    continue
                 if arg.startswith("--timeout="):
                     # Let's actually change the _terminal_timeout value which is used to
                     # calculate when the run() method should actually timeout
@@ -965,8 +962,6 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
         if self.__cli_output_supported__:
             json_output = False
             for idx, arg in enumerate(args):
-                if not isinstance(arg, str):
-                    continue
                 if arg in ("--out", "--output"):
                     self.__json_output__ = args[idx + 1] == "json"
                     break
@@ -979,8 +974,6 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                 self.__json_output__ = True
             if self.__json_output__:
                 for arg in args:
-                    if not isinstance(arg, str):
-                        continue
                     if arg in ("--out-indent", "--output-indent"):
                         break
                     if arg.startswith(("--out-indent=", "--output-indent=")):
@@ -992,8 +985,6 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
         if self.__cli_log_level_supported__:
             # Handle the logging flag
             for arg in args:
-                if not isinstance(arg, str):
-                    continue
                 if arg in ("-l", "--log-level"):
                     break
                 if arg.startswith("--log-level="):
