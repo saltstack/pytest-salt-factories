@@ -15,7 +15,6 @@ COVERAGE_VERSION_REQUIREMENT = "coverage==5.2"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000.1"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
-USE_SYSTEM_PYTHON = "USE_SYSTEM_PYTHON" in os.environ
 IS_WINDOWS = sys.platform.lower().startswith("win")
 
 if not IS_WINDOWS:

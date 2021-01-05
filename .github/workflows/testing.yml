@@ -238,17 +238,12 @@ jobs:
         for service in $(sudo systemctl list-unit-files | grep salt | grep -v @ | awk '{ print $1 }'); do sudo systemctl stop $service; done
 
     - name: Install Test Requirements
-      env:
-        USE_SYSTEM_PYTHON: 1
-        SALT_FACTORIES_SYSTEM_INSTALL: 1
       run: |
         sudo -E nox --force-color -e tests --no-venv --install-only
 
     - name: Test
       id: run-tests
       env:
-        USE_SYSTEM_PYTHON: 1
-        SALT_FACTORIES_SYSTEM_INSTALL: 1
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         sudo -E nox --force-color -e tests --no-venv -- -vv tests/
