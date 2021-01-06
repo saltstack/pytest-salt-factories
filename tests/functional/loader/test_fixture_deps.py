@@ -1,0 +1,47 @@
+import logging
+from unittest.mock import patch
+
+import pytest
+
+import saltfactories
+
+try:
+    saltfactories.__salt__  # pylint: disable=pointless-statement
+    HAS_SALT_DUNDER = True
+except AttributeError:
+    HAS_SALT_DUNDER = False
+
+log = logging.getLogger(__name__)
+
+
+@pytest.fixture
+def pre_loader_modules_patched_fixture():
+    with pytest.raises(AttributeError):
+        assert isinstance(saltfactories.__salt__, dict)
+    yield False
+
+
+@pytest.fixture
+def configure_loader_modules(pre_loader_modules_patched_fixture):
+    return {
+        saltfactories: {
+            "__salt__": {"test.echo": lambda x: x, "foo": pre_loader_modules_patched_fixture}
+        }
+    }
+
+
+@pytest.fixture
+def fixture_that_needs_loader_modules_patched():
+    assert saltfactories.__salt__["foo"] is False
+    with patch.dict(saltfactories.__salt__, {"foo": True}):
+        assert saltfactories.__salt__["foo"] is True
+        yield
+    assert saltfactories.__salt__["foo"] is False
+
+
+def test_fixture_deps(fixture_that_needs_loader_modules_patched):
+    assert (
+        HAS_SALT_DUNDER is False
+    ), "Weirdly, the saltfactories module has a __salt__ dunder defined. That's a bug!"
+    assert saltfactories.__salt__["foo"] is True
+    assert saltfactories.__salt__["test.echo"]("foo") == "foo"

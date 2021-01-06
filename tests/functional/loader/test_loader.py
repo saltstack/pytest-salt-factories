@@ -24,10 +24,29 @@ def test_loader_mocking():
     assert saltfactories.__salt__["test.echo"]("foo") == "foo"
 
 
+def test_loader_mocking_through_runpytest(testdir):
+    testdir.makepyfile(
+        """
+        import pytest
+        import saltfactories
+
+        @pytest.fixture
+        def configure_loader_modules():
+            return {saltfactories: {"__salt__": {"test.echo": lambda x: x}}}
+
+        def test_one():
+            assert saltfactories.__salt__["test.echo"]("foo") == "foo"
+        """
+    )
+    res = testdir.runpytest()
+    res.assert_outcomes(passed=1)
+
+
 def test_configure_loader_modules_not_a_fixture(testdir):
     testdir.makepyfile(
         """
         import pytest
+        import saltfactories
 
         def configure_loader_modules():
             return {saltfactories: {"__salt__": {"test.echo": lambda x: x}}}
