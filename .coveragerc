@@ -1,13 +1,15 @@
 [run]
 branch = True
 cover_pylib = False
+parallel = True
+concurrency = multiprocessing
 relative_files = True
 
 omit =
   .nox/*
   setup.py
   saltfactories/__init__.py
-  saltfactories/_version.py
+  saltfactories/version.py
   saltfactories/utils/compat.py
 
 [report]
@@ -32,7 +34,7 @@ omit =
   .nox/*
   setup.py
   saltfactories/__init__.py
-  saltfactories/_version.py
+  saltfactories/version.py
   saltfactories/utils/compat.py
 
 
