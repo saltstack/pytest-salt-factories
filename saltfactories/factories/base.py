@@ -185,7 +185,7 @@ class SubprocessFactoryImpl:
                 self._terminal.kill()
             try:
                 # Allow the process to exit by itself in case slow_stop is True
-                self._terminal.wait(5)
+                self._terminal.wait(10)
             except subprocess.TimeoutExpired:
                 # The process failed to stop, no worries, we'll make sure it exit along with it's
                 # child processes bellow
@@ -372,7 +372,7 @@ class ProcessFactory(SubprocessFactoryBase):
     @default_timeout.default
     def _set_default_timeout(self):
         if not sys.platform.startswith(("win", "darwin")):
-            return 30
+            return 60
         # Windows and macOS are just slower.
         return 120
 
@@ -933,7 +933,7 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                         # Not a number? Let salt do it's error handling
                         break
                     if salt_cli_timeout >= self.impl._terminal_timeout:
-                        self.impl._terminal_timeout = int(salt_cli_timeout) + 5
+                        self.impl._terminal_timeout = int(salt_cli_timeout) + 10
                     break
                 if salt_cli_timeout_next:
                     try:
@@ -942,20 +942,18 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
                         # Not a number? Let salt do it's error handling
                         break
                     if salt_cli_timeout >= self.impl._terminal_timeout:
-                        self.impl._terminal_timeout = int(salt_cli_timeout) + 5
+                        self.impl._terminal_timeout = int(salt_cli_timeout) + 10
                     break
                 if arg == "-t" or arg.startswith("--timeout"):
                     salt_cli_timeout_next = True
                     continue
             else:
-                # Always shave off 5 seconds to the passed --timeout argument so that the salt command times out
-                # before the terminal does
+                # Pass the default timeout to salt and increase the internal timeout by 10 seconds to
+                # allow salt to exit cleanly.
                 salt_cli_timeout = self.impl._terminal_timeout
                 if salt_cli_timeout:
-                    # Shave off a few seconds so that the salt command times out before the terminal does
-                    salt_cli_timeout -= 5
-                if salt_cli_timeout:
-                    # If it's still a positive number, add it to the salt command CLI flags
+                    self.impl._terminal_timeout = salt_cli_timeout + 10
+                    # Add it to the salt command CLI flags
                     cmdline.append("--timeout={}".format(salt_cli_timeout))
 
         # Handle the output flag

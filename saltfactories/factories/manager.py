@@ -97,7 +97,7 @@ class FactoriesManager:
             self.root_dir = pathlib.Path("/")
         if self.start_timeout is None:
             if not sys.platform.startswith(("win", "darwin")):
-                self.start_timeout = 30
+                self.start_timeout = 60
             else:
                 # Windows and macOS are just slower
                 self.start_timeout = 120
