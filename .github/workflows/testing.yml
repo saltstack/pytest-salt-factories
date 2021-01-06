@@ -202,7 +202,7 @@ jobs:
 #        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
 
   Linux-System-Install:
-    runs-on: ubuntu-latest
+    runs-on: 'ubuntu-20.04'
     needs: Pre-Commit
 
     timeout-minutes: 15
