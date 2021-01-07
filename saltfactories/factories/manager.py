@@ -61,9 +61,9 @@ class FactoriesManager:
             can be written down to disk.
         start_timeout(int):
             The amount of time, in seconds, to wait, until a subprocess is considered as not started.
-        stats_processes(:py:class:`~collections.OrderedDict`):
-            This will be an `OrderedDict` instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
-            hook accessible at `stats_processes` on the `session` attribute of the :fixture:`request`.
+        stats_processes(:py:class:`saltfactories.plugins.sysstats.StatsProcesses`):
+            This will be an `StatsProcesses` class instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
+            hook accessible as a session scoped `stats_processes` fixture.
         system_install(bool):
             If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
             salt system paths apply.

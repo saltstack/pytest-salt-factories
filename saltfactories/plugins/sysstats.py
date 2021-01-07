@@ -14,6 +14,26 @@ import pytest
 
 
 @attr.s(kw_only=True, slots=True, hash=True)
+class StatsProcesses:
+    processes = attr.ib(init=False, default=attr.Factory(OrderedDict), hash=False)
+
+    def add(self, display_name, process):
+        if isinstance(process, int):
+            # This is a process pid
+            process = psutil.Process(process)
+        self.processes[display_name] = process
+
+    def remove(self, display_name):
+        self.processes.pop(display_name, None)
+
+    def items(self):
+        return self.processes.items()
+
+    def __iter__(self):
+        return iter(self.processes)
+
+
+@attr.s(kw_only=True, slots=True, hash=True)
 class SystemStatsReporter:
 
     config = attr.ib(repr=False, hash=False)
@@ -119,7 +139,7 @@ class SystemStatsReporter:
                     continue
             if remove_from_stats:
                 for name in remove_from_stats:
-                    self.stats_processes.pop(name)
+                    self.stats_processes.remove(name)
 
 
 def pytest_addoption(parser):
@@ -160,13 +180,20 @@ def pytest_sessionstart(session):
         session.config.getoption("--sys-stats") is True
         and session.config.getoption("--no-sys-stats") is False
     ):
-        stats_processes = OrderedDict((("Test Suite Run", psutil.Process(os.getpid())),))
+        stats_processes = StatsProcesses()
+        stats_processes.add("Test Suite Run", os.getpid())
     else:
         stats_processes = None
-    session.stats_processes = stats_processes
+
+    session.config.pluginmanager.register(stats_processes, "saltfactories-sysstats-processes")
 
     terminalreporter = session.config.pluginmanager.getplugin("terminalreporter")
     sys_stats_reporter = SystemStatsReporter(
         config=session.config, stats_processes=stats_processes, terminalreporter=terminalreporter
     )
     session.config.pluginmanager.register(sys_stats_reporter, "saltfactories-sysstats-reporter")
+
+
+@pytest.fixture(scope="session")
+def stats_processes(request):
+    return request.config.pluginmanager.get_plugin("saltfactories-sysstats-processes")

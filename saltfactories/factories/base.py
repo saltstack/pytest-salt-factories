@@ -720,12 +720,12 @@ class DaemonFactory(SubprocessFactoryBase):
     def _add_factory_to_stats_processes(self):
         if self.factories_manager and self.factories_manager.stats_processes is not None:
             display_name = self.get_display_name()
-            self.factories_manager.stats_processes[display_name] = psutil.Process(self.pid)
+            self.factories_manager.stats_processes.add(display_name, self.pid)
 
     def _remove_factory_from_stats_processes(self):
         if self.factories_manager and self.factories_manager.stats_processes is not None:
             display_name = self.get_display_name()
-            self.factories_manager.stats_processes.pop(display_name, None)
+            self.factories_manager.stats_processes.remove(display_name)
 
     def _terminate_processes_matching_listen_ports(self):
         if not self.listen_ports:
