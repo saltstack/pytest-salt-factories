@@ -335,6 +335,11 @@ class EventListener:
         self.auth_event_handlers.pop(master_id, None)
 
 
+@pytest.fixture(scope="session")
+def event_listener(request):
+    return request.config.pluginmanager.get_plugin("saltfactories-event-listener")
+
+
 def pytest_configure(config):
     event_listener = EventListener()
     config.pluginmanager.register(event_listener, "saltfactories-event-listener")

@@ -23,11 +23,6 @@ def minion(master):
         yield factory
 
 
-@pytest.fixture(scope="module")
-def event_listener(salt_factories):
-    return salt_factories.event_listener
-
-
 @pytest.fixture
 def salt_call_cli(minion):
     return minion.get_salt_call_cli()
