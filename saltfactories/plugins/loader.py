@@ -7,41 +7,51 @@ from saltfactories.utils.loader import LoaderModuleMock
 log = logging.getLogger(__name__)
 
 
-@pytest.hookimpl(tryfirst=True)
-def pytest_runtest_setup(item):
+@pytest.hookimpl(trylast=True)
+def pytest_collection_modifyitems(items):
     """
-    Inject the ``setup_loader_mock`` fixture if the test module has a ``configure_loader_modules``
-    fixture defined.
+    Iterate through the collected items, in particular their test modules, to see if there's a function
+    named ``configure_loader_modules``. If there is, assert that it's a fixture. If not, raise an error.
+    """
+    seen_modules = set()
+    for item in items:
+        if item.module.__name__ in seen_modules:
+            # No need to check the same module more than once
+            continue
+        seen_modules.add(item.module.__name__)
+        # If the test module defines a configure_loader_modules function, let's confirm that it's actually a fixture
+        try:
+            fixture = item.module.configure_loader_modules
+        except AttributeError:
+            # The test module does not define a `configure_loader_modules` function at all
+            continue
+        else:
+            # The test module defines a `configure_loader_modules` function. Is it a fixture?
+            try:
+                fixture._pytestfixturefunction
+            except AttributeError:
+                # It's not a fixture, raise an error
+                raise RuntimeError(
+                    "The module {} defines a configure_loader_modules function but "
+                    "that function is not a fixture".format(item.module)
+                )
 
-    ``setup_loader_mock`` is what actually takes care of patching/mocking the salt dunders prior
-    to running the test.
+
+@pytest.fixture(autouse=True)
+def setup_loader_mock(request):
     """
-    # If the module defines a configure_loader_modules, we'll inject setup_loader_mock
-    # which is what actually sets up the salt loader mocking
+    Setup Salt's loader mocking/patching if the test module defines a ``configure_loader_modules`` fixture
+    """
+    # If the test module defines a configure_loader_modules function, we'll setup the LoaderModuleMock
+    # which is what actually sets up the salt loader mocking, if not, it's a no-op
     try:
-        fixture = item.module.configure_loader_modules
+        request.node.module.configure_loader_modules
     except AttributeError:
         # The test module does not define a `configure_loader_modules` function at all
-        pass
+        # Carry on testing
+        yield
     else:
-        # The test module defines a `configure_loader_modules` function. Is it a fixture?
-        try:
-            fixture._pytestfixturefunction
-        except AttributeError:
-            # It's not a fixture, raise an error
-            raise RuntimeError(
-                "The module {} defines a configure_loader_modules function but "
-                "that function is not a fixture".format(item.module)
-            )
-        else:
-            # It's a fixture. Inject `setup_loader_mock` as the first fixture because it needs to
-            # be evaluated as soon as possible to allow other fixtures to mock/patch the salt dunders
-            # prior to running the test
-            if "setup_loader_mock" not in item.fixturenames:
-                item.fixturenames.insert(0, "setup_loader_mock")
-
-
-@pytest.fixture
-def setup_loader_mock(configure_loader_modules):
-    with LoaderModuleMock(configure_loader_modules) as loader_mock:
-        yield loader_mock
+        # Mock salt's loader with what the `configure_loader_modules` fixture returns
+        configure_loader_modules = request.getfixturevalue("configure_loader_modules")
+        with LoaderModuleMock(configure_loader_modules) as loader_mock:
+            yield loader_mock

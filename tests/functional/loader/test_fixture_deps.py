@@ -14,6 +14,21 @@ except AttributeError:
 log = logging.getLogger(__name__)
 
 
+@pytest.fixture(autouse=True)
+def confirm_saltfactories_does_not_have_salt_dunders():
+    assert (
+        HAS_SALT_DUNDER is False
+    ), "Weirdly, the saltfactories module has a __salt__ dunder defined. That's a bug!"
+
+
+def confirm_saltfactories_does_not_have_salt_dunders_after_setup_loader_mock_terminates(
+    setup_loader_mock,
+):
+    yield
+    with pytest.raises(AttributeError):
+        assert isinstance(saltfactories.__salt__, dict)
+
+
 @pytest.fixture
 def pre_loader_modules_patched_fixture():
     with pytest.raises(AttributeError):
@@ -40,8 +55,5 @@ def fixture_that_needs_loader_modules_patched():
 
 
 def test_fixture_deps(fixture_that_needs_loader_modules_patched):
-    assert (
-        HAS_SALT_DUNDER is False
-    ), "Weirdly, the saltfactories module has a __salt__ dunder defined. That's a bug!"
     assert saltfactories.__salt__["foo"] is True
     assert saltfactories.__salt__["test.echo"]("foo") == "foo"
