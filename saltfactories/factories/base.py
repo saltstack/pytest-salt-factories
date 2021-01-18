@@ -100,7 +100,7 @@ class SubprocessFactoryImpl:
         """
         return self.factory.build_cmdline(*args)
 
-    def init_terminal(self, cmdline, **kwargs):
+    def init_terminal(self, cmdline, env=None, **kwargs):
         """
         Instantiate a terminal with the passed cmdline and kwargs and return it.
 
@@ -115,6 +115,9 @@ class SubprocessFactoryImpl:
                         __name__, self.__class__.__name__, key
                     )
                 )
+        environ = self.factory.environ.copy()
+        if env is not None:
+            environ.update(env)
         self._terminal_stdout = tempfile.SpooledTemporaryFile(512000, buffering=0)
         self._terminal_stderr = tempfile.SpooledTemporaryFile(512000, buffering=0)
         if platform.is_windows():
@@ -134,6 +137,7 @@ class SubprocessFactoryImpl:
             cwd=self.factory.cwd,
             universal_newlines=True,
             close_fds=close_fds,
+            env=environ,
         )
         # Reset the previous _terminal_result if set
         self._terminal_result = None
@@ -253,7 +257,7 @@ class SubprocessFactoryImpl:
         """
         cmdline = self.build_cmdline(*args, **kwargs)
         log.info("%s is running %r in CWD: %s ...", self.factory, cmdline, self.factory.cwd)
-        return self.init_terminal(cmdline, env=self.factory.environ)
+        return self.init_terminal(cmdline)
 
 
 @attr.s(kw_only=True)
