@@ -7,10 +7,11 @@ Simple salt engine which will setup a socket to accept connections allowing us t
 when a daemon is up and running
 """
 import atexit
+import collections.abc
+import datetime
 import logging
 import threading
 
-import salt.utils.event
 import zmq
 
 try:
@@ -19,6 +20,17 @@ try:
     HAS_MSGPACK = True
 except ImportError:
     HAS_MSGPACK = False
+
+import salt.utils.event
+
+try:
+    import salt.utils.immutabletypes as immutabletypes
+except ImportError:
+    immutabletypes = None
+try:
+    from salt.utils.data import CaseInsensitiveDict
+except ImportError:
+    CaseInsensitiveDict = None
 
 
 log = logging.getLogger(__name__)
@@ -48,6 +60,32 @@ def start():
     except Exception:  # pylint: disable=broad-except
         log.error("Failed to start PyTestEventForwardEngine", exc_info=True)
         raise
+
+
+def ext_type_encoder(obj):
+    """
+    Convert any types that msgpack cannot handle on it's own
+    """
+    if isinstance(obj, (datetime.datetime, datetime.date)):
+        # msgpack doesn't support datetime.datetime and datetime.date datatypes.
+        return obj.strftime("%Y%m%dT%H:%M:%S.%f")
+    # The same for immutable types
+    elif immutabletypes is not None and isinstance(obj, immutabletypes.ImmutableDict):
+        return dict(obj)
+    elif immutabletypes is not None and isinstance(obj, immutabletypes.ImmutableList):
+        return list(obj)
+    elif immutabletypes is not None and isinstance(obj, immutabletypes.ImmutableSet):
+        # msgpack can't handle set so translate it to tuple
+        return tuple(obj)
+    elif isinstance(obj, set):
+        # msgpack can't handle set so translate it to tuple
+        return tuple(obj)
+    elif CaseInsensitiveDict is not None and isinstance(obj, CaseInsensitiveDict):
+        return dict(obj)
+    elif isinstance(obj, collections.abc.MutableMapping):
+        return dict(obj)
+    # Nothing known exceptions found. Let msgpack raise its own.
+    return obj
 
 
 class PyTestEventForwardEngine:
@@ -105,7 +143,7 @@ class PyTestEventForwardEngine:
                     log.debug("%s Received Event; TAG: %r DATA: %r", self, tag, data)
                     forward = (self.id, tag, data)
                     try:
-                        dumped = msgpack.dumps(forward, use_bin_type=True)
+                        dumped = msgpack.dumps(forward, use_bin_type=True, default=ext_type_encoder)
                         push.send(dumped)
                         log.info("%s forwarded event: %r", self, forward)
                     except Exception:  # pylint: disable=broad-except

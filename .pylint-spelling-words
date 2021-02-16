@@ -23,6 +23,8 @@ containerfactory
 cp
 css
 cwd
+datatypes
+datetime
 deepcopy
 dmux
 dns
