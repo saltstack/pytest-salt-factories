@@ -12,6 +12,7 @@ import msgpack
 import pytest
 import zmq
 
+from saltfactories.utils import platform
 from saltfactories.utils import ports
 from saltfactories.utils import time
 
@@ -20,12 +21,23 @@ log = logging.getLogger(__name__)
 
 @attr.s(kw_only=True, slots=True, hash=True)
 class LogServer:
-    log_host = attr.ib(default="0.0.0.0")
-    log_port = attr.ib(default=attr.Factory(ports.get_unused_localhost_port))
+    log_host = attr.ib()
+    log_port = attr.ib()
     log_level = attr.ib()
     running_event = attr.ib(init=False, repr=False, hash=False)
     sentinel_event = attr.ib(init=False, repr=False, hash=False)
     process_queue_thread = attr.ib(init=False, repr=False, hash=False)
+
+    @log_host.default
+    def _default_log_host(self):
+        if platform.is_windows():
+            # Windows cannot bind to 0.0.0.0
+            return "127.0.0.1"
+        return "0.0.0.0"
+
+    @log_port.default
+    def _default_log_port(self):
+        return ports.get_unused_localhost_port()
 
     def start(self):
         log.info("%s starting...", self)
