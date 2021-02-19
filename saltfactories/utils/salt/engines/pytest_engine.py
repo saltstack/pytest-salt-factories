@@ -7,13 +7,17 @@ Simple salt engine which will setup a socket to accept connections allowing us t
 when a daemon is up and running
 """
 import atexit
-import collections.abc
 import datetime
 import logging
 import threading
 
 import zmq
 
+try:
+    from collections.abc import MutableMapping
+except ImportError:
+    # Py2 compat
+    from collections import MutableMapping
 try:
     import msgpack
 
@@ -82,7 +86,7 @@ def ext_type_encoder(obj):
         return tuple(obj)
     elif CaseInsensitiveDict is not None and isinstance(obj, CaseInsensitiveDict):
         return dict(obj)
-    elif isinstance(obj, collections.abc.MutableMapping):
+    elif isinstance(obj, MutableMapping):
         return dict(obj)
     # Nothing known exceptions found. Let msgpack raise its own.
     return obj
