@@ -22,12 +22,25 @@ except ImportError:
 try:
     from salt._logging.impl import LOG_LEVELS
     from salt._logging.mixins import ExcInfoOnLogLevelFormatMixin
-    from salt._logging.mixins import NewStyleClassMixin
 except ImportError:
     # This likely due to running backwards compatibility tests against older minions
     from salt.log.setup import LOG_LEVELS
     from salt.log.mixins import ExcInfoOnLogLevelFormatMixIn as ExcInfoOnLogLevelFormatMixin
-    from salt.log.mixins import NewStyleClassMixIn as NewStyleClassMixin
+try:
+    from salt._logging.mixins import NewStyleClassMixin
+except ImportError:
+    try:
+        # This likely due to running backwards compatibility tests against older minions
+        from salt.log.mixins import NewStyleClassMixIn as NewStyleClassMixin
+    except ImportError:
+        # NewStyleClassMixin was removed from salt
+
+        class NewStyleClassMixin(object):
+            """
+            A copy of Salt's previous NewStyleClassMixin implementation
+            """
+
+
 try:
     import msgpack
 
