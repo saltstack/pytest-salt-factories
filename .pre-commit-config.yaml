@@ -17,12 +17,12 @@ repos:
     hooks:
       - id: sort-pylint-spelling-words
         name: Sort PyLint Spelling Words File
-        entry: .pre-commit-hooks/sort-pylint-spelling-words.py
-        language: script
+        entry: python .pre-commit-hooks/sort-pylint-spelling-words.py
+        language: system
         files: ^\.pylint-spelling-words$
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.7.2
+    rev: v2.10.0
     hooks:
       - id: pyupgrade
         name: Rewrite Code to be Py3.5+
@@ -38,7 +38,7 @@ repos:
         exclude: ^(docs/.*\.py|saltfactories/factories/(cli|daemons)/__init__\.py)$
 
   - repo: https://github.com/asottile/reorder_python_imports
-    rev: v2.3.5
+    rev: v2.4.0
     hooks:
       - id: reorder-python-imports
         args: [
