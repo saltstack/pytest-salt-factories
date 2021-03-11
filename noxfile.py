@@ -16,11 +16,14 @@ SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000.1"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
 IS_WINDOWS = sys.platform.lower().startswith("win")
+IS_DARWIN = sys.platform.lower().startswith("darwin")
 
-if not IS_WINDOWS:
-    COVERAGE_FAIL_UNDER_PERCENT = 80
-else:
+if IS_WINDOWS:
     COVERAGE_FAIL_UNDER_PERCENT = 70
+elif IS_DARWIN:
+    COVERAGE_FAIL_UNDER_PERCENT = 75
+else:
+    COVERAGE_FAIL_UNDER_PERCENT = 80
 
 # Be verbose when running under a CI context
 PIP_INSTALL_SILENT = (
