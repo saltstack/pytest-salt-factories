@@ -16,7 +16,7 @@ def test_has_required_salt_state(testdir):
             assert True
         """
     )
-    res = testdir.runpytest_inprocess()
+    res = testdir.runpytest()
     res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
@@ -31,7 +31,7 @@ def test_missing_required_salt_state(testdir):
             assert True
         """
     )
-    res = testdir.runpytest_inprocess()
+    res = testdir.runpytest()
     res.assert_outcomes(skipped=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
@@ -87,6 +87,6 @@ def test_has_required_custom_salt_state(testdir):
             assert True
         """
     )
-    res = testdir.runpytest_inprocess()
+    res = testdir.runpytest()
     res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")

@@ -20,7 +20,7 @@ def test_runtime_error_raised_for_non_module_type_keys(testdir):
             assert True
         """
     )
-    res = testdir.runpytest_inprocess()
+    res = testdir.runpytest()
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(
         [
@@ -43,7 +43,7 @@ def test_runtime_error_raised_for_non_dict_values(testdir):
             assert True
         """
     )
-    res = testdir.runpytest_inprocess()
+    res = testdir.runpytest()
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(
         [
@@ -65,7 +65,7 @@ def test_runtime_error_raised_for_bad_fixture_name(testdir):
             assert True
         """
     )
-    res = testdir.runpytest_inprocess()
+    res = testdir.runpytest()
     res.stdout.fnmatch_lines(
         [
             "*RuntimeError:*defines a 'configure_loader_module' fixture but the "
@@ -91,7 +91,7 @@ def test_bad_fixture_name_as_plain_function_ok(testdir):
             assert True
         """
     )
-    res = testdir.runpytest_inprocess()
+    res = testdir.runpytest()
     res.assert_outcomes(passed=1)
 
 
@@ -109,7 +109,7 @@ def test_runtime_error_raised_when_sys_modules_is_not_list(testdir):
             assert True
         """
     )
-    res = testdir.runpytest_inprocess()
+    res = testdir.runpytest()
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(["*RuntimeError: 'sys.modules' must be a dictionary*"])
 
@@ -131,7 +131,7 @@ def test_runtime_error_raised_when_not_needed_dunders_are_passed(testdir, dunder
             dunder
         )
     )
-    res = testdir.runpytest_inprocess()
+    res = testdir.runpytest()
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(["*RuntimeError: No need to patch '{}'*".format(dunder)])
 
@@ -150,6 +150,6 @@ def test_runtime_error_raised_on_unknown_salt_dunders(testdir):
             assert True
         """
     )
-    res = testdir.runpytest_inprocess()
+    res = testdir.runpytest()
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(["*RuntimeError: Don't know how to handle '__foobar__'*"])
