@@ -9,6 +9,7 @@ saltfactories.utils.markers
 PyTest Markers related utilities
 """
 import contextlib
+import fnmatch
 import logging
 import os
 import sys
@@ -146,3 +147,41 @@ def skip_if_no_remote_network():
 
     if has_remote_network is False:
         return "No internet network connection was detected"
+
+
+def check_required_loader_attributes(loader_instance, loader_attr, required_items):
+    """
+    Args:
+        loader_instance(:py:class:`saltfactories.utils.functional.Loader`):
+            An instance of :py:class:`saltfactories.utils.functional.Loader`
+        loader_attr(str): The name of the minion attribute to check, such as 'modules' or 'states'
+        required_items(tuple): The items that must be part of the loader attribute for the decorated test
+    Returns:
+        set: The modules that are not available
+    """
+    required_salt_items = set(required_items)
+    available_items = list(getattr(loader_instance, loader_attr))
+    not_available_items = set()
+
+    name = "__not_available_{items}s__".format(items=loader_attr)
+    if not hasattr(loader_instance, name):
+        cached_not_available_items = set()
+        setattr(loader_instance, name, cached_not_available_items)
+        loader_instance._reload_all_funcs.append(cached_not_available_items.clear)
+    else:
+        cached_not_available_items = getattr(loader_instance, name)
+
+    for not_available_item in cached_not_available_items:
+        if not_available_item in required_salt_items:
+            not_available_items.add(not_available_item)
+            required_salt_items.remove(not_available_item)
+
+    for required_item_name in required_salt_items:
+        search_name = required_item_name
+        if "." not in search_name:
+            search_name += ".*"
+        if not fnmatch.filter(available_items, search_name):
+            not_available_items.add(required_item_name)
+            cached_not_available_items.add(required_item_name)
+
+    return not_available_items

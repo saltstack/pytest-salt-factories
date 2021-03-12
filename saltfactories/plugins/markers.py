@@ -9,6 +9,7 @@ import os
 import pytest
 
 import saltfactories.utils.compat
+import saltfactories.utils.functional
 import saltfactories.utils.markers
 import saltfactories.utils.platform
 
@@ -420,6 +421,48 @@ def pytest_runtest_setup(item):
                 "Passed an invalid platform to skip_unless_on_platforms: {}".format(exc)
             )
 
+    # Next are two special markers, requires_salt_modules and requires_salt_states. These need access to a
+    # saltfactories.utils.functional.Loader instance
+    # They will use a session_markers_loader fixture to gain access to that
+    session_markers_loader = item._request.getfixturevalue("session_markers_loader")
+    requires_salt_modules_marker = item.get_closest_marker("requires_salt_modules")
+    if requires_salt_modules_marker is not None:
+        required_salt_modules = requires_salt_modules_marker.args
+        if len(required_salt_modules) == 1 and isinstance(
+            required_salt_modules[0], (list, tuple, set)
+        ):
+            required_salt_modules = required_salt_modules[0]
+        required_salt_modules = set(required_salt_modules)
+        not_available_modules = saltfactories.utils.markers.check_required_loader_attributes(
+            session_markers_loader, "modules", required_salt_modules
+        )
+
+        if not_available_modules:
+            item._skipped_by_mark = True
+            if len(not_available_modules) == 1:
+                pytest.skip("Salt module '{}' is not available".format(*not_available_modules))
+            pytest.skip("Salt modules not available: {}".format(", ".join(not_available_modules)))
+
+    requires_salt_states_marker = item.get_closest_marker("requires_salt_states")
+    if requires_salt_states_marker is not None:
+        required_salt_states = requires_salt_states_marker.args
+        if len(required_salt_states) == 1 and isinstance(
+            required_salt_states[0], (list, tuple, set)
+        ):
+            required_salt_states = required_salt_states[0]
+        required_salt_states = set(required_salt_states)
+        not_available_states = saltfactories.utils.markers.check_required_loader_attributes(
+            session_markers_loader, "states", required_salt_states
+        )
+
+        if not_available_states:
+            item._skipped_by_mark = True
+            if len(not_available_states) == 1:
+                pytest.skip("Salt state module '{}' is not available".format(*not_available_states))
+            pytest.skip(
+                "Salt state modules not available: {}".format(", ".join(not_available_states))
+            )
+
 
 @pytest.mark.trylast
 def pytest_configure(config):
@@ -542,8 +585,35 @@ def pytest_configure(config):
         "netbsd=False, openbsd=False, aix=False): Pass True to one or more platform names to get the test skipped "
         "unless the chosen platforms match",
     )
+    config.addinivalue_line(
+        "markers",
+        "requires_salt_modules(*required_module_names): Skip if at least one module is not available.",
+    )
+    config.addinivalue_line(
+        "markers",
+        "requires_salt_states(*required_state_names): Skip if at least one state module is not available.",
+    )
 
     # Add keys to environ in order to support Salt's helper decorators while it does not migrate to pytest markers
     env2cli = (("DESTRUCTIVE_TESTS", "--run-destructive"), ("EXPENSIVE_TESTS", "--run-expensive"))
     for envkey, cliflag in env2cli:
         os.environ[str(envkey)] = str(config.getoption(cliflag)).lower()
+
+
+@pytest.fixture(scope="session")
+def session_markers_loader(salt_factories):
+    minion_id = "session-markers-minion"
+    config_overrides = {
+        "file_client": "local",
+        "features": {"enable_slsvars_fixes": True},
+    }
+    factory = salt_factories.get_salt_minion_daemon(
+        minion_id,
+        config_overrides=config_overrides,
+    )
+    loader_instance = saltfactories.utils.functional.Loaders(factory.config.copy())
+    # Sync Everything
+    loader_instance.modules.saltutil.sync_all()
+    # Reload Everything - This is required or custom modules in _modules will not be found
+    loader_instance.reload_all()
+    return loader_instance
