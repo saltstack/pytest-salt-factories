@@ -62,6 +62,7 @@ msg
 msgpack
 namespace
 ng
+nocover
 nodeid
 nox
 ordereddict

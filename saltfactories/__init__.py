@@ -1,7 +1,7 @@
 """
 NG PyTest Salt Plugin
 """
-# pragma: no cover
+# pragma: nocover
 import pathlib
 import re
 import sys

@@ -25,7 +25,7 @@ try:
     from docker.errors import APIError
 
     HAS_DOCKER = True
-except ImportError:  # pragma: no cover
+except ImportError:  # pragma: nocover
     HAS_DOCKER = False
 
     class APIError(Exception):
@@ -36,7 +36,7 @@ try:
     from requests.exceptions import ConnectionError as RequestsConnectionError
 
     HAS_REQUESTS = True
-except ImportError:  # pragma: no cover
+except ImportError:  # pragma: nocover
     HAS_REQUESTS = False
 
     class RequestsConnectionError(ConnectionError):

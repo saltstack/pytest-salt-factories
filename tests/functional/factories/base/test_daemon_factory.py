@@ -17,7 +17,7 @@ from saltfactories.utils.processes import _get_cmdline
 PROCESS_START_TIMEOUT = 2
 
 
-def kill_children(procs):  # pragma: no cover
+def kill_children(procs):  # pragma: nocover
     _, alive = psutil.wait_procs(procs, timeout=3)
     for p in alive:
         p.kill()
@@ -112,7 +112,7 @@ def test_daemon_process_termination(request, tempfiles):
     )
     daemon.terminate()
     assert psutil.pid_exists(daemon_pid) is False
-    for child in list(children):  # pragma: no cover
+    for child in list(children):  # pragma: nocover
         if psutil.pid_exists(child.pid):
             continue
         children.remove(child)
@@ -265,7 +265,7 @@ def test_started_context_manager(request, tempfiles, start_timeout):
         started = None
         with daemon.started(start_timeout=start_timeout):
             # We should not even be able to set the following variable
-            started = False  # pragma: no cover
+            started = False  # pragma: nocover
     assert started is None
     match = re.search(r"which took (?P<seconds>.*) seconds", str(exc.value))
     assert match
@@ -386,7 +386,7 @@ def test_context_manager_returns_class_instance(tempfiles):
     with pytest.raises(RuntimeError):
         with daemon as d:
             # We should not even be able to set the following variable
-            started = d.is_running()  # pragma: no cover
+            started = d.is_running()  # pragma: nocover
     assert d is None
     assert started is None
 
