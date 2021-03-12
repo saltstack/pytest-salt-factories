@@ -87,7 +87,7 @@ def setup_handlers():
     role = __opts__["__role"]
     pytest_key = "pytest-{}".format(role)
     pytest_config = __opts__[pytest_key]
-    log_opts = __opts__[pytest_key]["log"]
+    log_opts = pytest_config["log"]
     host_addr = log_opts.get("host")
     if not host_addr:
         import subprocess
