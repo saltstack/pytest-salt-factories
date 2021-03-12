@@ -13,6 +13,7 @@ repos:
       - id: check-merge-conflict  # Check for files that contain merge conflict strings.
       - id: check-ast             # Simply check whether files parse as valid python.
 
+  # ----- Formatting ------------------------------------------------------------------------------------------------>
   - repo: local
     hooks:
       - id: sort-pylint-spelling-words
@@ -72,3 +73,26 @@ repos:
           - saltpylint
           - pyenchant
           - salt>=3001
+  # <---- Formatting -------------------------------------------------------------------------------------------------
+
+  # ----- Security -------------------------------------------------------------------------------------------------->
+  - repo: https://github.com/PyCQA/bandit
+    rev: "1.7.0"
+    hooks:
+      - id: bandit
+        alias: bandit-salt
+        name: Run bandit against Salt
+        args: [--silent, -lll, --skip, B701]
+        exclude: >
+            (?x)^(
+                tests/.*
+            )$
+  - repo: https://github.com/PyCQA/bandit
+    rev: "1.7.0"
+    hooks:
+      - id: bandit
+        alias: bandit-tests
+        name: Run bandit against the test suite
+        args: [--silent, -lll, --skip, B701]
+        files: ^tests/.*
+  # <---- Security ---------------------------------------------------------------------------------------------------
