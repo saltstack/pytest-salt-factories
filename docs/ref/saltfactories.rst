@@ -19,6 +19,14 @@ Subpackages
 Submodules
 ----------
 
+saltfactories.cli module
+------------------------
+
+.. automodule:: saltfactories.cli
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 saltfactories.exceptions module
 -------------------------------
 
