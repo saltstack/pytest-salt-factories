@@ -59,6 +59,6 @@ def test_configure_loader_modules_not_a_fixture(testdir):
     # res.assert_outcomes(passed=1)
     res.stdout.fnmatch_lines(
         [
-            "*RuntimeError*defines a configure_loader_modules function but that function is not a fixture*"
+            "*RuntimeError*defines a 'configure_loader_modules' function but that function is not a fixture*"
         ]
     )
