@@ -468,7 +468,7 @@ jobs:
     runs-on: macOS-latest
     needs: Pre-Commit
 
-    timeout-minutes: 40
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
@@ -595,7 +595,7 @@ jobs:
     runs-on: macOS-latest
     needs: Pre-Commit
 
-    timeout-minutes: 40
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
