@@ -464,7 +464,8 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
     def register_after_terminate_callback(self, callback, *args, **kwargs):
         self.after_terminate_callbacks.append((callback, args, kwargs))
 
-    def _format_callback(self, callback, args, kwargs):
+    @staticmethod
+    def _format_callback(callback, args, kwargs):
         callback_str = "{}(".format(callback.__name__)
         if args:
             callback_str += ", ".join([repr(arg) for arg in args])
@@ -667,7 +668,13 @@ class DaemonFactory(SubprocessFactoryBase):
         return self
 
     @contextlib.contextmanager
-    def stopped(self):
+    def stopped(
+        self,
+        before_stop_callback=None,
+        after_stop_callback=None,
+        before_start_callback=None,
+        after_start_callback=None,
+    ):
         """
         This context manager will stop the factory while the context is in place, it re-starts it once out of
         context.
@@ -682,17 +689,73 @@ class DaemonFactory(SubprocessFactoryBase):
                 assert factory.is_running() is False
 
             assert factory.is_running() is True
+
+        Arguments:
+            before_stop_callback(callable):
+                A callable to run before stopping the daemon. The callback must accept one argument,
+                the daemon instance.
+            after_stop_callback(callable):
+                A callable to run after stopping the daemon. The callback must accept one argument,
+                the daemon instance.
+            before_start_callback(callable):
+                A callable to run before starting the daemon. The callback must accept one argument,
+                the daemon instance.
+            after_start_callback(callable):
+                A callable to run after starting the daemon. The callback must accept one argument,
+                the daemon instance.
         """
         if not self.is_running():
             raise FactoryNotRunning("{} is not running ".format(self))
         start_arguments = self.impl.get_start_arguments()
         try:
+            if before_stop_callback:
+                try:
+                    before_stop_callback(self)
+                except Exception as exc:  # pylint: disable=broad-except
+                    log.info(
+                        "Exception raised when running %s: %s",
+                        self.impl._format_callback(before_stop_callback),
+                        exc,
+                        exc_info=True,
+                    )
             self.terminate()
+            if after_stop_callback:
+                try:
+                    after_stop_callback(self)
+                except Exception as exc:  # pylint: disable=broad-except
+                    log.info(
+                        "Exception raised when running %s: %s",
+                        self.impl._format_callback(after_stop_callback),
+                        exc,
+                        exc_info=True,
+                    )
             yield
         except Exception:  # pylint: disable=broad-except,try-except-raise
             raise
         else:
-            return self.started(*start_arguments.args, **start_arguments.kwargs)
+            if before_start_callback:
+                try:
+                    before_start_callback(self)
+                except Exception as exc:  # pylint: disable=broad-except
+                    log.info(
+                        "Exception raised when running %s: %s",
+                        self.impl._format_callback(before_start_callback),
+                        exc,
+                        exc_info=True,
+                    )
+            _started = self.started(*start_arguments.args, **start_arguments.kwargs)
+            if _started:
+                if after_start_callback:
+                    try:
+                        after_start_callback(self)
+                    except Exception as exc:  # pylint: disable=broad-except
+                        log.info(
+                            "Exception raised when running %s: %s",
+                            self.impl._format_callback(after_start_callback),
+                            exc,
+                            exc_info=True,
+                        )
+            return _started
 
     def run_start_checks(self, started_at, timeout_at):
         log.debug("%s is running start checks", self)

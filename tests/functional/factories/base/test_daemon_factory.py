@@ -5,6 +5,7 @@ import re
 import sys
 import time
 
+import attr
 import psutil
 import pytest
 
@@ -15,6 +16,8 @@ from saltfactories.utils import platform
 from saltfactories.utils.processes import _get_cmdline
 
 PROCESS_START_TIMEOUT = 2
+
+log = logging.getLogger(__name__)
 
 
 def kill_children(procs):  # pragma: nocover
@@ -346,6 +349,89 @@ def test_stopped_context_manager(request, factory_stopped_script):
         with daemon.stopped():
             assert daemon.is_running() is False
         assert daemon.is_running()
+
+
+@attr.s
+class CallbackState:
+    daemon = attr.ib()
+    before_stop_callback_called = attr.ib(default=False)
+    after_stop_callback_called = attr.ib(default=False)
+    before_start_callback_called = attr.ib(default=False)
+    after_start_callback_called = attr.ib(default=False)
+
+    def before_stop_callback(self, daemon):
+        assert daemon is self.daemon
+        self.before_stop_callback_called = True
+
+    def after_stop_callback(self, daemon):
+        assert daemon is self.daemon
+        self.after_stop_callback_called = True
+
+    def before_start_callback(self, daemon):
+        assert daemon is self.daemon
+        self.before_start_callback_called = True
+
+    def after_start_callback(self, daemon):
+        assert daemon is self.daemon
+        self.after_start_callback_called = True
+
+
+def test_stopped_context_manager_callbacks(request, factory_stopped_script):
+
+    daemon = DaemonFactory(
+        cli_script_name=sys.executable,
+        base_script_args=[factory_stopped_script],
+        start_timeout=3,
+        max_start_attempts=1,
+        check_ports=[12345],
+    )
+    # Make sure the daemon is terminated no matter what
+    request.addfinalizer(daemon.terminate)
+
+    daemon_started_once = False
+    with daemon.started():
+        daemon_started_once = daemon.is_running()
+        assert daemon_started_once is True
+
+        callbacks = CallbackState(daemon)
+        assert callbacks.before_stop_callback_called is False
+        assert callbacks.after_stop_callback_called is False
+        assert callbacks.before_start_callback_called is False
+        assert callbacks.after_start_callback_called is False
+        with daemon.stopped(
+            before_stop_callback=callbacks.before_stop_callback,
+            after_stop_callback=callbacks.after_stop_callback,
+            before_start_callback=callbacks.before_start_callback,
+            after_start_callback=callbacks.after_start_callback,
+        ):
+            assert daemon.is_running() is False
+            assert callbacks.before_stop_callback_called is True
+            assert callbacks.after_stop_callback_called is True
+            assert callbacks.before_start_callback_called is False
+            assert callbacks.after_start_callback_called is False
+        assert daemon.is_running()
+        assert callbacks.before_stop_callback_called is True
+        assert callbacks.after_stop_callback_called is True
+        assert callbacks.before_start_callback_called is True
+        assert callbacks.after_start_callback_called is False
+
+        # Reset the callbacks state
+        callbacks.before_stop_callback_called = False
+        callbacks.after_stop_callback_called = False
+        callbacks.before_start_callback_called = False
+        callbacks.after_start_callback_called = False
+
+        # Let's got through stopped again, the callbacks should not be called again
+        # because they are not passed into .stopped()
+        with daemon.stopped():
+            assert daemon.is_running() is False
+        assert daemon.is_running()
+        assert callbacks.before_stop_callback_called is False
+        assert callbacks.after_stop_callback_called is False
+        assert callbacks.before_start_callback_called is False
+        assert callbacks.after_start_callback_called is False
+
+    assert daemon_started_once is True
 
 
 def test_context_manager_returns_class_instance(tempfiles):
