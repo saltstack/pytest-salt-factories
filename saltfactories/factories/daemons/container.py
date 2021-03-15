@@ -366,8 +366,8 @@ class ContainerFactory(Factory):
             )
         return self
 
-    def __exit__(self, *exc):
-        return self.terminate()
+    def __exit__(self, *_):
+        self.terminate()
 
 
 @attr.s(kw_only=True)
