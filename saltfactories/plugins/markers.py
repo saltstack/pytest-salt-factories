@@ -427,11 +427,18 @@ def pytest_runtest_setup(item):
     session_markers_loader = item._request.getfixturevalue("session_markers_loader")
     requires_salt_modules_marker = item.get_closest_marker("requires_salt_modules")
     if requires_salt_modules_marker is not None:
+        if requires_salt_modules_marker.kwargs:
+            raise ValueError("The 'required_salt_modules' marker does not accept keyword arguments")
         required_salt_modules = requires_salt_modules_marker.args
-        if len(required_salt_modules) == 1 and isinstance(
-            required_salt_modules[0], (list, tuple, set)
-        ):
-            required_salt_modules = required_salt_modules[0]
+        if not required_salt_modules:
+            raise ValueError(
+                "The 'required_salt_modules' marker needs at least one module name to be passed"
+            )
+        for arg in required_salt_modules:
+            if not isinstance(arg, str):
+                raise ValueError(
+                    "The 'required_salt_modules' marker only accepts strings as arguments"
+                )
         required_salt_modules = set(required_salt_modules)
         not_available_modules = saltfactories.utils.markers.check_required_loader_attributes(
             session_markers_loader, "modules", required_salt_modules
@@ -445,11 +452,18 @@ def pytest_runtest_setup(item):
 
     requires_salt_states_marker = item.get_closest_marker("requires_salt_states")
     if requires_salt_states_marker is not None:
+        if requires_salt_states_marker.kwargs:
+            raise ValueError("The 'required_salt_states' marker does not accept keyword arguments")
         required_salt_states = requires_salt_states_marker.args
-        if len(required_salt_states) == 1 and isinstance(
-            required_salt_states[0], (list, tuple, set)
-        ):
-            required_salt_states = required_salt_states[0]
+        if not required_salt_states:
+            raise ValueError(
+                "The 'required_salt_states' marker needs at least one state module name to be passed"
+            )
+        for arg in required_salt_states:
+            if not isinstance(arg, str):
+                raise ValueError(
+                    "The 'required_salt_states' marker only accepts strings as arguments"
+                )
         required_salt_states = set(required_salt_states)
         not_available_states = saltfactories.utils.markers.check_required_loader_attributes(
             session_markers_loader, "states", required_salt_states

@@ -4,32 +4,51 @@
 
     Test the ``@pytest.mark.requires_salt_modules`` marker
 """
+import pytest
 
 
-def test_has_required_salt_module(testdir):
+@pytest.mark.parametrize(
+    "modules",
+    [
+        ("cmd",),
+        ("cmd", "test"),
+    ],
+)
+def test_has_required_salt_module(testdir, modules):
     testdir.makepyfile(
         """
         import pytest
 
-        @pytest.mark.requires_salt_modules("cmd")
+        @pytest.mark.requires_salt_modules({})
         def test_one():
             assert True
-        """
+        """.format(
+            ", ".join(repr(module) for module in modules)
+        )
     )
     res = testdir.runpytest()
     res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
-def test_missing_required_salt_module(testdir):
+@pytest.mark.parametrize(
+    "modules",
+    [
+        ("cmdmod",),
+        ("cmd", "tests"),
+    ],
+)
+def test_missing_required_salt_module(testdir, modules):
     testdir.makepyfile(
         """
         import pytest
 
-        @pytest.mark.requires_salt_modules("cmdmod")
+        @pytest.mark.requires_salt_modules({})
         def test_one():
             assert True
-        """
+        """.format(
+            ", ".join(repr(module) for module in modules)
+        )
     )
     res = testdir.runpytest()
     res.assert_outcomes(skipped=1)
@@ -89,3 +108,56 @@ def test_has_required_custom_salt_module(testdir):
     res = testdir.runpytest()
     res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
+
+
+def test_marker_does_not_accept_keyword_argument(testdir):
+    testdir.makepyfile(
+        """
+        import pytest
+
+        @pytest.mark.requires_salt_modules("cmd", foo=True)
+        def test_one():
+            assert True
+        """
+    )
+    res = testdir.runpytest()
+    res.assert_outcomes(errors=1)
+    res.stdout.fnmatch_lines(
+        ["*ValueError: The 'required_salt_modules' marker does not accept keyword arguments*"]
+    )
+
+
+def test_marker_only_accepts_string_arguments(testdir):
+    testdir.makepyfile(
+        """
+        import pytest
+
+        @pytest.mark.requires_salt_modules(("cmd", "test"))
+        def test_one():
+            assert True
+        """
+    )
+    res = testdir.runpytest()
+    res.assert_outcomes(errors=1)
+    res.stdout.fnmatch_lines(
+        ["*ValueError: The 'required_salt_modules' marker only accepts strings as arguments*"]
+    )
+
+
+def test_marker_errors_with_no_arguments(testdir):
+    testdir.makepyfile(
+        """
+        import pytest
+
+        @pytest.mark.requires_salt_modules
+        def test_one():
+            assert True
+        """
+    )
+    res = testdir.runpytest()
+    res.assert_outcomes(errors=1)
+    res.stdout.fnmatch_lines(
+        [
+            "*ValueError: The 'required_salt_modules' marker needs at least one module name to be passed*"
+        ]
+    )
