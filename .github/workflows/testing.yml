@@ -75,7 +75,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: Pre-Commit
 
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     strategy:
       fail-fast: false
@@ -468,7 +468,7 @@ jobs:
     runs-on: macOS-latest
     needs: Pre-Commit
 
-    timeout-minutes: 40
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
@@ -595,7 +595,7 @@ jobs:
     runs-on: macOS-latest
     needs: Pre-Commit
 
-    timeout-minutes: 40
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false

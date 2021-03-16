@@ -56,7 +56,6 @@ class SaltSyndicFactory(SaltDaemonFactory):
             conf_d_dir = conf_dir / "master.d"
             conf_d_dir.mkdir(exist_ok=True)
             conf_file = str(conf_d_dir / "syndic.conf")
-            pki_dir = conf_dir / "pki" / "master"
 
             pidfile_dir = root_dir / "var" / "run"
 

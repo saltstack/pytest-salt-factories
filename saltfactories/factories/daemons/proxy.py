@@ -157,7 +157,6 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
     def _get_verify_config_entries(cls, config):
         # verify env to make sure all required directories are created and have the
         # right permissions
-        pki_dir = pathlib.Path(config["pki_dir"])
         return [
             str(pathlib.Path(config["log_file"]).parent),
             # config['extension_modules'],
