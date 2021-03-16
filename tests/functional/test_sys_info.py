@@ -8,14 +8,14 @@ import pytest
 
 
 @pytest.mark.parametrize("flag", ["--sysinfo", "--sys-info"])
-def test_sysinfo(testdir, flag):
-    p = testdir.makepyfile(
+def test_sysinfo(pytester, flag):
+    pytester.makepyfile(
         """
         def test_one():
             assert True
         """
     )
-    res = testdir.runpytest("-vv", flag)
+    res = pytester.runpytest("-vv", flag)
     res.assert_outcomes(passed=1)
     res.stdout.fnmatch_lines(
         [
@@ -30,14 +30,14 @@ def test_sysinfo(testdir, flag):
     )
 
 
-def test_no_sysinfo(testdir):
-    p = testdir.makepyfile(
+def test_no_sysinfo(pytester):
+    pytester.makepyfile(
         """
         def test_one():
             assert True
         """
     )
-    res = testdir.runpytest("-vv")
+    res = pytester.runpytest("-vv")
     res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*>> System Information >>*")
     res.stdout.fnmatch_lines(

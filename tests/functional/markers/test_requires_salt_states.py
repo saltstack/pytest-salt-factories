@@ -14,8 +14,8 @@ import pytest
         ("cmd", "test"),
     ],
 )
-def test_has_required_salt_state(testdir, modules):
-    testdir.makepyfile(
+def test_has_required_salt_state(pytester, modules):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -26,7 +26,7 @@ def test_has_required_salt_state(testdir, modules):
             ", ".join(repr(module) for module in modules)
         )
     )
-    res = testdir.runpytest()
+    res = pytester.runpytest()
     res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
@@ -38,8 +38,8 @@ def test_has_required_salt_state(testdir, modules):
         ("cmd", "tests"),
     ],
 )
-def test_missing_required_salt_state(testdir, modules):
-    testdir.makepyfile(
+def test_missing_required_salt_state(pytester, modules):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -50,13 +50,13 @@ def test_missing_required_salt_state(testdir, modules):
             ", ".join(repr(module) for module in modules)
         )
     )
-    res = testdir.runpytest()
+    res = pytester.runpytest()
     res.assert_outcomes(skipped=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
-def test_has_required_custom_salt_state(testdir):
-    testdir.makepyfile(
+def test_has_required_custom_salt_state(pytester):
+    pytester.makepyfile(
         r"""
         import pathlib
         import textwrap
@@ -106,13 +106,13 @@ def test_has_required_custom_salt_state(testdir):
             assert True
         """
     )
-    res = testdir.runpytest()
+    res = pytester.runpytest()
     res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
-def test_marker_does_not_accept_keyword_argument(testdir):
-    testdir.makepyfile(
+def test_marker_does_not_accept_keyword_argument(pytester):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -121,15 +121,15 @@ def test_marker_does_not_accept_keyword_argument(testdir):
             assert True
         """
     )
-    res = testdir.runpytest()
+    res = pytester.runpytest()
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(
         ["*UsageError: The 'required_salt_states' marker does not accept keyword arguments*"]
     )
 
 
-def test_marker_only_accepts_string_arguments(testdir):
-    testdir.makepyfile(
+def test_marker_only_accepts_string_arguments(pytester):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -138,15 +138,15 @@ def test_marker_only_accepts_string_arguments(testdir):
             assert True
         """
     )
-    res = testdir.runpytest()
+    res = pytester.runpytest()
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(
         ["*UsageError: The 'required_salt_states' marker only accepts strings as arguments*"]
     )
 
 
-def test_marker_errors_with_no_arguments(testdir):
-    testdir.makepyfile(
+def test_marker_errors_with_no_arguments(pytester):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -155,7 +155,7 @@ def test_marker_errors_with_no_arguments(testdir):
             assert True
         """
     )
-    res = testdir.runpytest()
+    res = pytester.runpytest()
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(
         [

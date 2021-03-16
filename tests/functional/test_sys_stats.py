@@ -7,14 +7,14 @@
 import pytest
 
 
-def test_basic_sys_stats(testdir):
-    p = testdir.makepyfile(
+def test_basic_sys_stats(pytester):
+    pytester.makepyfile(
         """
         def test_one():
             assert True
         """
     )
-    res = testdir.runpytest("-vv", "--sys-stats")
+    res = pytester.runpytest("-vv", "--sys-stats")
     res.assert_outcomes(passed=1)
     res.stdout.fnmatch_lines(
         [
@@ -28,14 +28,14 @@ def test_basic_sys_stats(testdir):
 
 
 @pytest.mark.skip_on_freebsd
-def test_basic_sys_stats_uss(testdir):
-    p = testdir.makepyfile(
+def test_basic_sys_stats_uss(pytester):
+    pytester.makepyfile(
         """
         def test_one():
             assert True
         """
     )
-    res = testdir.runpytest("-vv", "--sys-stats", "--sys-stats-uss-mem")
+    res = pytester.runpytest("-vv", "--sys-stats", "--sys-stats-uss-mem")
     res.assert_outcomes(passed=1)
     res.stdout.fnmatch_lines(
         [
@@ -50,8 +50,8 @@ def test_basic_sys_stats_uss(testdir):
 
 @pytest.mark.skip_on_windows
 @pytest.mark.skip_if_binaries_missing("sshd", "ssh-keygen")
-def test_proc_sys_stats(testdir):
-    p = testdir.makepyfile(
+def test_proc_sys_stats(pytester):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -65,7 +65,7 @@ def test_proc_sys_stats(testdir):
             assert sshd.is_running()
         """
     )
-    res = testdir.runpytest("-vv", "--sys-stats")
+    res = pytester.runpytest("-vv", "--sys-stats")
     res.assert_outcomes(passed=1)
     res.stdout.fnmatch_lines(
         [
