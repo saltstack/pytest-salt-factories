@@ -9,6 +9,7 @@ saltfactories.factories.daemons.api
 Salt API Factory
 """
 import attr
+import pytest
 
 from saltfactories.factories.base import SaltDaemonFactory
 
@@ -21,7 +22,7 @@ class SaltApiFactory(SaltDaemonFactory):
         elif "rest_tornado" in self.config:
             self.check_ports = [self.config["rest_tornado"]["port"]]
         else:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The salt-master configuration for this salt-api instance does not seem to have "
                 "any api properly configured."
             )
@@ -36,7 +37,7 @@ class SaltApiFactory(SaltDaemonFactory):
         config_defaults=None,
         config_overrides=None,
     ):
-        raise RuntimeError(
+        raise pytest.UsageError(
             "The salt-api daemon is not configurable. It uses the salt-master config that "
             "it's attached to."
         )
@@ -47,7 +48,7 @@ class SaltApiFactory(SaltDaemonFactory):
 
     @classmethod
     def load_config(cls, config_file, config):
-        raise RuntimeError(
+        raise pytest.UsageError(
             "The salt-api daemon does not have it's own config file. It uses the salt-master config that "
             "it's attached to."
         )

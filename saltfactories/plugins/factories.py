@@ -48,7 +48,7 @@ def salt_factories(
     tempdir, event_listener, stats_processes, salt_factories_config, _salt_factories_config
 ):
     if not isinstance(salt_factories_config, dict):
-        raise RuntimeError("The 'salt_factories_config' fixture MUST return a dictionary")
+        raise pytest.UsageError("The 'salt_factories_config' fixture MUST return a dictionary")
     if salt_factories_config:
         log.debug(
             "Salt Factories Manager Default Config:\n%s", pprint.pformat(_salt_factories_config)

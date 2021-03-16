@@ -110,7 +110,7 @@ class SubprocessFactoryImpl:
         """
         for key in ("stdin", "stdout", "stderr", "close_fds", "shell", "cwd"):
             if key in kwargs:
-                raise RuntimeError(
+                raise pytest.UsageError(
                     "{}.{}.init_terminal() does not accept {} as a valid keyword argument".format(
                         __name__, self.__class__.__name__, key
                     )
@@ -1258,7 +1258,7 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         SaltFactory.__attrs_post_init__(self)
 
         if self.system_install is True and self.extra_cli_arguments_after_first_start_failure:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "You cannot pass `extra_cli_arguments_after_first_start_failure` to a salt "
                 "system installation setup."
             )

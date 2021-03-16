@@ -9,6 +9,8 @@ import pathlib
 import stat
 import textwrap
 
+import pytest
+
 log = logging.getLogger(__name__)
 
 SCRIPT_TEMPLATES = {
@@ -166,7 +168,7 @@ def generate_script(
                 )
 
             if inject_coverage and not code_dir:
-                raise RuntimeError(
+                raise pytest.UsageError(
                     "The inject coverage code needs to know the code root to find the "
                     "path to the '.coveragerc' file. Please pass 'code_dir'."
                 )

@@ -413,7 +413,7 @@ def test_stopped_context_manager_callbacks(request, factory_stopped_script):
         assert callbacks.before_stop_callback_called is True
         assert callbacks.after_stop_callback_called is True
         assert callbacks.before_start_callback_called is True
-        assert callbacks.after_start_callback_called is False
+        assert callbacks.after_start_callback_called is True
 
         # Reset the callbacks state
         callbacks.before_stop_callback_called = False

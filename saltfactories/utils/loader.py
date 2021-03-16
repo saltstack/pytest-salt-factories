@@ -11,6 +11,7 @@ from collections import deque
 from unittest.mock import patch
 
 import attr
+import pytest
 
 log = logging.getLogger(__name__)
 
@@ -73,12 +74,12 @@ class LoaderModuleMock:
         for module, globals_to_mock in self.setup_loader_modules.items():
             log.trace("Setting up loader globals for %s; globals: %s", module, globals_to_mock)
             if not isinstance(module, types.ModuleType):
-                raise RuntimeError(
+                raise pytest.UsageError(
                     "The dictionary keys returned by setup_loader_modules() "
                     "must be an imported module, not {}".format(type(module))
                 )
             if not isinstance(globals_to_mock, dict):
-                raise RuntimeError(
+                raise pytest.UsageError(
                     "The dictionary values returned by setup_loader_modules() "
                     "must be a dictionary, not {}".format(type(globals_to_mock))
                 )
@@ -135,7 +136,7 @@ class LoaderModuleMock:
             return
         sys_modules = mocks["sys.modules"]
         if not isinstance(sys_modules, dict):
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "'sys.modules' must be a dictionary not: {}".format(type(sys_modules))
             )
         patcher = patch.dict(sys.modules, values=sys_modules)
@@ -152,14 +153,14 @@ class LoaderModuleMock:
 
             if key.startswith("__"):
                 if key in ("__init__", "__virtual__"):
-                    raise RuntimeError(
+                    raise pytest.UsageError(
                         "No need to patch {!r}. Passed loader module dict: {}".format(
                             key,
                             self.setup_loader_modules,
                         )
                     )
                 elif key not in allowed_salt_dunders:
-                    raise RuntimeError(
+                    raise pytest.UsageError(
                         "Don't know how to handle {!r}. Passed loader module dict: {}".format(
                             key,
                             self.setup_loader_modules,

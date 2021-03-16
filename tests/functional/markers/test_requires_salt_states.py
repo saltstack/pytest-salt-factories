@@ -124,7 +124,7 @@ def test_marker_does_not_accept_keyword_argument(testdir):
     res = testdir.runpytest()
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(
-        ["*ValueError: The 'required_salt_states' marker does not accept keyword arguments*"]
+        ["*UsageError: The 'required_salt_states' marker does not accept keyword arguments*"]
     )
 
 
@@ -141,7 +141,7 @@ def test_marker_only_accepts_string_arguments(testdir):
     res = testdir.runpytest()
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(
-        ["*ValueError: The 'required_salt_states' marker only accepts strings as arguments*"]
+        ["*UsageError: The 'required_salt_states' marker only accepts strings as arguments*"]
     )
 
 
@@ -159,6 +159,6 @@ def test_marker_errors_with_no_arguments(testdir):
     res.assert_outcomes(errors=1)
     res.stdout.fnmatch_lines(
         [
-            "*ValueError: The 'required_salt_states' marker needs at least one state module name to be passed*"
+            "*UsageError: The 'required_salt_states' marker needs at least one state module name to be passed*"
         ]
     )

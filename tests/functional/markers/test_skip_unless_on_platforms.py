@@ -89,7 +89,7 @@ def test_no_platforms(testdir):
     res = testdir.runpytest_inprocess()
     res.stdout.fnmatch_lines(
         [
-            "* RuntimeError: Pass at least one platform to skip_unless_on_platforms as a keyword argument"
+            "*UsageError: Pass at least one platform to skip_unless_on_platforms as a keyword argument"
         ]
     )
 
@@ -107,7 +107,7 @@ def test_all_platforms_false(testdir):
     res = testdir.runpytest_inprocess()
     res.stdout.fnmatch_lines(
         [
-            "* RuntimeError: Pass at least one platform with a True value to skip_unless_on_platforms as a keyword argument"
+            "*UsageError: Pass at least one platform with a True value to skip_unless_on_platforms as a keyword argument"
         ]
     )
 
@@ -125,6 +125,6 @@ def test_unknown_platform(testdir):
     res = testdir.runpytest_inprocess()
     res.stdout.fnmatch_lines(
         [
-            "* RuntimeError: Passed an invalid platform to skip_unless_on_platforms: on_platforms() got an unexpected keyword argument 'car'"
+            "*UsageError: Passed an invalid platform to skip_unless_on_platforms: on_platforms() got an unexpected keyword argument 'car'"
         ]
     )

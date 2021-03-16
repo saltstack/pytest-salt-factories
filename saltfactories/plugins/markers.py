@@ -73,7 +73,7 @@ def pytest_runtest_setup(item):
     ):
         binaries = skip_if_binaries_missing_marker.args
         if len(binaries) == 1 and not isinstance(binaries[0], str):
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "Do not pass a list as binaries to the skip_if_binaries_missing() marker. "
                 "Instead, pass each binary as an argument to skip_if_binaries_missing()."
             )
@@ -106,10 +106,10 @@ def pytest_runtest_setup(item):
     skip_on_windows_marker = item.get_closest_marker("skip_on_windows")
     if skip_on_windows_marker is not None:
         if skip_on_windows_marker.args:
-            raise RuntimeError("The skip_on_windows marker does not accept any arguments")
+            raise pytest.UsageError("The skip_on_windows marker does not accept any arguments")
         reason = skip_on_windows_marker.kwargs.pop("reason", None)
         if skip_on_windows_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_on_windows marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -121,10 +121,12 @@ def pytest_runtest_setup(item):
     skip_unless_on_windows_marker = item.get_closest_marker("skip_unless_on_windows")
     if skip_unless_on_windows_marker is not None:
         if skip_unless_on_windows_marker.args:
-            raise RuntimeError("The skip_unless_on_windows marker does not accept any arguments")
+            raise pytest.UsageError(
+                "The skip_unless_on_windows marker does not accept any arguments"
+            )
         reason = skip_unless_on_windows_marker.kwargs.pop("reason", None)
         if skip_unless_on_windows_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_unless_on_windows marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -136,10 +138,10 @@ def pytest_runtest_setup(item):
     skip_on_linux_marker = item.get_closest_marker("skip_on_linux")
     if skip_on_linux_marker is not None:
         if skip_on_linux_marker.args:
-            raise RuntimeError("The skip_on_linux marker does not accept any arguments")
+            raise pytest.UsageError("The skip_on_linux marker does not accept any arguments")
         reason = skip_on_linux_marker.kwargs.pop("reason", None)
         if skip_on_linux_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_on_linux marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -151,10 +153,10 @@ def pytest_runtest_setup(item):
     skip_unless_on_linux_marker = item.get_closest_marker("skip_unless_on_linux")
     if skip_unless_on_linux_marker is not None:
         if skip_unless_on_linux_marker.args:
-            raise RuntimeError("The skip_unless_on_linux marker does not accept any arguments")
+            raise pytest.UsageError("The skip_unless_on_linux marker does not accept any arguments")
         reason = skip_unless_on_linux_marker.kwargs.pop("reason", None)
         if skip_unless_on_linux_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_unless_on_linux marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -166,10 +168,10 @@ def pytest_runtest_setup(item):
     skip_on_darwin_marker = item.get_closest_marker("skip_on_darwin")
     if skip_on_darwin_marker is not None:
         if skip_on_darwin_marker.args:
-            raise RuntimeError("The skip_on_darwin marker does not accept any arguments")
+            raise pytest.UsageError("The skip_on_darwin marker does not accept any arguments")
         reason = skip_on_darwin_marker.kwargs.pop("reason", None)
         if skip_on_darwin_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_on_darwin marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -181,10 +183,12 @@ def pytest_runtest_setup(item):
     skip_unless_on_darwin_marker = item.get_closest_marker("skip_unless_on_darwin")
     if skip_unless_on_darwin_marker is not None:
         if skip_unless_on_darwin_marker.args:
-            raise RuntimeError("The skip_unless_on_darwin marker does not accept any arguments")
+            raise pytest.UsageError(
+                "The skip_unless_on_darwin marker does not accept any arguments"
+            )
         reason = skip_unless_on_darwin_marker.kwargs.pop("reason", None)
         if skip_unless_on_darwin_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_unless_on_darwin marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -196,10 +200,10 @@ def pytest_runtest_setup(item):
     skip_on_sunos_marker = item.get_closest_marker("skip_on_sunos")
     if skip_on_sunos_marker is not None:
         if skip_on_sunos_marker.args:
-            raise RuntimeError("The skip_on_sunos marker does not accept any arguments")
+            raise pytest.UsageError("The skip_on_sunos marker does not accept any arguments")
         reason = skip_on_sunos_marker.kwargs.pop("reason", None)
         if skip_on_sunos_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_on_sunos marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -211,10 +215,10 @@ def pytest_runtest_setup(item):
     skip_unless_on_sunos_marker = item.get_closest_marker("skip_unless_on_sunos")
     if skip_unless_on_sunos_marker is not None:
         if skip_unless_on_sunos_marker.args:
-            raise RuntimeError("The skip_unless_on_sunos marker does not accept any arguments")
+            raise pytest.UsageError("The skip_unless_on_sunos marker does not accept any arguments")
         reason = skip_unless_on_sunos_marker.kwargs.pop("reason", None)
         if skip_unless_on_sunos_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_unless_on_sunos marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -226,10 +230,10 @@ def pytest_runtest_setup(item):
     skip_on_smartos_marker = item.get_closest_marker("skip_on_smartos")
     if skip_on_smartos_marker is not None:
         if skip_on_smartos_marker.args:
-            raise RuntimeError("The skip_on_smartos marker does not accept any arguments")
+            raise pytest.UsageError("The skip_on_smartos marker does not accept any arguments")
         reason = skip_on_smartos_marker.kwargs.pop("reason", None)
         if skip_on_smartos_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_on_smartos marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -241,10 +245,12 @@ def pytest_runtest_setup(item):
     skip_unless_on_smartos_marker = item.get_closest_marker("skip_unless_on_smartos")
     if skip_unless_on_smartos_marker is not None:
         if skip_unless_on_smartos_marker.args:
-            raise RuntimeError("The skip_unless_on_smartos marker does not accept any arguments")
+            raise pytest.UsageError(
+                "The skip_unless_on_smartos marker does not accept any arguments"
+            )
         reason = skip_unless_on_smartos_marker.kwargs.pop("reason", None)
         if skip_unless_on_smartos_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_unless_on_smartos marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -256,10 +262,10 @@ def pytest_runtest_setup(item):
     skip_on_freebsd_marker = item.get_closest_marker("skip_on_freebsd")
     if skip_on_freebsd_marker is not None:
         if skip_on_freebsd_marker.args:
-            raise RuntimeError("The skip_on_freebsd marker does not accept any arguments")
+            raise pytest.UsageError("The skip_on_freebsd marker does not accept any arguments")
         reason = skip_on_freebsd_marker.kwargs.pop("reason", None)
         if skip_on_freebsd_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_on_freebsd marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -271,10 +277,12 @@ def pytest_runtest_setup(item):
     skip_unless_on_freebsd_marker = item.get_closest_marker("skip_unless_on_freebsd")
     if skip_unless_on_freebsd_marker is not None:
         if skip_unless_on_freebsd_marker.args:
-            raise RuntimeError("The skip_unless_on_freebsd marker does not accept any arguments")
+            raise pytest.UsageError(
+                "The skip_unless_on_freebsd marker does not accept any arguments"
+            )
         reason = skip_unless_on_freebsd_marker.kwargs.pop("reason", None)
         if skip_unless_on_freebsd_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_unless_on_freebsd marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -286,10 +294,10 @@ def pytest_runtest_setup(item):
     skip_on_netbsd_marker = item.get_closest_marker("skip_on_netbsd")
     if skip_on_netbsd_marker is not None:
         if skip_on_netbsd_marker.args:
-            raise RuntimeError("The skip_on_netbsd marker does not accept any arguments")
+            raise pytest.UsageError("The skip_on_netbsd marker does not accept any arguments")
         reason = skip_on_netbsd_marker.kwargs.pop("reason", None)
         if skip_on_netbsd_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_on_netbsd marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -301,10 +309,12 @@ def pytest_runtest_setup(item):
     skip_unless_on_netbsd_marker = item.get_closest_marker("skip_unless_on_netbsd")
     if skip_unless_on_netbsd_marker is not None:
         if skip_unless_on_netbsd_marker.args:
-            raise RuntimeError("The skip_unless_on_netbsd marker does not accept any arguments")
+            raise pytest.UsageError(
+                "The skip_unless_on_netbsd marker does not accept any arguments"
+            )
         reason = skip_unless_on_netbsd_marker.kwargs.pop("reason", None)
         if skip_unless_on_netbsd_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_unless_on_netbsd marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -316,10 +326,10 @@ def pytest_runtest_setup(item):
     skip_on_openbsd_marker = item.get_closest_marker("skip_on_openbsd")
     if skip_on_openbsd_marker is not None:
         if skip_on_openbsd_marker.args:
-            raise RuntimeError("The skip_on_openbsd marker does not accept any arguments")
+            raise pytest.UsageError("The skip_on_openbsd marker does not accept any arguments")
         reason = skip_on_openbsd_marker.kwargs.pop("reason", None)
         if skip_on_openbsd_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_on_openbsd marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -331,10 +341,12 @@ def pytest_runtest_setup(item):
     skip_unless_on_openbsd_marker = item.get_closest_marker("skip_unless_on_openbsd")
     if skip_unless_on_openbsd_marker is not None:
         if skip_unless_on_openbsd_marker.args:
-            raise RuntimeError("The skip_unless_on_openbsd marker does not accept any arguments")
+            raise pytest.UsageError(
+                "The skip_unless_on_openbsd marker does not accept any arguments"
+            )
         reason = skip_unless_on_openbsd_marker.kwargs.pop("reason", None)
         if skip_unless_on_openbsd_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_unless_on_openbsd marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -346,10 +358,10 @@ def pytest_runtest_setup(item):
     skip_on_aix_marker = item.get_closest_marker("skip_on_aix")
     if skip_on_aix_marker is not None:
         if skip_on_aix_marker.args:
-            raise RuntimeError("The skip_on_aix marker does not accept any arguments")
+            raise pytest.UsageError("The skip_on_aix marker does not accept any arguments")
         reason = skip_on_aix_marker.kwargs.pop("reason", None)
         if skip_on_aix_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_on_aix marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -361,10 +373,10 @@ def pytest_runtest_setup(item):
     skip_unless_on_aix_marker = item.get_closest_marker("skip_unless_on_aix")
     if skip_unless_on_aix_marker is not None:
         if skip_unless_on_aix_marker.args:
-            raise RuntimeError("The skip_unless_on_aix marker does not accept any arguments")
+            raise pytest.UsageError("The skip_unless_on_aix marker does not accept any arguments")
         reason = skip_unless_on_aix_marker.kwargs.pop("reason", None)
         if skip_unless_on_aix_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The skip_unless_on_aix marker only accepts 'reason' as a keyword argument."
             )
         if reason is None:
@@ -376,14 +388,14 @@ def pytest_runtest_setup(item):
     skip_on_platforms_marker = item.get_closest_marker("skip_on_platforms")
     if skip_on_platforms_marker is not None:
         if skip_on_platforms_marker.args:
-            raise RuntimeError("The skip_on_platforms marker does not accept any arguments")
+            raise pytest.UsageError("The skip_on_platforms marker does not accept any arguments")
         reason = skip_on_platforms_marker.kwargs.pop("reason", None)
         if not skip_on_platforms_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "Pass at least one platform to skip_on_platforms as a keyword argument"
             )
         if not any(skip_on_platforms_marker.kwargs.values()):
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "Pass at least one platform with a True value to skip_on_platforms as a keyword argument"
             )
         if reason is None:
@@ -393,19 +405,23 @@ def pytest_runtest_setup(item):
                 item._skipped_by_mark = True
                 pytest.skip(reason)
         except TypeError as exc:
-            raise RuntimeError("Passed an invalid platform to skip_on_platforms: {}".format(exc))
+            raise pytest.UsageError(
+                "Passed an invalid platform to skip_on_platforms: {}".format(exc)
+            )
 
     skip_unless_on_platforms_marker = item.get_closest_marker("skip_unless_on_platforms")
     if skip_unless_on_platforms_marker is not None:
         if skip_unless_on_platforms_marker.args:
-            raise RuntimeError("The skip_unless_on_platforms marker does not accept any arguments")
+            raise pytest.UsageError(
+                "The skip_unless_on_platforms marker does not accept any arguments"
+            )
         reason = skip_unless_on_platforms_marker.kwargs.pop("reason", None)
         if not skip_unless_on_platforms_marker.kwargs:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "Pass at least one platform to skip_unless_on_platforms as a keyword argument"
             )
         if not any(skip_unless_on_platforms_marker.kwargs.values()):
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "Pass at least one platform with a True value to skip_unless_on_platforms as a keyword argument"
             )
         if reason is None:
@@ -417,7 +433,7 @@ def pytest_runtest_setup(item):
                 item._skipped_by_mark = True
                 pytest.skip(reason)
         except TypeError as exc:
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "Passed an invalid platform to skip_unless_on_platforms: {}".format(exc)
             )
 
@@ -428,15 +444,17 @@ def pytest_runtest_setup(item):
     requires_salt_modules_marker = item.get_closest_marker("requires_salt_modules")
     if requires_salt_modules_marker is not None:
         if requires_salt_modules_marker.kwargs:
-            raise ValueError("The 'required_salt_modules' marker does not accept keyword arguments")
+            raise pytest.UsageError(
+                "The 'required_salt_modules' marker does not accept keyword arguments"
+            )
         required_salt_modules = requires_salt_modules_marker.args
         if not required_salt_modules:
-            raise ValueError(
+            raise pytest.UsageError(
                 "The 'required_salt_modules' marker needs at least one module name to be passed"
             )
         for arg in required_salt_modules:
             if not isinstance(arg, str):
-                raise ValueError(
+                raise pytest.UsageError(
                     "The 'required_salt_modules' marker only accepts strings as arguments"
                 )
         required_salt_modules = set(required_salt_modules)
@@ -453,15 +471,17 @@ def pytest_runtest_setup(item):
     requires_salt_states_marker = item.get_closest_marker("requires_salt_states")
     if requires_salt_states_marker is not None:
         if requires_salt_states_marker.kwargs:
-            raise ValueError("The 'required_salt_states' marker does not accept keyword arguments")
+            raise pytest.UsageError(
+                "The 'required_salt_states' marker does not accept keyword arguments"
+            )
         required_salt_states = requires_salt_states_marker.args
         if not required_salt_states:
-            raise ValueError(
+            raise pytest.UsageError(
                 "The 'required_salt_states' marker needs at least one state module name to be passed"
             )
         for arg in required_salt_states:
             if not isinstance(arg, str):
-                raise ValueError(
+                raise pytest.UsageError(
                     "The 'required_salt_states' marker only accepts strings as arguments"
                 )
         required_salt_states = set(required_salt_states)
