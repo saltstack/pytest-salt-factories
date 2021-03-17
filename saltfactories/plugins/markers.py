@@ -8,9 +8,8 @@ import os
 
 import pytest
 
-import saltfactories.utils.compat
+import saltfactories.utils.functional
 import saltfactories.utils.markers
-import saltfactories.utils.platform
 
 
 def pytest_addoption(parser):
@@ -41,384 +40,8 @@ def pytest_runtest_setup(item):
     """
     Fixtures injection based on markers or test skips based on CLI arguments
     """
-    destructive_tests_marker = item.get_closest_marker("destructive_test")
-    if destructive_tests_marker is not None or saltfactories.utils.compat.has_unittest_attr(
-        item, "__destructive_test__"
-    ):
-        if item.config.getoption("--run-destructive") is False:
-            item._skipped_by_mark = True
-            pytest.skip("Destructive tests are disabled")
-
-    expensive_tests_marker = item.get_closest_marker("expensive_test")
-    if expensive_tests_marker is not None or saltfactories.utils.compat.has_unittest_attr(
-        item, "__expensive_test__"
-    ):
-        if item.config.getoption("--run-expensive") is False:
-            item._skipped_by_mark = True
-            pytest.skip("Expensive tests are disabled")
-
-    skip_if_not_root_marker = item.get_closest_marker("skip_if_not_root")
-    if skip_if_not_root_marker is not None or saltfactories.utils.compat.has_unittest_attr(
-        item, "__skip_if_not_root__"
-    ):
-        skip_reason = saltfactories.utils.markers.skip_if_not_root()
-        if skip_reason:
-            item._skipped_by_mark = True
-            pytest.skip(skip_reason)
-
-    skip_if_binaries_missing_marker = item.get_closest_marker("skip_if_binaries_missing")
-    if skip_if_binaries_missing_marker is not None or saltfactories.utils.compat.has_unittest_attr(
-        item, "__skip_if_binaries_missing__"
-    ):
-        binaries = skip_if_binaries_missing_marker.args
-        if len(binaries) == 1 and not isinstance(binaries[0], str):
-            raise RuntimeError(
-                "Do not pass a list as binaries to the skip_if_binaries_missing() marker. "
-                "Instead, pass each binary as an argument to skip_if_binaries_missing()."
-            )
-        skip_reason = saltfactories.utils.markers.skip_if_binaries_missing(
-            binaries, **skip_if_binaries_missing_marker.kwargs
-        )
-        if skip_reason:
-            item._skipped_by_mark = True
-            pytest.skip(skip_reason)
-
-    requires_network_marker = item.get_closest_marker("requires_network")
-    if requires_network_marker is not None or saltfactories.utils.compat.has_unittest_attr(
-        item, "__requires_network__"
-    ):
-        only_local_network = requires_network_marker.kwargs.get("only_local_network", False)
-        local_skip_reason = saltfactories.utils.markers.skip_if_no_local_network()
-        if local_skip_reason:
-            # Since we're only supposed to check local network, and no
-            # local network was detected, skip the test
-            item._skipped_by_mark = True
-            pytest.skip(local_skip_reason)
-
-        if only_local_network is False:
-            remote_skip_reason = saltfactories.utils.markers.skip_if_no_remote_network()
-            if remote_skip_reason:
-                item._skipped_by_mark = True
-                pytest.skip(remote_skip_reason)
-
-    # Platform Skip Markers
-    skip_on_windows_marker = item.get_closest_marker("skip_on_windows")
-    if skip_on_windows_marker is not None:
-        if skip_on_windows_marker.args:
-            raise RuntimeError("The skip_on_windows marker does not accept any arguments")
-        reason = skip_on_windows_marker.kwargs.pop("reason", None)
-        if skip_on_windows_marker.kwargs:
-            raise RuntimeError(
-                "The skip_on_windows marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Skipped on Windows"
-        if saltfactories.utils.platform.is_windows():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_unless_on_windows_marker = item.get_closest_marker("skip_unless_on_windows")
-    if skip_unless_on_windows_marker is not None:
-        if skip_unless_on_windows_marker.args:
-            raise RuntimeError("The skip_unless_on_windows marker does not accept any arguments")
-        reason = skip_unless_on_windows_marker.kwargs.pop("reason", None)
-        if skip_unless_on_windows_marker.kwargs:
-            raise RuntimeError(
-                "The skip_unless_on_windows marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Platform is not Windows, skipped"
-        if not saltfactories.utils.platform.is_windows():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_on_linux_marker = item.get_closest_marker("skip_on_linux")
-    if skip_on_linux_marker is not None:
-        if skip_on_linux_marker.args:
-            raise RuntimeError("The skip_on_linux marker does not accept any arguments")
-        reason = skip_on_linux_marker.kwargs.pop("reason", None)
-        if skip_on_linux_marker.kwargs:
-            raise RuntimeError(
-                "The skip_on_linux marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Skipped on Linux"
-        if saltfactories.utils.platform.is_linux():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_unless_on_linux_marker = item.get_closest_marker("skip_unless_on_linux")
-    if skip_unless_on_linux_marker is not None:
-        if skip_unless_on_linux_marker.args:
-            raise RuntimeError("The skip_unless_on_linux marker does not accept any arguments")
-        reason = skip_unless_on_linux_marker.kwargs.pop("reason", None)
-        if skip_unless_on_linux_marker.kwargs:
-            raise RuntimeError(
-                "The skip_unless_on_linux marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Platform is not Linux, skipped"
-        if not saltfactories.utils.platform.is_linux():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_on_darwin_marker = item.get_closest_marker("skip_on_darwin")
-    if skip_on_darwin_marker is not None:
-        if skip_on_darwin_marker.args:
-            raise RuntimeError("The skip_on_darwin marker does not accept any arguments")
-        reason = skip_on_darwin_marker.kwargs.pop("reason", None)
-        if skip_on_darwin_marker.kwargs:
-            raise RuntimeError(
-                "The skip_on_darwin marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Skipped on Darwin"
-        if saltfactories.utils.platform.is_darwin():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_unless_on_darwin_marker = item.get_closest_marker("skip_unless_on_darwin")
-    if skip_unless_on_darwin_marker is not None:
-        if skip_unless_on_darwin_marker.args:
-            raise RuntimeError("The skip_unless_on_darwin marker does not accept any arguments")
-        reason = skip_unless_on_darwin_marker.kwargs.pop("reason", None)
-        if skip_unless_on_darwin_marker.kwargs:
-            raise RuntimeError(
-                "The skip_unless_on_darwin marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Platform is not Darwin, skipped"
-        if not saltfactories.utils.platform.is_darwin():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_on_sunos_marker = item.get_closest_marker("skip_on_sunos")
-    if skip_on_sunos_marker is not None:
-        if skip_on_sunos_marker.args:
-            raise RuntimeError("The skip_on_sunos marker does not accept any arguments")
-        reason = skip_on_sunos_marker.kwargs.pop("reason", None)
-        if skip_on_sunos_marker.kwargs:
-            raise RuntimeError(
-                "The skip_on_sunos marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Skipped on SunOS"
-        if saltfactories.utils.platform.is_sunos():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_unless_on_sunos_marker = item.get_closest_marker("skip_unless_on_sunos")
-    if skip_unless_on_sunos_marker is not None:
-        if skip_unless_on_sunos_marker.args:
-            raise RuntimeError("The skip_unless_on_sunos marker does not accept any arguments")
-        reason = skip_unless_on_sunos_marker.kwargs.pop("reason", None)
-        if skip_unless_on_sunos_marker.kwargs:
-            raise RuntimeError(
-                "The skip_unless_on_sunos marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Platform is not SunOS, skipped"
-        if not saltfactories.utils.platform.is_sunos():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_on_smartos_marker = item.get_closest_marker("skip_on_smartos")
-    if skip_on_smartos_marker is not None:
-        if skip_on_smartos_marker.args:
-            raise RuntimeError("The skip_on_smartos marker does not accept any arguments")
-        reason = skip_on_smartos_marker.kwargs.pop("reason", None)
-        if skip_on_smartos_marker.kwargs:
-            raise RuntimeError(
-                "The skip_on_smartos marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Skipped on SmartOS"
-        if saltfactories.utils.platform.is_smartos():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_unless_on_smartos_marker = item.get_closest_marker("skip_unless_on_smartos")
-    if skip_unless_on_smartos_marker is not None:
-        if skip_unless_on_smartos_marker.args:
-            raise RuntimeError("The skip_unless_on_smartos marker does not accept any arguments")
-        reason = skip_unless_on_smartos_marker.kwargs.pop("reason", None)
-        if skip_unless_on_smartos_marker.kwargs:
-            raise RuntimeError(
-                "The skip_unless_on_smartos marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Platform is not SmartOS, skipped"
-        if not saltfactories.utils.platform.is_smartos():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_on_freebsd_marker = item.get_closest_marker("skip_on_freebsd")
-    if skip_on_freebsd_marker is not None:
-        if skip_on_freebsd_marker.args:
-            raise RuntimeError("The skip_on_freebsd marker does not accept any arguments")
-        reason = skip_on_freebsd_marker.kwargs.pop("reason", None)
-        if skip_on_freebsd_marker.kwargs:
-            raise RuntimeError(
-                "The skip_on_freebsd marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Skipped on FreeBSD"
-        if saltfactories.utils.platform.is_freebsd():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_unless_on_freebsd_marker = item.get_closest_marker("skip_unless_on_freebsd")
-    if skip_unless_on_freebsd_marker is not None:
-        if skip_unless_on_freebsd_marker.args:
-            raise RuntimeError("The skip_unless_on_freebsd marker does not accept any arguments")
-        reason = skip_unless_on_freebsd_marker.kwargs.pop("reason", None)
-        if skip_unless_on_freebsd_marker.kwargs:
-            raise RuntimeError(
-                "The skip_unless_on_freebsd marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Platform is not FreeBSD, skipped"
-        if not saltfactories.utils.platform.is_freebsd():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_on_netbsd_marker = item.get_closest_marker("skip_on_netbsd")
-    if skip_on_netbsd_marker is not None:
-        if skip_on_netbsd_marker.args:
-            raise RuntimeError("The skip_on_netbsd marker does not accept any arguments")
-        reason = skip_on_netbsd_marker.kwargs.pop("reason", None)
-        if skip_on_netbsd_marker.kwargs:
-            raise RuntimeError(
-                "The skip_on_netbsd marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Skipped on NetBSD"
-        if saltfactories.utils.platform.is_netbsd():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_unless_on_netbsd_marker = item.get_closest_marker("skip_unless_on_netbsd")
-    if skip_unless_on_netbsd_marker is not None:
-        if skip_unless_on_netbsd_marker.args:
-            raise RuntimeError("The skip_unless_on_netbsd marker does not accept any arguments")
-        reason = skip_unless_on_netbsd_marker.kwargs.pop("reason", None)
-        if skip_unless_on_netbsd_marker.kwargs:
-            raise RuntimeError(
-                "The skip_unless_on_netbsd marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Platform is not NetBSD, skipped"
-        if not saltfactories.utils.platform.is_netbsd():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_on_openbsd_marker = item.get_closest_marker("skip_on_openbsd")
-    if skip_on_openbsd_marker is not None:
-        if skip_on_openbsd_marker.args:
-            raise RuntimeError("The skip_on_openbsd marker does not accept any arguments")
-        reason = skip_on_openbsd_marker.kwargs.pop("reason", None)
-        if skip_on_openbsd_marker.kwargs:
-            raise RuntimeError(
-                "The skip_on_openbsd marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Skipped on OpenBSD"
-        if saltfactories.utils.platform.is_openbsd():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_unless_on_openbsd_marker = item.get_closest_marker("skip_unless_on_openbsd")
-    if skip_unless_on_openbsd_marker is not None:
-        if skip_unless_on_openbsd_marker.args:
-            raise RuntimeError("The skip_unless_on_openbsd marker does not accept any arguments")
-        reason = skip_unless_on_openbsd_marker.kwargs.pop("reason", None)
-        if skip_unless_on_openbsd_marker.kwargs:
-            raise RuntimeError(
-                "The skip_unless_on_openbsd marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Platform is not OpenBSD, skipped"
-        if not saltfactories.utils.platform.is_openbsd():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_on_aix_marker = item.get_closest_marker("skip_on_aix")
-    if skip_on_aix_marker is not None:
-        if skip_on_aix_marker.args:
-            raise RuntimeError("The skip_on_aix marker does not accept any arguments")
-        reason = skip_on_aix_marker.kwargs.pop("reason", None)
-        if skip_on_aix_marker.kwargs:
-            raise RuntimeError(
-                "The skip_on_aix marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Skipped on AIX"
-        if saltfactories.utils.platform.is_aix():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_unless_on_aix_marker = item.get_closest_marker("skip_unless_on_aix")
-    if skip_unless_on_aix_marker is not None:
-        if skip_unless_on_aix_marker.args:
-            raise RuntimeError("The skip_unless_on_aix marker does not accept any arguments")
-        reason = skip_unless_on_aix_marker.kwargs.pop("reason", None)
-        if skip_unless_on_aix_marker.kwargs:
-            raise RuntimeError(
-                "The skip_unless_on_aix marker only accepts 'reason' as a keyword argument."
-            )
-        if reason is None:
-            reason = "Platform is not AIX, skipped"
-        if not saltfactories.utils.platform.is_aix():
-            item._skipped_by_mark = True
-            pytest.skip(reason)
-
-    skip_on_platforms_marker = item.get_closest_marker("skip_on_platforms")
-    if skip_on_platforms_marker is not None:
-        if skip_on_platforms_marker.args:
-            raise RuntimeError("The skip_on_platforms marker does not accept any arguments")
-        reason = skip_on_platforms_marker.kwargs.pop("reason", None)
-        if not skip_on_platforms_marker.kwargs:
-            raise RuntimeError(
-                "Pass at least one platform to skip_on_platforms as a keyword argument"
-            )
-        if not any(skip_on_platforms_marker.kwargs.values()):
-            raise RuntimeError(
-                "Pass at least one platform with a True value to skip_on_platforms as a keyword argument"
-            )
-        if reason is None:
-            reason = "Skipped on platform match"
-        try:
-            if saltfactories.utils.platform.on_platforms(**skip_on_platforms_marker.kwargs):
-                item._skipped_by_mark = True
-                pytest.skip(reason)
-        except TypeError as exc:
-            raise RuntimeError("Passed an invalid platform to skip_on_platforms: {}".format(exc))
-
-    skip_unless_on_platforms_marker = item.get_closest_marker("skip_unless_on_platforms")
-    if skip_unless_on_platforms_marker is not None:
-        if skip_unless_on_platforms_marker.args:
-            raise RuntimeError("The skip_unless_on_platforms marker does not accept any arguments")
-        reason = skip_unless_on_platforms_marker.kwargs.pop("reason", None)
-        if not skip_unless_on_platforms_marker.kwargs:
-            raise RuntimeError(
-                "Pass at least one platform to skip_unless_on_platforms as a keyword argument"
-            )
-        if not any(skip_unless_on_platforms_marker.kwargs.values()):
-            raise RuntimeError(
-                "Pass at least one platform with a True value to skip_unless_on_platforms as a keyword argument"
-            )
-        if reason is None:
-            reason = "Platform(s) do not match, skipped"
-        try:
-            if not saltfactories.utils.platform.on_platforms(
-                **skip_unless_on_platforms_marker.kwargs
-            ):
-                item._skipped_by_mark = True
-                pytest.skip(reason)
-        except TypeError as exc:
-            raise RuntimeError(
-                "Passed an invalid platform to skip_unless_on_platforms: {}".format(exc)
-            )
+    __tracebackhide__ = True
+    saltfactories.utils.markers.evaluate_markers(item)
 
 
 @pytest.mark.trylast
@@ -542,8 +165,35 @@ def pytest_configure(config):
         "netbsd=False, openbsd=False, aix=False): Pass True to one or more platform names to get the test skipped "
         "unless the chosen platforms match",
     )
+    config.addinivalue_line(
+        "markers",
+        "requires_salt_modules(*required_module_names): Skip if at least one module is not available.",
+    )
+    config.addinivalue_line(
+        "markers",
+        "requires_salt_states(*required_state_names): Skip if at least one state module is not available.",
+    )
 
     # Add keys to environ in order to support Salt's helper decorators while it does not migrate to pytest markers
     env2cli = (("DESTRUCTIVE_TESTS", "--run-destructive"), ("EXPENSIVE_TESTS", "--run-expensive"))
     for envkey, cliflag in env2cli:
         os.environ[str(envkey)] = str(config.getoption(cliflag)).lower()
+
+
+@pytest.fixture(scope="session")
+def session_markers_loader(salt_factories):
+    minion_id = "session-markers-minion"
+    config_overrides = {
+        "file_client": "local",
+        "features": {"enable_slsvars_fixes": True},
+    }
+    factory = salt_factories.get_salt_minion_daemon(
+        minion_id,
+        config_overrides=config_overrides,
+    )
+    loader_instance = saltfactories.utils.functional.Loaders(factory.config.copy())
+    # Sync Everything
+    loader_instance.modules.saltutil.sync_all()
+    # Reload Everything - This is required or custom modules in _modules will not be found
+    loader_instance.reload_all()
+    return loader_instance

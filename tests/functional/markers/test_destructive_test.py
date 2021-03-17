@@ -6,8 +6,8 @@
 """
 
 
-def test_run_destructive_skipped(testdir):
-    testdir.makepyfile(
+def test_run_destructive_skipped(pytester):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -16,13 +16,13 @@ def test_run_destructive_skipped(testdir):
             assert True
         """
     )
-    res = testdir.runpytest()
+    res = pytester.runpytest()
     res.assert_outcomes(skipped=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
-def test_run_destructive_not_skipped(testdir):
-    testdir.makepyfile(
+def test_run_destructive_not_skipped(pytester):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -31,6 +31,6 @@ def test_run_destructive_not_skipped(testdir):
             assert True
         """
     )
-    res = testdir.runpytest("--run-destructive")
+    res = pytester.runpytest("--run-destructive")
     res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")

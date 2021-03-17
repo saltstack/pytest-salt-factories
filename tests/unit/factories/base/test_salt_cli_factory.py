@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import sys
 from collections import OrderedDict
 from unittest import mock
@@ -11,10 +12,12 @@ from saltfactories.utils.processes import ProcessResult
 
 
 @pytest.fixture
-def config_dir(testdir):
-    _conf_dir = testdir.mkdir("conf")
-    yield _conf_dir
-    _conf_dir.remove(rec=1, ignore_errors=True)
+def config_dir(pytester):
+    _conf_dir = pytester.mkdir("conf")
+    try:
+        yield _conf_dir
+    finally:
+        shutil.rmtree(str(_conf_dir), ignore_errors=True)
 
 
 @pytest.fixture
@@ -24,21 +27,23 @@ def minion_id():
 
 @pytest.fixture
 def config_file(config_dir, minion_id):
-    config_file = config_dir.join("config").strpath
+    config_file = str(config_dir / "config")
     with open(config_file, "w") as wfh:
         wfh.write("id: {}\n".format(minion_id))
     return config_file
 
 
 @pytest.fixture
-def cli_script_name(testdir):
-    py_file = testdir.makepyfile(
+def cli_script_name(pytester):
+    py_file = pytester.makepyfile(
         """
         print("This would be the CLI script")
         """
     )
-    yield py_file.strpath
-    py_file.remove(rec=0, ignore_errors=True)
+    try:
+        yield str(py_file)
+    finally:
+        py_file.unlink()
 
 
 def test_default_cli_flags(minion_id, config_dir, config_file, cli_script_name):
@@ -48,7 +53,7 @@ def test_default_cli_flags(minion_id, config_dir, config_file, cli_script_name):
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -76,7 +81,7 @@ def test_override_log_level(minion_id, config_dir, config_file, cli_script_name,
         [
             sys.executable,
             cli_script_name,
-            "--config-dir={}".format(config_dir.strpath),
+            "--config-dir={}".format(config_dir),
             "--out=json",
             "--out-indent=0",
             minion_id,
@@ -105,7 +110,7 @@ def test_override_output(minion_id, config_dir, config_file, cli_script_name, fl
         [
             sys.executable,
             cli_script_name,
-            "--config-dir={}".format(config_dir.strpath),
+            "--config-dir={}".format(config_dir),
             "--log-level=critical",
             minion_id,
         ]
@@ -135,7 +140,7 @@ def test_override_output_indent(minion_id, config_dir, config_file, cli_script_n
         [
             sys.executable,
             cli_script_name,
-            "--config-dir={}".format(config_dir.strpath),
+            "--config-dir={}".format(config_dir),
             "--out=json",
             "--log-level=critical",
             minion_id,
@@ -160,7 +165,7 @@ def test_cli_timeout_lesser_than_timeout_kw(minion_id, config_dir, config_file, 
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -186,7 +191,7 @@ def test_cli_timeout_lesser_than_timeout_kw(minion_id, config_dir, config_file, 
         # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
-        ret = proc.run(*args, **kwargs)
+        proc.run(*args, **kwargs)
         assert proc.impl._terminal_timeout == explicit_timeout
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
@@ -203,7 +208,7 @@ def test_cli_timeout_matches_timeout_kw(minion_id, config_dir, config_file, cli_
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -246,7 +251,7 @@ def test_cli_timeout_greater_than_timeout_kw(minion_id, config_dir, config_file,
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -289,7 +294,7 @@ def test_cli_timeout_updates_to_timeout_kw_plus_10(
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--timeout={}".format(explicit_timeout),
         "--out=json",
         "--out-indent=0",
@@ -330,7 +335,7 @@ def test_cli_timeout_updates_to_default_timeout_plus_10(
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--timeout={}".format(default_timeout),
         "--out=json",
         "--out-indent=0",
@@ -376,7 +381,7 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
         [
             sys.executable,
             cli_script_name,
-            "--config-dir={}".format(config_dir.strpath),
+            "--config-dir={}".format(config_dir),
             "--out=json",
             "--out-indent=0",
             "--log-level=critical",
@@ -417,7 +422,7 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
         [
             sys.executable,
             cli_script_name,
-            "--config-dir={}".format(config_dir.strpath),
+            "--config-dir={}".format(config_dir),
             "--out=json",
             "--out-indent=0",
             "--log-level=critical",
@@ -444,9 +449,9 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
 
 @pytest.mark.parametrize("flag", ["-c", "--config-dir", "--config-dir=", None])
 def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name, flag):
-    passed_config_dir = config_dir.strpath + ".new"
+    passed_config_dir = "{}.new".format(config_dir)
     if flag is None:
-        flag_overrides_args = ["--config-dir={}".format(config_dir.strpath)]
+        flag_overrides_args = ["--config-dir={}".format(config_dir)]
     elif flag.endswith("="):
         flag_overrides_args = [flag + passed_config_dir]
     else:
@@ -494,7 +499,7 @@ def test_non_string_cli_flags(minion_id, config_dir, config_file, cli_script_nam
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -517,7 +522,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -539,7 +544,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -562,7 +567,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -584,7 +589,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",

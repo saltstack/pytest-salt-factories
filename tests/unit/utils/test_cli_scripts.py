@@ -118,7 +118,7 @@ def test_generate_script_inject_coverage(tmpdir):
     Test coverage related code included in script generation
     """
     # If code_dir is not passed, assert that we fail
-    with pytest.raises(RuntimeError):
+    with pytest.raises(pytest.UsageError):
         cli_scripts.generate_script(tmpdir.strpath, "salt-foobar-fail", inject_coverage=True)
 
     code_dir = tmpdir.mkdir("code-dir").strpath

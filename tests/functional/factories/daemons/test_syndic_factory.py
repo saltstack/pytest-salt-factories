@@ -97,8 +97,8 @@ def test_keyword_nested_overrides_override_defaults(mom):
     assert syndic.minion.config["colors"] == expected_colors
 
 
-def test_provide_root_dir(testdir, mom):
-    root_dir = testdir.mkdir("custom-root")
+def test_provide_root_dir(pytester, mom):
+    root_dir = str(pytester.mkdir("custom-root"))
     config_defaults = {"root_dir": root_dir}
     syndic_id = random_string("syndic-")
     syndic = mom.get_salt_syndic_daemon(syndic_id, config_defaults=config_defaults)

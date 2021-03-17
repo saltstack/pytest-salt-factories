@@ -38,6 +38,7 @@ favicon
 favicons
 fds
 formatter
+funcname
 getsockname
 gettempdir
 globals
@@ -62,6 +63,7 @@ msg
 msgpack
 namespace
 ng
+nocover
 nodeid
 nox
 ordereddict

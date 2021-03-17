@@ -4,16 +4,20 @@ tests.unit.factories.cli.test_salt
 
 Test the ``salt`` CLI functionality
 """
+import shutil
+
 import pytest
 
 from saltfactories.factories.cli.salt import SaltCliFactory
 
 
 @pytest.fixture
-def config_dir(testdir):
-    _conf_dir = testdir.mkdir("conf")
-    yield _conf_dir
-    _conf_dir.remove(rec=1, ignore_errors=True)
+def config_dir(pytester):
+    _conf_dir = pytester.mkdir("conf")
+    try:
+        yield _conf_dir
+    finally:
+        shutil.rmtree(str(_conf_dir), ignore_errors=True)
 
 
 @pytest.fixture
@@ -23,28 +27,30 @@ def minion_id():
 
 @pytest.fixture
 def config_file(config_dir, minion_id):
-    config_file = config_dir.join("config").strpath
+    config_file = str(config_dir / "config")
     with open(config_file, "w") as wfh:
         wfh.write("id: {}\n".format(minion_id))
     return config_file
 
 
 @pytest.fixture
-def cli_script_name(testdir):
-    py_file = testdir.makepyfile(
+def cli_script_name(pytester):
+    py_file = pytester.makepyfile(
         """
         print("This would be the CLI script")
         """
     )
-    yield py_file.strpath
-    py_file.remove(rec=0, ignore_errors=True)
+    try:
+        yield str(py_file)
+    finally:
+        py_file.unlink()
 
 
 def test_missing_minion_id_raises_exception(minion_id, config_dir, config_file, cli_script_name):
     config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
     proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    with pytest.raises(RuntimeError) as exc:
+    with pytest.raises(pytest.UsageError) as exc:
         proc.build_cmdline(*args)
     assert (
         str(exc.value) == "The `minion_tgt` keyword argument is mandatory for the salt CLI factory"

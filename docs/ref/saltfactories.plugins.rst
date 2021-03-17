@@ -25,6 +25,14 @@ saltfactories.plugins.factories module
    :undoc-members:
    :show-inheritance:
 
+saltfactories.plugins.loader module
+-----------------------------------
+
+.. automodule:: saltfactories.plugins.loader
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 saltfactories.plugins.log\_server module
 ----------------------------------------
 

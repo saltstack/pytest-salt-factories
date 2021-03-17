@@ -21,6 +21,21 @@ def pytest_collection_modifyitems(items):
         seen_modules.add(item.module.__name__)
         # If the test module defines a configure_loader_modules function, let's confirm that it's actually a fixture
         try:
+            fixture = item.module.configure_loader_module
+            try:
+                fixture._pytestfixturefunction  # pylint: disable=pointless-statement
+                raise RuntimeError(
+                    "The module {} defines a 'configure_loader_module' fixture but "
+                    "the correct fixture name is 'configure_loader_modules'".format(item.module)
+                )
+            except AttributeError:
+                # It's a regular function?!
+                # Carry on
+                pass
+        except AttributeError:
+            # The test module does not define a `configure_loader_module` function, good, it's a typo
+            pass
+        try:
             fixture = item.module.configure_loader_modules
         except AttributeError:
             # The test module does not define a `configure_loader_modules` function at all
@@ -32,7 +47,7 @@ def pytest_collection_modifyitems(items):
             except AttributeError:
                 # It's not a fixture, raise an error
                 raise RuntimeError(
-                    "The module {} defines a configure_loader_modules function but "
+                    "The module {} defines a 'configure_loader_modules' function but "
                     "that function is not a fixture".format(item.module)
                 )
 

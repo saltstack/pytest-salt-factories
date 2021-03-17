@@ -17,10 +17,18 @@ saltfactories.utils.cli\_scripts module
    :undoc-members:
    :show-inheritance:
 
-saltfactories.utils.compat module
+saltfactories.utils.functional module
+-------------------------------------
+
+.. automodule:: saltfactories.utils.functional
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+saltfactories.utils.loader module
 ---------------------------------
 
-.. automodule:: saltfactories.utils.compat
+.. automodule:: saltfactories.utils.loader
    :members:
    :undoc-members:
    :show-inheritance:
@@ -53,6 +61,14 @@ saltfactories.utils.processes module
 ------------------------------------
 
 .. automodule:: saltfactories.utils.processes
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+saltfactories.utils.socket module
+---------------------------------
+
+.. automodule:: saltfactories.utils.socket
    :members:
    :undoc-members:
    :show-inheritance:

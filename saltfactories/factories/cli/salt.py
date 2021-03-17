@@ -5,6 +5,7 @@ saltfactories.factories.cli.salt
 ``salt`` CLI factory
 """
 import attr
+import pytest
 
 from saltfactories.factories.base import SaltCliFactory as _SaltCliFactory
 
@@ -20,7 +21,7 @@ class SaltCliFactory(_SaltCliFactory):
     def build_cmdline(self, *args, minion_tgt=None, **kwargs):  # pylint: disable=arguments-differ
         skip_raise_exception_args = {"-V", "--version", "--versions-report", "--help"}
         if minion_tgt is None and not set(args).intersection(skip_raise_exception_args):
-            raise RuntimeError(
+            raise pytest.UsageError(
                 "The `minion_tgt` keyword argument is mandatory for the salt CLI factory"
             )
         return super().build_cmdline(*args, minion_tgt=minion_tgt, **kwargs)

@@ -1,3 +1,4 @@
+import shutil
 import sys
 
 import pytest
@@ -6,10 +7,12 @@ from saltfactories.factories.base import SaltDaemonFactory
 
 
 @pytest.fixture
-def config_dir(testdir):
-    _conf_dir = testdir.mkdir("conf")
-    yield _conf_dir
-    _conf_dir.remove(rec=1, ignore_errors=True)
+def config_dir(pytester):
+    _conf_dir = pytester.mkdir("conf")
+    try:
+        yield _conf_dir
+    finally:
+        shutil.rmtree(str(_conf_dir), ignore_errors=True)
 
 
 @pytest.fixture
@@ -19,21 +22,23 @@ def master_id():
 
 @pytest.fixture
 def config_file(config_dir, master_id):
-    config_file = config_dir.join("config").strpath
+    config_file = str(config_dir / "config")
     with open(config_file, "w") as wfh:
         wfh.write("id: {}\n".format(master_id))
     return config_file
 
 
 @pytest.fixture
-def cli_script_name(testdir):
-    py_file = testdir.makepyfile(
+def cli_script_name(pytester):
+    py_file = pytester.makepyfile(
         """
         print("This would be the CLI script")
         """
     )
-    yield py_file.strpath
-    py_file.remove(rec=0, ignore_errors=True)
+    try:
+        yield str(py_file)
+    finally:
+        py_file.unlink()
 
 
 def test_default_cli_flags(config_dir, config_file, cli_script_name):
@@ -41,7 +46,7 @@ def test_default_cli_flags(config_dir, config_file, cli_script_name):
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
         "--log-level=critical",
     ]
     proc = SaltDaemonFactory(start_timeout=1, cli_script_name=cli_script_name, config=config)
@@ -60,7 +65,7 @@ def test_override_log_level(config_dir, config_file, cli_script_name, flag):
     expected = [
         sys.executable,
         cli_script_name,
-        "--config-dir={}".format(config_dir.strpath),
+        "--config-dir={}".format(config_dir),
     ] + args
     proc = SaltDaemonFactory(start_timeout=1, cli_script_name=cli_script_name, config=config)
     cmdline = proc.build_cmdline(*args)
@@ -69,9 +74,9 @@ def test_override_log_level(config_dir, config_file, cli_script_name, flag):
 
 @pytest.mark.parametrize("flag", ["-c", "--config-dir", "--config-dir=", None])
 def test_override_config_dir(config_dir, config_file, cli_script_name, flag):
-    passed_config_dir = config_dir.strpath + ".new"
+    passed_config_dir = "{}.new".format(config_dir)
     if flag is None:
-        args = ["--config-dir={}".format(config_dir.strpath)]
+        args = ["--config-dir={}".format(config_dir)]
     elif flag.endswith("="):
         args = [flag + passed_config_dir]
     else:

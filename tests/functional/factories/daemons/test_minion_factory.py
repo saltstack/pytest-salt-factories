@@ -77,8 +77,8 @@ def test_keyword_nested_overrides_override_defaults(salt_factories):
     assert minion_config["colors"] == {"black": True, "white": True, "grey": False}
 
 
-def test_provide_root_dir(testdir, salt_factories):
-    root_dir = testdir.mkdir("custom-root")
+def test_provide_root_dir(pytester, salt_factories):
+    root_dir = str(pytester.mkdir("custom-root"))
     config_defaults = {"root_dir": root_dir}
     minion_config = salt_factories.get_salt_minion_daemon(
         random_string("minion-"), config_defaults=config_defaults

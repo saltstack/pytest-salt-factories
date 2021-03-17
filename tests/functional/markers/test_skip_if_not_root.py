@@ -8,8 +8,8 @@ import sys
 from unittest import mock
 
 
-def test_skip_if_not_root_skipped(testdir):
-    testdir.makepyfile(
+def test_skip_if_not_root_skipped(pytester):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -24,13 +24,13 @@ def test_skip_if_not_root_skipped(testdir):
         mocked_func = mock.patch("salt.utils.win_functions.is_admin", return_value=False)
 
     with mocked_func:
-        res = testdir.runpytest()
+        res = pytester.runpytest()
         res.assert_outcomes(skipped=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
-def test_skip_if_not_root_not_skipped(testdir):
-    testdir.makepyfile(
+def test_skip_if_not_root_not_skipped(pytester):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -45,6 +45,6 @@ def test_skip_if_not_root_not_skipped(testdir):
         mocked_func = mock.patch("salt.utils.win_functions.is_admin", return_value=True)
 
     with mocked_func:
-        res = testdir.runpytest_inprocess("-ra", "-vv")
+        res = pytester.runpytest_inprocess("-ra", "-vv")
         res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")

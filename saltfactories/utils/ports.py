@@ -7,6 +7,8 @@ Ports related utility functions
 import contextlib
 import logging
 
+import pytest
+
 from saltfactories.utils import socket
 from saltfactories.utils import time
 
@@ -18,13 +20,13 @@ def get_unused_localhost_port(cached_seconds=10):
     Return a random unused port on localhost
     """
     if not isinstance(cached_seconds, (int, float)):
-        raise RuntimeError(
+        raise pytest.UsageError(
             "The value of 'cached_seconds' needs to be an integer or a float, not {}".format(
                 type(cached_seconds)
             )
         )
     if cached_seconds < 0:
-        raise RuntimeError(
+        raise pytest.UsageError(
             "The value of 'cached_seconds' needs to be a positive number, not {}".format(
                 cached_seconds
             )

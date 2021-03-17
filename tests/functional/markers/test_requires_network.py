@@ -10,8 +10,8 @@ from saltfactories.utils import ports
 from saltfactories.utils import socket
 
 
-def test_has_local_network(testdir):
-    testdir.makepyfile(
+def test_has_local_network(pytester):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -20,13 +20,13 @@ def test_has_local_network(testdir):
             assert True
         """
     )
-    res = testdir.runpytest()
+    res = pytester.runpytest()
     res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
-def test_no_local_network(testdir):
-    testdir.makepyfile(
+def test_no_local_network(pytester):
+    pytester.makepyfile(
         """
         import pytest
 
@@ -42,6 +42,6 @@ def test_no_local_network(testdir):
         side_effect=[ports.get_unused_localhost_port() for n in range(10)],
     ):
         with mock.patch("saltfactories.utils.markers.socket.socket", return_value=mock_socket):
-            res = testdir.runpytest_inprocess("-p", "no:salt-factories-log-server")
+            res = pytester.runpytest_inprocess("-p", "no:salt-factories-log-server")
             res.assert_outcomes(skipped=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
