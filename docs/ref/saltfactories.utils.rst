@@ -17,14 +17,6 @@ saltfactories.utils.cli\_scripts module
    :undoc-members:
    :show-inheritance:
 
-saltfactories.utils.compat module
----------------------------------
-
-.. automodule:: saltfactories.utils.compat
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 saltfactories.utils.functional module
 -------------------------------------
 
