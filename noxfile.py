@@ -294,6 +294,22 @@ def docs(session):
     os.chdir("..")
 
 
+@nox.session(name="docs-dev", python="3")
+def docs_dev(session):
+    """
+    Build Docs
+    """
+    session.install(
+        "--progress-bar=off",
+        "-r",
+        os.path.join("requirements", "docs.txt"),
+        silent=PIP_INSTALL_SILENT,
+    )
+    os.chdir("docs/")
+    session.run("make", "html", "SPHINXOPTS=-W", external=True, env={"LOCAL_DEV_BUILD": "1"})
+    os.chdir("..")
+
+
 @nox.session(name="docs-crosslink-info", python="3")
 def docs_crosslink_info(session):
     """
