@@ -44,6 +44,9 @@ for addtl_path in addtl_paths:
     sys.path.insert(0, addtl_path)
 
 
+LOCAL_DEV_BUILD = os.environ.get("LOCAL_DEV_BUILD", "0") == "1"
+
+
 # -- Project information -----------------------------------------------------
 this_year = datetime.datetime.today().year
 if this_year == 2020:
@@ -104,7 +107,7 @@ exclude_patterns = [
 ]
 
 autosummary_generate = True
-
+modindex_common_prefix = ["saltfactories."]
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -132,8 +135,8 @@ html_theme_options = {
     # hide tabs?
     "master_doc": False,
     # Minify for smaller HTML/CSS assets
-    "html_minify": True,
-    "css_minify": True,
+    "html_minify": False if LOCAL_DEV_BUILD else True,
+    "css_minify": False if LOCAL_DEV_BUILD else True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
