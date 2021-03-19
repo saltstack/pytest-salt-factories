@@ -42,7 +42,7 @@ def skip_if_not_root():
                 return "You must be logged in as an Administrator to run this test"
 
 
-def skip_if_binaries_missing(binaries, check_all=True, message=None):
+def skip_if_binaries_missing(binaries, check_all=True, reason=None):
     """
     Helper function to check for existing binaries
 
@@ -54,27 +54,25 @@ def skip_if_binaries_missing(binaries, check_all=True, message=None):
             If ``check_all`` is ``False``, then only one the passed binaries needs to be found.
             Useful when, for example, passing a list of python interpreter names(python3.5,
             python3, python), where only one needs to exist.
-        message (str):
-            Message to include in the skip reason.
+        reason (str):
+            The skip reason.
 
     Returns:
         str: The reason for the skip.
         None: Should not be skipped.
     """
-    if message:
-        reason = "{} ".format(message)
-    else:
-        reason = ""
     if check_all is False:
         # We only need one of the passed binaries to exist
         if salt.utils.path.which_bin(binaries) is None:
-            reason += "None of the following binaries was found: {}".format(", ".join(binaries))
-            return reason
+            if reason is not None:
+                return reason
+            return "None of the following binaries was found: {}".format(", ".join(binaries))
     else:
         for binary in binaries:
             if salt.utils.path.which(binary) is None:
-                reason += "The '{}' binary was not found".format(binary)
-                return reason
+                if reason is not None:
+                    return reason
+                return "The '{}' binary was not found".format(binary)
     log.debug("All binaries found. Searched for: %s", ", ".join(binaries))
 
 
@@ -215,11 +213,24 @@ def evaluate_markers(item):
     skip_if_binaries_missing_marker = item.get_closest_marker("skip_if_binaries_missing")
     if skip_if_binaries_missing_marker is not None:
         binaries = skip_if_binaries_missing_marker.args
-        if len(binaries) == 1 and not isinstance(binaries[0], str):
+        if not binaries:
             raise pytest.UsageError(
-                "Do not pass a list as binaries to the skip_if_binaries_missing() marker. "
-                "Instead, pass each binary as an argument to skip_if_binaries_missing()."
+                "The 'skip_if_binaries_missing' marker needs at least one binary name to be passed"
             )
+        for arg in binaries:
+            if not isinstance(arg, str):
+                raise pytest.UsageError(
+                    "The 'skip_if_binaries_missing' marker only accepts strings as arguments. If you are "
+                    "trying to pass multiple binaries, each binary should be an separate argument."
+                )
+        message = skip_if_binaries_missing_marker.kwargs.pop("message", None)
+        if message:
+            item.warn(
+                """Please stop passing 'message="{0}"' and instead pass 'reason="{0}"'""".format(
+                    message
+                )
+            )
+            skip_if_binaries_missing_marker.kwargs["reason"] = message
         skip_reason = skip_if_binaries_missing(binaries, **skip_if_binaries_missing_marker.kwargs)
         if skip_reason:
             item._skipped_by_mark = True
