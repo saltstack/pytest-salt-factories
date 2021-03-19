@@ -48,3 +48,27 @@ def test_skip_if_not_root_not_skipped(pytester):
         res = pytester.runpytest_inprocess("-ra", "-vv")
         res.assert_outcomes(passed=1)
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
+
+
+def test_error_on_args_or_kwargs(pytester):
+    pytester.makepyfile(
+        """
+        import pytest
+
+        @pytest.mark.skip_if_not_root("arg")
+        def test_one():
+            assert True
+
+        @pytest.mark.skip_if_not_root(kwarg="arg")
+        def test_two():
+            assert True
+        """
+    )
+    res = pytester.runpytest("--run-destructive")
+    res.assert_outcomes(errors=2)
+    res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
+    res.stdout.fnmatch_lines(
+        [
+            "*UsageError: The 'skip_if_not_root' marker does not accept any arguments or keyword arguments*"
+        ]
+    )
