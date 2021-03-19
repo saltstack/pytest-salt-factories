@@ -19,22 +19,26 @@ def pytest_collection_modifyitems(items):
             # No need to check the same module more than once
             continue
         seen_modules.add(item.module.__name__)
-        # If the test module defines a configure_loader_modules function, let's confirm that it's actually a fixture
-        try:
-            fixture = item.module.configure_loader_module
+        # Some users have reported that this was not working and it was due to the fixture having the
+        # wrong name. Let's look for typos.
+        typos = ("configure_loader_module", "configure_load_module", "configure_load_modules")
+        for typo in typos:
             try:
-                fixture._pytestfixturefunction  # pylint: disable=pointless-statement
-                raise RuntimeError(
-                    "The module {} defines a 'configure_loader_module' fixture but "
-                    "the correct fixture name is 'configure_loader_modules'".format(item.module)
-                )
+                fixture = getattr(item.module, typo)
+                try:
+                    fixture._pytestfixturefunction  # pylint: disable=pointless-statement
+                    raise RuntimeError(
+                        "The module {} defines a '{}' fixture but the correct fixture name "
+                        "is 'configure_loader_modules'".format(item.module, typo)
+                    )
+                except AttributeError:
+                    # It's a regular function?!
+                    # Carry on
+                    pass
             except AttributeError:
-                # It's a regular function?!
-                # Carry on
+                # The test module does not define a function with the typo as the name. Good.
                 pass
-        except AttributeError:
-            # The test module does not define a `configure_loader_module` function, good, it's a typo
-            pass
+        # If the test module defines a configure_loader_modules function, let's confirm that it's actually a fixture
         try:
             fixture = item.module.configure_loader_modules
         except AttributeError:
