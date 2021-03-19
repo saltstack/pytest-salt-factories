@@ -193,18 +193,30 @@ def evaluate_markers(item):
     """
     destructive_tests_marker = item.get_closest_marker("destructive_test")
     if destructive_tests_marker is not None:
+        if destructive_tests_marker.args or destructive_tests_marker.kwargs:
+            raise pytest.UsageError(
+                "The 'destructive_test' marker does not accept any arguments or keyword arguments"
+            )
         if item.config.getoption("--run-destructive") is False:
             item._skipped_by_mark = True
             pytest.skip("Destructive tests are disabled")
 
     expensive_tests_marker = item.get_closest_marker("expensive_test")
     if expensive_tests_marker is not None:
+        if expensive_tests_marker.args or expensive_tests_marker.kwargs:
+            raise pytest.UsageError(
+                "The 'expensive_test' marker does not accept any arguments or keyword arguments"
+            )
         if item.config.getoption("--run-expensive") is False:
             item._skipped_by_mark = True
             pytest.skip("Expensive tests are disabled")
 
     skip_if_not_root_marker = item.get_closest_marker("skip_if_not_root")
     if skip_if_not_root_marker is not None:
+        if skip_if_not_root_marker.args or skip_if_not_root_marker.kwargs:
+            raise pytest.UsageError(
+                "The 'skip_if_not_root' marker does not accept any arguments or keyword arguments"
+            )
         skip_reason = skip_if_not_root()
         if skip_reason:
             item._skipped_by_mark = True
