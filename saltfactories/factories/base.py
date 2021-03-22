@@ -100,21 +100,19 @@ class SubprocessFactoryImpl:
         """
         return self.factory.build_cmdline(*args)
 
-    def init_terminal(self, cmdline, env=None, **kwargs):
+    def init_terminal(self, cmdline, env=None):
         """
-        Instantiate a terminal with the passed cmdline and kwargs and return it.
+        Instantiate a terminal with the passed command line(``cmdline``) and return it.
 
-        Additionally, it sets a reference to it in self._terminal and also collects
+        Additionally, it sets a reference to it in ``self._terminal`` and also collects
         an initial listing of child processes which will be used when terminating the
         terminal
+
+        :param list,tuple cmdline:
+            List of strings to pass as ``args`` to :py:class:`~subprocess.Popen`
+        :keyword dict environ:
+            A dictionary of ``key``, ``value`` pairs to add to the environment.
         """
-        for key in ("stdin", "stdout", "stderr", "close_fds", "shell", "cwd", "bufsize"):
-            if key in kwargs:
-                raise pytest.UsageError(
-                    "{}.{}.init_terminal() does not accept {} as a valid keyword argument".format(
-                        __name__, self.__class__.__name__, key
-                    )
-                )
         environ = self.factory.environ.copy()
         if env is not None:
             environ.update(env)
