@@ -9,6 +9,10 @@ import os
 import sys
 import tempfile
 
+import pytest
+
+import saltfactories.utils.tempfiles
+
 log = logging.getLogger(__name__)
 
 
@@ -55,3 +59,14 @@ def pytest_runtest_logfinish(nodeid):
     :param location: a triple of ``(filename, linenum, testname)``
     """
     log.debug("<<<<<<< END %s <<<<<<<", nodeid)
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_load_initial_conftests(*_):
+    """
+    Register our pytest helpers
+    """
+    if "temp_directory" not in pytest.helpers:
+        pytest.helpers.register(saltfactories.utils.tempfiles.temp_directory, name="temp_directory")
+    if "temp_file" not in pytest.helpers:
+        pytest.helpers.register(saltfactories.utils.tempfiles.temp_file, name="temp_file")

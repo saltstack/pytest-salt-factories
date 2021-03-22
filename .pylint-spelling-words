@@ -9,6 +9,7 @@ attr
 auth
 autodoc
 basename
+basepath
 bool
 booleans
 cli
@@ -118,6 +119,8 @@ sys
 sysinfo
 sysstats
 systemd
+tempfile
+tempfiles
 testname
 tmp
 tmpdir
