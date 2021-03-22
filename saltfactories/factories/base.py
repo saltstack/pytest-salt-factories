@@ -108,7 +108,7 @@ class SubprocessFactoryImpl:
         an initial listing of child processes which will be used when terminating the
         terminal
         """
-        for key in ("stdin", "stdout", "stderr", "close_fds", "shell", "cwd"):
+        for key in ("stdin", "stdout", "stderr", "close_fds", "shell", "cwd", "bufsize"):
             if key in kwargs:
                 raise pytest.UsageError(
                     "{}.{}.init_terminal() does not accept {} as a valid keyword argument".format(
@@ -138,6 +138,7 @@ class SubprocessFactoryImpl:
             universal_newlines=True,
             close_fds=close_fds,
             env=environ,
+            bufsize=0,
         )
         # Reset the previous _terminal_result if set
         self._terminal_result = None
