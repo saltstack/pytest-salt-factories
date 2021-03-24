@@ -1,4 +1,8 @@
 """
+..
+    PYTEST_DONT_REWRITE
+
+
 saltfactories.utils.tempfiles
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -12,12 +16,11 @@ import tempfile
 import textwrap
 from contextlib import contextmanager
 
-import pytest
+import attr
 
 log = logging.getLogger(__name__)
 
 
-@pytest.helpers.register
 @contextmanager
 def temp_directory(name=None, basepath=None):
     """
@@ -85,7 +88,6 @@ def temp_directory(name=None, basepath=None):
             created_directory = created_directory.parent
 
 
-@pytest.helpers.register
 @contextmanager
 def temp_file(name=None, contents=None, directory=None, strip_first_newline=True):
     """
@@ -179,3 +181,185 @@ def _write_or_touch(file_path, contents, strip_first_newline=True):
         if file_path.exists():
             file_path.unlink()
             log.debug("Deleted temp file: %s", file_path)
+
+
+@attr.s(kw_only=True, slots=True)
+class SaltEnv:
+    """
+    This helper class represent a Salt Environment, either for states or pillar.
+    It's base purpose it to handle temporary file creation/deletion during testing.
+
+    :keyword str saltenv:
+        The salt environment name, commonly, 'base' or 'prod'
+    :keyword list paths:
+        The salt environment list of paths.
+
+        .. admonition:: Note
+
+            The first entry in this list, is the path that will get used to create temporary files in.
+    """
+
+    saltenv = attr.ib()
+    paths = attr.ib(default=attr.Factory(list))
+    write_path = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        for idx, path in enumerate(self.paths[:]):
+            if not isinstance(path, pathlib.Path):
+                # We have to cast path to a string because on Py3.5, path might be an instance of pathlib2.Path
+                path = pathlib.Path(str(path))
+                self.paths[idx] = path
+            path.mkdir(parents=True, exist_ok=True)
+        self.write_path = self.paths[0]
+
+    def temp_file(self, name, contents=None, strip_first_newline=True):
+        """
+        Create a temporary file within this saltenv.
+
+        Please check :py:func:`saltfactories.utils.temp_file` for documentation.
+        """
+        return temp_file(
+            name=name,
+            contents=contents,
+            directory=self.write_path,
+            strip_first_newline=strip_first_newline,
+        )
+
+
+@attr.s(kw_only=True)
+class SaltEnvs:
+    """
+    This class serves as a container for multiple salt environments for states or pillar.
+
+    :keyword dict envs:
+        The `envs` dictionary should be a mapping of a string as key, the `saltenv`, commonly 'base' or 'prod',
+        and the value an instance of :py:class:`~saltfactories.utils.SaltEnv` or a list of strings(paths).
+        In the case where a list of strings(paths) is passed, it is converted to an instance of
+        :py:class:`~saltfactories.utils.SaltEnv`
+
+    To provide a better user experience, the salt environments can be accessed as attributes of this class.
+
+    .. code-block:: python
+
+        envs = SaltEnvs(
+            {
+                "base": [
+                    "/path/to/base/env",
+                ],
+                "prod": [
+                    "/path/to/prod/env",
+                ],
+            }
+        )
+        with envs.base.temp_file("foo.txt", "foo contents") as base_foo_path:
+            ...
+        with envs.prod.temp_file("foo.txt", "foo contents") as prod_foo_path:
+            ...
+
+    """
+
+    envs = attr.ib()
+
+    def __attrs_post_init__(self):
+        for envname, envtree in self.envs.items():
+            if not isinstance(envtree, SaltEnv):
+                if isinstance(envtree, str):
+                    envtree = [envtree]
+                self.envs[envname] = SaltEnv(saltenv=envname, paths=envtree)
+            setattr(self, envname, self.envs[envname])
+
+
+@attr.s(kw_only=True)
+class SaltStateTree(SaltEnvs):
+    """
+    Helper class which handles temporary file creation within the state tree.
+
+    :keyword dict envs:
+        A mapping of a ``saltenv`` to a list of paths.
+
+        .. code-block:: python
+
+            envs = {
+                "base": [
+                    "/path/to/base/env",
+                    "/another/path/to/base/env",
+                ],
+                "prod": [
+                    "/path/to/prod/env",
+                    "/another/path/to/prod/env",
+                ],
+            }
+
+    The state tree environments can be accessed by attribute:
+
+    .. code-block:: python
+
+        # See example of envs definition above
+        state_tree = SaltStateTree(envs=envs)
+
+        # To access the base saltenv
+        base = state_tree.envs["base"]
+
+        # Alternatively, in a simpler form
+        base = state_tree.base
+
+    .. admonition:: Attention
+
+        The temporary files created by the :py:meth:`~saltfactories.utils.tempfiles.SaltEnv.temp_file` are written
+        to the first path passed when instantiating the ``SaltStateTree``.
+
+        .. code-block:: python
+
+            # Given the example mapping shown above ...
+
+            with state_tree.base.temp_file("foo.sls") as path:
+                assert path == "/path/to/base/env"
+    """
+
+
+@attr.s(kw_only=True)
+class SaltPillarTree(SaltEnvs):
+    """
+    Helper class which handles temporary file creation within the pillar tree.
+
+    :keyword dict envs:
+        A mapping of a ``saltenv`` to a list of paths.
+
+        .. code-block:: python
+
+            envs = {
+                "base": [
+                    "/path/to/base/env",
+                    "/another/path/to/base/env",
+                ],
+                "prod": [
+                    "/path/to/prod/env",
+                    "/another/path/to/prod/env",
+                ],
+            }
+
+    The pillar tree environments can be accessed by attribute:
+
+    .. code-block:: python
+
+        # See example of envs definition above
+        pillar_tree = SaltPillarTree(envs=envs)
+
+        # To access the base saltenv
+        base = pillar_tree.envs["base"]
+
+        # Alternatively, in a simpler form
+        base = pillar_tree.base
+
+    .. admonition:: Attention
+
+        The temporary files created by the :py:meth:`~saltfactories.utils.tempfiles.SaltEnv.temp_file` are written
+        to the first path passed when instantiating the ``SaltPillarTree``.
+
+        .. code-block:: python
+
+            # Given the example mapping shown above ...
+
+            with pillar_tree.base.temp_file("foo.sls") as path:
+                assert path == "/path/to/base/env"
+    """

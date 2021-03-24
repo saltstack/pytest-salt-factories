@@ -34,11 +34,13 @@ dunders
 ebuild
 env
 environ
+envs
 factorydaemonscriptbase
 favicon
 favicons
 fds
 formatter
+func
 funcname
 getsockname
 gettempdir
@@ -71,6 +73,7 @@ ordereddict
 os
 osx
 outputters
+pathlib
 pid
 png
 popen
@@ -88,8 +91,10 @@ repo
 ret
 returncode
 rst
+rtype
 saltapifactory
 saltcloudfactory
+saltenv
 saltfactories
 saltmaster
 saltmasterfactory

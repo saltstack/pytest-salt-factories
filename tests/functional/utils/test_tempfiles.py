@@ -116,3 +116,33 @@ def test_temp_file_contents(strip_first_newline):
     with tempfiles.temp_file(contents=contents, strip_first_newline=strip_first_newline) as tpath:
         assert tpath.is_file()
         assert tpath.read_text() == expected_contents
+
+
+def test_salt_env_temp_file(tmp_path):
+    with tempfiles.temp_directory("state-tree", basepath=tmp_path) as state_tree_path:
+        with tempfiles.temp_directory(
+            "base1", basepath=state_tree_path
+        ) as base_env_path_1, tempfiles.temp_directory(
+            "base2", basepath=state_tree_path
+        ) as base_env_path_2:
+            saltenv = tempfiles.SaltEnvs(envs={"base": [base_env_path_1, base_env_path_2]})
+
+            # Let's make sure we can access the saltenv by attribute
+            assert saltenv.base == saltenv.envs["base"]
+
+            # Let's create a temporary file using the `temp_file` helper method
+            top_file_contents = """
+            'base':
+              '*':
+                - bar
+            """
+            with saltenv.base.temp_file("top.sls", contents=top_file_contents) as top_file_path:
+                with pytest.raises(ValueError):
+                    # the top file shall not be created within the base_env_path_2
+                    # We have to cast to a string because on Py3.5, the path might be an instance of pathlib2.Path
+                    top_file_path.relative_to(str(base_env_path_2))
+
+                # It should however, be created within the base_env_path_1
+                # We have to cast to a string because on Py3.5, the path might be an instance of pathlib2.Path
+                relpath = top_file_path.relative_to(str(base_env_path_1))
+                assert relpath

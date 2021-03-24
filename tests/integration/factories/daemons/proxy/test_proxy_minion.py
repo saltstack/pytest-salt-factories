@@ -70,3 +70,13 @@ def test_proxy_minion_salt_call(proxy_minion, salt_call_cli):
     ret = salt_call_cli.run("--proxyid={}".format(proxy_minion.id), "test.ping")
     assert ret.exitcode == 0, ret
     assert ret.json is True
+
+
+def test_state_tree(proxy_minion, salt_call_cli):
+    sls_contents = """
+    test:
+      test.succeed_without_changes
+    """
+    with proxy_minion.state_tree.base.temp_file("foo.sls", sls_contents):
+        ret = salt_call_cli.run("--local", "state.sls", "foo")
+        assert ret.exitcode == 0
