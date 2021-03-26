@@ -12,7 +12,15 @@ import datetime
 import os
 import sys
 
+import pytest
 import sphinx_material_saltstack
+
+try:
+    pytest.helpers
+except AttributeError:
+    from pytest_helpers_namespace.plugin import HelpersRegistry
+
+    pytest.helpers = HelpersRegistry()
 
 try:
     docs_basepath = os.path.abspath(os.path.dirname(__file__))

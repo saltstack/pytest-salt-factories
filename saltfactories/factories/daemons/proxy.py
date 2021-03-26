@@ -8,6 +8,7 @@ saltfactories.factories.daemons.proxy
 
 Salt Proxy Minion Factory
 """
+import copy
 import logging
 import pathlib
 import shutil
@@ -22,6 +23,7 @@ from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.factories.base import SystemdSaltDaemonFactoryImpl
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import ports
+from saltfactories.utils.tempfiles import SaltStateTree
 
 log = logging.getLogger(__name__)
 
@@ -38,10 +40,17 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
 
     include_proxyid_cli_flag = attr.ib(default=True, repr=False)
 
+    state_tree = attr.ib(init=False, hash=False, repr=False)
+
     def _get_impl_class(self):
         if self.system_install:
             return SystemdSaltProxyFactoryImpl
         return super()._get_impl_class()
+
+    @state_tree.default
+    def __setup_state_tree(self):
+        if "file_roots" in self.config:
+            return SaltStateTree(envs=copy.deepcopy(self.config["file_roots"]))
 
     @classmethod
     def default_config(
@@ -98,6 +107,13 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
             conf_dir.mkdir(parents=True, exist_ok=True)
             conf_file = str(conf_dir / "proxy")
 
+            state_tree_root = root_dir / "state-tree"
+            state_tree_root.mkdir(exist_ok=True)
+            state_tree_root_base = state_tree_root / "base"
+            state_tree_root_base.mkdir(exist_ok=True)
+            state_tree_root_prod = state_tree_root / "prod"
+            state_tree_root_prod.mkdir(exist_ok=True)
+
             _config_defaults = {
                 "id": proxy_minion_id,
                 "conf_file": conf_file,
@@ -116,6 +132,10 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
                 "loop_interval": 0.05,
                 "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
                 "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "file_roots": {
+                    "base": [str(state_tree_root_base)],
+                    "prod": [str(state_tree_root_prod)],
+                },
                 "proxy": {"proxytype": "dummy"},
                 "enable_legacy_startup_events": False,
                 "acceptance_wait_time": 0.5,

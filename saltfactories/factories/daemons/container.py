@@ -1,8 +1,12 @@
 """
-    saltfactories.factories.daemons.container
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+..
+    PYTEST_DONT_REWRITE
 
-    Container based factories
+
+saltfactories.factories.daemons.container
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Container based factories
 """
 import atexit
 import logging

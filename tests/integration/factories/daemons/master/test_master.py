@@ -46,6 +46,11 @@ def salt_key(master):
     return master.get_salt_key_cli()
 
 
+@pytest.fixture
+def salt_call(minion):
+    return minion.get_salt_call_cli()
+
+
 def test_master(master):
     assert master.is_running()
 
@@ -142,3 +147,13 @@ def test_exit_status_unknown_user(salt_factories):
 
     assert exc.value.exitcode == salt.defaults.exitcodes.EX_NOUSER, str(exc.value)
     assert "The user is not available." in exc.value.stderr, str(exc.value)
+
+
+def test_state_tree(master, salt_call):
+    sls_contents = """
+    test:
+      test.succeed_without_changes
+    """
+    with master.state_tree.base.temp_file("foo.sls", sls_contents):
+        ret = salt_call.run("state.sls", "foo")
+        assert ret.exitcode == 0

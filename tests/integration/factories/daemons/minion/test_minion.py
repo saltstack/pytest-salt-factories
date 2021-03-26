@@ -64,3 +64,13 @@ def test_salt_call_exception_handling_doesnt_timeout(minion, salt_call_cli):
         "test.raise_exception", "OSError", "2", "No such file or directory", "/tmp/foo.txt"
     )
     assert ret.exitcode == 1, ret
+
+
+def test_state_tree(minion, salt_call_cli):
+    sls_contents = """
+    test:
+      test.succeed_without_changes
+    """
+    with minion.state_tree.base.temp_file("foo.sls", sls_contents):
+        ret = salt_call_cli.run("--local", "state.sls", "foo")
+        assert ret.exitcode == 0

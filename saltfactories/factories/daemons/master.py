@@ -8,6 +8,7 @@ saltfactories.factories.daemons.master
 
 Salt Master Factory
 """
+import copy
 import pathlib
 import shutil
 from functools import partial
@@ -21,11 +22,16 @@ from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import ports
 from saltfactories.utils import running_username
+from saltfactories.utils.tempfiles import SaltPillarTree
+from saltfactories.utils.tempfiles import SaltStateTree
 
 
 @attr.s(kw_only=True, slots=True)
 class SaltMasterFactory(SaltDaemonFactory):
     on_auth_event_callback = attr.ib(repr=False, default=None)
+
+    state_tree = attr.ib(init=False, hash=False, repr=False)
+    pillar_tree = attr.ib(init=False, hash=False, repr=False)
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
@@ -43,6 +49,16 @@ class SaltMasterFactory(SaltDaemonFactory):
             self.register_after_terminate_callback(
                 self.event_listener.unregister_auth_event_handler, self.id
             )
+
+    @state_tree.default
+    def __setup_state_tree(self):
+        if "file_roots" in self.config:
+            return SaltStateTree(envs=copy.deepcopy(self.config["file_roots"]))
+
+    @pillar_tree.default
+    def __setup_pillar_tree(self):
+        if "pillar_roots" in self.config:
+            return SaltPillarTree(envs=copy.deepcopy(self.config["pillar_roots"]))
 
     @classmethod
     def default_config(
