@@ -155,14 +155,22 @@ def pytest_configure(config):
     )
     config.addinivalue_line(
         "markers",
+        "skip_on_aarch64: Skip test on AArch64",
+    )
+    config.addinivalue_line(
+        "markers",
+        "skip_unless_on_aarch64: Skip test unless on AArch64",
+    )
+    config.addinivalue_line(
+        "markers",
         "skip_on_platforms(windows=False, linux=False, darwin=False, sunos=False, smartos=False, freebsd=False, "
-        "netbsd=False, openbsd=False, aix=False): Pass True to one or more platform names to get the test skipped "
+        "netbsd=False, openbsd=False, aix=False, aarch64=False): Pass True to one or more platform names to get the test skipped "
         "on those platforms",
     )
     config.addinivalue_line(
         "markers",
         "skip_unless_on_platforms(windows=False, linux=False, darwin=False, sunos=False, smartos=False, freebsd=False, "
-        "netbsd=False, openbsd=False, aix=False): Pass True to one or more platform names to get the test skipped "
+        "netbsd=False, openbsd=False, aix=False, aarch64=False): Pass True to one or more platform names to get the test skipped "
         "unless the chosen platforms match",
     )
     config.addinivalue_line(

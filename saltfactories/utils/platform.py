@@ -8,6 +8,8 @@ saltfactories.utils.platform
 
 Platform related utilities
 """
+import sys
+
 import salt.utils.platform
 
 
@@ -75,6 +77,17 @@ def is_aix():
     return salt.utils.platform.is_aix()
 
 
+def is_aarch64():
+    """
+    Simple function to return if host is AArch64 or not
+    """
+    try:
+        return salt.utils.platform.is_aarch64()
+    except AttributeError:
+        # Salt < 3004
+        return sys.platform.startswith("aarch64")
+
+
 def on_platforms(
     windows=False,
     linux=False,
@@ -85,6 +98,7 @@ def on_platforms(
     netbsd=False,
     openbsd=False,
     aix=False,
+    aarch64=False,
 ):
     """
     Check to see if we're on one of the provided platforms.
@@ -114,6 +128,9 @@ def on_platforms(
         return True
 
     if aix and is_aix():
+        return True
+
+    if aarch64 and is_aarch64():
         return True
 
     return False
