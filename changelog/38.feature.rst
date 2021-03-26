@@ -1,0 +1,4 @@
+Temporary state tree management
+
+*  Add `temp_file` and `temp_directory` support as pytest helpers
+*  Add `SaltStateTree` and `SaltPillarTree` for easier temp files support
