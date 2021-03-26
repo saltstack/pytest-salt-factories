@@ -13,7 +13,7 @@ repos:
       - id: check-merge-conflict  # Check for files that contain merge conflict strings.
       - id: check-ast             # Simply check whether files parse as valid python.
 
-  # ----- Formatting ------------------------------------------------------------------------------------------------>
+  # ----- Local Hooks ----------------------------------------------------------------------------------------------->
   - repo: local
     hooks:
       - id: sort-pylint-spelling-words
@@ -22,6 +22,13 @@ repos:
         language: system
         files: ^\.pylint-spelling-words$
 
+      - id: check-changelog-entries
+        name: Check Changelog Entries
+        entry: python .pre-commit-hooks/check-changelog-entries.py
+        language: system
+  # <---- Local Hooks ------------------------------------------------------------------------------------------------
+
+  # ----- Formatting ------------------------------------------------------------------------------------------------>
   - repo: https://github.com/asottile/pyupgrade
     rev: v2.11.0
     hooks:
