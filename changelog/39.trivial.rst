@@ -1,0 +1,5 @@
+CI pileline adjustements
+
+* Bump salt testing requirement to 3002.6
+* Drop testing of FreeBSD since it's too unreliable on Github Actions
+* Full clone when testing so that codecov does not complain

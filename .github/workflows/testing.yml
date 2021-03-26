@@ -87,10 +87,12 @@ jobs:
           - 3.8
           - 3.9
         salt-version:
-          - salt==3002.2
+          - salt==3002.6
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
@@ -212,6 +214,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Install Nox
       run: |
@@ -346,10 +350,12 @@ jobs:
         python-version:
           - 3.7
         salt-version:
-          - salt==3002.2
+          - salt==3002.6
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v2
@@ -477,7 +483,7 @@ jobs:
         python-version:
           - 3.7
         salt-version:
-          - salt==3002.2
+          - salt==3002.6
 
     steps:
     - uses: actions/checkout@v2
@@ -591,118 +597,118 @@ jobs:
 #        report_paths: 'artifacts/junit-report.xml'
 #        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
 
-  FreeBSD:
-    runs-on: macOS-latest
-    needs: Pre-Commit
-
-    timeout-minutes: 60
-
-    strategy:
-      fail-fast: false
-      max-parallel: 3
-      matrix:
-        salt-version:
-          - salt==3002.2
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Test
-      id: run-tests
-      uses: vmactions/freebsd-vm@v0.0.9
-      with:
-        envs: 'SALT_REQUIREMENT'
-        prepare: |
-          pkg install -y py37-pip py37-sqlite3 libunwind libzmq4 git
-          pip-3.7 install nox cython
-          ln -s /usr/local/bin/python3.7 /usr/local/bin/python3
-          echo "DONE"
-        run: |
-          nox --force-color -e tests-3 -- -vv tests/
-      env:
-        SALT_REQUIREMENT: ${{ matrix.salt-version }}
-
-    - name: Create CodeCov Flags
-      if: always()
-      id: codecov-flags
-      run: |
-        echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('FreeBSD', 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
-
-    - name: Upload Salt Factories Code Coverage
-      if: always()
-      shell: bash
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
-        REPORT_NAME: FreeBSD-Py3-${{ matrix.salt-version }}-factories
-        REPORT_PATH: artifacts/coverage-saltfactories.xml
-      run: |
-        if [ ! -f codecov.sh ]; then
-          n=0
-          until [ "$n" -ge 5 ]
-          do
-          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
-              break
-          fi
-            n=$((n+1))
-            sleep 15
-          done
-        fi
-        if [ -f codecov.sh ]; then
-          n=0
-          until [ "$n" -ge 5 ]
-          do
-            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-                break
-            fi
-            n=$((n+1))
-            sleep 15
-          done
-        fi
-
-    - name: Upload Salt Factories Tests Code Coverage
-      if: always()
-      shell: bash
-      env:
-        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
-        REPORT_NAME: FreeBSD-Py3-${{ matrix.salt-version }}-tests
-        REPORT_PATH: artifacts/coverage-tests.xml
-      run: |
-        if [ ! -f codecov.sh ]; then
-          n=0
-          until [ "$n" -ge 5 ]
-          do
-          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
-              break
-          fi
-            n=$((n+1))
-            sleep 15
-          done
-        fi
-        if [ -f codecov.sh ]; then
-          n=0
-          until [ "$n" -ge 5 ]
-          do
-            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-                break
-            fi
-            n=$((n+1))
-            sleep 15
-          done
-        fi
-
-    - name: Upload Logs
-      if: always()
-      uses: actions/upload-artifact@main
-      with:
-        name: runtests-FreeBSD-py3-${{ matrix.salt-version }}.log
-        path: artifacts/runtests-*.log
-
-#    - name: Publish Test Report
-#      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
-#      uses: mikepenz/action-junit-report@v1.1.1
+#  FreeBSD:
+#    runs-on: macOS-latest
+#    needs: Pre-Commit
+#
+#    timeout-minutes: 60
+#
+#    strategy:
+#      fail-fast: false
+#      max-parallel: 3
+#      matrix:
+#        salt-version:
+#          - salt==3002.6
+#
+#    steps:
+#    - uses: actions/checkout@v2
+#
+#    - name: Test
+#      id: run-tests
+#      uses: vmactions/freebsd-vm@v0.0.9
 #      with:
-#        check_name: macOS Test Results (${{ matrix.python-version}}, ${{ matrix.salt-version }})
-#        report_paths: 'artifacts/junit-report.xml'
-#        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+#        envs: 'SALT_REQUIREMENT'
+#        prepare: |
+#          pkg install -y py37-pip py37-sqlite3 libunwind libzmq4 git
+#          pip-3.7 install nox cython
+#          ln -s /usr/local/bin/python3.7 /usr/local/bin/python3
+#          echo "DONE"
+#        run: |
+#          nox --force-color -e tests-3 -- -vv tests/
+#      env:
+#        SALT_REQUIREMENT: ${{ matrix.salt-version }}
+#
+#    - name: Create CodeCov Flags
+#      if: always()
+#      id: codecov-flags
+#      run: |
+#        echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('FreeBSD', 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
+#
+#    - name: Upload Salt Factories Code Coverage
+#      if: always()
+#      shell: bash
+#      env:
+#        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+#        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
+#        REPORT_NAME: FreeBSD-Py3-${{ matrix.salt-version }}-factories
+#        REPORT_PATH: artifacts/coverage-saltfactories.xml
+#      run: |
+#        if [ ! -f codecov.sh ]; then
+#          n=0
+#          until [ "$n" -ge 5 ]
+#          do
+#          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
+#              break
+#          fi
+#            n=$((n+1))
+#            sleep 15
+#          done
+#        fi
+#        if [ -f codecov.sh ]; then
+#          n=0
+#          until [ "$n" -ge 5 ]
+#          do
+#            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+#                break
+#            fi
+#            n=$((n+1))
+#            sleep 15
+#          done
+#        fi
+#
+#    - name: Upload Salt Factories Tests Code Coverage
+#      if: always()
+#      shell: bash
+#      env:
+#        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+#        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
+#        REPORT_NAME: FreeBSD-Py3-${{ matrix.salt-version }}-tests
+#        REPORT_PATH: artifacts/coverage-tests.xml
+#      run: |
+#        if [ ! -f codecov.sh ]; then
+#          n=0
+#          until [ "$n" -ge 5 ]
+#          do
+#          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
+#              break
+#          fi
+#            n=$((n+1))
+#            sleep 15
+#          done
+#        fi
+#        if [ -f codecov.sh ]; then
+#          n=0
+#          until [ "$n" -ge 5 ]
+#          do
+#            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+#                break
+#            fi
+#            n=$((n+1))
+#            sleep 15
+#          done
+#        fi
+#
+#    - name: Upload Logs
+#      if: always()
+#      uses: actions/upload-artifact@main
+#      with:
+#        name: runtests-FreeBSD-py3-${{ matrix.salt-version }}.log
+#        path: artifacts/runtests-*.log
+#
+##    - name: Publish Test Report
+##      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
+##      uses: mikepenz/action-junit-report@v1.1.1
+##      with:
+##        check_name: macOS Test Results (${{ matrix.python-version}}, ${{ matrix.salt-version }})
+##        report_paths: 'artifacts/junit-report.xml'
+##        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
