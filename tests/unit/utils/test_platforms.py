@@ -115,3 +115,15 @@ def test_is_not_aix():
     return_value = True
     with mock.patch("salt.utils.platform.is_aix", return_value=return_value):
         assert saltfactories.utils.platform.is_aix() is return_value
+
+
+def test_is_aarch64():
+    return_value = True
+    with mock.patch("sys.platform", "aarch64"):
+        assert saltfactories.utils.platform.is_aarch64() is return_value
+
+
+def test_is_not_aarch64():
+    return_value = False
+    with mock.patch("sys.platform", "not_aarch64"):
+        assert saltfactories.utils.platform.is_aarch64() is return_value

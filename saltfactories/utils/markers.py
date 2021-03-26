@@ -524,6 +524,38 @@ def evaluate_markers(item):
             item._skipped_by_mark = True
             pytest.skip(reason)
 
+    skip_on_aarch64_marker = item.get_closest_marker("skip_on_aarch64")
+    if skip_on_aarch64_marker is not None:
+        if skip_on_aarch64_marker.args:
+            raise pytest.UsageError("The skip_on_aarch64 marker does not accept any arguments")
+        reason = skip_on_aarch64_marker.kwargs.pop("reason", None)
+        if skip_on_aarch64_marker.kwargs:
+            raise pytest.UsageError(
+                "The skip_on_aarch64 marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on AArch64"
+        if saltfactories.utils.platform.is_aarch64():
+            item._skipped_by_mark = True
+            pytest.skip(reason)
+
+    skip_unless_on_aarch64_marker = item.get_closest_marker("skip_unless_on_aarch64")
+    if skip_unless_on_aarch64_marker is not None:
+        if skip_unless_on_aarch64_marker.args:
+            raise pytest.UsageError(
+                "The skip_unless_on_aarch64 marker does not accept any arguments"
+            )
+        reason = skip_unless_on_aarch64_marker.kwargs.pop("reason", None)
+        if skip_unless_on_aarch64_marker.kwargs:
+            raise pytest.UsageError(
+                "The skip_unless_on_aarch64 marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Platform is not AArch64, skipped"
+        if not saltfactories.utils.platform.is_aarch64():
+            item._skipped_by_mark = True
+            pytest.skip(reason)
+
     skip_on_platforms_marker = item.get_closest_marker("skip_on_platforms")
     if skip_on_platforms_marker is not None:
         if skip_on_platforms_marker.args:
