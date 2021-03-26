@@ -1,0 +1,1 @@
+Start using `towncrier <https://pypi.org/project/towncrier/>`_ to maintain the changelog

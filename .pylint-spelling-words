@@ -12,6 +12,7 @@ basename
 basepath
 bool
 booleans
+changelog
 cli
 cli's
 cmdline

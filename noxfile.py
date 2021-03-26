@@ -350,3 +350,27 @@ def gen_api_docs(session):
     session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     shutil.rmtree("docs/ref")
     session.run("sphinx-apidoc", "--module-first", "-o", "docs/ref/", "saltfactories/")
+
+
+@nox.session(name="changelog", python="3")
+@nox.parametrize("draft", [False, True])
+def changelog(session, draft):
+    """
+    Generate salt's changelog
+    """
+    requirements_file = os.path.join("requirements", "changelog.txt")
+    install_command = ["--progress-bar=off", "-r", requirements_file]
+    session.install(*install_command, silent=PIP_INSTALL_SILENT)
+
+    version = session.run(
+        "python",
+        "setup.py",
+        "--version",
+        silent=True,
+        log=False,
+    )
+
+    town_cmd = ["towncrier", "--version={}".format(version)]
+    if draft:
+        town_cmd.append("--draft")
+    session.run(*town_cmd)
