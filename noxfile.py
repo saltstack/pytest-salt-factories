@@ -153,6 +153,8 @@ def tests(session):
         "--show-capture=no",
         "--junitxml={}".format(JUNIT_REPORT),
         "--showlocals",
+        "--strict-markers",
+        "--lsof",
         "-ra",
         "-s",
     ]
