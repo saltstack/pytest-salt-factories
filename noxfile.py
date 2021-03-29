@@ -41,7 +41,7 @@ REPO_ROOT = pathlib.Path(__file__).resolve().parent
 # Change current directory to REPO_ROOT
 os.chdir(str(REPO_ROOT))
 
-SITECUSTOMIZE_DIR = str(REPO_ROOT / "saltfactories" / "utils" / "coverage")
+SITECUSTOMIZE_DIR = str(REPO_ROOT / "src" / "saltfactories" / "utils" / "coverage")
 ARTIFACTS_DIR = REPO_ROOT / "artifacts"
 # Make sure the artifacts directory exists
 ARTIFACTS_DIR.mkdir(parents=True, exist_ok=True)
@@ -182,7 +182,7 @@ def tests(session):
         "-o",
         str(COVERAGE_REPORT_SALTFACTORIES),
         "--omit=tests/*",
-        "--include=saltfactories/*",
+        "--include=src/saltfactories/*",
     )
     # Generate report for tests code coverage
     session.run(
@@ -190,11 +190,11 @@ def tests(session):
         "xml",
         "-o",
         str(COVERAGE_REPORT_TESTS),
-        "--omit=saltfactories/*",
+        "--omit=src/saltfactories/*",
         "--include=tests/*",
     )
     try:
-        cmdline = ["coverage", "report", "--show-missing", "--include=saltfactories/*,tests/*"]
+        cmdline = ["coverage", "report", "--show-missing", "--include=src/saltfactories/*,tests/*"]
         if system_install is False:
             cmdline.append("--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT))
         session.run(*cmdline)
@@ -279,6 +279,7 @@ def docs(session):
         os.path.join("requirements", "docs.txt"),
         silent=PIP_INSTALL_SILENT,
     )
+    session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     os.chdir("docs/")
     session.run("make", "clean", external=True)
     session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
@@ -304,6 +305,7 @@ def docs_crosslink_info(session):
         os.path.join("requirements", "docs.txt"),
         silent=PIP_INSTALL_SILENT,
     )
+    session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     os.chdir("docs/")
     intersphinx_mapping = json.loads(
         session.run(
@@ -345,5 +347,6 @@ def gen_api_docs(session):
         os.path.join("requirements", "docs.txt"),
         silent=PIP_INSTALL_SILENT,
     )
+    session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     shutil.rmtree("docs/ref")
     session.run("sphinx-apidoc", "--module-first", "-o", "docs/ref/", "saltfactories/")

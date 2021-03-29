@@ -10,7 +10,13 @@
 #
 import datetime
 import os
+import pathlib
 import sys
+
+try:
+    from importlib.metadata import version as pkg_version
+except ImportError:
+    from importlib_metadata import version as pkg_version
 
 import pytest
 import sphinx_material_saltstack
@@ -23,21 +29,19 @@ except AttributeError:
     pytest.helpers = HelpersRegistry()
 
 try:
-    docs_basepath = os.path.abspath(os.path.dirname(__file__))
+    docs_basepath = pathlib.Path(__file__).resolve().parent
 except NameError:
     # sphinx-intl and six execute some code which will raise this NameError
     # assume we're in the doc/ directory
-    docs_basepath = os.path.abspath(os.path.dirname("."))
+    docs_basepath = pathlib.Path(".").resolve().parent
 
 addtl_paths = (
-    os.pardir,  # saltfactories itself (for autodoc)
-    "_ext",  # custom Sphinx extensions
+    docs_basepath / "_ext",  # custom Sphinx extensions
+    docs_basepath.parent / "src",  # saltfactories itself (for autodoc)
 )
 
 for addtl_path in addtl_paths:
-    sys.path.insert(0, os.path.abspath(os.path.join(docs_basepath, addtl_path)))
-
-import saltfactories
+    sys.path.insert(0, addtl_path)
 
 
 # -- Project information -----------------------------------------------------
@@ -51,7 +55,7 @@ copyright = f"{copyright_year}, SaltStack, Inc."
 author = "SaltStack, Inc."
 
 # The full version, including alpha/beta/rc tags
-release = saltfactories.__version__
+release = pkg_version("pytest-salt-factories")
 
 
 # Variables to pass into the docs from sitevars.rst for rst substitution

@@ -23,12 +23,12 @@ repos:
         files: ^\.pylint-spelling-words$
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.10.0
+    rev: v2.11.0
     hooks:
       - id: pyupgrade
         name: Rewrite Code to be Py3.5+
         args: [--py3-plus]
-        exclude: (^saltfactories/utils/salt/.*\.py)
+        exclude: (^src/saltfactories/utils/salt/.*\.py)
 
   - repo: https://github.com/hakancelik96/unimport
     rev: "31cc123640880e385159c719d2f12b5cf8586495"
@@ -36,7 +36,7 @@ repos:
       - id: unimport
         name: Remove unused imports
         args: [--remove]
-        exclude: ^(docs/.*\.py|saltfactories/factories/(cli|daemons)/__init__\.py)$
+        exclude: ^(docs/.*\.py|src/saltfactories/factories/(cli|daemons)/__init__\.py)$
 
   - repo: https://github.com/asottile/reorder_python_imports
     rev: v2.4.0
@@ -44,15 +44,16 @@ repos:
       - id: reorder-python-imports
         args: [
           --py3-plus,
+          --application-directories=.:src
         ]
-        exclude: saltfactories/version.py
+        exclude: src/saltfactories/version.py
 
   - repo: https://github.com/psf/black
     rev: 20.8b1
     hooks:
       - id: black
         args: [-l 100]
-        exclude: saltfactories/version.py
+        exclude: src/saltfactories/version.py
 
   - repo: https://github.com/asottile/blacken-docs
     rev: v1.7.0
@@ -68,7 +69,7 @@ repos:
       - id: pylint
         name: PyLint
         args: [--output-format=parseable, --rcfile=.pylintrc]
-        exclude: saltfactories/version.py
+        exclude: src/saltfactories/version.py
         additional_dependencies:
           - saltpylint
           - pyenchant

@@ -116,4 +116,4 @@ salt-checkout/
 artifacts/
 
 # Ignore the setuptools_scm generated version file
-saltfactories/version.py
+src/saltfactories/version.py

@@ -8,9 +8,6 @@ relative_files = True
 omit =
   .nox/*
   setup.py
-  saltfactories/__init__.py
-  saltfactories/version.py
-  saltfactories/utils/compat.py
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -33,15 +30,13 @@ exclude_lines =
 omit =
   .nox/*
   setup.py
-  saltfactories/__init__.py
-  saltfactories/version.py
-  saltfactories/utils/compat.py
 
 
 ignore_errors = True
 
 [paths]
 source =
-  saltfactories/
+  src/saltfactories
+  **/site-packages/saltfactories
 testsuite =
   tests/

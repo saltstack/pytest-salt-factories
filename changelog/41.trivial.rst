@@ -1,0 +1,1 @@
+Switch project to an ``src/`` based layout
