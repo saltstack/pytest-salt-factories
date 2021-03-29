@@ -61,7 +61,7 @@ def start():
     try:
         pytest_engine = PyTestEventForwardEngine(opts=opts)
         pytest_engine.start()
-    except Exception:  # pylint: disable=broad-except
+    except Exception:  # pragma: no cover pylint: disable=broad-except
         log.error("Failed to start PyTestEventForwardEngine", exc_info=True)
         raise
 
@@ -150,7 +150,7 @@ class PyTestEventForwardEngine:
                         dumped = msgpack.dumps(forward, use_bin_type=True, default=ext_type_encoder)
                         push.send(dumped)
                         log.info("%s forwarded event: %r", self, forward)
-                    except Exception:  # pylint: disable=broad-except
+                    except Exception:  # pragma: no cover pylint: disable=broad-except
                         log.error("%s failed to forward event: %r", self, forward, exc_info=True)
         push.close(1500)
         context.term()
