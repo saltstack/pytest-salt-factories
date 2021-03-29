@@ -13,7 +13,7 @@ class SaltFactoriesException(Exception):
     """
 
 
-class FactoryFailure(SaltFactoriesException):
+class ProcessFailed(SaltFactoriesException):
     """
     Exception raised when a sub-process fails
     """
@@ -49,6 +49,12 @@ class FactoryFailure(SaltFactoriesException):
         if append_new_line:
             message += "\n"
         return message
+
+
+class FactoryFailure(ProcessFailed):
+    """
+    Exception raised when a sub-process fails on one of the factories
+    """
 
 
 class FactoryNotStarted(FactoryFailure):

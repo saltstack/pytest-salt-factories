@@ -6,3 +6,4 @@ psutil
 pyzmq; python_version < '3.8'
 pyzmq<21.0.0; python_version >= '3.8'
 msgpack>=0.5,!=0.5.5
+virtualenv
