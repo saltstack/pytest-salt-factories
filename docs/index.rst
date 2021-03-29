@@ -1,23 +1,49 @@
-.. PyTest Salt Factories documentation master file, created by
-   sphinx-quickstart on Mon Feb 17 17:33:49 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+:orphan:
 
-Welcome to PyTest Salt Factories's documentation!
-=================================================
+.. _about:
 
-.. toctree::
-  :maxdepth: 2
-  :caption: Contents:
+======================
+What is Salt Factories
+======================
 
-  ref/saltfactories.rst
-  ref/saltfactories.factories
-  ref/saltfactories.utils
-  ref/modules
+It's a `pytest`_ plugin, and also the evolution of `pytest-salt <https://github.com/saltstack/pytest-salt>`_, a great
+start, but ...
 
-Indices and tables
-==================
+.. image:: _static/Overengineering.jpg
+  :alt: Overengineering Example
+  :align: center
+  :width: 90%
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+over-engineered.
+
+From the ground up, pytest-salt-factories was created to be ...
+
+
+.. image:: _static/turn-light.jpg
+  :alt: Simple Overengineering
+  :align: center
+  :width: 90%
+
+
+simple.
+
+
+Documentation
+=============
+
+Please see :ref:`Contents <table-of-contents>` for full documentation, including installation and tutorials.
+
+Bugs/Requests
+=============
+
+Please use the `GitHub issue tracker`_ to submit bugs or request features.
+
+
+Changelog
+=========
+
+Consult the :ref:`Changelog <changelog>` page for fixes and enhancements of each version.
+
+
+.. _pytest: https://docs.pytest.org
+.. _GitHub issue tracker: https://github.com/saltstack/pytest-salt-factories/issues

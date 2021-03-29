@@ -1,8 +1,8 @@
 """
-    saltfactories.utils.functional
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+saltfactories.utils.functional
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Salt functional testing support
+Salt functional testing support
 """
 import copy
 import logging
@@ -22,6 +22,12 @@ log = logging.getLogger(__name__)
 
 
 class Loaders:
+    """
+    This class provides the required functionality for functional testing against the salt loaders
+
+    :param dict opts: The options dictionary to load the salt loaders.
+    """
+
     def __init__(self, opts):
         self.opts = opts
         self.context = {}

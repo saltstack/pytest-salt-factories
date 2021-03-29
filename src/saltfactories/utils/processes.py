@@ -22,6 +22,19 @@ class ProcessResult:
     """
     This class serves the purpose of having a common result class which will hold the
     resulting data from a subprocess command.
+
+    :keyword int exitcode:
+        The exitcode returned by the process
+    :keyword str stdout:
+        The ``stdout`` returned by the process
+    :keyword str stderr:
+        The ``stderr`` returned by the process
+    :keyword list,tuple cmdline:
+        The command line used to start the process
+
+    .. admonition:: Note
+
+        Cast :py:class:`~saltfactories.utils.processes.ProcessResult` to a string to pretty-print it.
     """
 
     exitcode = attr.ib()
@@ -54,6 +67,12 @@ class ShellResult(ProcessResult):
     """
     This class serves the purpose of having a common result class which will hold the
     resulting data from a subprocess command.
+
+    :keyword dict json:
+        The dictionary returned from the process ``stdout`` if it could JSON decode it.
+
+    Please look at :py:class:`~saltfactories.utils.processes.ProcessResult` for the additional supported keyword
+    arguments documentation.
     """
 
     json = attr.ib(default=None, kw_only=True)
@@ -77,6 +96,9 @@ class ShellResult(ProcessResult):
 def collect_child_processes(pid):
     """
     Try to collect any started child processes of the provided pid
+
+    :param int pid:
+        The PID of the process
     """
     # Let's get the child processes of the started subprocess
     try:
@@ -189,6 +211,17 @@ def _terminate_process_list(process_list, kill=False, slow_stop=False):
 
 
 def terminate_process_list(process_list, kill=False, slow_stop=False):
+    """
+    Terminate a list of processes
+
+    :param ~collections.abc.Iterable process_list:
+        An iterable of :py:class:`psutil.Process` instances to terminate
+    :keyword bool kill:
+        Kill the process instead of terminating it.
+    :keyword bool slow_stop:
+        First try to terminate each process in the list, and if termination was not successful, kill it.
+    """
+
     def on_process_terminated(proc):
         log.info(
             "Process %s terminated with exit code: %s",
@@ -237,6 +270,17 @@ def terminate_process_list(process_list, kill=False, slow_stop=False):
 def terminate_process(pid=None, process=None, children=None, kill_children=None, slow_stop=False):
     """
     Try to terminate/kill the started process
+
+    :keyword int pid:
+        The PID of the process
+    :keyword ~psutil.Process process:
+        An instance of :py:class:`psutil.Process`
+    :keyword ~collections.abc.Iterable children:
+        An iterable of :py:class:`psutil.Process` instances, children to the process being terminated
+    :keyword bool kill_children:
+        Also try to terminate/kill child processes
+    :keyword bool slow_stop:
+        First try to terminate each process in the list, and if termination was not successful, kill it.
     """
     children = children or []
     process_list = []

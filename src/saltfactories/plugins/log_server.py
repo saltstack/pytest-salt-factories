@@ -1,8 +1,6 @@
 """
-    saltfactories.plugins.log_server
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Log Server Plugin
+Log Server
+==========
 """
 import logging
 import threading

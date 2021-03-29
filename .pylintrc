@@ -243,7 +243,7 @@ dummy-variables-rgx=_$|dummy
 
 # List of additional names supposed to be defined in builtins. Remember that
 # you should avoid to define new builtins when possible.
-additional-builtins=__opts__,__virtual__,__salt_system_encoding__,__context__
+additional-builtins=__opts__,__virtual__,__salt_system_encoding__,__context__,__salt__
 
 # List of strings which can identify a callback function by name. A callback
 # name must start or end with one of those strings.

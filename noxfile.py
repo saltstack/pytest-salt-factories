@@ -307,6 +307,7 @@ def docs_dev(session):
         os.path.join("requirements", "docs.txt"),
         silent=PIP_INSTALL_SILENT,
     )
+    session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     os.chdir("docs/")
     session.run("make", "html", "SPHINXOPTS=-W", external=True, env={"LOCAL_DEV_BUILD": "1"})
     os.chdir("..")

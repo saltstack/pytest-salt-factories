@@ -2,10 +2,6 @@
 ..
     PYTEST_DONT_REWRITE
 
-
-saltfactories.utils
-~~~~~~~~~~~~~~~~~~~
-
 Utility functions
 """
 import random
@@ -19,14 +15,12 @@ def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
     """
     Generates a random string.
 
-    Args:
-        prefix(str): The prefix for the random string
-        size(int): The size of the random string
-        uppercase(bool): If true, include upper-cased ascii chars in choice sample
-        lowercase(bool): If true, include lower-cased ascii chars in choice sample
-        digits(bool): If true, include digits in choice sample
-    Returns:
-        str: The random string
+    :keyword str prefix: The prefix for the random string
+    :keyword int size: The size of the random string
+    :keyword bool uppercase: If true, include upper-cased ascii chars in choice sample
+    :keyword bool lowercase: If true, include lower-cased ascii chars in choice sample
+    :keyword bool digits: If true, include digits in choice sample
+    :return str: The random string
     """
     if not any([uppercase, lowercase, digits]):
         raise RuntimeError("At least one of 'uppercase', 'lowercase' or 'digits' needs to be true")

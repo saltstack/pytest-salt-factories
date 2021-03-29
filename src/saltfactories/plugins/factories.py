@@ -2,9 +2,8 @@
 ..
     PYTEST_DONT_REWRITE
 
-
-saltfactories.plugins.factories
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Daemon & CLI Factories
+======================
 
 Salt Daemon Factories PyTest Plugin
 """

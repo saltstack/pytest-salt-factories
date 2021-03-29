@@ -3,6 +3,8 @@ saltfactories.plugin
 ~~~~~~~~~~~~~~~~~~~~
 
 Salt Factories PyTest plugin interface
+
+:meta private:
 """
 import logging
 import os

@@ -1,3 +1,9 @@
+"""
+Loader
+======
+
+Salt loader mock support for tests
+"""
 import logging
 
 import pytest

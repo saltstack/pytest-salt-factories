@@ -1,7 +1,4 @@
 """
-saltfactories.exceptions
-~~~~~~~~~~~~~~~~~~~~~~~~
-
 PyTest Salt Factories related exceptions
 """
 import traceback
@@ -16,6 +13,19 @@ class SaltFactoriesException(Exception):
 class ProcessFailed(SaltFactoriesException):
     """
     Exception raised when a sub-process fails
+
+    :param str message:
+        The exception message
+    :keyword list,tuple cmdline:
+        The command line used to start the process
+    :keyword str stdout:
+        The ``stdout`` returned by the process
+    :keyword str stderr:
+        The ``stderr`` returned by the process
+    :keyword int exitcode:
+        The exitcode returned by the process
+    :keyword Exception exc:
+        The original exception raised
     """
 
     def __init__(self, message, cmdline=None, stdout=None, stderr=None, exitcode=None, exc=None):
@@ -60,22 +70,34 @@ class FactoryFailure(ProcessFailed):
 class FactoryNotStarted(FactoryFailure):
     """
     Exception raised when a factory failed to start
+
+    Please look at :py:class:`~saltfactories.exceptions.FactoryFailure` for the supported keyword
+    arguments documentation.
     """
 
 
 class FactoryNotRunning(FactoryFailure):
     """
     Exception raised when trying to use a factory's `.stopped` context manager and the factory is not running
+
+    Please look at :py:class:`~saltfactories.exceptions.FactoryFailure` for the supported keyword
+    arguments documentation.
     """
 
 
 class ProcessNotStarted(FactoryFailure):
     """
     Exception raised when a process failed to start
+
+    Please look at :py:class:`~saltfactories.exceptions.FactoryFailure` for the supported keyword
+    arguments documentation.
     """
 
 
 class FactoryTimeout(FactoryNotStarted):
     """
     Exception raised when a process timed-out
+
+    Please look at :py:class:`~saltfactories.exceptions.FactoryFailure` for the supported keyword
+    arguments documentation.
     """

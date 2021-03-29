@@ -17,6 +17,8 @@ log = logging.getLogger(__name__)
 
 def get_unused_localhost_port(cached_seconds=10):
     """
+    :keyword int cached_seconds: The number of seconds to consider a port as being used
+
     Return a random unused port on localhost
     """
     if not isinstance(cached_seconds, (int, float)):
@@ -53,6 +55,11 @@ def get_unused_localhost_port(cached_seconds=10):
 
 
 def get_connectable_ports(ports):
+    """
+    :param ~collections.abc.Iterable ports: An iterable of ports to try and connect to
+    :rtype: set
+    :return: Returns a set of the ports where connection was successful
+    """
     connectable_ports = set()
     ports = set(ports)
 
