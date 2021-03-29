@@ -30,7 +30,7 @@ try:
     from docker.errors import APIError
 
     HAS_DOCKER = True
-except ImportError:  # pragma: nocover
+except ImportError:  # pragma: no cover
     HAS_DOCKER = False
 
     class APIError(Exception):
@@ -41,7 +41,7 @@ try:
     from requests.exceptions import ConnectionError as RequestsConnectionError
 
     HAS_REQUESTS = True
-except ImportError:  # pragma: nocover
+except ImportError:  # pragma: no cover
     HAS_REQUESTS = False
 
     class RequestsConnectionError(ConnectionError):
@@ -114,7 +114,7 @@ class ContainerFactory(Factory):
         for callback, args, kwargs in self.before_start_callbacks:
             try:
                 callback(*args, **kwargs)
-            except Exception as exc:  # pylint: disable=broad-except
+            except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                 log.info(
                     "Exception raised when running %s: %s",
                     format_callback_to_string(callback, args, kwargs),
@@ -199,7 +199,7 @@ class ContainerFactory(Factory):
             for callback, args, kwargs in self.after_start_callbacks:
                 try:
                     callback(*args, **kwargs)
-                except Exception as exc:  # pylint: disable=broad-except
+                except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
                         format_callback_to_string(callback, args, kwargs),
@@ -241,7 +241,7 @@ class ContainerFactory(Factory):
         for callback, args, kwargs in self.before_terminate_callbacks:
             try:
                 callback(*args, **kwargs)
-            except Exception as exc:  # pylint: disable=broad-except
+            except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                 log.info(
                     "Exception raised when running %s: %s",
                     format_callback_to_string(callback, args, kwargs),
@@ -272,7 +272,7 @@ class ContainerFactory(Factory):
             for callback, args, kwargs in self.after_terminate_callbacks:
                 try:
                     callback(*args, **kwargs)
-                except Exception as exc:  # pylint: disable=broad-except
+                except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
                         format_callback_to_string(callback, args, kwargs),

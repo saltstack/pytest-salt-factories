@@ -15,7 +15,7 @@ def docker_client():
     except DockerException:
         pytest.skip("Failed to get a connection to docker running on the system")
     connectable = ContainerFactory.client_connectable(client)
-    if connectable is not True:  # pragma: nocover
+    if connectable is not True:  # pragma: no cover
         pytest.skip(connectable)
     return client
 

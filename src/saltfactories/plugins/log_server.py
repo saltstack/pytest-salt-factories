@@ -93,7 +93,7 @@ class LogServer:
         exit_timeout = None
         try:
             puller.bind(address)
-        except zmq.ZMQError:
+        except zmq.ZMQError:  # pragma: no cover
             log.exception("%s Unable to bind to puller at %s", self, address)
             return
         try:
@@ -119,13 +119,13 @@ class LogServer:
                     try:
                         msg = puller.recv(flags=zmq.NOBLOCK)
                     except zmq.ZMQError as exc:
-                        if exc.errno != zmq.EAGAIN:
+                        if exc.errno != zmq.EAGAIN:  # pragma: no cover
                             raise
                         time.sleep(0.25)
                         continue
                     if msgpack.version >= (0, 5, 2):
                         record_dict = msgpack.loads(msg, raw=False)
-                    else:
+                    else:  # pragma: no cover
                         record_dict = msgpack.loads(msg, encoding="utf-8")
                     if record_dict is None:
                         # A sentinel to stop processing the queue
@@ -134,7 +134,7 @@ class LogServer:
                         break
                     try:
                         record_dict["message"]
-                    except KeyError:
+                    except KeyError:  # pragma: no cover
                         # This log record was msgpack dumped from Py2
                         for key, value in record_dict.copy().items():
                             skip_update = True
@@ -151,9 +151,9 @@ class LogServer:
                     record = logging.makeLogRecord(record_dict)
                     logger = logging.getLogger(record.name)
                     logger.handle(record)
-                except (EOFError, KeyboardInterrupt, SystemExit):
+                except (EOFError, KeyboardInterrupt, SystemExit):  # pragma: no cover
                     break
-                except Exception as exc:  # pylint: disable=broad-except
+                except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                     log.warning(
                         "%s An exception occurred in the processing queue thread: %s",
                         self,
@@ -175,14 +175,14 @@ def pytest_configure(config):
         level = logging_plugin.log_cli_handler.level
         if level is not None:
             levels.append(level)
-    except AttributeError:
+    except AttributeError:  # pragma: no cover
         # PyTest CLI logging not configured
         pass
     try:
         level = logging_plugin.log_file_level
         if level is not None:
             levels.append(level)
-    except AttributeError:
+    except AttributeError:  # pragma: no cover
         # PyTest Log File logging not configured
         pass
 

@@ -17,7 +17,7 @@ from saltfactories.factories.base import SaltCliFactory
 
 try:
     SALT_KEY_LOG_LEVEL_SUPPORTED = SaltKeyOptionParser._skip_console_logging_config_ is False
-except AttributeError:  # pragma: nocover
+except AttributeError:  # pragma: no cover
     # New logging is in place
     SALT_KEY_LOG_LEVEL_SUPPORTED = True
 

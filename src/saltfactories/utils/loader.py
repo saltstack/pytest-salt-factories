@@ -110,7 +110,7 @@ class LoaderModuleMock:
             try:
                 log.trace("Calling finalizer %s", func_repr)
                 func(*args, **kwargs)
-            except Exception as exc:  # pragma: nocover pylint: disable=broad-except
+            except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                 log.error(
                     "Failed to run finalizer %s: %s",
                     func_repr,

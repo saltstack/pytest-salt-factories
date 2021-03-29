@@ -15,7 +15,7 @@ try:
     import salt.features
 
     HAS_SALT_FEATURES = True
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_SALT_FEATURES = False
 
 log = logging.getLogger(__name__)
@@ -50,7 +50,7 @@ class Loaders:
         for func in self._reload_all_funcs:
             try:
                 func()
-            except Exception as exc:  # pylint: disable=broad-except
+            except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                 log.warning("Failed to run '%s': %s", func.__name__, exc, exc_info=True)
         self.opts = copy.deepcopy(self._original_opts)
         self._grains = self._utils = self._modules = None

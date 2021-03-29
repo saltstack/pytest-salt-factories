@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 def _convert_stamp(stamp):
     try:
         return datetime.fromisoformat(stamp)
-    except AttributeError:
+    except AttributeError:  # pragma: no cover
         # Python < 3.7
         return datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%S.%f")
 
@@ -95,7 +95,7 @@ class EventListener:
         puller.bind(self.address)
         if msgpack.version >= (0, 5, 2):
             msgpack_kwargs = {"raw": False}
-        else:
+        else:  # pragma: no cover
             msgpack_kwargs = {"encoding": "utf-8"}
         log.debug("%s started", self)
         self.running_event.set()
@@ -107,7 +107,7 @@ class EventListener:
                 break
             try:
                 decoded = msgpack.loads(payload, **msgpack_kwargs)
-            except ValueError:
+            except ValueError:  # pragma: no cover
                 log.error(
                     "%s Failed to msgpack.load message with payload: %s",
                     self,
@@ -143,7 +143,7 @@ class EventListener:
                     if auth_event_callback:
                         try:
                             auth_event_callback(data)
-                        except Exception as exc:  # pylint: disable=broad-except
+                        except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                             log.error(
                                 "%s Error calling %r: %s",
                                 self,
@@ -152,7 +152,7 @@ class EventListener:
                                 exc_info=True,
                             )
                 log.debug("%s store size after event received: %d", self, len(self.store))
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # pragma: no cover pylint: disable=broad-except
                 log.error("%s Something funky happened", self, exc_info=True)
                 puller.close(0)
                 context.term()

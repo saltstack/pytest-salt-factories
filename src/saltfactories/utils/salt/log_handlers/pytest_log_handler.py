@@ -242,7 +242,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
                 self.context.term()
             if self.proxy_thread is not None and self.proxy_thread.is_alive():
                 self.proxy_thread.join(5)
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception as exc:  # pragma: no cover pylint: disable=broad-except
             sys.stderr.write(
                 "Failed to terminate ZMQHandler: {}\n{}\n".format(exc, traceback.format_exc(exc))
             )
@@ -300,7 +300,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
             self.in_proxy.send(msg)
         except SystemExit:
             pass
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # pragma: no cover pylint: disable=broad-except
             self.handleError(record)
 
     def _proxy_logs_target(self, socket_bind_event):

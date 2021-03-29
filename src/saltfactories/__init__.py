@@ -1,14 +1,10 @@
-"""
-NG PyTest Salt Plugin
-"""
-# pragma: nocover
 import pathlib
 import re
 import sys
 
 try:
     from .version import __version__
-except ImportError:
+except ImportError:  # pragma: no cover
     __version__ = "0.0.0.not-installed"
     try:
         from importlib.metadata import version, PackageNotFoundError
@@ -50,7 +46,7 @@ try:
     __version_info__ = tuple(
         [int(p) if p.isdigit() else p for p in VERSION_INFO_REGEX.match(__version__).groups() if p]
     )
-except AttributeError:
+except AttributeError:  # pragma: no cover
     __version_info__ = (-1, -1, -1)
 finally:
     del VERSION_INFO_REGEX
