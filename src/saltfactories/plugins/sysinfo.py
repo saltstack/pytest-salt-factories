@@ -3,10 +3,8 @@
     PYTEST_DONT_REWRITE
 
 
-    saltfactories.plugins.sysinfo
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    System Information Plugin
+System Information
+==================
 """
 import io
 import pathlib

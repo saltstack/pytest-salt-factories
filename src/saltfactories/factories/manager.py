@@ -34,39 +34,39 @@ class FactoriesManager:
 
     If process statistics are enabled, it also adds the started daemons to those statistics.
 
-    Args:
-        root_dir:
-        log_server_port(int):
-            The port the log server should listen at
-        log_server_level(int):
-            The level of the log server
-        log_server_host(str):
-            The hostname/ip address of the host running the logs server. Defaults to "localhost".
-        code_dir(str):
-            The path to the code root directory of the project being tested. This is important for proper
-            code-coverage paths.
-        inject_coverage(bool):
-            Inject code-coverage related code in the generated CLI scripts
-        inject_sitecustomize(bool):
-            Inject code in the generated CLI scripts in order for our `sitecustomise.py` to be loaded by
-            subprocesses.
-        cwd(str):
-            The path to the current working directory
-        environ(dict):
-            A dictionary of `key`, `value` pairs to add to the environment.
-        slow_stop(bool):
-            Whether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
-            :py:meth:`~subprocess.Popen.terminate` on the sub-process.
-            When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
-            can be written down to disk.
-        start_timeout(int):
-            The amount of time, in seconds, to wait, until a subprocess is considered as not started.
-        stats_processes(:py:class:`saltfactories.plugins.sysstats.StatsProcesses`):
-            This will be an `StatsProcesses` class instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
-            hook accessible as a session scoped `stats_processes` fixture.
-        system_install(bool):
-            If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
-            salt system paths apply.
+    :keyword pathlib.Path, str root_dir:
+    :keyword int log_server_port:
+        The port the log server should listen at
+    :keyword int log_server_level:
+        The level of the log server
+    :keyword str log_server_host:
+        The hostname/ip address of the host running the logs server. Defaults to "localhost".
+    :keyword str code_dir:
+        The path to the code root directory of the project being tested. This is important for proper
+        code-coverage paths.
+    :keyword bool inject_coverage:
+        Inject code-coverage related code in the generated CLI scripts
+    :keyword bool inject_sitecustomize:
+        Inject code in the generated CLI scripts in order for our `sitecustomise.py` to be loaded by
+        subprocesses.
+    :keyword str cwd:
+        The path to the current working directory
+    :keyword dict environ:
+        A dictionary of `key`, `value` pairs to add to the environment.
+    :keyword bool slow_stop:
+        Whether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
+        :py:meth:`~subprocess.Popen.terminate` on the sub-process.
+        When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
+        can be written down to disk.
+    :keyword int start_timeout:
+        The amount of time, in seconds, to wait, until a subprocess is considered as not started.
+    :type stats_processes: saltfactories.plugins.sysstats.StatsProcesses
+    :keyword stats_processes:
+        This will be an `StatsProcesses` class instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
+        hook accessible as a session scoped `stats_processes` fixture.
+    :keyword bool system_install:
+        If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
+        salt system paths apply.
     """
 
     root_dir = attr.ib()

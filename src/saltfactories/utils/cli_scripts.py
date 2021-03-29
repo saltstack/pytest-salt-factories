@@ -120,7 +120,12 @@ def generate_script(
     inject_sitecustomize=False,
 ):
     """
-    Generate script
+    Generate a CLI script
+    :param ~pathlib.Path bin_dir: The path to the directory which will contain the CLI scripts
+    :param str script_name: The CLI script name
+    :param ~pathlib.Path code_dir: The project's being tested root directory path
+    :param bool inject_coverage: Inject code to track code coverage
+    :param bool inject_sitecustomize: Inject code to support code coverage in subprocesses
     """
     if isinstance(bin_dir, str):
         bin_dir = pathlib.Path(bin_dir)

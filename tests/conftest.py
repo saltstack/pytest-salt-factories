@@ -114,6 +114,7 @@ def pytest_runtest_setup(item):
         # There's no point on running these tests against a system install of salt
         str(TESTS_PATH / "unit"),
         str(TESTS_PATH / "functional"),
+        str(TESTS_PATH / "scenarios" / "examples"),
         str(TESTS_PATH / "integration" / "factories" / "cli"),
         str(TESTS_PATH / "integration" / "factories" / "daemons" / "sshd"),
         str(TESTS_PATH / "integration" / "factories" / "daemons" / "container"),

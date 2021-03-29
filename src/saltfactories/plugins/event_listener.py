@@ -1,8 +1,8 @@
 """
-saltfactories.plugins.event_listener
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Event Listener
+==============
 
-A "pseudo" event listener for salt factories pytest plugin
+A salt events store for all daemons started by salt-factories
 """
 import copy
 import fnmatch
@@ -34,6 +34,25 @@ def _convert_stamp(stamp):
 
 @attr.s(kw_only=True, slots=True, hash=True, frozen=True)
 class Event:
+    """
+    The ``Event`` class is a container for a salt event which will live on the
+    :py:class:`~saltfactories.plugins.event_listener.EventListener` store.
+
+    :keyword str daemon_id:
+        The daemon ID which received this event.
+    :keyword str tag:
+        The event tag of the event.
+    :keyword ~datetime.datetime stamp:
+        When the event occurred
+    :keyword dict data:
+        The event payload, filtered of all of Salt's private keys like ``_stamp`` which prevents proper
+        assertions against it.
+    :keyword dict full_data:
+        The full event payload, as received by the daemon, including all of Salt's private keys.
+    :keyword int,float expire_seconds:
+        The time, in seconds, after which the event should be considered as expired and removed from the store.
+    """
+
     daemon_id = attr.ib()
     tag = attr.ib()
     stamp = attr.ib(converter=_convert_stamp)
@@ -48,6 +67,9 @@ class Event:
 
     @property
     def expired(self):
+        """
+        Property to identify if the event has expired, at which time it should be removed from the store.
+        """
         if datetime.utcnow() < self._expire_at:
             return False
         return True
@@ -55,11 +77,33 @@ class Event:
 
 @attr.s(kw_only=True, slots=True, hash=True, frozen=True)
 class MatchedEvents:
+    """
+    The ``MatchedEvents`` class is a container which is returned by
+    :py:func:`~saltfactories.plugins.event_listener.EventListener.wait_for_events`.
+
+    :keyword set matches:
+        A :py:class:`set` of :py:class:`~saltfactories.plugins.event_listener.Event` instances that matched.
+    :keyword set missed:
+        A :py:class:`set` of :py:class:`~saltfactories.plugins.event_listener.Event` instances that remained
+        unmatched.
+
+    One can also easily iterate through all matched events of this class:
+
+    .. code-block:: python
+
+        matched_events = MatchedEvents(..., ...)
+        for event in matched_events:
+            print(event.tag)
+    """
+
     matches = attr.ib()
     missed = attr.ib()
 
     @property
     def found_all_events(self):
+        """
+        :return bool: :py:class:`True` if all events were matched, or :py:class:`False` otherwise.
+        """
         return (not self.missed) is True
 
     def __iter__(self):
@@ -68,6 +112,14 @@ class MatchedEvents:
 
 @attr.s(kw_only=True, slots=True, hash=True)
 class EventListener:
+    """
+    The ``EventListener`` is a service started by salt-factories which receives all the events of all the
+    salt masters that it starts. The service runs throughout the whole pytest session.
+
+    :keyword int timeout:
+        How long, in seconds, should a forwarded event stay in the store, after which, it will be deleted.
+    """
+
     timeout = attr.ib(default=120)
     address = attr.ib(init=False)
     store = attr.ib(init=False, repr=False, hash=False)
@@ -241,6 +293,17 @@ class EventListener:
         log.debug("%s stopped", self)
 
     def get_events(self, patterns, after_time=None):
+        """
+        Get events from the internal store.
+
+        :param ~collections.abc.Sequence pattern:
+            An iterable of tuples in the form of ``("<daemon-id>", "<event-tag-pattern>")``, ie, which daemon ID
+            we're targeting and the event tag pattern which will be passed to :py:func:`~fnmatch.fnmatch` to
+            assert a match.
+        :keyword ~datetime.datetime,float after_time:
+            After which time to start matching events.
+        :return set: A set of matched events
+        """
         if after_time is None:
             after_time = datetime.utcnow()
         elif isinstance(after_time, float):
@@ -286,9 +349,18 @@ class EventListener:
         """
         Wait for a set of patterns to match or until timeout is reached.
 
-        Returns:
-            :py:class:`saltfactories.plugins.event_listener.MatchedEvents`:
-                An instance of ``MatchedEvents``.
+        :param ~collections.abc.Sequence pattern:
+            An iterable of tuples in the form of ``("<daemon-id>", "<event-tag-pattern>")``, ie, which daemon ID
+            we're targeting and the event tag pattern which will be passed to :py:func:`~fnmatch.fnmatch` to
+            assert a match.
+        :keyword int,float timeout:
+            The amount of time to wait for the events, in seconds.
+        :keyword ~datetime.datetime,float after_time:
+            After which time to start matching events.
+
+        :return:
+            An instance of :py:class:`~saltfactories.plugins.event_listener.MatchedEvents`.
+        :rtype ~saltfactories.plugins.event_listener.MatchedEvents:
         """
         if after_time is None:
             after_time = datetime.utcnow()
@@ -329,14 +401,67 @@ class EventListener:
         return MatchedEvents(matches=found_events, missed=patterns)
 
     def register_auth_event_handler(self, master_id, callback):
+        """
+        Register a callback to run for every authentication event, to accept or reject the minion authenticating.
+
+        :param str master_id:
+            The master ID for which the callback should run
+        :type callback: ~collections.abc.Callable
+        :param callback:
+            The function while should be called
+        """
         self.auth_event_handlers[master_id] = callback
 
     def unregister_auth_event_handler(self, master_id):
+        """
+        Un-register the authentication event callback, if any, for the provided master ID
+
+        :param str master_id:
+            The master ID for which the callback is registered
+        """
         self.auth_event_handlers.pop(master_id, None)
 
 
 @pytest.fixture(scope="session")
 def event_listener(request):
+    """
+    All started daemons will forward their events into an instance of
+    :py:class:`~saltfactories.plugins.event_listener.EventListener`.
+
+    This fixture can be used to wait for events:
+
+    .. code-block:: python
+
+        def test_send(event_listener, salt_master, salt_minion, salt_call_cli):
+            event_tag = random_string("salt/test/event/")
+            data = {"event.fire": "just test it!!!!"}
+            start_time = time.time()
+            ret = salt_call_cli.run("event.send", event_tag, data=data)
+            assert ret.exitcode == 0
+            assert ret.json
+            assert ret.json is True
+
+            event_pattern = (salt_master.id, event_tag)
+            matched_events = event_listener.wait_for_events(
+                [event_pattern], after_time=start_time, timeout=30
+            )
+            assert matched_events.found_all_events
+            # At this stage, we got all the events we were waiting for
+
+
+    And assert against those events events:
+
+    .. code-block:: python
+
+        def test_send(event_listener, salt_master, salt_minion, salt_call_cli):
+            # ... check the example above for the initial code ...
+            assert matched_events.found_all_events
+            # At this stage, we got all the events we were waiting for
+            for event in matched_events:
+                assert event.data["id"] == salt_minion.id
+                assert event.data["cmd"] == "_minion_event"
+                assert "event.fire" in event.data["data"]
+    """
     return request.config.pluginmanager.get_plugin("saltfactories-event-listener")
 
 

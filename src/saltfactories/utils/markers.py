@@ -151,13 +151,16 @@ def skip_if_no_remote_network():
 
 def check_required_loader_attributes(loader_instance, loader_attr, required_items):
     """
-    Args:
-        loader_instance(:py:class:`saltfactories.utils.functional.Loader`):
-            An instance of :py:class:`saltfactories.utils.functional.Loader`
-        loader_attr(str): The name of the minion attribute to check, such as 'modules' or 'states'
-        required_items(tuple): The items that must be part of the loader attribute for the decorated test
-    Returns:
-        set: The modules that are not available
+    :type loader_instance: ~saltfactories.utils.functional.Loaders
+    :param loader_instance:
+        An instance of :py:class:`~saltfactories.utils.functional.Loaders`
+    :param str loader_attr:
+        The name of the minion attribute to check, such as 'modules' or 'states'
+    :param tuple required_items:
+        The items that must be part of the loader attribute for the decorated test
+    :return: The modules that are not available
+    :rtype: set
+
     """
     required_salt_items = set(required_items)
     available_items = list(getattr(loader_instance, loader_attr))

@@ -1,8 +1,9 @@
 """
-    saltfactories.utils.loader
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~
+saltfactories.utils.loader
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Salt's Loader PyTest Mock Support
+Salt's Loader PyTest Mock Support
+
 """
 import logging
 import sys

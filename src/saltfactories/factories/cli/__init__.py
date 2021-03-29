@@ -1,3 +1,7 @@
+"""
+CLI
+===
+"""
 from . import call
 from . import client
 from . import cloud

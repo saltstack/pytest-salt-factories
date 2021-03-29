@@ -1,9 +1,3 @@
-"""
-    saltfactories.plugins.markers
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Salt Factories Related Markers
-"""
 import os
 
 import pytest

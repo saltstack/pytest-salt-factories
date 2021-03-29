@@ -40,6 +40,7 @@ from saltfactories.utils.processes import ShellResult
 from saltfactories.utils.processes import terminate_process
 from saltfactories.utils.processes import terminate_process_list
 
+
 log = logging.getLogger(__name__)
 
 
@@ -48,13 +49,12 @@ class Factory:
     """
     Base factory class
 
-    Args:
-        display_name(str):
-            Human readable name for the factory
-        environ(dict):
-            A dictionary of `key`, `value` pairs to add to the environment.
-        cwd (str):
-            The path to the current working directory
+    :keyword str display_name:
+        Human readable name for the factory
+    :keyword dict environ:
+        A dictionary of ``key``, ``value`` pairs to add to the environment.
+    :keyword str cwd:
+        The path to the current working directory
     """
 
     display_name = attr.ib(default=None)
@@ -80,6 +80,10 @@ class Factory:
 class SubprocessFactoryImpl:
     """
     Subprocess interaction implementation
+
+    :keyword ~saltfactories.factories.base.Factory factory:
+        The factory instance, either :py:class:`~saltfactories.factories.base.Factory` or
+        a sub-class of it.
     """
 
     factory = attr.ib()
@@ -95,9 +99,9 @@ class SubprocessFactoryImpl:
         """
         Construct a list of arguments to use when starting the subprocess
 
-        Args:
-            args:
-                Additional arguments to use when starting the subprocess
+        :param str args:
+            Additional arguments to use when starting the subprocess
+
         """
         return self.factory.build_cmdline(*args)
 
@@ -156,7 +160,8 @@ class SubprocessFactoryImpl:
 
     def is_running(self):
         """
-        Returns true if the sub-process is alive
+        :return: Returns true if the sub-process is alive
+        :rtype: bool
         """
         if not self._terminal:
             return False
@@ -165,6 +170,8 @@ class SubprocessFactoryImpl:
     def terminate(self):
         """
         Terminate the started daemon
+
+        :rtype: ~saltfactories.utils.processes.ProcessResult
         """
         return self._terminate()
 
@@ -265,19 +272,21 @@ class SubprocessFactoryBase(Factory):
     """
     Base CLI script/binary class
 
-    Args:
-        cli_script_name(str):
-            This is the string containing the name of the binary to call on the subprocess, either the
-            full path to it, or the basename. In case of the basename, the directory containing the
-            basename must be in your ``$PATH`` variable.
-        base_script_args(list or tuple):
-            An list or tuple iterable of the base arguments to use when building the command line to
-            launch the process
-        slow_stop(bool):
-            Whether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
-            :py:meth:`~subprocess.Popen.terminate` on the sub-process.
-            When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
-            can be written down to disk.
+    :keyword str cli_script_name:
+        This is the string containing the name of the binary to call on the subprocess, either the
+        full path to it, or the basename. In case of the basename, the directory containing the
+        basename must be in your ``$PATH`` variable.
+    :keyword list,tuple base_script_args:
+        An list or tuple iterable of the base arguments to use when building the command line to
+        launch the process
+    :keyword bool slow_stop:
+        Whether to terminate the processes by sending a :py:attr:`SIGTERM` signal or by calling
+        :py:meth:`~subprocess.Popen.terminate` on the sub-process.
+        When code coverage is enabled, one will want `slow_stop` set to `True` so that coverage data
+        can be written down to disk.
+
+    Please look at :py:class:`~saltfactories.factories.base.Factory` for the additional supported keyword
+    arguments documentation.
     """
 
     cli_script_name = attr.ib()
@@ -333,9 +342,9 @@ class SubprocessFactoryBase(Factory):
         """
         Construct a list of arguments to use when starting the subprocess
 
-        Args:
-            args:
-                Additional arguments to use when starting the subprocess
+        :param str args:
+            Additional arguments to use when starting the subprocess
+
         """
         return (
             [self.get_script_path()]
@@ -366,9 +375,11 @@ class ProcessFactory(SubprocessFactoryBase):
     """
     Base process factory
 
-    Args:
-        default_timeout(int):
-            The maximum amount of seconds that a script should run
+    :keyword int default_timeout:
+        The maximum amount of seconds that a script should run
+
+    Please look at :py:class:`~saltfactories.factories.base.SubprocessFactoryBase` for the additional supported keyword
+    arguments documentation.
     """
 
     default_timeout = attr.ib()
@@ -444,6 +455,9 @@ class StartDaemonCallArguments:
 class DaemonFactoryImpl(SubprocessFactoryImpl):
     """
     Daemon subprocess interaction implementation
+
+    Please look at :py:class:`~saltfactories.factories.base.SubprocessFactoryImpl` for the additional supported keyword
+    arguments documentation.
     """
 
     before_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
@@ -599,6 +613,9 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
 class DaemonFactory(SubprocessFactoryBase):
     """
     Base daemon factory
+
+    Please look at :py:class:`~saltfactories.factories.base.SubprocessFactoryBase` for the additional supported keyword
+    arguments documentation.
     """
 
     check_ports = attr.ib(default=None)
@@ -666,6 +683,19 @@ class DaemonFactory(SubprocessFactoryBase):
         after_start_callback=None,
     ):
         """
+        :keyword ~collections.abc.Callable before_stop_callback:
+            A callable to run before stopping the daemon. The callback must accept one argument,
+            the daemon instance.
+        :keyword ~collections.abc.Callable after_stop_callback:
+            A callable to run after stopping the daemon. The callback must accept one argument,
+            the daemon instance.
+        :keyword ~collections.abc.Callable before_start_callback:
+            A callable to run before starting the daemon. The callback must accept one argument,
+            the daemon instance.
+        :keyword ~collections.abc.Callable after_start_callback:
+            A callable to run after starting the daemon. The callback must accept one argument,
+            the daemon instance.
+
         This context manager will stop the factory while the context is in place, it re-starts it once out of
         context.
 
@@ -679,20 +709,6 @@ class DaemonFactory(SubprocessFactoryBase):
                 assert factory.is_running() is False
 
             assert factory.is_running() is True
-
-        Arguments:
-            before_stop_callback(callable):
-                A callable to run before stopping the daemon. The callback must accept one argument,
-                the daemon instance.
-            after_stop_callback(callable):
-                A callable to run after stopping the daemon. The callback must accept one argument,
-                the daemon instance.
-            before_start_callback(callable):
-                A callable to run before starting the daemon. The callback must accept one argument,
-                the daemon instance.
-            after_start_callback(callable):
-                A callable to run after starting the daemon. The callback must accept one argument,
-                the daemon instance.
         """
         if not self.is_running():
             raise FactoryNotRunning("{} is not running ".format(self))
@@ -834,14 +850,13 @@ class SaltFactory:
     """
     Base factory for salt cli's and daemon's
 
-    Args:
-        config(dict):
-            The Salt config dictionary
-        python_executable(str):
-            The path to the python executable to use
-        system_install(bool):
-            If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
-            salt system paths apply.
+    :param dict config:
+        The Salt config dictionary
+    :param str python_executable:
+        The path to the python executable to use
+    :param bool system_install:
+        If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
+        salt system paths apply.
     """
 
     id = attr.ib(default=None, init=False)
@@ -877,19 +892,21 @@ class SaltFactory:
 class SaltCliFactoryImpl(SubprocessFactoryImpl):
     """
     Subprocess interaction implementation
+
+    Please look at :py:class:`~saltfactories.factories.base.SubprocessFactoryImpl` for the additional supported keyword
+    arguments documentation.
     """
 
     def build_cmdline(self, *args, minion_tgt=None, **kwargs):  # pylint: disable=arguments-differ
         """
         Construct a list of arguments to use when starting the subprocess
 
-        Args:
-            args:
-                Additional arguments to use when starting the subprocess
-            kwargs:
-                Keyword arguments will be converted into ``key=value`` pairs to be consumed by the salt CLI's
-            minion_tgt(str):
-                The minion ID to target
+        :param str args:
+            Additional arguments to use when starting the subprocess
+        :keyword str minion_tgt:
+            The minion ID to target
+        :keyword kwargs:
+            Additional keyword arguments will be converted into ``key=value`` pairs to be consumed by the salt CLI's
         """
         return self.factory.build_cmdline(*args, minion_tgt=minion_tgt, **kwargs)
 
@@ -899,9 +916,12 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
     """
     Base factory for salt cli's
 
-    Args:
-        hard_crash(bool):
-            Pass ``--hard-crash`` to Salt's CLI's
+    :param bool hard_crash:
+        Pass ``--hard-crash`` to Salt's CLI's
+
+    Please look at :py:class:`~saltfactories.factories.base.SaltFactory` and
+    :py:class:`~saltfactories.factories.base.ProcessFactory` for the additional supported keyword
+    arguments documentation.
     """
 
     hard_crash = attr.ib(repr=False, default=False)
@@ -940,17 +960,16 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
         """
         Construct a list of arguments to use when starting the subprocess
 
-        Args:
-            args:
-                Additional arguments to use when starting the subprocess
-            kwargs:
-                Keyword arguments will be converted into ``key=value`` pairs to be consumed by the salt CLI's
-            minion_tgt(str):
-                The minion ID to target
-            merge_json_output(bool):
-                The default behavior of salt outputters is to print one line per minion return, which makes
-                parsing the whole output as JSON impossible when targeting multiple minions. If this value
-                is ``True``, an attempt is made to merge each JSON line into a single dictionary.
+        :param str args:
+            Additional arguments to use when starting the subprocess
+        :keyword str minion_tgt:
+            The minion ID to target
+        :keyword bool merge_json_output:
+            The default behavior of salt outputters is to print one line per minion return, which makes
+            parsing the whole output as JSON impossible when targeting multiple minions. If this value
+            is ``True``, an attempt is made to merge each JSON line into a single dictionary.
+        :keyword kwargs:
+            Additional keyword arguments will be converted into ``key=value`` pairs to be consumed by the salt CLI's
         """
         log.debug(
             "Building cmdline. Minion target: %s; Input args: %s; Input kwargs: %s;",
@@ -1109,6 +1128,9 @@ class SaltCliFactory(SaltFactory, ProcessFactory):
 class SystemdSaltDaemonFactoryImpl(DaemonFactoryImpl):
     """
     Daemon systemd interaction implementation
+
+    Please look at :py:class:`~saltfactories.factories.base.DaemonFactoryImpl` for the additional supported keyword
+    arguments documentation.
     """
 
     _process = attr.ib(init=False, repr=False, default=None)
@@ -1118,9 +1140,9 @@ class SystemdSaltDaemonFactoryImpl(DaemonFactoryImpl):
         """
         Construct a list of arguments to use when starting the subprocess
 
-        Args:
-            args:
-                Additional arguments to use when starting the subprocess
+        :param str args:
+            Additional arguments to use when starting the subprocess
+
         """
         if args:
             log.debug(
@@ -1237,6 +1259,10 @@ class SystemdSaltDaemonFactoryImpl(DaemonFactoryImpl):
 class SaltDaemonFactory(SaltFactory, DaemonFactory):
     """
     Base factory for salt daemon's
+
+    Please look at :py:class:`~saltfactories.factories.base.SaltFactory` and
+    :py:class:`~saltfactories.factories.base.DaemonFactory` for the additional supported keyword
+    arguments documentation.
     """
 
     display_name = attr.ib(init=False, default=None)
@@ -1343,9 +1369,9 @@ class SaltDaemonFactory(SaltFactory, DaemonFactory):
         """
         Construct a list of arguments to use when starting the subprocess
 
-        Args:
-            args:
-                Additional arguments to use when starting the subprocess
+        :param str args:
+            Additional arguments to use when starting the subprocess
+
         """
         _args = []
         # Handle the config directory flag

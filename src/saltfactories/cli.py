@@ -1,3 +1,8 @@
+"""
+The ``salt-factories`` CLI script is meant to be used to get an absolute path to the directory containing
+``sitecustomize.py`` so that it can be injected into ``PYTHONPATH`` when running tests to track subprocesses
+code coverage.
+"""
 import argparse
 import sys
 

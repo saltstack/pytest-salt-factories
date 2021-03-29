@@ -1,8 +1,9 @@
 """
-    saltfactories.plugins.sysstats
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    Process stats PyTest plugin interface
+System Statistics
+=================
+
+Process stats PyTest plugin interface
 """
 import os
 import sys
