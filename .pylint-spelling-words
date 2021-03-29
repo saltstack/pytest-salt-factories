@@ -81,6 +81,7 @@ popen
 pragma
 prepend
 processresult
+proxied
 psutil
 py
 pyc
@@ -134,6 +135,7 @@ toc
 unix
 uss
 utils
+venv
 virtualenv
 virtualenvs
 zmq

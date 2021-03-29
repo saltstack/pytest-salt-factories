@@ -1,0 +1,1 @@
+Added a ``VirtualEnv`` helper class to create and interact with a virtual environment
