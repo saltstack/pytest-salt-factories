@@ -28,12 +28,16 @@ class VirtualEnv:
     """
     Helper class to create and use a virtual environment
 
-    :keyword str,~pathlib.Path:
+    :keyword str,~pathlib.Path venv_dir:
         The path to the directory where the virtual environment should be created
     :keyword list venv_create_args:
         Additional list of strings to pass when creating the virtualenv
     :keyword dict env:
         Additional environment entries
+    :keyword str,~pathlib.Path cwd:
+        The default ``cwd`` to use. Can be overridden when calling
+        :py:func:`~saltfactories.utils.virtualenv.VirtualEnv.run` and
+        :py:func:`~saltfactories.utils.virtualenv.VirtualEnv.install`
 
     .. code-block:: python
 
@@ -46,6 +50,7 @@ class VirtualEnv:
     venv_dir = attr.ib(converter=_cast_to_pathlib_path)
     venv_create_args = attr.ib(default=attr.Factory(list))
     env = attr.ib(default=None)
+    cwd = attr.ib(default=None)
     environ = attr.ib(init=False, repr=False)
     venv_python = attr.ib(init=False, repr=False)
     venv_bin_dir = attr.ib(init=False, repr=False)
@@ -92,7 +97,7 @@ class VirtualEnv:
         :rtype: ~saltfactories.utils.processes.ProcessResult
         """
         check = kwargs.pop("check", True)
-        kwargs.setdefault("cwd", str(self.venv_dir))
+        kwargs.setdefault("cwd", self.cwd or str(self.venv_dir))
         kwargs.setdefault("stdout", subprocess.PIPE)
         kwargs.setdefault("stderr", subprocess.PIPE)
         kwargs.setdefault("universal_newlines", True)
