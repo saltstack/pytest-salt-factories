@@ -19,6 +19,7 @@ from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.factories.base import Factory
 from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.factories.daemons.minion import SaltMinionFactory
+from saltfactories.utils import format_callback_to_string
 from saltfactories.utils import ports
 from saltfactories.utils import random_string
 from saltfactories.utils import time
@@ -50,7 +51,7 @@ except ImportError:  # pragma: nocover
 try:
     import pywintypes
 
-    PyWinTypesError = pywintypes.error
+    PyWinTypesError = pywintypes.error  # pragma: no cover
 except ImportError:
 
     class PyWinTypesError(Exception):
@@ -87,15 +88,6 @@ class ContainerFactory(Factory):
                 raise RuntimeError("The requests python library was not found installed")
             self.docker_client = docker.from_env()
 
-    def _format_callback(self, callback, args, kwargs):
-        callback_str = "{}(".format(callback.__name__)
-        if args:
-            callback_str += ", ".join([repr(arg) for arg in args])
-        if kwargs:
-            callback_str += ", ".join(["{}={!r}".format(k, v) for (k, v) in kwargs.items()])
-        callback_str += ")"
-        return callback_str
-
     def register_before_start_callback(self, callback, *args, **kwargs):
         self.before_start_callbacks.append((callback, args, kwargs))
 
@@ -125,7 +117,7 @@ class ContainerFactory(Factory):
             except Exception as exc:  # pylint: disable=broad-except
                 log.info(
                     "Exception raised when running %s: %s",
-                    self._format_callback(callback, args, kwargs),
+                    format_callback_to_string(callback, args, kwargs),
                     exc,
                     exc_info=True,
                 )
@@ -210,7 +202,7 @@ class ContainerFactory(Factory):
                 except Exception as exc:  # pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
-                        self._format_callback(callback, args, kwargs),
+                        format_callback_to_string(callback, args, kwargs),
                         exc,
                         exc_info=True,
                     )
@@ -252,7 +244,7 @@ class ContainerFactory(Factory):
             except Exception as exc:  # pylint: disable=broad-except
                 log.info(
                     "Exception raised when running %s: %s",
-                    self._format_callback(callback, args, kwargs),
+                    format_callback_to_string(callback, args, kwargs),
                     exc,
                     exc_info=True,
                 )
@@ -283,7 +275,7 @@ class ContainerFactory(Factory):
                 except Exception as exc:  # pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
-                        self._format_callback(callback, args, kwargs),
+                        format_callback_to_string(callback, args, kwargs),
                         exc,
                         exc_info=True,
                     )

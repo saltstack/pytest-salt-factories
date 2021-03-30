@@ -30,6 +30,7 @@ from salt.utils.immutabletypes import freeze
 from saltfactories.exceptions import FactoryNotRunning
 from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.exceptions import FactoryTimeout
+from saltfactories.utils import format_callback_to_string
 from saltfactories.utils import platform
 from saltfactories.utils import ports
 from saltfactories.utils import running_username
@@ -463,16 +464,6 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
     def register_after_terminate_callback(self, callback, *args, **kwargs):
         self.after_terminate_callbacks.append((callback, args, kwargs))
 
-    @staticmethod
-    def _format_callback(callback, args, kwargs):
-        callback_str = "{}(".format(callback.__name__)
-        if args:
-            callback_str += ", ".join([repr(arg) for arg in args])
-        if kwargs:
-            callback_str += ", ".join(["{}={!r}".format(k, v) for (k, v) in kwargs.items()])
-        callback_str += ")"
-        return callback_str
-
     def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
         """
         Start the daemon
@@ -504,7 +495,7 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
                 except Exception as exc:  # pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
-                        self._format_callback(callback, args, kwargs),
+                        format_callback_to_string(callback, args, kwargs),
                         exc,
                         exc_info=True,
                     )
@@ -553,7 +544,7 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
                 except Exception as exc:  # pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
-                        self._format_callback(callback, args, kwargs),
+                        format_callback_to_string(callback, args, kwargs),
                         exc,
                         exc_info=True,
                     )
@@ -582,7 +573,7 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
             except Exception as exc:  # pylint: disable=broad-except
                 log.info(
                     "Exception raised when running %s: %s",
-                    self._format_callback(callback, args, kwargs),
+                    format_callback_to_string(callback, args, kwargs),
                     exc,
                     exc_info=True,
                 )
@@ -595,7 +586,7 @@ class DaemonFactoryImpl(SubprocessFactoryImpl):
                 except Exception as exc:  # pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
-                        self._format_callback(callback, args, kwargs),
+                        format_callback_to_string(callback, args, kwargs),
                         exc,
                         exc_info=True,
                     )
@@ -713,7 +704,7 @@ class DaemonFactory(SubprocessFactoryBase):
                 except Exception as exc:  # pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
-                        self.impl._format_callback(before_stop_callback),
+                        format_callback_to_string(before_stop_callback),
                         exc,
                         exc_info=True,
                     )
@@ -724,7 +715,7 @@ class DaemonFactory(SubprocessFactoryBase):
                 except Exception as exc:  # pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
-                        self.impl._format_callback(after_stop_callback),
+                        format_callback_to_string(after_stop_callback),
                         exc,
                         exc_info=True,
                     )
@@ -738,7 +729,7 @@ class DaemonFactory(SubprocessFactoryBase):
                 except Exception as exc:  # pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
-                        self.impl._format_callback(before_start_callback),
+                        format_callback_to_string(before_start_callback),
                         exc,
                         exc_info=True,
                     )
@@ -750,7 +741,7 @@ class DaemonFactory(SubprocessFactoryBase):
                     except Exception as exc:  # pylint: disable=broad-except
                         log.info(
                             "Exception raised when running %s: %s",
-                            self.impl._format_callback(after_start_callback),
+                            format_callback_to_string(after_start_callback),
                             exc,
                             exc_info=True,
                         )
