@@ -13,6 +13,8 @@ from unittest.mock import patch
 import attr
 import pytest
 
+from saltfactories.utils import format_callback_to_string
+
 log = logging.getLogger(__name__)
 
 
@@ -104,7 +106,7 @@ class LoaderModuleMock:
     def stop(self):
         while self._finalizers:
             func, args, kwargs = self._finalizers.popleft()
-            func_repr = self._format_callback(func, args, kwargs)
+            func_repr = format_callback_to_string(func, args, kwargs)
             try:
                 log.trace("Calling finalizer %s", func_repr)
                 func(*args, **kwargs)
@@ -121,15 +123,6 @@ class LoaderModuleMock:
         Register a function to run when stopping
         """
         self._finalizers.append((func, args, kwargs))
-
-    def _format_callback(self, callback, args, kwargs):
-        callback_str = "{}(".format(callback.__qualname__)
-        if args:
-            callback_str += ", ".join([repr(arg) for arg in args])
-        if kwargs:
-            callback_str += ", ".join(["{}={!r}".format(k, v) for (k, v) in kwargs.items()])
-        callback_str += ")"
-        return callback_str
 
     def _patch_sys_modules(self, mocks):
         if "sys.modules" not in mocks:
