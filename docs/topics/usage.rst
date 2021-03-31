@@ -11,7 +11,6 @@ Let's consider this ``echo-extension`` example.
 The ``echo-extension`` provides an execution module:
 
 .. include-example:: examples/echo-extension/src/echoext/modules/echo_mod.py
-   :caption: examples/echo-extension/src/echoext/modules/echo_mod.py
 
 And also a state module:
 
