@@ -1,6 +1,7 @@
 -r base.txt
 -r tests.txt
+furo
 sphinx
-sphinx-material-saltstack
+sphinx-copybutton
 sphinx-prompt
 sphinxcontrib-spelling

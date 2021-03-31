@@ -14,3 +14,4 @@ Table Of Contents
    topics/fixtures
    ref/saltfactories/index
    changelog
+   GitHub Repository <https://github.com/saltstack/pytest-salt-factories>

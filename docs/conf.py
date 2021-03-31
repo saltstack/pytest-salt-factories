@@ -21,7 +21,6 @@ except ImportError:
     from importlib_metadata import version as pkg_version
 
 import pytest
-import sphinx_material_saltstack
 
 try:
     pytest.helpers
@@ -47,10 +46,6 @@ addtl_paths = (
 for addtl_path in addtl_paths:
     sys.path.insert(0, addtl_path)
 
-
-LOCAL_DEV_BUILD = os.environ.get("LOCAL_DEV_BUILD", "0") == "1"
-
-
 # -- Project information -----------------------------------------------------
 this_year = datetime.datetime.today().year
 if this_year == 2020:
@@ -58,12 +53,11 @@ if this_year == 2020:
 else:
     copyright_year = f"2020 - {this_year}"
 project = "PyTest Salt Factories"
-copyright = f"{copyright_year}, SaltStack, Inc."
-author = "SaltStack, Inc."
+copyright = f"{copyright_year}, VMware, Inc."
+author = "VMware, Inc."
 
 # The full version, including alpha/beta/rc tags
 release = pkg_version("pytest-salt-factories")
-
 
 # Variables to pass into the docs from sitevars.rst for rst substitution
 with open("sitevars.rst") as site_vars_file:
@@ -81,9 +75,9 @@ rst_prolog = """
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "sphinx_material_saltstack",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
+    "sphinx_copybutton",
     # "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.viewcode",
@@ -118,31 +112,8 @@ master_doc = "contents"
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = "sphinx_material_saltstack"
-html_theme_path = sphinx_material_saltstack.html_theme_path()
-html_context = sphinx_material_saltstack.get_html_context()
-html_sidebars = {"**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]}
-html_theme_options = {
-    # Set the name of the project to appear in the navigation.
-    "nav_title": "PyTest Salt Factories",
-    # Set you GA account ID to enable tracking
-    # "google_analytics_account": "",
-    # Set the repo location to get a badge with stats (only if public repo)
-    "repo_url": "https://github.com/saltstack/pytest-salt-factories",
-    "repo_name": "pytest-salt-factories",
-    "repo_type": "github",
-    # Visible levels of the global TOC; -1 means unlimited
-    "globaltoc_depth": 1,
-    # If False, expand all TOC entries
-    "globaltoc_collapse": False,
-    # If True, show hidden TOC entries
-    "globaltoc_includehidden": True,
-    # hide tabs?
-    "master_doc": False,
-    # Minify for smaller HTML/CSS assets
-    "html_minify": False if LOCAL_DEV_BUILD else True,
-    "css_minify": False if LOCAL_DEV_BUILD else True,
-}
+html_theme = "furo"
+html_title = project
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -151,31 +122,19 @@ html_static_path = ["_static"]
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
-html_css_files = [
-    "css/inline-include.css",
-]
+# html_css_files = [
+#    "css/inline-include.css",
+# ]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
-html_logo = os.path.join(
-    html_theme_path[0],
-    "sphinx_material_saltstack",
-    "static",
-    "images",
-    "saltstack-logo.png",
-)
+html_logo = "_static/img/SaltProject_altlogo_teal.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
 # pixels large. Favicons can be up to at least 228x228. PNG
 # format is supported as well, not just .ico'
-html_favicon = os.path.join(
-    html_theme_path[0],
-    "sphinx_material_saltstack",
-    "static",
-    "images",
-    "favicon.png",
-)
+html_favicon = "_static/img/SaltProject_Logomark_teal.png"
 
 # Sphinx Napoleon Config
 napoleon_google_docstring = True
