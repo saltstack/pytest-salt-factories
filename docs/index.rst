@@ -2,31 +2,9 @@
 
 .. _about:
 
-======================
-What is Salt Factories
-======================
-
-It's a `pytest`_ plugin, and also the evolution of `pytest-salt <https://github.com/saltstack/pytest-salt>`_, a great
-start, but ...
-
-.. image:: _static/Overengineering.jpg
-  :alt: Overengineering Example
-  :align: center
-  :width: 90%
-
-over-engineered.
-
-From the ground up, pytest-salt-factories was created to be ...
-
-
-.. image:: _static/turn-light.jpg
-  :alt: Simple Overengineering
-  :align: center
-  :width: 90%
-
-
-simple.
-
+.. include:: ../README.rst
+   :start-after: include-starts-here
+   :end-before: include-ends-here
 
 Documentation
 =============
@@ -45,5 +23,4 @@ Changelog
 Consult the :ref:`Changelog <changelog>` page for fixes and enhancements of each version.
 
 
-.. _pytest: https://docs.pytest.org
 .. _GitHub issue tracker: https://github.com/saltstack/pytest-salt-factories/issues
