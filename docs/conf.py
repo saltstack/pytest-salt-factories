@@ -122,9 +122,9 @@ html_static_path = ["_static"]
 
 # These paths are either relative to html_static_path
 # or fully qualified paths (eg. https://...)
-# html_css_files = [
-#    "css/inline-include.css",
-# ]
+html_css_files = [
+    "css/inline-include.css",
+]
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
