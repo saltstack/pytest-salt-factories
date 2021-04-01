@@ -107,6 +107,7 @@ proxied
 psutil
 py
 pyc
+pyproject
 pytest
 pytest's
 pytestconfig
@@ -163,6 +164,8 @@ tmp
 tmpdir
 toc
 toctree
+toml
+towncrier
 un
 undoc
 unix

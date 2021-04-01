@@ -84,6 +84,7 @@ extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.coverage",
     "sphinxcontrib.spelling",
+    "sphinxcontrib.towncrier",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -164,6 +165,16 @@ autodoc_default_options = {"member-order": "bysource"}
 autodoc_mock_imports = ["salt"]
 autodoc_typehints = "description"
 # <---- Autodoc Config -----------------------------------------------------------------------------------------------
+
+
+# ----- Towncrier Draft Release ------------------------------------------------------------------------------------->
+# Options: draft/sphinx-version/sphinx-release
+towncrier_draft_autoversion_mode = "draft"
+towncrier_draft_include_empty = True
+towncrier_draft_working_directory = REPO_ROOT
+# Not yet supported:
+# towncrier_draft_config_path = 'pyproject.toml'  # relative to cwd
+# <---- Towncrier Draft Release --------------------------------------------------------------------------------------
 
 
 # ----- Literal Include - Auto Caption ------------------------------------------------------------------------------>

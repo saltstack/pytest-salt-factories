@@ -5,3 +5,4 @@ sphinx
 sphinx-copybutton
 sphinx-prompt
 sphinxcontrib-spelling
+sphinxcontrib-towncrier
