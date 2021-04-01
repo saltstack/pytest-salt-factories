@@ -115,6 +115,14 @@ master_doc = "contents"
 #
 html_theme = "furo"
 html_title = project
+html_theme_options = {
+    "announcement": (
+        "<b>"
+        "Documentation is always evolving, but this one hasn't reached it's prime for a 1.0.0 release. "
+        "Once we reach that stage, this warning will go away."
+        "</b>"
+    ),
+}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
