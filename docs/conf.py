@@ -116,6 +116,8 @@ master_doc = "contents"
 html_theme = "furo"
 html_title = project
 html_theme_options = {
+    "light_logo": "img/SaltProject_altlogo_teal.png",
+    "dark_logo": "img/SaltProject_altlogo_teal.png",
     "announcement": (
         "<b>"
         "Documentation is always evolving, but this one hasn't reached it's prime for a 1.0.0 release. "
@@ -134,10 +136,6 @@ html_static_path = ["_static"]
 html_css_files = [
     "css/inline-include.css",
 ]
-
-# The name of an image file (relative to this directory) to place at the top
-# of the sidebar.
-html_logo = "_static/img/SaltProject_altlogo_teal.png"
 
 # The name of an image file (within the static path) to use as favicon of the
 # docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
