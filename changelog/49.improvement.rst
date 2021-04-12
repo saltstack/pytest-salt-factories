@@ -1,0 +1,1 @@
+* Salt allows minions and proxy minions to also have file and pillar roots configured
