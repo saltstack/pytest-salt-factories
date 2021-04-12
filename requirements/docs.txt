@@ -6,3 +6,4 @@ sphinx-copybutton
 sphinx-prompt
 sphinxcontrib-spelling
 sphinxcontrib-towncrier
+towncrier < 19.9.0
