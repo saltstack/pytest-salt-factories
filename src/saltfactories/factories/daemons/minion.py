@@ -37,12 +37,12 @@ class SaltMinionFactory(SaltDaemonFactory):
     @state_tree.default
     def __setup_state_tree(self):
         if "file_roots" in self.config:
-            return SaltStateTree(envs=copy.deepcopy(self.config["file_roots"]))
+            return SaltStateTree(envs=copy.deepcopy(self.config.get("file_roots") or {}))
 
     @pillar_tree.default
     def __setup_pillar_tree(self):
         if "pillar_roots" in self.config:
-            return SaltPillarTree(envs=copy.deepcopy(self.config["pillar_roots"]))
+            return SaltPillarTree(envs=copy.deepcopy(self.config.get("pillar_roots") or {}))
 
     @classmethod
     def default_config(
@@ -74,6 +74,11 @@ class SaltMinionFactory(SaltDaemonFactory):
             logs_dir = root_dir / "var" / "log" / "salt"
             logs_dir.mkdir(parents=True, exist_ok=True)
 
+            state_tree_root = root_dir / "srv" / "salt"
+            state_tree_root.mkdir(parents=True, exist_ok=True)
+            pillar_tree_root = root_dir / "srv" / "pillar"
+            pillar_tree_root.mkdir(parents=True, exist_ok=True)
+
             _config_defaults = {
                 "id": master_id,
                 "conf_file": conf_file,
@@ -88,6 +93,12 @@ class SaltMinionFactory(SaltDaemonFactory):
                 "log_level_logfile": "debug",
                 "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
                 "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "file_roots": {
+                    "base": [str(state_tree_root)],
+                },
+                "pillar_roots": {
+                    "base": [str(pillar_tree_root)],
+                },
                 "pytest-minion": {
                     "master-id": master_id,
                     "log": {"prefix": "{}(id={!r})".format(cls.__name__, minion_id)},
@@ -104,6 +115,12 @@ class SaltMinionFactory(SaltDaemonFactory):
             state_tree_root_base.mkdir(exist_ok=True)
             state_tree_root_prod = state_tree_root / "prod"
             state_tree_root_prod.mkdir(exist_ok=True)
+            pillar_tree_root = root_dir / "pillar-tree"
+            pillar_tree_root.mkdir(exist_ok=True)
+            pillar_tree_root_base = pillar_tree_root / "base"
+            pillar_tree_root_base.mkdir(exist_ok=True)
+            pillar_tree_root_prod = pillar_tree_root / "prod"
+            pillar_tree_root_prod.mkdir(exist_ok=True)
 
             _config_defaults = {
                 "id": minion_id,
@@ -126,6 +143,10 @@ class SaltMinionFactory(SaltDaemonFactory):
                 "file_roots": {
                     "base": [str(state_tree_root_base)],
                     "prod": [str(state_tree_root_prod)],
+                },
+                "pillar_roots": {
+                    "base": [str(pillar_tree_root_base)],
+                    "prod": [str(pillar_tree_root_prod)],
                 },
                 "enable_legacy_startup_events": False,
                 "acceptance_wait_time": 0.5,
@@ -168,7 +189,7 @@ class SaltMinionFactory(SaltDaemonFactory):
         # verify env to make sure all required directories are created and have the
         # right permissions
         pki_dir = pathlib.Path(config["pki_dir"])
-        return [
+        verify_env_entries = [
             str(pki_dir / "minions"),
             str(pki_dir / "minions_pre"),
             str(pki_dir / "minions_rejected"),
@@ -180,6 +201,13 @@ class SaltMinionFactory(SaltDaemonFactory):
             # config['extension_modules'],
             config["sock_dir"],
         ]
+        verify_env_entries.extend(config["file_roots"]["base"])
+        if "prod" in config["file_roots"]:
+            verify_env_entries.extend(config["file_roots"]["prod"])
+        verify_env_entries.extend(config["pillar_roots"]["base"])
+        if "prod" in config["pillar_roots"]:
+            verify_env_entries.extend(config["pillar_roots"]["prod"])
+        return verify_env_entries
 
     @classmethod
     def load_config(cls, config_file, config):

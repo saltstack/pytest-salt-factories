@@ -23,6 +23,7 @@ from saltfactories.factories.base import SaltDaemonFactory
 from saltfactories.factories.base import SystemdSaltDaemonFactoryImpl
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import ports
+from saltfactories.utils.tempfiles import SaltPillarTree
 from saltfactories.utils.tempfiles import SaltStateTree
 
 log = logging.getLogger(__name__)
@@ -41,6 +42,7 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
     include_proxyid_cli_flag = attr.ib(default=True, repr=False)
 
     state_tree = attr.ib(init=False, hash=False, repr=False)
+    pillar_tree = attr.ib(init=False, hash=False, repr=False)
 
     def _get_impl_class(self):
         if self.system_install:
@@ -50,7 +52,12 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
     @state_tree.default
     def __setup_state_tree(self):
         if "file_roots" in self.config:
-            return SaltStateTree(envs=copy.deepcopy(self.config["file_roots"]))
+            return SaltStateTree(envs=copy.deepcopy(self.config.get("file_roots") or {}))
+
+    @pillar_tree.default
+    def __setup_pillar_tree(self):
+        if "pillar_roots" in self.config:
+            return SaltPillarTree(envs=copy.deepcopy(self.config.get("pillar_roots") or {}))
 
     @classmethod
     def default_config(
@@ -81,6 +88,11 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
             logs_dir = root_dir / "var" / "log" / "salt"
             logs_dir.mkdir(parents=True, exist_ok=True)
 
+            state_tree_root = root_dir / "srv" / "salt"
+            state_tree_root.mkdir(parents=True, exist_ok=True)
+            pillar_tree_root = root_dir / "srv" / "pillar"
+            pillar_tree_root.mkdir(parents=True, exist_ok=True)
+
             _config_defaults = {
                 "id": proxy_minion_id,
                 "conf_file": conf_file,
@@ -96,6 +108,12 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
                 "loop_interval": 0.05,
                 "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
                 "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "file_roots": {
+                    "base": [str(state_tree_root)],
+                },
+                "pillar_roots": {
+                    "base": [str(pillar_tree_root)],
+                },
                 "proxy": {"proxytype": "dummy"},
                 "pytest-minion": {
                     "master-id": master_id,
@@ -113,6 +131,12 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
             state_tree_root_base.mkdir(exist_ok=True)
             state_tree_root_prod = state_tree_root / "prod"
             state_tree_root_prod.mkdir(exist_ok=True)
+            pillar_tree_root = root_dir / "pillar-tree"
+            pillar_tree_root.mkdir(exist_ok=True)
+            pillar_tree_root_base = pillar_tree_root / "base"
+            pillar_tree_root_base.mkdir(exist_ok=True)
+            pillar_tree_root_prod = pillar_tree_root / "prod"
+            pillar_tree_root_prod.mkdir(exist_ok=True)
 
             _config_defaults = {
                 "id": proxy_minion_id,
@@ -135,6 +159,10 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
                 "file_roots": {
                     "base": [str(state_tree_root_base)],
                     "prod": [str(state_tree_root_prod)],
+                },
+                "pillar_roots": {
+                    "base": [str(pillar_tree_root_base)],
+                    "prod": [str(pillar_tree_root_prod)],
                 },
                 "proxy": {"proxytype": "dummy"},
                 "enable_legacy_startup_events": False,
@@ -177,11 +205,18 @@ class SaltProxyMinionFactory(SaltDaemonFactory):
     def _get_verify_config_entries(cls, config):
         # verify env to make sure all required directories are created and have the
         # right permissions
-        return [
+        verify_env_entries = [
             str(pathlib.Path(config["log_file"]).parent),
             # config['extension_modules'],
             config["sock_dir"],
         ]
+        verify_env_entries.extend(config["file_roots"]["base"])
+        if "prod" in config["file_roots"]:
+            verify_env_entries.extend(config["file_roots"]["prod"])
+        verify_env_entries.extend(config["pillar_roots"]["base"])
+        if "prod" in config["pillar_roots"]:
+            verify_env_entries.extend(config["pillar_roots"]["prod"])
+        return verify_env_entries
 
     @classmethod
     def load_config(cls, config_file, config):
