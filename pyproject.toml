@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools_scm]
 write_to = "src/saltfactories/version.py"
-write_to_template = "__version__ = \"{version}\""
+write_to_template = "# pylint: skip-file\n\n__version__ = \"{version}\"\n"
 
 [tool.towncrier]
 package = "saltfactories"
