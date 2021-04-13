@@ -185,13 +185,13 @@ def pytest_configure(config):
 @pytest.fixture(scope="session")
 def session_markers_loader(salt_factories):
     minion_id = "session-markers-minion"
-    config_overrides = {
+    overrides = {
         "file_client": "local",
         "features": {"enable_slsvars_fixes": True},
     }
-    factory = salt_factories.get_salt_minion_daemon(
+    factory = salt_factories.salt_minion_daemon(
         minion_id,
-        config_overrides=config_overrides,
+        overrides=overrides,
     )
     loader_instance = saltfactories.utils.functional.Loaders(factory.config.copy())
     # Sync Everything

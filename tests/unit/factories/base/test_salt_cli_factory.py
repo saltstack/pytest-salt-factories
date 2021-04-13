@@ -7,7 +7,7 @@ from unittest import mock
 
 import pytest
 
-from saltfactories.factories.base import SaltCliFactory
+from saltfactories.bases import SaltCli
 from saltfactories.utils.processes import ProcessResult
 
 
@@ -60,8 +60,8 @@ def test_default_cli_flags(minion_id, config_dir, config_file, cli_script_name):
         minion_id,
         "test.ping",
     ]
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
 
 
@@ -89,8 +89,8 @@ def test_override_log_level(minion_id, config_dir, config_file, cli_script_name,
         + flag_overrides_args
         + ["test.ping"]
     )
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
 
 
@@ -117,8 +117,8 @@ def test_override_output(minion_id, config_dir, config_file, cli_script_name, fl
         + flag_overrides_args
         + ["test.ping"]
     )
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
 
 
@@ -148,15 +148,15 @@ def test_override_output_indent(minion_id, config_dir, config_file, cli_script_n
         + flag_overrides_args
         + ["test.ping"]
     )
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
 
 
 def test_cli_timeout_lesser_than_timeout_kw(minion_id, config_dir, config_file, cli_script_name):
     # Both --timeout and _timeout are passed.
     # Since --timeout is less than _timeout, the value of _timeout does not changed
-    default_timeout = 10
+    timeout = 10
     explicit_timeout = 60
     cli_timeout = 6
     config = {"conf_file": config_file, "id": "the-id"}
@@ -181,9 +181,7 @@ def test_cli_timeout_lesser_than_timeout_kw(minion_id, config_dir, config_file, 
     terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
     popen_mock.terminate = terminate_mock
 
-    proc = SaltCliFactory(
-        cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
-    )
+    proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     with mock.patch.object(proc.impl, "init_terminal", popen_mock), mock.patch.object(
         proc, "terminate", terminate_mock
     ):
@@ -199,7 +197,7 @@ def test_cli_timeout_lesser_than_timeout_kw(minion_id, config_dir, config_file, 
 def test_cli_timeout_matches_timeout_kw(minion_id, config_dir, config_file, cli_script_name):
     # Both --timeout and _timeout are passed.
     # Since --timeout is greater than _timeout, the value of _timeout is updated to the value of --timeout plus 5
-    default_timeout = 10
+    timeout = 10
     explicit_timeout = 20
     cli_timeout = 20
     config = {"conf_file": config_file, "id": "the-id"}
@@ -224,9 +222,7 @@ def test_cli_timeout_matches_timeout_kw(minion_id, config_dir, config_file, cli_
     terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
     popen_mock.terminate = terminate_mock
 
-    proc = SaltCliFactory(
-        cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
-    )
+    proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     with mock.patch.object(proc.impl, "init_terminal", popen_mock), mock.patch.object(
         proc, "terminate", terminate_mock
     ):
@@ -242,7 +238,7 @@ def test_cli_timeout_matches_timeout_kw(minion_id, config_dir, config_file, cli_
 def test_cli_timeout_greater_than_timeout_kw(minion_id, config_dir, config_file, cli_script_name):
     # Both --timeout and _timeout are passed.
     # Since --timeout is greater than _timeout, the value of _timeout is updated to the value of --timeout plus 5
-    default_timeout = 10
+    timeout = 10
     explicit_timeout = 20
     cli_timeout = 60
     config = {"conf_file": config_file, "id": "the-id"}
@@ -267,9 +263,7 @@ def test_cli_timeout_greater_than_timeout_kw(minion_id, config_dir, config_file,
     terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
     popen_mock.terminate = terminate_mock
 
-    proc = SaltCliFactory(
-        cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
-    )
+    proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     with mock.patch.object(proc.impl, "init_terminal", popen_mock), mock.patch.object(
         proc, "terminate", terminate_mock
     ):
@@ -286,7 +280,7 @@ def test_cli_timeout_updates_to_timeout_kw_plus_10(
     minion_id, config_dir, config_file, cli_script_name
 ):
     # _timeout is passed, the value of --timeout is _timeout, internal timeout is added 10 seconds
-    default_timeout = 10
+    timeout = 10
     explicit_timeout = 60
     config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
@@ -309,9 +303,7 @@ def test_cli_timeout_updates_to_timeout_kw_plus_10(
     popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
     terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", ""))
 
-    proc = SaltCliFactory(
-        cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
-    )
+    proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     with mock.patch.object(proc.impl, "init_terminal", popen_mock), mock.patch.object(
         proc, "terminate", terminate_mock
     ):
@@ -328,7 +320,7 @@ def test_cli_timeout_updates_to_default_timeout_plus_10(
     minion_id, config_dir, config_file, cli_script_name
 ):
     # Neither _timeout nor --timeout are passed, --timeout equals the default timeout, internal timeout is added 10
-    default_timeout = 10
+    timeout = 10
     config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
@@ -336,7 +328,7 @@ def test_cli_timeout_updates_to_default_timeout_plus_10(
         sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
-        "--timeout={}".format(default_timeout),
+        "--timeout={}".format(timeout),
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -350,9 +342,7 @@ def test_cli_timeout_updates_to_default_timeout_plus_10(
     popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
     terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", ""))
 
-    proc = SaltCliFactory(
-        cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
-    )
+    proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     with mock.patch.object(proc.impl, "init_terminal", popen_mock), mock.patch.object(
         proc, "terminate", terminate_mock
     ):
@@ -361,7 +351,7 @@ def test_cli_timeout_updates_to_default_timeout_plus_10(
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         ret = proc.run(*args, **kwargs)
-        assert proc.impl._terminal_timeout == default_timeout + 10
+        assert proc.impl._terminal_timeout == timeout + 10
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
 
@@ -373,7 +363,7 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
     else:
         flag_overrides_args = [flag, str(flag_value)]
 
-    default_timeout = 10
+    timeout = 10
     config = {"conf_file": config_file, "id": "the-id"}
     args = flag_overrides_args + ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
@@ -390,16 +380,14 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
         + flag_overrides_args
         + ["test.ping"]
     )
-    proc = SaltCliFactory(
-        cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
-    )
+    proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
     # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
     proc.__cli_timeout_supported__ = True
     # We set the _terminal_timeout attribute just to test. This attribute would be set when calling
     # SaltScriptBase.run() but we don't really want to call it
     proc.impl._terminal_timeout = flag_value
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
     # Let's also confirm that we also parsed the timeout flag value and set the SaltScriptBase
     # _terminal_timeout to that value plus 10
@@ -414,7 +402,7 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
     else:
         flag_overrides_args = [flag, str(flag_value) + "i"]
 
-    default_timeout = 10
+    timeout = 10
     config = {"conf_file": config_file, "id": "the-id"}
     args = flag_overrides_args + ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
@@ -431,20 +419,18 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
         + flag_overrides_args
         + ["test.ping"]
     )
-    proc = SaltCliFactory(
-        cli_script_name=cli_script_name, config=config, default_timeout=default_timeout
-    )
+    proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
     # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
     proc.__cli_timeout_supported__ = True
     # We set the _terminal_timeout attribute just to test. This attribute would be set when calling
     # SaltScriptBase.run() but we don't really want to call it
-    proc.impl._terminal_timeout = default_timeout
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc.impl._terminal_timeout = timeout
+    cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
     # Let's confirm that even though we tried to parse the timeout flag value, it was a bad value and the
     # SaltScriptBase _terminal_timeout attribute was not update
-    assert proc.impl._terminal_timeout == default_timeout
+    assert proc.impl._terminal_timeout == timeout
 
 
 @pytest.mark.parametrize("flag", ["-c", "--config-dir", "--config-dir=", None])
@@ -472,8 +458,8 @@ def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name
         + flag_overrides_args
         + ["test.ping"]
     )
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
 
 
@@ -482,9 +468,9 @@ def test_process_output(cli_script_name, config_file):
     in_stderr = ""
     cmdline = ["--out=json"]
     config = {"conf_file": config_file, "id": "the-id"}
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    # Call proc.build_cmdline() so that proc.__json_output__ is properly set
-    proc.build_cmdline()
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    # Call proc.cmdline() so that proc.__json_output__ is properly set
+    proc.cmdline()
     stdout, stderr, json_out = proc.process_output(in_stdout, in_stderr, cmdline=cmdline)
     assert stdout == json.loads(in_stdout)
     assert stderr == in_stderr
@@ -507,8 +493,8 @@ def test_non_string_cli_flags(minion_id, config_dir, config_file, cli_script_nam
         "test.ping",
         "foo={}".format(json.dumps(foo)),
     ]
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
 
 
@@ -531,8 +517,8 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     ]
     for key, value in extra_kwargs.items():
         expected.append("{}={}".format(key, value))
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args, **kwargs)
     # Function **kwargs are not ordered dictionaries on some python versions
     # let's just use sorted to make sure everything is in the output
     assert sorted(cmdline) == sorted(expected)
@@ -554,8 +540,8 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     for key, value in extra_kwargs.items():
         value = json.dumps(value)
         expected.append("{}={}".format(key, value))
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args, **kwargs)
     # Function **kwargs are not ordered dictionaries on some python versions
     # let's just use sorted to make sure everything is in the output
     assert sorted(cmdline) == sorted(expected)
@@ -577,8 +563,8 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     for key, value in extra_kwargs.items():
         value = json.dumps(value)
         expected.append("{}={}".format(key, value))
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args, **kwargs)
     # Function **kwargs are not ordered dictionaries on some python versions
     # let's just use sorted to make sure everything is in the output
     assert sorted(cmdline) == sorted(expected)
@@ -597,17 +583,15 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         "test.ping",
         "extra={}".format(json.dumps(extra_kwargs)),
     ]
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args, **kwargs)
+    proc = SaltCli(script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args, **kwargs)
     # Function **kwargs are not ordered dictionaries on some python versions
     # let's just use sorted to make sure everything is in the output
     assert sorted(cmdline) == sorted(expected)
 
 
 def test_salt_cli_factory_id_attr_comes_first_in_repr(config_file):
-    proc = SaltCliFactory(
-        cli_script_name="foo-bar", config={"id": "TheID", "conf_file": config_file}
-    )
+    proc = SaltCli(script_name="foo-bar", config={"id": "TheID", "conf_file": config_file})
     regex = r"{}(id='TheID'".format(proc.__class__.__name__)
     assert repr(proc).startswith(regex)
     assert str(proc).startswith(regex)
@@ -615,7 +599,5 @@ def test_salt_cli_factory_id_attr_comes_first_in_repr(config_file):
 
 def test_salt_cli_display_name(config_file):
     factory_id = "TheID"
-    proc = SaltCliFactory(
-        cli_script_name="foo-bar", config={"id": factory_id, "conf_file": config_file}
-    )
-    assert proc.get_display_name() == "{}(id={!r})".format(SaltCliFactory.__name__, factory_id)
+    proc = SaltCli(script_name="foo-bar", config={"id": factory_id, "conf_file": config_file})
+    assert proc.get_display_name() == "{}(id={!r})".format(SaltCli.__name__, factory_id)

@@ -14,7 +14,7 @@ import pprint
 import pytest
 
 import saltfactories
-from saltfactories.factories.manager import FactoriesManager
+from saltfactories.manager import FactoriesManager
 
 
 log = logging.getLogger(__name__)

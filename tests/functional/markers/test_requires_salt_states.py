@@ -83,18 +83,18 @@ def test_has_required_custom_salt_state(pytester):
             ''')
             module_path = rootfs_states / "{}.py".format(custom_module_name)
             module_path.write_text(module_contents)
-            config_defaults = {
+            defaults = {
                 "root_dir": str(root_dir),
             }
-            config_overrides = {
+            overrides = {
                 "file_client": "local",
                 "features": {"enable_slsvars_fixes": True},
                 "file_roots": {
                     "base": [str(rootfs)]
                 }
             }
-            factory = salt_factories.get_salt_minion_daemon(
-                minion_id, config_defaults=config_defaults, config_overrides=config_overrides,
+            factory = salt_factories.salt_minion_daemon(
+                minion_id, defaults=defaults, overrides=overrides,
             )
             loader_instance = saltfactories.utils.functional.Loaders(factory.config.copy())
             ret = loader_instance.states.bogus.echoed("foo")

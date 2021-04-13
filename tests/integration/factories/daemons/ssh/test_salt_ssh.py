@@ -21,7 +21,7 @@ def sshd(salt_factories):
 
 @pytest.fixture(scope="module")
 def master(salt_factories):
-    return salt_factories.get_salt_master_daemon(random_string("master-"))
+    return salt_factories.salt_master_daemon(random_string("master-"))
 
 
 @pytest.fixture(scope="module")
@@ -43,7 +43,7 @@ def salt_ssh_cli(sshd, salt_factories, master):
         log.debug("Wrote '%s' with contents:\n%s", roster_file_path, contents)
         log.warning("")
     try:
-        yield master.get_salt_ssh_cli(
+        yield master.salt_ssh_cli(
             roster_file=str(roster_file_path), client_key=str(sshd.client_key)
         )
     finally:
