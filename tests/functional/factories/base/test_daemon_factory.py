@@ -9,9 +9,9 @@ import attr
 import psutil
 import pytest
 
+from saltfactories.bases import Daemon
 from saltfactories.exceptions import FactoryNotRunning
 from saltfactories.exceptions import FactoryNotStarted
-from saltfactories.factories.base import DaemonFactory
 from saltfactories.utils import platform
 from saltfactories.utils.processes import _get_cmdline
 
@@ -87,11 +87,11 @@ def test_daemon_process_termination(request, tempfiles):
         executable=True,
     )
     if not platform.is_windows():
-        factory_kwargs = dict(cli_script_name=script)
+        factory_kwargs = dict(script_name=script)
     else:
         # Windows don't know how to handle python scripts directly
-        factory_kwargs = dict(cli_script_name=sys.executable, base_script_args=[script])
-    daemon = DaemonFactory(start_timeout=1, **factory_kwargs)
+        factory_kwargs = dict(script_name=sys.executable, base_script_args=[script])
+    daemon = Daemon(start_timeout=1, **factory_kwargs)
     daemon.start()
     daemon_pid = daemon.pid
     # Make sure the daemon is terminated no matter what
@@ -186,11 +186,11 @@ def test_daemon_process_termination_parent_killed(request, tempfiles):
         executable=True,
     )
     if not platform.is_windows():
-        factory_kwargs = dict(cli_script_name=script)
+        factory_kwargs = dict(script_name=script)
     else:
         # Windows don't know how to handle python scripts directly
-        factory_kwargs = dict(cli_script_name=sys.executable, base_script_args=[script])
-    daemon = DaemonFactory(start_timeout=1, **factory_kwargs)
+        factory_kwargs = dict(script_name=sys.executable, base_script_args=[script])
+    daemon = Daemon(start_timeout=1, **factory_kwargs)
     daemon.start()
     daemon_pid = daemon.pid
     # Make sure the daemon is terminated no matter what
@@ -243,8 +243,8 @@ def test_started_context_manager(request, tempfiles, start_timeout):
         """,
         executable=True,
     )
-    daemon = DaemonFactory(
-        cli_script_name=sys.executable,
+    daemon = Daemon(
+        script_name=sys.executable,
         base_script_args=[script],
         start_timeout=2,
         max_start_attempts=1,
@@ -318,8 +318,8 @@ def factory_stopped_script(tempfiles):
 
 
 def test_stopped_context_manager_raises_FactoryNotRunning(request, factory_stopped_script):
-    daemon = DaemonFactory(
-        cli_script_name=sys.executable,
+    daemon = Daemon(
+        script_name=sys.executable,
         base_script_args=[factory_stopped_script],
         start_timeout=3,
         max_start_attempts=1,
@@ -334,8 +334,8 @@ def test_stopped_context_manager_raises_FactoryNotRunning(request, factory_stopp
 
 
 def test_stopped_context_manager(request, factory_stopped_script):
-    daemon = DaemonFactory(
-        cli_script_name=sys.executable,
+    daemon = Daemon(
+        script_name=sys.executable,
         base_script_args=[factory_stopped_script],
         start_timeout=3,
         max_start_attempts=1,
@@ -378,8 +378,8 @@ class CallbackState:
 
 def test_stopped_context_manager_callbacks(request, factory_stopped_script):
 
-    daemon = DaemonFactory(
-        cli_script_name=sys.executable,
+    daemon = Daemon(
+        script_name=sys.executable,
         base_script_args=[factory_stopped_script],
         start_timeout=3,
         max_start_attempts=1,
@@ -460,8 +460,8 @@ def test_context_manager_returns_class_instance(tempfiles):
         """,
         executable=True,
     )
-    daemon = DaemonFactory(
-        cli_script_name=sys.executable,
+    daemon = Daemon(
+        script_name=sys.executable,
         base_script_args=[script],
         start_timeout=1,
         max_start_attempts=1,
@@ -526,8 +526,8 @@ def test_exact_max_start_attempts(tempfiles, caplog, max_start_attempts):
         """,
         executable=True,
     )
-    daemon = DaemonFactory(
-        cli_script_name=sys.executable,
+    daemon = Daemon(
+        script_name=sys.executable,
         base_script_args=[script],
         start_timeout=0.1,
         max_start_attempts=max_start_attempts,
@@ -543,7 +543,7 @@ def test_exact_max_start_attempts(tempfiles, caplog, max_start_attempts):
         "Attempt: {} of {}".format(n, max_start_attempts) for n in range(1, max_start_attempts + 1)
     ]
     for record in caplog.records:
-        if not record.message.startswith("Starting DaemonFactory"):
+        if not record.message.startswith("Starting Daemon"):
             continue
         for idx, start_attempt in enumerate(list(start_attempts)):
             if start_attempt in record.message:

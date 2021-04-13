@@ -8,7 +8,7 @@ import shutil
 
 import pytest
 
-from saltfactories.factories.cli.salt import SaltCliFactory
+from saltfactories.cli.salt import Salt
 
 
 @pytest.fixture
@@ -49,9 +49,9 @@ def cli_script_name(pytester):
 def test_missing_minion_id_raises_exception(minion_id, config_dir, config_file, cli_script_name):
     config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
+    proc = Salt(script_name=cli_script_name, config=config)
     with pytest.raises(pytest.UsageError) as exc:
-        proc.build_cmdline(*args)
+        proc.cmdline(*args)
     assert (
         str(exc.value) == "The `minion_tgt` keyword argument is mandatory for the salt CLI factory"
     )
@@ -66,12 +66,12 @@ def test_missing_minion_id_does_not_raise_exception(
     """
     config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"] + [flag]
-    proc = SaltCliFactory(cli_script_name=cli_script_name, config=config)
+    proc = Salt(script_name=cli_script_name, config=config)
     try:
-        cmdline = proc.build_cmdline(*args)
+        proc.cmdline(*args)
     except RuntimeError:
         pytest.fail(
-            "The SaltCliFactory raised RuntimeError when the CLI flag '{}' was present in args".format(
+            "The Salt class raised RuntimeError when the CLI flag '{}' was present in args".format(
                 flag
             )
         )

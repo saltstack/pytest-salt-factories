@@ -1,6 +1,6 @@
 import pytest
 
-from saltfactories.factories.daemons.container import ContainerFactory
+from saltfactories.daemons.container import Container
 from saltfactories.utils import ports
 from saltfactories.utils import socket
 
@@ -14,7 +14,7 @@ def docker_client():
         client = docker.from_env()
     except DockerException:
         pytest.skip("Failed to get a connection to docker running on the system")
-    connectable = ContainerFactory.client_connectable(client)
+    connectable = Container.client_connectable(client)
     if connectable is not True:  # pragma: no cover
         pytest.skip(connectable)
     return client

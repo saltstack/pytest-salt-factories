@@ -2,8 +2,8 @@ import shutil
 
 import pytest
 
+from saltfactories.bases import SaltDaemon
 from saltfactories.exceptions import FactoryNotStarted
-from saltfactories.factories.base import SaltDaemonFactory
 
 
 @pytest.fixture
@@ -58,8 +58,8 @@ def test_extra_cli_arguments_after_first_failure(
             output_file
         ),
     )
-    daemon = SaltDaemonFactory(
-        cli_script_name=script,
+    daemon = SaltDaemon(
+        script_name=script,
         config=config,
         start_timeout=0.25,
         max_start_attempts=2,

@@ -12,7 +12,7 @@ def salt_minion_2(salt_master, salt_minion):
     """
     This fixture just configures and starts a salt-minion.
     """
-    factory = salt_master.get_salt_minion_daemon(salt_minion.id + "-2")
+    factory = salt_master.salt_minion_daemon(salt_minion.id + "-2")
     with factory.started():
         yield factory
 

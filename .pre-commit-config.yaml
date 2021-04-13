@@ -43,7 +43,7 @@ repos:
       - id: unimport
         name: Remove unused imports
         args: [--remove]
-        exclude: ^(docs/.*\.py|src/saltfactories/factories/(cli|daemons)/__init__\.py)$
+        exclude: ^(docs/.*\.py|src/saltfactories/(cli|daemons)/__init__\.py)$
 
   - repo: https://github.com/asottile/reorder_python_imports
     rev: v2.4.0

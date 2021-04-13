@@ -5,14 +5,14 @@ from saltfactories.utils import random_string
 
 @pytest.fixture(scope="module")
 def master(salt_factories):
-    factory = salt_factories.get_salt_master_daemon(random_string("master-"))
+    factory = salt_factories.salt_master_daemon(random_string("master-"))
     with factory.started():
         yield factory
 
 
 @pytest.fixture(scope="module")
 def minion(master):
-    factory = master.get_salt_minion_daemon(random_string("minion-"))
+    factory = master.salt_minion_daemon(random_string("minion-"))
     with factory.started():
         yield factory
 
@@ -24,7 +24,7 @@ def salt_cli(master):
 
 @pytest.fixture
 def salt_call_cli(minion):
-    return minion.get_salt_call_cli()
+    return minion.salt_call_cli()
 
 
 def test_minion(minion, salt_cli):

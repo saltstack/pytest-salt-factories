@@ -13,14 +13,14 @@ pytestmark = pytest.mark.skipif(
 
 @pytest.fixture(scope="module")
 def master(salt_factories):
-    factory = salt_factories.get_salt_master_daemon(random_string("master-"))
+    factory = salt_factories.salt_master_daemon(random_string("master-"))
     with factory.started():
         yield factory
 
 
 @pytest.fixture(scope="module")
 def proxy_minion(master):
-    factory = master.get_salt_proxy_minion_daemon(random_string("proxy-minion-"))
+    factory = master.salt_proxy_minion_daemon(random_string("proxy-minion-"))
     with factory.started():
         yield factory
 
@@ -32,7 +32,7 @@ def salt_cli(master):
 
 @pytest.fixture
 def salt_call_cli(proxy_minion):
-    return proxy_minion.get_salt_call_cli()
+    return proxy_minion.salt_call_cli()
 
 
 def test_proxy_minion(proxy_minion, salt_cli):

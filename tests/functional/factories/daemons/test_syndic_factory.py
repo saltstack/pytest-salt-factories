@@ -6,19 +6,19 @@ from saltfactories.utils import running_username
 
 @pytest.fixture
 def mom(salt_factories):
-    return salt_factories.get_salt_master_daemon(random_string("mom-"))
+    return salt_factories.salt_master_daemon(random_string("mom-"))
 
 
-def test_keyword_basic_config_defaults(mom):
+def test_keyword_basic_defaults(mom):
     syndic_id = random_string("syndic-")
-    config_defaults = {"zzzz": True}
-    master_config_defaults = config_defaults.copy()
-    minion_config_defaults = config_defaults.copy()
-    syndic = mom.get_salt_syndic_daemon(
+    defaults = {"zzzz": True}
+    master_defaults = defaults.copy()
+    minion_defaults = defaults.copy()
+    syndic = mom.salt_syndic_daemon(
         syndic_id,
-        config_defaults=config_defaults,
-        master_config_defaults=master_config_defaults,
-        minion_config_defaults=minion_config_defaults,
+        defaults=defaults,
+        master_defaults=master_defaults,
+        minion_defaults=minion_defaults,
     )
     assert "zzzz" in syndic.config
     assert syndic.config["zzzz"] is True
@@ -28,16 +28,16 @@ def test_keyword_basic_config_defaults(mom):
     assert syndic.minion.config["zzzz"] is True
 
 
-def test_keyword_basic_config_overrides(mom):
+def test_keyword_basic_overrides(mom):
     syndic_id = random_string("syndic-")
-    config_overrides = {"zzzz": True}
-    master_config_overrides = config_overrides.copy()
-    minion_config_overrides = config_overrides.copy()
-    syndic = mom.get_salt_syndic_daemon(
+    overrides = {"zzzz": True}
+    master_overrides = overrides.copy()
+    minion_overrides = overrides.copy()
+    syndic = mom.salt_syndic_daemon(
         syndic_id,
-        config_overrides=config_overrides,
-        master_config_overrides=master_config_overrides,
-        minion_config_overrides=minion_config_overrides,
+        overrides=overrides,
+        master_overrides=master_overrides,
+        minion_overrides=minion_overrides,
     )
     assert "zzzz" in syndic.config
     assert syndic.config["zzzz"] is True
@@ -49,20 +49,20 @@ def test_keyword_basic_config_overrides(mom):
 
 def test_keyword_simple_overrides_override_defaults(mom):
     syndic_id = random_string("syndic-")
-    config_defaults = {"zzzz": False}
-    master_config_defaults = config_defaults.copy()
-    minion_config_defaults = config_defaults.copy()
-    config_overrides = {"zzzz": True}
-    master_config_overrides = config_overrides.copy()
-    minion_config_overrides = config_overrides.copy()
-    syndic = mom.get_salt_syndic_daemon(
+    defaults = {"zzzz": False}
+    master_defaults = defaults.copy()
+    minion_defaults = defaults.copy()
+    overrides = {"zzzz": True}
+    master_overrides = overrides.copy()
+    minion_overrides = overrides.copy()
+    syndic = mom.salt_syndic_daemon(
         syndic_id,
-        config_defaults=config_defaults,
-        master_config_defaults=master_config_defaults,
-        minion_config_defaults=minion_config_defaults,
-        config_overrides=config_overrides,
-        master_config_overrides=master_config_overrides,
-        minion_config_overrides=minion_config_overrides,
+        defaults=defaults,
+        master_defaults=master_defaults,
+        minion_defaults=minion_defaults,
+        overrides=overrides,
+        master_overrides=master_overrides,
+        minion_overrides=minion_overrides,
     )
     assert "zzzz" in syndic.config
     assert syndic.config["zzzz"] is True
@@ -77,14 +77,14 @@ def test_keyword_nested_overrides_override_defaults(mom):
     overrides = {"zzzz": True, "colors": {"white": True, "grey": False}}
     expected_colors = {"black": True, "white": True, "grey": False}
     syndic_id = random_string("syndic-")
-    syndic = mom.get_salt_syndic_daemon(
+    syndic = mom.salt_syndic_daemon(
         syndic_id,
-        config_defaults=defaults,
-        master_config_defaults=defaults.copy(),
-        minion_config_defaults=defaults.copy(),
-        config_overrides=overrides,
-        master_config_overrides=overrides.copy(),
-        minion_config_overrides=overrides.copy(),
+        defaults=defaults,
+        master_defaults=defaults.copy(),
+        minion_defaults=defaults.copy(),
+        overrides=overrides,
+        master_overrides=overrides.copy(),
+        minion_overrides=overrides.copy(),
     )
     assert "zzzz" in syndic.config
     assert syndic.config["zzzz"] is True
@@ -99,9 +99,9 @@ def test_keyword_nested_overrides_override_defaults(mom):
 
 def test_provide_root_dir(pytester, mom):
     root_dir = str(pytester.mkdir("custom-root"))
-    config_defaults = {"root_dir": root_dir}
+    defaults = {"root_dir": root_dir}
     syndic_id = random_string("syndic-")
-    syndic = mom.get_salt_syndic_daemon(syndic_id, config_defaults=config_defaults)
+    syndic = mom.salt_syndic_daemon(syndic_id, defaults=defaults)
     assert syndic.config["root_dir"] == root_dir
 
 
@@ -113,14 +113,14 @@ def configure_kwargs_ids(value):
     "configure_kwargs",
     [
         {
-            "config_defaults": {"user": "blah"},
-            "master_config_defaults": {"user": "blah"},
-            "minion_config_defaults": {"user": "blah"},
+            "defaults": {"user": "blah"},
+            "master_defaults": {"user": "blah"},
+            "minion_defaults": {"user": "blah"},
         },
         {
-            "config_overrides": {"user": "blah"},
-            "master_config_overrides": {"user": "blah"},
-            "minion_config_overrides": {"user": "blah"},
+            "overrides": {"user": "blah"},
+            "master_overrides": {"user": "blah"},
+            "minion_overrides": {"user": "blah"},
         },
         {},
     ],
@@ -128,7 +128,7 @@ def configure_kwargs_ids(value):
 )
 def test_provide_user(salt_factories, mom, configure_kwargs):
     syndic_id = random_string("syndic-")
-    syndic = mom.get_salt_syndic_daemon(syndic_id, **configure_kwargs)
+    syndic = mom.salt_syndic_daemon(syndic_id, **configure_kwargs)
 
     if not configure_kwargs:
         # salt-factories injects the current username

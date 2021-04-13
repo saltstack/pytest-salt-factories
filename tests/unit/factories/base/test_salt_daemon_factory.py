@@ -3,7 +3,7 @@ import sys
 
 import pytest
 
-from saltfactories.factories.base import SaltDaemonFactory
+from saltfactories.bases import SaltDaemon
 
 
 @pytest.fixture
@@ -49,8 +49,8 @@ def test_default_cli_flags(config_dir, config_file, cli_script_name):
         "--config-dir={}".format(config_dir),
         "--log-level=critical",
     ]
-    proc = SaltDaemonFactory(start_timeout=1, cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline()
+    proc = SaltDaemon(start_timeout=1, script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline()
     assert cmdline == expected
 
 
@@ -67,8 +67,8 @@ def test_override_log_level(config_dir, config_file, cli_script_name, flag):
         cli_script_name,
         "--config-dir={}".format(config_dir),
     ] + args
-    proc = SaltDaemonFactory(start_timeout=1, cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args)
+    proc = SaltDaemon(start_timeout=1, script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args)
     assert cmdline == expected
 
 
@@ -84,14 +84,14 @@ def test_override_config_dir(config_dir, config_file, cli_script_name, flag):
 
     config = {"conf_file": config_file, "id": "the-id"}
     expected = [sys.executable, cli_script_name, "--log-level=critical"] + args
-    proc = SaltDaemonFactory(start_timeout=1, cli_script_name=cli_script_name, config=config)
-    cmdline = proc.build_cmdline(*args)
+    proc = SaltDaemon(start_timeout=1, script_name=cli_script_name, config=config)
+    cmdline = proc.cmdline(*args)
     assert cmdline == expected
 
 
 def test_salt_daemon_factory_id_attr_comes_first_in_repr(config_file):
-    proc = SaltDaemonFactory(
-        start_timeout=1, cli_script_name="foo-bar", config={"id": "TheID", "conf_file": config_file}
+    proc = SaltDaemon(
+        start_timeout=1, script_name="foo-bar", config={"id": "TheID", "conf_file": config_file}
     )
     regex = r"{}(id='TheID'".format(proc.__class__.__name__)
     assert repr(proc).startswith(regex)
@@ -100,9 +100,9 @@ def test_salt_daemon_factory_id_attr_comes_first_in_repr(config_file):
 
 def test_salt_cli_display_name(config_file):
     factory_id = "TheID"
-    proc = SaltDaemonFactory(
+    proc = SaltDaemon(
         start_timeout=1,
-        cli_script_name="foo-bar",
+        script_name="foo-bar",
         config={"id": factory_id, "conf_file": config_file},
     )
-    assert proc.get_display_name() == "{}(id={!r})".format(SaltDaemonFactory.__name__, factory_id)
+    assert proc.get_display_name() == "{}(id={!r})".format(SaltDaemon.__name__, factory_id)

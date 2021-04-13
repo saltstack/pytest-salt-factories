@@ -2,13 +2,13 @@ import sys
 
 import pytest
 
+from saltfactories.bases import Process
 from saltfactories.exceptions import FactoryTimeout
-from saltfactories.factories.base import ProcessFactory
 
 
 @pytest.mark.parametrize("exitcode", [0, 1, 3, 9, 40, 120])
 def test_exitcode(exitcode, tempfiles):
-    shell = ProcessFactory(cli_script_name=sys.executable)
+    shell = Process(script_name=sys.executable)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -24,7 +24,7 @@ def test_exitcode(exitcode, tempfiles):
 
 
 def test_timeout_defined_on_class_instantiation(tempfiles):
-    shell = ProcessFactory(cli_script_name=sys.executable, default_timeout=0.5)
+    shell = Process(script_name=sys.executable, timeout=0.5)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -38,7 +38,7 @@ def test_timeout_defined_on_class_instantiation(tempfiles):
 
 
 def test_timeout_defined_run(tempfiles):
-    shell = ProcessFactory(cli_script_name=sys.executable)
+    shell = Process(script_name=sys.executable)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -72,7 +72,7 @@ def test_timeout_defined_run(tempfiles):
     ],
 )
 def test_json_output(input_str, expected_object, tempfiles):
-    shell = ProcessFactory(cli_script_name=sys.executable)
+    shell = Process(script_name=sys.executable)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -92,7 +92,7 @@ def test_json_output(input_str, expected_object, tempfiles):
 
 def test_stderr_output(tempfiles):
     input_str = "Thou shalt not exit cleanly"
-    shell = ProcessFactory(cli_script_name=sys.executable)
+    shell = Process(script_name=sys.executable)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -107,7 +107,7 @@ def test_stderr_output(tempfiles):
 
 
 def test_unicode_output(tempfiles):
-    shell = ProcessFactory(cli_script_name=sys.executable)
+    shell = Process(script_name=sys.executable)
     script = tempfiles.makepyfile(
         r"""
         # coding=utf-8
@@ -127,7 +127,7 @@ def test_unicode_output(tempfiles):
 
 
 def test_process_failed_to_start(tempfiles):
-    shell = ProcessFactory(cli_script_name=sys.executable)
+    shell = Process(script_name=sys.executable)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8

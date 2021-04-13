@@ -10,8 +10,8 @@ from saltfactories.utils import random_string
 
 @pytest.fixture(scope="module")
 def master(salt_factories):
-    factory = salt_factories.get_salt_master_daemon(
-        random_string("master-"), config_overrides={"max_open_files": 4096}
+    factory = salt_factories.salt_master_daemon(
+        random_string("master-"), overrides={"max_open_files": 4096}
     )
     with factory.started():
         yield factory
@@ -19,36 +19,36 @@ def master(salt_factories):
 
 @pytest.fixture(scope="module")
 def minion(master):
-    factory = master.get_salt_minion_daemon(random_string("minion-1-"))
+    factory = master.salt_minion_daemon(random_string("minion-1-"))
     with factory.started():
         yield factory
 
 
 @pytest.fixture
 def minion_3(master):
-    factory = master.get_salt_minion_daemon(random_string("minion-3-"))
+    factory = master.salt_minion_daemon(random_string("minion-3-"))
     with factory.started():
         yield factory
 
 
 @pytest.fixture
 def salt_run(master):
-    return master.get_salt_run_cli()
+    return master.salt_run_cli()
 
 
 @pytest.fixture
 def salt_cp(master):
-    return master.get_salt_cp_cli()
+    return master.salt_cp_cli()
 
 
 @pytest.fixture
 def salt_key(master):
-    return master.get_salt_key_cli()
+    return master.salt_key_cli()
 
 
 @pytest.fixture
 def salt_call(minion):
-    return minion.get_salt_call_cli()
+    return minion.salt_call_cli()
 
 
 def test_master(master):
@@ -139,9 +139,7 @@ def test_salt_key(master, minion, minion_3, salt_key):
 @pytest.mark.skip_on_windows
 @pytest.mark.skip_on_salt_system_install
 def test_exit_status_unknown_user(salt_factories):
-    master = salt_factories.get_salt_master_daemon(
-        "set-exitcodes", config_overrides={"user": "unknown-user"}
-    )
+    master = salt_factories.salt_master_daemon("set-exitcodes", overrides={"user": "unknown-user"})
     with pytest.raises(FactoryNotStarted) as exc:
         master.start(max_start_attempts=1)
 
