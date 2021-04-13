@@ -253,7 +253,7 @@ def lint_code(session):
     if session.posargs:
         paths = session.posargs
     else:
-        paths = ["setup.py", "noxfile.py", "saltfactories/"]
+        paths = ["setup.py", "noxfile.py", "src/saltfactories/"]
     _lint(session, ".pylintrc", flags, paths)
 
 
