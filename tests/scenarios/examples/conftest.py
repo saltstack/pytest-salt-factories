@@ -3,6 +3,7 @@ import shutil
 import attr
 import pytest
 
+from saltfactories import CODE_ROOT_DIR
 from saltfactories.utils.virtualenv import VirtualEnv
 
 
@@ -27,6 +28,7 @@ class ExtensionVirtualEnv(VirtualEnv):
         self.venv.__enter__()
         self.venv.run("git", "init", ".")
         self.venv.run("git", "add", ".")
+        self.venv.install(str(CODE_ROOT_DIR.parent.parent))
         self.venv.install(".[tests]")
         return self.venv
 
