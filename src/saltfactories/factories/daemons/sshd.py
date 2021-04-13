@@ -202,4 +202,4 @@ class SshdDaemonFactory(DaemonFactory):
                 stdout=exc.stdout,
                 stderr=exc.stderr,
                 exitcode=exc.returncode,
-            )
+            ) from exc

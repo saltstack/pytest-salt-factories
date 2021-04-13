@@ -59,7 +59,7 @@ def pytest_collection_modifyitems(items):
                 raise RuntimeError(
                     "The module {} defines a 'configure_loader_modules' function but "
                     "that function is not a fixture".format(item.module)
-                )
+                ) from None
 
 
 @pytest.fixture(autouse=True)
