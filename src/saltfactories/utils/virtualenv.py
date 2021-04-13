@@ -80,8 +80,8 @@ class VirtualEnv:
     def __enter__(self):
         try:
             self._create_virtualenv()
-        except subprocess.CalledProcessError:
-            raise AssertionError("Failed to create virtualenv")
+        except subprocess.CalledProcessError as exc:
+            raise AssertionError("Failed to create virtualenv") from exc
         return self
 
     def __exit__(self, *args):
@@ -113,14 +113,14 @@ class VirtualEnv:
         if check is True:
             try:
                 proc.check_returncode()
-            except subprocess.CalledProcessError:
+            except subprocess.CalledProcessError as exc:
                 raise ProcessFailed(
                     "Command failed return code check",
                     cmdline=proc.args,
                     stdout=proc.stdout,
                     stderr=proc.stderr,
                     exitcode=proc.returncode,
-                )
+                ) from exc
         return ret
 
     @staticmethod
