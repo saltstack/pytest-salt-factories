@@ -5,7 +5,6 @@ tests.utils.test_ports
 Test the port related utilities
 """
 import functools
-import time
 from unittest import mock
 
 import pytest
@@ -46,7 +45,7 @@ class MockedSocket:
         pass
 
 
-def test_get_unused_localhost_port_unique():
+def test_get_unused_localhost_port_cached():
     """
     Tests that test_get_unused_localhost_port only returns unique ports on consecutive calls
     """
@@ -69,33 +68,31 @@ def test_get_unused_localhost_port_unique():
     with mock.patch(
         "saltfactories.utils.socket.socket",
         new_callable=functools.partial(MockedCreateSocket, ports),
-    ) as mocked_socket:
+    ):
         for _ in range(num_calls):
-            got_ports.append(ports_utils.get_unused_localhost_port(cached_seconds=1))
+            got_ports.append(ports_utils.get_unused_localhost_port(use_cache=True))
         assert len(got_ports) == num_calls
         assert set(got_ports) == unique
 
-    # Let's get ports again. Since not enough time has passed, we won't get any ports
     with mock.patch(
         "saltfactories.utils.socket.socket",
         new_callable=functools.partial(MockedCreateSocket, ports + ports),
-    ) as mocked_socket:
+    ):
         for _ in range(num_calls):
             with pytest.raises(IndexError):
                 # we won't have enough ports
-                got_ports.append(ports_utils.get_unused_localhost_port(cached_seconds=1))
+                got_ports.append(ports_utils.get_unused_localhost_port(use_cache=True))
         # Since we couldn't get repeated ports, got_ports remains as it was
         assert len(got_ports) == num_calls
         assert set(got_ports) == unique
 
-    # Now, if we sleep one second, the cached ports will be gone and we'll get repeated ports
-    time.sleep(1)
+    # If we don't cache the port, we'll get repeated ports
     with mock.patch(
         "saltfactories.utils.socket.socket",
         new_callable=functools.partial(MockedCreateSocket, ports),
-    ) as mocked_socket:
+    ):
         for _ in range(num_calls):
-            got_ports.append(ports_utils.get_unused_localhost_port(cached_seconds=1))
+            got_ports.append(ports_utils.get_unused_localhost_port())
 
         assert len(got_ports) == 2 * len(unique)
         assert set(got_ports) == unique
