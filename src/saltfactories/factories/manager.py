@@ -175,7 +175,7 @@ class FactoriesManager:
         log_config = pytest_config["log"]
         log_config.setdefault("host", self.log_server_host)
         log_config.setdefault("port", self.log_server_port)
-        log_config.setdefault("level", self.log_server_level)
+        log_config.setdefault("level", "debug")
 
     def get_salt_master_daemon(
         self,
