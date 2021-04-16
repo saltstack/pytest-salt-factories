@@ -118,6 +118,7 @@ ret
 returncode
 rst
 rtype
+runtest
 saltapi
 saltcloud
 saltenv
@@ -151,6 +152,7 @@ sysinfo
 sysstats
 systemd
 systemdsaltdaemonimpl
+teardown
 tempfile
 tempfiles
 testname
