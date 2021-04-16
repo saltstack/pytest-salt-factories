@@ -54,6 +54,7 @@ def check_changelog_entries(files):
                 )
                 exitcode = 1
                 continue
+            check_changelog_entry_contents(path)
         except ValueError:
             # Not under changelog/, carry on checking
             # Is it a changelog entry
@@ -97,6 +98,17 @@ def check_changelog_entries(files):
                     flush=True,
                 )
     return exitcode
+
+
+def check_changelog_entry_contents(entry):
+    contents = entry.read_text().splitlines()
+    if len(contents) > 1:
+        # More than one line.
+        # If the second line starts with '*' it's a bullet list and we need to add an
+        # empty line before it.
+        if contents[1].strip().startswith("*"):
+            contents.insert(1, "")
+    entry.write_text("{}\n".format("\n".join(contents)))
 
 
 def main(argv):

@@ -1,3 +1,4 @@
 Forwarding logs, file and pillar roots fixes
+
 * Salt allows minions and proxy minions to also have file and pillar roots configured
 * All factories will now send logs of level ``debug`` or higher to the log server
