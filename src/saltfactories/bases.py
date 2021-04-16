@@ -152,8 +152,11 @@ class SubprocessImpl:
             # If TimeoutExpired is not raised, it means the process failed to start
         except subprocess.TimeoutExpired:
             # We're good
+            # Collect any child processes, though, this early there likely is none
             with contextlib.suppress(psutil.NoSuchProcess):
-                for child in psutil.Process(self._terminal.pid).children(recursive=True):
+                for child in psutil.Process(self._terminal.pid).children(
+                    recursive=True
+                ):  # pragma: no cover
                     if child not in self._children:
                         self._children.append(child)
             atexit.register(self.terminate)
@@ -198,7 +201,7 @@ class SubprocessImpl:
             try:
                 # Allow the process to exit by itself in case slow_stop is True
                 self._terminal.wait(10)
-            except subprocess.TimeoutExpired:
+            except subprocess.TimeoutExpired:  # pragma: no cover
                 # The process failed to stop, no worries, we'll make sure it exit along with it's
                 # child processes bellow
                 pass
@@ -219,7 +222,7 @@ class SubprocessImpl:
 
             self._terminal_stdout.flush()
             self._terminal_stdout.seek(0)
-            if sys.version_info < (3, 6):
+            if sys.version_info < (3, 6):  # pragma: no cover
                 stdout = self._terminal._translate_newlines(
                     self._terminal_stdout.read(), __salt_system_encoding__
                 )
@@ -231,7 +234,7 @@ class SubprocessImpl:
 
             self._terminal_stderr.flush()
             self._terminal_stderr.seek(0)
-            if sys.version_info < (3, 6):
+            if sys.version_info < (3, 6):  # pragma: no cover
                 stderr = self._terminal._translate_newlines(
                     self._terminal_stderr.read(), __salt_system_encoding__
                 )
@@ -258,7 +261,7 @@ class SubprocessImpl:
         """
         The pid of the running process. None if not running.
         """
-        if not self._terminal:
+        if not self._terminal:  # pragma: no cover
             return
         return self._terminal.pid
 
@@ -560,7 +563,7 @@ class DaemonImpl(SubprocessImpl):
         :keyword int start_timeout:
             The maximum number of seconds to wait before considering that the daemon did not start
         """
-        if self.is_running():
+        if self.is_running():  # pragma: no cover
             log.warning("%s is already running.", self)
             return True
         self._start_args_and_kwargs = StartDaemonCallArguments(
@@ -600,7 +603,7 @@ class DaemonImpl(SubprocessImpl):
                     self.factory.extra_cli_arguments_after_first_start_failure
                 )
             self.run(*run_arguments)
-            if not self.is_running():
+            if not self.is_running():  # pragma: no cover
                 # A little breathe time to allow the process to start if not started already
                 time.sleep(0.5)
             while time.time() <= start_running_timeout:
@@ -1264,7 +1267,7 @@ class SaltCli(Salt, Process):
         ):
             try:
                 json_out = json_out[self._minion_tgt]
-            except KeyError:
+            except KeyError:  # pragma: no cover
                 pass
         return stdout, stderr, json_out
 
@@ -1289,7 +1292,7 @@ class SystemdSaltDaemonImpl(DaemonImpl):
             Additional arguments to use when starting the subprocess
 
         """
-        if args:
+        if args:  # pragma: no cover
             log.debug(
                 "%s.run() is ignoring the passed in arguments: %r", self.__class__.__name__, args
             )
@@ -1347,7 +1350,7 @@ class SystemdSaltDaemonImpl(DaemonImpl):
         """
         This method actually terminates the started daemon
         """
-        if self._process is None:
+        if self._process is None:  # pragma: no cover
             return self._terminal_result
         atexit.unregister(self.terminate)
         log.info("Stopping %s", self.factory)
@@ -1360,7 +1363,7 @@ class SystemdSaltDaemonImpl(DaemonImpl):
         pid = self.pid
         cmdline = self._process.cmdline()
         self.internal_run("systemctl", "stop", self.get_service_name())
-        if self._process.is_running():
+        if self._process.is_running():  # pragma: no cover
             try:
                 self._process.wait()
             except psutil.TimeoutExpired:
@@ -1561,7 +1564,7 @@ class SaltDaemon(Salt, Daemon):
         """
         if not super().run_start_checks(started_at, timeout_at):
             return False
-        if not self.event_listener:
+        if not self.event_listener:  # pragma: no cover
             log.debug("The 'event_listener' attribute is not set. Not checking events...")
             return True
 

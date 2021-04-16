@@ -239,7 +239,7 @@ class EventListener:
             log.debug("%s store size after cleanup: %s", self, len(self.store))
 
     def start(self):
-        if self.running_event.is_set():
+        if self.running_event.is_set():  # pragma: no cover
             return
         log.debug("%s is starting", self)
         self.running_thread.start()
@@ -250,7 +250,7 @@ class EventListener:
         self.cleanup_thread.start()
 
     def stop(self):
-        if self.running_event.is_set() is False:
+        if self.running_event.is_set() is False:  # pragma: no cover
             return
         log.debug("%s is stopping", self)
         self.store.clear()
@@ -261,7 +261,7 @@ class EventListener:
         try:
             push.send(self.sentinel)
             log.debug("%s Sent sentinel to trigger log server shutdown", self)
-            if self.sentinel_event.wait(5) is not True:
+            if self.sentinel_event.wait(5) is not True:  # pragma: no cover
                 log.warning(
                     "%s Failed to wait for the reception of the stop sentinel message. Stopping anyway.",
                     self,
@@ -272,7 +272,7 @@ class EventListener:
         self.running_event.clear()
         log.debug("%s Joining running thread...", self)
         self.running_thread.join(7)
-        if self.running_thread.is_alive():
+        if self.running_thread.is_alive():  # pragma: no cover
             log.debug("%s The running thread is still alive. Waiting a little longer...", self)
             self.running_thread.join(5)
             if self.running_thread.is_alive():
@@ -282,7 +282,7 @@ class EventListener:
                 )
         log.debug("%s Joining cleanup thread...", self)
         self.cleanup_thread.join(7)
-        if self.cleanup_thread.is_alive():
+        if self.cleanup_thread.is_alive():  # pragma: no cover
             log.debug("%s The cleanup thread is still alive. Waiting a little longer...", self)
             self.cleanup_thread.join(5)
             if self.cleanup_thread.is_alive():

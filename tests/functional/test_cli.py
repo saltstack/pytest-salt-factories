@@ -30,3 +30,25 @@ def test_salt_factories_cli(cmdline):
     assert ret.returncode == 0
     assert ret.stdout
     assert ret.stdout.strip() == str(saltfactories.CODE_ROOT_DIR / "utils" / "coverage")
+
+
+@pytest.mark.parametrize(
+    "cmdline",
+    (
+        ["salt-factories"],
+        [sys.executable, "-m", "saltfactories"],
+    ),
+    ids=cmdline_ids,
+)
+def test_salt_factories_cli_show_help(cmdline):
+    ret = subprocess.run(
+        cmdline,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+        check=False,
+    )
+    assert ret.returncode == 1
+    assert not ret.stdout
+    assert ret.stderr
+    assert "usage:" in ret.stderr.strip()

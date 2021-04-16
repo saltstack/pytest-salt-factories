@@ -119,14 +119,14 @@ class FactoriesManager:
 
     def final_minion_config_tweaks(self, config):
         pytest_key = "pytest-minion"
-        if pytest_key not in config:
+        if pytest_key not in config:  # pragma: no cover
             config[pytest_key] = {}
         config[pytest_key]["returner_address"] = self.event_listener.address
         self.final_common_config_tweaks(config, "minion")
 
     def final_master_config_tweaks(self, config):
         pytest_key = "pytest-master"
-        if pytest_key not in config:
+        if pytest_key not in config:  # pragma: no cover
             config[pytest_key] = {}
         config[pytest_key]["returner_address"] = self.event_listener.address
         self.final_common_config_tweaks(config, "master")
@@ -149,7 +149,7 @@ class FactoriesManager:
             config["engines_dirs"] = []
         config["engines_dirs"].insert(0, str(FactoriesManager.get_salt_engines_path()))
         config.setdefault("user", running_username())
-        if not config["user"]:
+        if not config["user"]:  # pragma: no cover
             # If this value is empty, None, False, just remove it
             config.pop("user")
         if "log_forwarding_consumer" not in config:
@@ -165,7 +165,7 @@ class FactoriesManager:
             config[pytest_key] = {}
 
         pytest_config = config[pytest_key]
-        if "log" not in pytest_config:
+        if "log" not in pytest_config:  # pragma: no cover
             pytest_config["log"] = {}
 
         log_config = pytest_config["log"]

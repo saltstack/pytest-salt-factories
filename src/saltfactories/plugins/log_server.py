@@ -44,7 +44,7 @@ class LogServer:
         self.process_queue_thread = threading.Thread(target=self.process_logs)
         self.process_queue_thread.start()
         # Wait for the thread to start
-        if self.running_event.wait(5) is not True:
+        if self.running_event.wait(5) is not True:  # pragma: no cover
             self.running_event.clear()
             raise RuntimeError("Failed to start the log server")
         log.info("%s started", self)
@@ -58,7 +58,7 @@ class LogServer:
         try:
             sender.send(msgpack.dumps(None))
             log.debug("%s Sent sentinel to trigger log server shutdown", self)
-            if self.sentinel_event.wait(5) is not True:
+            if self.sentinel_event.wait(5) is not True:  # pragma: no cover
                 log.warning(
                     "%s Failed to wait for the reception of the stop sentinel message. Stopping anyway.",
                     self,
@@ -73,7 +73,7 @@ class LogServer:
         self.process_queue_thread.join(7)
         if not self.process_queue_thread.is_alive():
             log.debug("%s Stopped", self)
-        else:
+        else:  # pragma: no cover
             log.warning(
                 "%s The logging server thread is still running. Waiting a little longer...", self
             )

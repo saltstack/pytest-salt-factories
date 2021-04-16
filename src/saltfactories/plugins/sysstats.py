@@ -119,26 +119,29 @@ class SystemStatsReporter:
                                 stats["c_count"] = 0
                                 c_mem = stats["mem"]
                                 for child in children:
-                                    if child.pid in pids:
+                                    if child.pid in pids:  # pragma: no cover
                                         continue
                                     pids.append(child.pid)
-                                    if not psutil.pid_exists(child.pid):
+                                    if not psutil.pid_exists(child.pid):  # pragma: no cover
                                         remove_from_stats.add(name)
                                         continue
                                     try:
                                         c_mem += child.memory_percent(self.sys_stats_mem_type)
                                         stats["c_count"] += 1
-                                    except (psutil.AccessDenied, psutil.NoSuchProcess):
+                                    except (
+                                        psutil.AccessDenied,
+                                        psutil.NoSuchProcess,
+                                    ):  # pragma: no cover
                                         continue
                                 if stats["c_count"]:
                                     stats["c_mem"] = "{:6.2f}".format(c_mem)
                                 else:
                                     template = no_children_template
                         self.terminalreporter.write(template.format(**stats))
-                except psutil.NoSuchProcess:
+                except psutil.NoSuchProcess:  # pragma: no cover
                     remove_from_stats.add(name)
                     continue
-            if remove_from_stats:
+            if remove_from_stats:  # pragma: no cover
                 for name in remove_from_stats:
                     self.stats_processes.remove(name)
 

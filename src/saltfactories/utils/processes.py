@@ -121,7 +121,7 @@ def _get_cmdline(proc):
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             # OSX is more restrictive about the above information
             cmdline = None
-        except OSError:
+        except OSError:  # pragma: no cover
             # On Windows we've seen something like:
             #   File " c: ... \lib\site-packages\pytestsalt\utils\__init__.py", line 182, in terminate_process
             #     terminate_process_list(process_list, kill=slow_stop is False, slow_stop=slow_stop)
@@ -137,7 +137,7 @@ def _get_cmdline(proc):
             #     ret = cext.proc_cmdline(self.pid, use_peb=True)
             #   OSError: [WinError 299] Only part of a ReadProcessMemory or WriteProcessMemory request was completed: 'originated from ReadProcessMemory(ProcessParameters)
             cmdline = None
-        except RuntimeError:
+        except RuntimeError:  # pragma: no cover
             # Also on windows
             # saltfactories\utils\processes\helpers.py:68: in _get_cmdline
             #     cmdline = proc.as_dict()
@@ -165,7 +165,7 @@ def _get_cmdline(proc):
                 cmdline = proc.as_dict()
             except psutil.NoSuchProcess:
                 cmdline = "<could not be retrived; dead process: {}>".format(proc)
-            except (psutil.AccessDenied, OSError):
+            except (psutil.AccessDenied, OSError):  # pragma: no cover
                 cmdline = weakref.proxy(proc)
         proc._cmdline = cmdline
     return proc._cmdline
@@ -182,7 +182,7 @@ def _terminate_process_list(process_list, kill=False, slow_stop=False):
             process_list.remove(process)
             continue
         try:
-            if not kill and process.status() == psutil.STATUS_ZOMBIE:
+            if not kill and process.status() == psutil.STATUS_ZOMBIE:  # pragma: no cover
                 # Zombie processes will exit once child processes also exit
                 continue
             if kill:
@@ -196,12 +196,12 @@ def _terminate_process_list(process_list, kill=False, slow_stop=False):
                         process.send_signal(signal.SIGTERM)
                         try:
                             process.wait(2)
-                        except psutil.TimeoutExpired:
+                        except psutil.TimeoutExpired:  # pragma: no cover
                             if psutil.pid_exists(process.pid):
                                 continue
                     else:
                         process.terminate()
-                except OSError as exc:
+                except OSError as exc:  # pragma: no cover
                     if exc.errno not in (errno.ESRCH, errno.EACCES):
                         raise
             if not psutil.pid_exists(process.pid):

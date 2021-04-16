@@ -113,7 +113,7 @@ class VirtualEnv:
         if check is True:
             try:
                 proc.check_returncode()
-            except subprocess.CalledProcessError as exc:
+            except subprocess.CalledProcessError as exc:  # pragma: no cover
                 raise ProcessFailed(
                     "Command failed return code check",
                     cmdline=proc.args,
