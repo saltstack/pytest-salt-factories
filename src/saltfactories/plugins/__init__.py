@@ -61,6 +61,16 @@ def pytest_runtest_logfinish(nodeid):
     log.debug("<<<<<<< END %s <<<<<<<", nodeid)
 
 
+def pytest_runtest_logreport(report):
+    """
+    Process the :py:class:`_pytest.reports.TestReport` produced for each
+    of the setup, call and teardown runtest phases of an item.
+    See :func:`pytest_runtest_protocol` for a description of the runtest protocol.
+    """
+    if report.when == "call":
+        log.debug("======= %s %s ========", report.outcome.upper(), report.nodeid)
+
+
 @pytest.hookimpl(trylast=True)
 def pytest_load_initial_conftests(*_):
     """
