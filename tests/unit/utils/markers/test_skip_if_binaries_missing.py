@@ -4,15 +4,25 @@
 
     Test the "skip_if_binaries_missing" marker helper
 """
+import os
+import sys
+
+import pytest
+
 import saltfactories.utils.markers as markers
 
 
-def test_single_existing():
-    assert markers.skip_if_binaries_missing(["python"]) is None
+@pytest.fixture
+def python_binary():
+    return os.path.basename(sys.executable)
 
 
-def test_multiple_existing():
-    assert markers.skip_if_binaries_missing(["python", "pip"]) is None
+def test_single_existing(python_binary):
+    assert markers.skip_if_binaries_missing([python_binary]) is None
+
+
+def test_multiple_existing(python_binary):
+    assert markers.skip_if_binaries_missing([python_binary, "pip"]) is None
 
 
 def test_single_non_existing_with_message():
@@ -21,8 +31,8 @@ def test_single_non_existing_with_message():
     assert reason == "Dam!"
 
 
-def test_multiple_one_missing():
-    reason = markers.skip_if_binaries_missing(["python", "pip9"])
+def test_multiple_one_missing(python_binary):
+    reason = markers.skip_if_binaries_missing([python_binary, "pip9"])
     assert reason is not None
     assert reason == "The 'pip9' binary was not found"
 
@@ -33,8 +43,8 @@ def test_multiple_all_missing():
     assert reason == "The 'python9' binary was not found"
 
 
-def test_multiple_one_missing_check_all_false():
-    reason = markers.skip_if_binaries_missing(["python", "pip9"], check_all=False)
+def test_multiple_one_missing_check_all_false(python_binary):
+    reason = markers.skip_if_binaries_missing([python_binary, "pip9"], check_all=False)
     # We should get no message back because the python binary is found
     assert reason is None, reason
     reason = markers.skip_if_binaries_missing(["python9", "pip"], check_all=False)
@@ -42,8 +52,10 @@ def test_multiple_one_missing_check_all_false():
     assert reason is None, reason
 
 
-def test_multiple_one_missing_check_all_false_with_message():
-    reason = markers.skip_if_binaries_missing(["python", "pip9"], reason="Dam!", check_all=False)
+def test_multiple_one_missing_check_all_false_with_message(python_binary):
+    reason = markers.skip_if_binaries_missing(
+        [python_binary, "pip9"], reason="Dam!", check_all=False
+    )
     # We should get no message back because the python binary is found
     assert reason is None
 
