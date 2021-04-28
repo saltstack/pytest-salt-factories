@@ -18,6 +18,9 @@ def test_missing_docker_library():
 
 def test_missing_requests_library():
     with mock.patch(
+        "saltfactories.daemons.container.HAS_DOCKER",
+        new_callable=mock.PropertyMock(return_value=True),
+    ), mock.patch(
         "saltfactories.daemons.container.HAS_REQUESTS",
         new_callable=mock.PropertyMock(return_value=False),
     ):
