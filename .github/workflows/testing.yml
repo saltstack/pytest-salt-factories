@@ -93,6 +93,10 @@ jobs:
           - 3.9
         salt-version:
           - salt==3002.6
+        pytest-version:
+          - "~=6.0.0"
+          - "~=6.1.0"
+          - ""
 
     steps:
     - uses: actions/checkout@v2
@@ -112,6 +116,7 @@ jobs:
     - name: Install Test Requirements
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
+        PYTEST_VERSION_REQUIREMENT: pytest${{ matrix.pytest-version }}
       run: |
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
@@ -127,7 +132,7 @@ jobs:
       if: always()
       id: codecov-flags
       run: |
-        echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
+        echo ::set-output name=flags::$(python -c "import sys; print('{},{},{},pytest${{ matrix.pytest-version }}'.format('${{ runner.os }}'.replace('-latest', ''), 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
 
     - name: Upload Salt Factories Code Coverage
       if: always()
@@ -135,7 +140,7 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
-        REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-factories
+        REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-PyTest${{ matrix.pytest-version }}-factories
         REPORT_PATH: artifacts/coverage-saltfactories.xml
       run: |
         if [ ! -f codecov.sh ]; then
@@ -167,7 +172,7 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
-        REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-tests
+        REPORT_NAME: ${{ runner.os }}-Py${{ matrix.python-version }}-${{ matrix.salt-version }}-PyTest${{ matrix.pytest-version }}-tests
         REPORT_PATH: artifacts/coverage-tests.xml
       run: |
         if [ ! -f codecov.sh ]; then
@@ -197,7 +202,7 @@ jobs:
       if: always()
       uses: actions/upload-artifact@main
       with:
-        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
+        name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}-pytest${{ matrix.pytest-version }}.log
         path: artifacts/runtests-*.log
 
 
@@ -574,112 +579,3 @@ jobs:
       with:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
-
-
-#  FreeBSD:
-#    runs-on: macOS-latest
-#    needs: Pre-Commit
-#
-#    timeout-minutes: 60
-#
-#    strategy:
-#      fail-fast: false
-#      max-parallel: 3
-#      matrix:
-#        salt-version:
-#          - salt==3002.6
-#
-#    steps:
-#    - uses: actions/checkout@v2
-#
-#    - name: Test
-#      id: run-tests
-#      uses: vmactions/freebsd-vm@v0.0.9
-#      with:
-#        envs: 'SALT_REQUIREMENT'
-#        prepare: |
-#          pkg install -y py37-pip py37-sqlite3 libunwind libzmq4 git
-#          pip-3.7 install nox cython
-#          ln -s /usr/local/bin/python3.7 /usr/local/bin/python3
-#          echo "DONE"
-#        run: |
-#          nox --force-color -e tests-3 -- -vv tests/
-#      env:
-#        SALT_REQUIREMENT: ${{ matrix.salt-version }}
-#
-#    - name: Create CodeCov Flags
-#      if: always()
-#      id: codecov-flags
-#      run: |
-#        echo ::set-output name=flags::$(python -c "import sys; print('{},{},{}'.format('FreeBSD', 'py{}{}'.format(*sys.version_info), '_'.join(str(v) for v in '${{ matrix.salt-version }}'.replace('==', '_').split('.'))))")
-#
-#    - name: Upload Salt Factories Code Coverage
-#      if: always()
-#      shell: bash
-#      env:
-#        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-#        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
-#        REPORT_NAME: FreeBSD-Py3-${{ matrix.salt-version }}-factories
-#        REPORT_PATH: artifacts/coverage-saltfactories.xml
-#      run: |
-#        if [ ! -f codecov.sh ]; then
-#          n=0
-#          until [ "$n" -ge 5 ]
-#          do
-#          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
-#              break
-#          fi
-#            n=$((n+1))
-#            sleep 15
-#          done
-#        fi
-#        if [ -f codecov.sh ]; then
-#          n=0
-#          until [ "$n" -ge 5 ]
-#          do
-#            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-#                break
-#            fi
-#            n=$((n+1))
-#            sleep 15
-#          done
-#        fi
-#
-#    - name: Upload Salt Factories Tests Code Coverage
-#      if: always()
-#      shell: bash
-#      env:
-#        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-#        REPORT_FLAGS: ${{ steps.codecov-flags.outputs.flags }},factories
-#        REPORT_NAME: FreeBSD-Py3-${{ matrix.salt-version }}-tests
-#        REPORT_PATH: artifacts/coverage-tests.xml
-#      run: |
-#        if [ ! -f codecov.sh ]; then
-#          n=0
-#          until [ "$n" -ge 5 ]
-#          do
-#          if curl --max-time 30 -L https://codecov.io/bash --output codecov.sh; then
-#              break
-#          fi
-#            n=$((n+1))
-#            sleep 15
-#          done
-#        fi
-#        if [ -f codecov.sh ]; then
-#          n=0
-#          until [ "$n" -ge 5 ]
-#          do
-#            if bash codecov.sh -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-#                break
-#            fi
-#            n=$((n+1))
-#            sleep 15
-#          done
-#        fi
-#
-#    - name: Upload Logs
-#      if: always()
-#      uses: actions/upload-artifact@main
-#      with:
-#        name: runtests-FreeBSD-py3-${{ matrix.salt-version }}.log
-#        path: artifacts/runtests-*.log

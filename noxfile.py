@@ -60,6 +60,24 @@ nox.options.reuse_existing_virtualenvs = True
 nox.options.error_on_missing_interpreters = False
 
 
+def pytest_version(session):
+    try:
+        return session._runner._pytest_version_info
+    except AttributeError:
+        session_pytest_version = session_run_always(
+            session,
+            "python",
+            "-c",
+            'import sys, pkg_resources; sys.stdout.write("{}".format(pkg_resources.get_distribution("pytest").version))',
+            silent=True,
+            log=False,
+        )
+        session._runner._pytest_version_info = tuple(
+            int(part) for part in session_pytest_version.split(".") if part.isdigit()
+        )
+    return session._runner._pytest_version_info
+
+
 def session_run_always(session, *command, **kwargs):
     try:
         # Guess we weren't the only ones wanting this
@@ -97,6 +115,11 @@ def tests(session):
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         if session.python is not False and system_install is False:
             session.install(SALT_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+        pytest_version_requirement = os.environ.get("PYTEST_VERSION_REQUIREMENT") or None
+        if pytest_version_requirement:
+            if not pytest_version_requirement.startswith("pytest"):
+                pytest_version_requirement = "pytest{}".format(pytest_version_requirement)
+            session.install(pytest_version_requirement, silent=PIP_INSTALL_SILENT)
         session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
             session, "pip", "list", "--format=json", silent=True, log=False, stderr=None
@@ -154,10 +177,11 @@ def tests(session):
         "--junitxml={}".format(JUNIT_REPORT),
         "--showlocals",
         "--strict-markers",
-        "--lsof",
         "-ra",
         "-s",
     ]
+    if pytest_version(session) > (6, 2):
+        args.append("--lsof")
     if session._runner.global_config.forcecolor:
         args.append("--color=yes")
     if not session.posargs:
@@ -197,7 +221,7 @@ def tests(session):
     )
     try:
         cmdline = ["coverage", "report", "--show-missing", "--include=src/saltfactories/*,tests/*"]
-        if system_install is False:
+        if system_install is False and pytest_version(session) >= (6, 2):
             cmdline.append("--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT))
         session.run(*cmdline)
     finally:
