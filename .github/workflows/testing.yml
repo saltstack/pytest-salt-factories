@@ -75,6 +75,7 @@ jobs:
       run: |
         nox --force-color -e docs
 
+
   Linux:
     runs-on: ubuntu-20.04
     needs: Pre-Commit
@@ -199,13 +200,6 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
 
-#    - name: Publish Test Report
-#      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
-#      uses: mikepenz/action-junit-report@v1.1.1
-#      with:
-#        check_name: Linux Test Results (${{ matrix.python-version}}, ${{ matrix.salt-version }})
-#        report_paths: 'artifacts/junit-report.xml'
-#        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
 
   Linux-System-Install:
     runs-on: ubuntu-20.04
@@ -333,13 +327,6 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ steps.python-version.outputs.short }}-system.log
         path: artifacts/runtests-*.log
 
-#    - name: Publish Test Report
-#      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
-#      uses: mikepenz/action-junit-report@v1.1.1
-#      with:
-#        check_name: Linux System Install Test Results
-#        report_paths: 'artifacts/junit-report.xml'
-#        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
 
   Windows:
     runs-on: windows-latest
@@ -466,13 +453,6 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
 
-#    - name: Publish Test Report
-#      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
-#      uses: mikepenz/action-junit-report@v1.1.1
-#      with:
-#        check_name: Windows Test Results (${{ matrix.python-version}}, ${{ matrix.salt-version }})
-#        report_paths: 'artifacts/junit-report.xml'
-#        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
 
   macOS:
     runs-on: macOS-latest
@@ -595,13 +575,6 @@ jobs:
         name: runtests-${{ runner.os }}-py${{ matrix.python-version }}-${{ matrix.salt-version }}.log
         path: artifacts/runtests-*.log
 
-#    - name: Publish Test Report
-#      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
-#      uses: mikepenz/action-junit-report@v1.1.1
-#      with:
-#        check_name: macOS Test Results (${{ matrix.python-version}}, ${{ matrix.salt-version }})
-#        report_paths: 'artifacts/junit-report.xml'
-#        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
 
 #  FreeBSD:
 #    runs-on: macOS-latest
@@ -710,11 +683,3 @@ jobs:
 #      with:
 #        name: runtests-FreeBSD-py3-${{ matrix.salt-version }}.log
 #        path: artifacts/runtests-*.log
-#
-##    - name: Publish Test Report
-##      if: steps.run-tests.outcome != 'cancelled' && steps.run-tests.outcome != 'skipped'
-##      uses: mikepenz/action-junit-report@v1.1.1
-##      with:
-##        check_name: macOS Test Results (${{ matrix.python-version}}, ${{ matrix.salt-version }})
-##        report_paths: 'artifacts/junit-report.xml'
-##        github_token: ${{ secrets.WORKFLOW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
