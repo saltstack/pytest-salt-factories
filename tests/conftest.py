@@ -6,15 +6,41 @@ import stat
 import tempfile
 import textwrap
 
-import pkg_resources
 import pytest
 import salt.version
 
 log = logging.getLogger(__name__)
 
-pytest_plugins = ["pytester"]
-
 TESTS_PATH = pathlib.Path(__file__).resolve().parent
+
+
+try:  # pragma: no cover
+    import importlib.metadata
+
+    pkg_version = importlib.metadata.version
+except ImportError:  # pragma: no cover
+    try:
+        import importlib_metadata
+
+        pkg_version = importlib_metadata.version
+    except ImportError:  # pragma: no cover
+        import pkg_resources
+
+        def pkg_version(package):
+            return pkg_resources.get_distribution(package).version
+
+
+def pkg_version_info(package):
+    return tuple(int(part) for part in pkg_version(package).split(".") if part.isdigit())
+
+
+if pkg_version_info("pytest") >= (6, 2):
+    pytest_plugins = ["pytester"]
+else:
+
+    @pytest.fixture
+    def pytester():
+        pytest.skip("The pytester fixture is not available in Pytest < 6.2.0")
 
 
 def pytest_report_header():
@@ -88,7 +114,7 @@ def tempfiles(request):
 
 @pytest.fixture(scope="session")
 def salt_version():
-    return pkg_resources.get_distribution("salt").version
+    return pkg_version("salt")
 
 
 @pytest.mark.trylast

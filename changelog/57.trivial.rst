@@ -1,0 +1,1 @@
+Drop Pytest requirement to 6.0.0
