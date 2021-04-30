@@ -21,7 +21,7 @@ def test_basic_sys_stats(pytester):
             "* PASSED*",
             "* Processes Statistics *",
             "* System  -  CPU: * %   MEM: * % (Virtual Memory)*",
-            "* Test Suite Run  -  CPU: * %   MEM: * % (RSS)",
+            "* Test Suite Run  -  CPU: * %   MEM: * % (RSS)*",
             "* 1 passed in *",
         ]
     )
@@ -42,7 +42,7 @@ def test_basic_sys_stats_uss(pytester):
             "* PASSED*",
             "* Processes Statistics *",
             "* System  -  CPU: * %   MEM: * % (Virtual Memory)*",
-            "* Test Suite Run  -  CPU: * %   MEM: * % (USS)",
+            "* Test Suite Run  -  CPU: * %   MEM: * % (USS)*",
             "* 1 passed in *",
         ]
     )
