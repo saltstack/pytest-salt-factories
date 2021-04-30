@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 import sys
 
@@ -21,6 +22,8 @@ def cmdline_ids(value):
     ids=cmdline_ids,
 )
 def test_salt_factories_cli(cmdline):
+    if not shutil.which(cmdline[0]):
+        pytest.skip("binary {} not found".format(cmdline[0]))
     ret = subprocess.run(
         cmdline,
         stdout=subprocess.PIPE,
@@ -41,6 +44,8 @@ def test_salt_factories_cli(cmdline):
     ids=cmdline_ids,
 )
 def test_salt_factories_cli_show_help(cmdline):
+    if not shutil.which(cmdline[0]):
+        pytest.skip("binary {} not found".format(cmdline[0]))
     ret = subprocess.run(
         cmdline,
         stdout=subprocess.PIPE,
