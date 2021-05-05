@@ -29,6 +29,8 @@ class ExtensionVirtualEnv(VirtualEnv):
         self.venv.run("git", "init", ".")
         self.venv.run("git", "add", ".")
         self.venv.install(str(CODE_ROOT_DIR.parent.parent))
+        # Salt(3003) doesn't yet support pyzmq 21.0.x
+        self.venv.install("pyzmq<21.0.0")
         self.venv.install(".[tests]")
         return self.venv
 
