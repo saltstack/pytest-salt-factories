@@ -77,7 +77,6 @@ def temp_directory(name=None, basepath=None):
     finally:
         created_directory = directory_path
         while True:
-            print(1, basepath, created_directory)
             if str(created_directory) == str(basepath):
                 break
             if not any(created_directory.iterdir()):
