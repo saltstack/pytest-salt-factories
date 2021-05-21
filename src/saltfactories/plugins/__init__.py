@@ -6,11 +6,11 @@ Salt Factories PyTest plugin interface
 """
 import logging
 import os
-import sys
 import tempfile
 
 import pytest
 
+import saltfactories.utils.platform
 import saltfactories.utils.tempfiles
 
 log = logging.getLogger(__name__)
@@ -21,10 +21,12 @@ def pytest_tempdir_temproot():
     # Avoid ${TMPDIR} and gettempdir() on MacOS as they yield a base path too long
     # for unix sockets: ``error: AF_UNIX path too long``
     # Gentoo Portage prefers ebuild tests are rooted in ${TMPDIR}
-    if not sys.platform.startswith("darwin"):
-        tempdir = os.environ.get("TMPDIR") or tempfile.gettempdir()
-    else:
+    if saltfactories.utils.platform.is_windows():
+        tempdir = "C:/Windows/Temp"
+    elif saltfactories.utils.platform.is_darwin():
         tempdir = "/tmp"
+    else:
+        tempdir = os.environ.get("TMPDIR") or tempfile.gettempdir()
     return os.path.abspath(os.path.realpath(tempdir))
 
 
