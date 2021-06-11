@@ -88,6 +88,8 @@ def setup_handlers():
     pytest_key = "pytest-{}".format(role)
     pytest_config = __opts__[pytest_key]
     log_opts = pytest_config["log"]
+    if log_opts.get("disabled"):
+        return
     host_addr = log_opts.get("host")
     if not host_addr:
         import subprocess
