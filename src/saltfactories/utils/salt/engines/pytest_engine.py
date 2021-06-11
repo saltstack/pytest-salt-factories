@@ -119,41 +119,52 @@ class PyTestEventForwardEngine:
         atexit.register(self.stop)
 
         self.running_event.set()
-        context = zmq.Context()
-        push = context.socket(zmq.PUSH)
-        log.debug("%s connecting PUSH socket to %s", self, self.returner_address)
-        push.connect(self.returner_address)
-        opts = self.opts.copy()
-        opts["file_client"] = "local"
-        with salt.utils.event.get_event(
-            self.role,
-            sock_dir=opts["sock_dir"],
-            transport=opts["transport"],
-            opts=opts,
-            listen=True,
-        ) as eventbus:
-            if self.role == "master":
-                event_tag = "salt/master/{}/start".format(self.id)
-                log.info("%s firing event on engine start. Tag: %s", self, event_tag)
-                load = {"id": self.id, "tag": event_tag, "data": {}}
-                eventbus.fire_event(load, event_tag)
-            log.info("%s started", self)
-            while self.running_event.is_set():
-                for event in eventbus.iter_events(full=True, auto_reconnect=True):
-                    if not event:
-                        continue
-                    tag = event["tag"]
-                    data = event["data"]
-                    log.debug("%s Received Event; TAG: %r DATA: %r", self, tag, data)
-                    forward = (self.id, tag, data)
-                    try:
-                        dumped = msgpack.dumps(forward, use_bin_type=True, default=ext_type_encoder)
-                        push.send(dumped)
-                        log.info("%s forwarded event: %r", self, forward)
-                    except Exception:  # pragma: no cover pylint: disable=broad-except
-                        log.error("%s failed to forward event: %r", self, forward, exc_info=True)
-        push.close(1500)
-        context.term()
+        try:
+            context = zmq.Context()
+            push = context.socket(zmq.PUSH)
+            log.debug("%s connecting PUSH socket to %s", self, self.returner_address)
+            push.connect(self.returner_address)
+            opts = self.opts.copy()
+            opts["file_client"] = "local"
+            with salt.utils.event.get_event(
+                self.role,
+                sock_dir=opts["sock_dir"],
+                transport=opts["transport"],
+                opts=opts,
+                listen=True,
+            ) as eventbus:
+                if self.role == "master":
+                    event_tag = "salt/master/{}/start".format(self.id)
+                    log.info("%s firing event on engine start. Tag: %s", self, event_tag)
+                    load = {"id": self.id, "tag": event_tag, "data": {}}
+                    eventbus.fire_event(load, event_tag)
+                log.info("%s started", self)
+                while self.running_event.is_set():
+                    for event in eventbus.iter_events(full=True, auto_reconnect=True):
+                        if not event:
+                            continue
+                        tag = event["tag"]
+                        data = event["data"]
+                        log.debug("%s Received Event; TAG: %r DATA: %r", self, tag, data)
+                        forward = (self.id, tag, data)
+                        try:
+                            dumped = msgpack.dumps(
+                                forward, use_bin_type=True, default=ext_type_encoder
+                            )
+                            push.send(dumped)
+                            log.info("%s forwarded event: %r", self, forward)
+                        except Exception:  # pragma: no cover pylint: disable=broad-except
+                            log.error(
+                                "%s failed to forward event: %r", self, forward, exc_info=True
+                            )
+        finally:
+            if self.running_event.is_set():
+                # Some exception happened, unset
+                self.running_event.clear()
+            if not push.closed:
+                push.close(1500)
+            if not context.closed:
+                context.term()
 
     def stop(self):
         if self.running_event.is_set() is False:
