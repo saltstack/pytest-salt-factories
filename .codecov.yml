@@ -1,5 +1,7 @@
 codecov:
   require_ci_to_pass: yes           # Less spammy. Only notify on passing builds.
+  notify:
+    wait_for_ci: true               # Should Codecov wait for all CI statuses to complete before sending theirs
 
 
 ignore:
@@ -19,8 +21,7 @@ coverage:
           flags:
             - factories
             - tests
-        factories                   # declare a new status context "salt"
-          paths: "!tests/"          # remove all files in "tests/"
+        factories:                  # declare a new status context "factories"
           target: auto              # will use the coverage from the base commit (pull request base or parent commit) coverage to compare against.
           base: auto                # will use the pull request base if the commit is on a pull request. If not, the parent commit will be used.
           if_no_uploads: error      # will post commit status of "error" if no coverage reports were uploaded
@@ -30,10 +31,9 @@ coverage:
           flags:
             - factories
         tests:                      # declare a new status context "tests"
-#          #target: 100%            # we always want 100% coverage here
+          target: 95%               # we always want 100% coverage here, close enough will do for now
           target: auto              # auto while we get this going
           base: auto                # will use the pull request base if the commit is on a pull request. If not, the parent commit will be used.
-          paths: "!saltfactories/"  # only include coverage in "tests/" folder
           if_no_uploads: error      # will post commit status of "error" if no coverage reports were uploaded
                                     # options: success, error, failure
           if_not_found: success     # if parent is not found report status as success, error, or failure
@@ -66,12 +66,13 @@ coverage:
 flags:
   factories:
     paths:
-      - saltfactories/
-    carryforward: true              # https://docs.codecov.io/docs/carryforward-flags
+      - src/
+    carryforward: false              # https://docs.codecov.io/docs/carryforward-flags
+                                     # We always test the full repo code. Carry-forward is False.
   tests:
     paths:
       - tests/
-    carryforward: true
+    carryforward: false
 
 comment:
   layout: "reach, diff, flags, files"
