@@ -1,0 +1,1 @@
+Several fixes/improvements to the ``ZMQHandler`` log forwarding handler
