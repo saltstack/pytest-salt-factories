@@ -50,6 +50,13 @@ def test_generate_script_defaults(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -102,6 +109,13 @@ def test_generate_script_code_dir(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -168,6 +182,13 @@ def test_generate_script_inject_coverage(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -251,6 +272,13 @@ def test_generate_script_inject_sitecustomize(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -312,6 +340,13 @@ def test_generate_script_inject_sitecustomize(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -351,6 +386,13 @@ def test_generate_script_salt(tmpdir):
                 salt_main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -395,6 +437,13 @@ def test_generate_script_salt_api(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -441,6 +490,13 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -488,6 +544,13 @@ def test_generate_script_only_generates_once(tmpdir):
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
