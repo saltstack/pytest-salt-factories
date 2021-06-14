@@ -80,7 +80,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: Pre-Commit
 
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     strategy:
       fail-fast: false
@@ -211,7 +211,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs: Pre-Commit
 
-    timeout-minutes: 15
+    timeout-minutes: 25
 
     strategy:
       fail-fast: false
