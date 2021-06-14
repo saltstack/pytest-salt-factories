@@ -17,6 +17,7 @@ SCRIPT_TEMPLATES = {
     "salt": textwrap.dedent(
         """
         import atexit
+        import traceback
         from salt.scripts import salt_main
 
         if __name__ == '__main__':
@@ -32,6 +33,11 @@ SCRIPT_TEMPLATES = {
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -41,6 +47,7 @@ SCRIPT_TEMPLATES = {
     "salt-api": textwrap.dedent(
         """
         import atexit
+        import traceback
         import salt.cli.api
         import salt.utils.process
 
@@ -63,6 +70,11 @@ SCRIPT_TEMPLATES = {
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -72,6 +84,7 @@ SCRIPT_TEMPLATES = {
     "common": textwrap.dedent(
         """
         import atexit
+        import traceback
         from salt.scripts import salt_{0}
 
         def main():
@@ -96,6 +109,11 @@ SCRIPT_TEMPLATES = {
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()

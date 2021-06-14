@@ -1,0 +1,1 @@
+Catch unhandled exceptions and write their traceback to ``sys.stderr`` in the generated CLI scripts

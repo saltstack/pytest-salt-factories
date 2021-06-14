@@ -33,6 +33,7 @@ def test_generate_script_defaults(tmpdir):
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         import atexit
+        import traceback
         from salt.scripts import salt_foobar
 
         def main():
@@ -57,6 +58,11 @@ def test_generate_script_defaults(tmpdir):
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -92,6 +98,7 @@ def test_generate_script_code_dir(tmpdir):
         sys.path.insert(0, CODE_DIR)
 
         import atexit
+        import traceback
         from salt.scripts import salt_foobar
 
         def main():
@@ -116,6 +123,11 @@ def test_generate_script_code_dir(tmpdir):
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -165,6 +177,7 @@ def test_generate_script_inject_coverage(tmpdir):
         os.environ[str('COVERAGE_PROCESS_START')] = str(COVERAGE_PROCESS_START)
 
         import atexit
+        import traceback
         from salt.scripts import salt_foobar
 
         def main():
@@ -189,6 +202,11 @@ def test_generate_script_inject_coverage(tmpdir):
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -255,6 +273,7 @@ def test_generate_script_inject_sitecustomize(tmpdir):
         sys.path.insert(0, SITECUSTOMIZE_DIR)
 
         import atexit
+        import traceback
         from salt.scripts import salt_foobar
 
         def main():
@@ -279,6 +298,11 @@ def test_generate_script_inject_sitecustomize(tmpdir):
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -323,6 +347,7 @@ def test_generate_script_inject_sitecustomize(tmpdir):
         sys.path.insert(0, SITECUSTOMIZE_DIR)
 
         import atexit
+        import traceback
         from salt.scripts import salt_foobar_2
 
         def main():
@@ -347,6 +372,11 @@ def test_generate_script_inject_sitecustomize(tmpdir):
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -378,6 +408,7 @@ def test_generate_script_salt(tmpdir):
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         import atexit
+        import traceback
         from salt.scripts import salt_main
 
         if __name__ == '__main__':
@@ -393,6 +424,11 @@ def test_generate_script_salt(tmpdir):
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -422,6 +458,7 @@ def test_generate_script_salt_api(tmpdir):
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         import atexit
+        import traceback
         import salt.cli.api
         import salt.utils.process
 
@@ -444,6 +481,11 @@ def test_generate_script_salt_api(tmpdir):
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -473,6 +515,7 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         import atexit
+        import traceback
         from salt.scripts import salt_foobar
 
         def main():
@@ -497,6 +540,11 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -527,6 +575,7 @@ def test_generate_script_only_generates_once(tmpdir):
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         import atexit
+        import traceback
         from salt.scripts import salt_foobar
 
         def main():
@@ -551,6 +600,11 @@ def test_generate_script_only_generates_once(tmpdir):
                     # A string?!
                     sys.stderr.write(exitcode)
                     exitcode = 1
+            except Exception as exc:
+                sys.stderr.write(
+                    "An un-handled exception was caught: " + str(exc) + "\\n" + traceback.format_exc()
+                )
+                exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
