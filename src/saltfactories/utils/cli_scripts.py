@@ -25,6 +25,13 @@ SCRIPT_TEMPLATES = {
                 salt_main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -49,6 +56,13 @@ SCRIPT_TEMPLATES = {
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
@@ -75,6 +89,13 @@ SCRIPT_TEMPLATES = {
                 main()
             except SystemExit as exc:
                 exitcode = exc.code
+                # https://docs.python.org/3/library/exceptions.html#SystemExit
+                if exitcode is None:
+                    exitcode = 0
+                if not isinstance(exitcode, int):
+                    # A string?!
+                    sys.stderr.write(exitcode)
+                    exitcode = 1
             sys.stdout.flush()
             sys.stderr.flush()
             atexit._run_exitfuncs()
