@@ -96,6 +96,8 @@ class LogServer:
             return
         try:
             self.running_event.set()
+            poller = zmq.Poller()
+            poller.register(puller, zmq.POLLIN)
             while True:
                 if not self.running_event.is_set():
                     if exit_timeout is None:
@@ -114,13 +116,9 @@ class LogServer:
                         )
                         break
                 try:
-                    try:
-                        msg = puller.recv(flags=zmq.NOBLOCK)
-                    except zmq.ZMQError as exc:
-                        if exc.errno != zmq.EAGAIN:  # pragma: no cover
-                            raise
-                        time.sleep(0.25)
+                    if not poller.poll(1000):
                         continue
+                    msg = puller.recv()
                     if msgpack.version >= (0, 5, 2):
                         record_dict = msgpack.loads(msg, raw=False)
                     else:  # pragma: no cover
