@@ -63,6 +63,7 @@ globals
 hookspec
 hostname
 https
+hwm
 ico
 ie
 illumos

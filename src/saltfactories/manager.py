@@ -108,14 +108,14 @@ class FactoriesManager:
         """
         Returns the path to the Salt log handler this plugin provides
         """
-        return CODE_ROOT_DIR / "utils" / "salt" / "log_handlers"
+        return CODE_ROOT_DIR / "utils" / "saltext" / "log_handlers"
 
     @staticmethod
     def get_salt_engines_path():
         """
         Returns the path to the Salt engine this plugin provides
         """
-        return CODE_ROOT_DIR / "utils" / "salt" / "engines"
+        return CODE_ROOT_DIR / "utils" / "saltext" / "engines"
 
     def final_minion_config_tweaks(self, config):
         pytest_key = "pytest-minion"

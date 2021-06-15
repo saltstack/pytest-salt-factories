@@ -1,4 +1,4 @@
-.. automodule:: saltfactories.utils.salt
+.. automodule:: saltfactories.utils.saltext
    :members:
    :show-inheritance:
    :inherited-members:
