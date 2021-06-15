@@ -4,14 +4,12 @@ pytest_log_handler
 
 Salt External Logging Handler
 """
-import atexit
 import copy
 import logging
 import os
 import pprint
 import socket
 import sys
-import threading
 import time
 import traceback
 
@@ -132,33 +130,56 @@ def setup_handlers():
 
 
 class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMixin):
-
-    # We offload sending the log records to the consumer to a separate
-    # thread because PUSH socket's WILL block if the receiving end can't
-    # receive fast enough, thus, also blocking the main thread.
-    #
-    # To achieve this, we create an inproc zmq.PAIR, which also guarantees
-    # message delivery, but should be way faster than the PUSH.
-    # We also set some high enough high water mark values to cope with the
-    # message flooding.
-    #
-    # We also implement a start method which is deferred until sending the
-    # first message because, logging handlers, on platforms which support
-    # forking, are inherited by forked processes, and we don't want the ZMQ
-    # machinery inherited.
-    # For the cases where the ZMQ machinery is still inherited because a
-    # process was forked after ZMQ has been prepped up, we check the handler's
-    # pid attribute against the current process pid. If it's not a match, we
-    # reconnect the ZMQ machinery.
-
-    def __init__(self, host="127.0.0.1", port=3330, log_prefix=None, level=logging.NOTSET):
+    def __init__(
+        self, host="127.0.0.1", port=3330, log_prefix=None, level=logging.NOTSET, socket_hwm=100000
+    ):
         super(ZMQHandler, self).__init__(level=level)
-        self.pid = os.getpid()
-        self.push_address = "tcp://{}:{}".format(host, port)
+        self.host = host
+        self.port = port
+        self._log_prefix = log_prefix
+        self.socket_hwm = socket_hwm
         self.log_prefix = self._get_log_prefix(log_prefix)
-        self.context = self.proxy_address = self.in_proxy = self.proxy_thread = None
-        self.running_event = threading.Event()
+        self.context = self.pusher = None
         self._exiting = False
+        self.dropped_messages_count = 0
+        # We set the formatter so that we only include the actual log message and not any other
+        # fields found in the log record
+        self.__formatter = logging.Formatter("%(message)s")
+
+    def _get_formatter(self):
+        return self.__formatter
+
+    def _set_formatter(self, fmt):
+        if fmt is not None:
+            self.setFormatter(fmt)
+
+    def _del_formatter(self):
+        raise RuntimeError("Cannot delete the 'formatter' attribute")
+
+    # We set formatter as a property to make it immutable
+    formatter = property(_get_formatter, _set_formatter, _del_formatter)
+
+    def setFormatter(self, _):
+        raise RuntimeError("Do not set a formatter on {}".format(self.__class__.__name__))
+
+    def __getstate__(self):
+        return {
+            "host": self.host,
+            "port": self.port,
+            "log_prefix": self._log_prefix,
+            "level": self.level,
+            "socket_hwm": self.socket_hwm,
+        }
+
+    def __setstate__(self, state):
+        self.__init__(**state)
+        self.stop()
+        self._exiting = False
+
+    def __repr__(self):
+        return "<{} host={} port={} level={}>".format(
+            self.__class__.__name__, self.host, self.port, logging.getLevelName(self.level)
+        )
 
     def _get_log_prefix(self, log_prefix):
         if log_prefix is None:
@@ -171,19 +192,15 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         return log_prefix.format(cli_name=cli_name)
 
     def start(self):
-        if self.pid != os.getpid():
-            self.stop()
-            self._exiting = False
-
         if self._exiting is True:
             return
 
-        if self.in_proxy is not None:
+        if self.pusher is not None:
             # We're running ...
             return
 
-        atexit.register(self.stop)
-        context = in_proxy = None
+        self.dropped_messages_count = 0
+        context = pusher = None
         try:
             context = zmq.Context()
             self.context = context
@@ -197,97 +214,47 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
             self._exiting = False
             return
 
-        # Let's start the proxy thread
-        socket_bind_event = threading.Event()
-        self.proxy_thread = threading.Thread(
-            target=self._proxy_logs_target, args=(socket_bind_event, self.running_event)
-        )
-        self.proxy_thread.start()
-        # Now that we discovered which random port to use, let's continue with the setup
-        if socket_bind_event.wait(2.5) is not True:
-            sys.stderr.write("Failed to bind the ZMQ socket PAIR\n")
-            sys.stderr.flush()
-            socket_bind_event.clear()
-            self.running_event.clear()
-            context.term()
-            if self.proxy_thread.is_alive():
-                # Wait for the thread to terminate
-                self.proxy_thread.join(2.5)
-                if self.proxy_thread.is_alive():
-                    # Hmm.. Still alive?!
-                    # Wait a little longer
-                    self.proxy_thread.join(2.5)
-            self.context = self.proxy_thread = None
-            self.stop()
-            # Allow the handler to re-try starting
-            self._exiting = False
-            return
-
-        # And we can now also connect the messages input side of the proxy
         try:
-            in_proxy = self.context.socket(zmq.PAIR)
-            in_proxy.set_hwm(100000)
-            in_proxy.connect(self.proxy_address)
-            self.in_proxy = in_proxy
+            pusher = context.socket(zmq.PUSH)
+            pusher.set_hwm(self.socket_hwm)
+            pusher.connect("tcp://{}:{}".format(self.host, self.port))
+            self.pusher = pusher
         except zmq.ZMQError as exc:
-            if in_proxy is not None:
-                in_proxy.close(0)
+            if pusher is not None:
+                pusher.close(0)
             sys.stderr.write(
-                "Failed to bind the ZMQ PAIR socket: {}\n{}\n".format(exc, traceback.format_exc())
+                "Failed to connect the ZMQ PUSH socket: {}\n{}\n".format(
+                    exc, traceback.format_exc()
+                )
             )
             sys.stderr.flush()
-            socket_bind_event.clear()
-            self.running_event.clear()
-            self.context.term()
-            if self.proxy_thread.is_alive():
-                # Wait for the thread to terminate
-                self.proxy_thread.join(2.5)
-                if self.proxy_thread.is_alive():
-                    # Hmm.. Still alive?!
-                    # Wait a little longer
-                    self.proxy_thread.join(2.5)
-            self.context = self.proxy_thread = self.proxy_address = None
             self.stop()
             # Allow the handler to re-try starting
             self._exiting = False
             return
-
-        self.pid = os.getpid()  # In case we're restarting
-        self.running_event.set()
 
     def stop(self):
         if self._exiting:
             return
 
         self._exiting = True
-        self.running_event.clear()
+
+        if self.dropped_messages_count:
+            sys.stderr.write(
+                "Dropped {} messages from getting forwarded. High water mark reached...\n".format(
+                    self.dropped_messages_count
+                )
+            )
+            sys.stderr.flush()
 
         try:
-            atexit.unregister(self.stop)
-        except AttributeError:  # pragma: no cover
-            # Python 2
-            try:
-                atexit._exithandlers.remove((self.stop, (), {}))
-            except ValueError:
-                # The exit handler isn't registered
-                pass
-
-        try:
-            if self.in_proxy is not None and not self.in_proxy.closed:
-                # Give it 1 second to flush any messages in it's queue
-                self.in_proxy.close(1000)
-                self.in_proxy = None
+            if self.pusher is not None and not self.pusher.closed:
+                # Give it 1.5 seconds to flush any messages in it's queue
+                self.pusher.close(1500)
+                self.pusher = None
             if self.context is not None and not self.context.closed:
                 self.context.term()
                 self.context = None
-            if self.proxy_thread is not None and self.proxy_thread.is_alive():
-                # Wait for the thread to terminate
-                self.proxy_thread.join(2.5)
-                if self.proxy_thread.is_alive():
-                    # Hmm.. Still alive?!
-                    # Wait a little longer
-                    self.proxy_thread.join(2.5)
-                self.proxy_thread = None
         except (SystemExit, KeyboardInterrupt):  # pragma: no cover pylint: disable=try-except-raise
             # Don't write these exceptions to stderr
             raise
@@ -298,7 +265,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
             sys.stderr.flush()
             raise
         finally:
-            self.context = self.in_proxy = self.proxy_address = self.proxy_thread = None
+            self.context = self.pusher = None
 
     def format(self, record):
         msg = super(ZMQHandler, self).format(record)
@@ -340,23 +307,42 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         if self._exiting:
             return
         self.start()
-        if self.in_proxy is None:
+        if self.pusher is None:
             sys.stderr.write(
                 "Not sending log message over the wire because "
-                "we were unable to properly configure a ZMQ PAIR socket.\n"
+                "we were unable to connect to the log server.\n"
             )
             sys.stderr.flush()
             return
         try:
             msg = self.prepare(record)
             if msg:
-                self.in_proxy.send(msg)
+                try:
+                    self._send_message(msg)
+                except zmq.error.Again:
+                    # Sleep a little and give up
+                    time.sleep(0.001)
+                    try:
+                        self._send_message(msg)
+                    except zmq.error.Again:
+                        # We can't send it nor queue it for send.
+                        # Drop it, otherwise, this call blocks until we can at least queue the message
+                        self.dropped_messages_count += 1
         except (SystemExit, KeyboardInterrupt):  # pragma: no cover pylint: disable=try-except-raise
             # Catch and raise SystemExit and KeyboardInterrupt so that we can handle
             # all other exception below
             raise
         except Exception:  # pragma: no cover pylint: disable=broad-except
             self.handleError(record)
+
+    def _send_message(self, msg):
+        self.pusher.send(msg, flags=zmq.NOBLOCK)
+        if self.dropped_messages_count:
+            logging.getLogger(__name__).debug(
+                "Dropped %s messages from getting forwarded. High water mark reached...",
+                self.dropped_messages_count,
+            )
+            self.dropped_messages_count = 0
 
     def close(self):
         """
@@ -368,75 +354,3 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         # too to ensure the handler doesn't get a chance to restart itself
         self._exiting = True
         super().close()
-
-    def _proxy_logs_target(self, socket_bind_event, running_event):
-        context = zmq.Context()
-        out_proxy = pusher = None
-        try:
-            out_proxy = context.socket(zmq.PAIR)
-            out_proxy.set_hwm(100000)
-            proxy_port = out_proxy.bind_to_random_port("tcp://127.0.0.1")
-            self.proxy_address = "tcp://127.0.0.1:{}".format(proxy_port)
-        except zmq.ZMQError as exc:
-            if out_proxy is not None:
-                out_proxy.close(0)
-            context.term()
-            sys.stderr.write(
-                "Failed to bind the ZMQ PAIR socket: {}\n{}\n".format(exc, traceback.format_exc())
-            )
-            sys.stderr.flush()
-            return
-
-        try:
-            pusher = context.socket(zmq.PUSH)
-            pusher.set_hwm(100000)
-            pusher.connect(self.push_address)
-        except zmq.ZMQError as exc:
-            if pusher is not None:
-                pusher.close(0)
-            context.term()
-            sys.stderr.write(
-                "Failed to connect the ZMQ PUSH socket: {}\n{}\n".format(
-                    exc, traceback.format_exc()
-                )
-            )
-            sys.stderr.flush()
-            return
-
-        socket_bind_event.set()
-
-        try:
-            if running_event.wait(2.5) is False:
-                sys.stderr.write(
-                    "Running event failed to set after 2.5 seconds. Stop processing...."
-                )
-                sys.stderr.flush()
-                self.stop()
-                # Allow the handler to re-try starting
-                self._exiting = False
-                return
-
-            while running_event.is_set():
-                try:
-                    msg = out_proxy.recv(zmq.NOBLOCK)
-                    pusher.send(msg)
-                except zmq.error.Again:
-                    # no messages yet, a little sleep
-                    time.sleep(0.001)
-                except zmq.ZMQError as exc:
-                    sys.stderr.write(
-                        "Failed to proxy log message: {}\n{}\n".format(exc, traceback.format_exc())
-                    )
-                    sys.stderr.flush()
-                    self.stop()
-                    break
-        finally:
-            # Close the receiving end of the PAIR proxy socket
-            if not out_proxy.closed:
-                out_proxy.close(500)
-            if not pusher.closed:
-                # Allow, the pusher queue to send any messages in it's queue for
-                # the next 0.5 seconds
-                pusher.close(500)
-            if not context.closed:
-                context.term()

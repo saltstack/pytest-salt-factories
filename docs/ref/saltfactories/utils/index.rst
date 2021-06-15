@@ -12,4 +12,4 @@ Utils
    :glob:
 
    *
-   salt/index
+   saltext/index

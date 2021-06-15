@@ -35,7 +35,7 @@ repos:
       - id: pyupgrade
         name: Rewrite Code to be Py3.5+
         args: [--py3-plus]
-        exclude: (^src/saltfactories/utils/salt/.*\.py)
+        exclude: (^src/saltfactories/utils/saltext/.*\.py)
 
   - repo: https://github.com/hakancelik96/unimport
     rev: "31cc123640880e385159c719d2f12b5cf8586495"

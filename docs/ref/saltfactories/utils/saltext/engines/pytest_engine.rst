@@ -1,4 +1,4 @@
-.. automodule:: saltfactories.utils.salt.engines.pytest_engine
+.. automodule:: saltfactories.utils.saltext.engines.pytest_engine
    :members:
    :show-inheritance:
    :inherited-members:
