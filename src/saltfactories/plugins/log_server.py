@@ -40,8 +40,8 @@ class LogServer:
 
     @socket_hwm.default
     def _default_socket_hwm(self):
-        # 1MB
-        return 1_000_000
+        # ~1MB
+        return 1000000
 
     def start(self):
         log.info("%s starting...", self)
