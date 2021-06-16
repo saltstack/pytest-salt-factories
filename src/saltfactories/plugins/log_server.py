@@ -22,6 +22,7 @@ class LogServer:
     log_host = attr.ib()
     log_port = attr.ib()
     log_level = attr.ib()
+    socket_hwm = attr.ib()
     running_event = attr.ib(init=False, repr=False, hash=False)
     sentinel_event = attr.ib(init=False, repr=False, hash=False)
     process_queue_thread = attr.ib(init=False, repr=False, hash=False)
@@ -36,6 +37,11 @@ class LogServer:
     @log_port.default
     def _default_log_port(self):
         return ports.get_unused_localhost_port()
+
+    @socket_hwm.default
+    def _default_socket_hwm(self):
+        # 1MB
+        return 1_000_000
 
     def start(self):
         log.info("%s starting...", self)
@@ -87,6 +93,7 @@ class LogServer:
         address = "tcp://{}:{}".format(self.log_host, self.log_port)
         context = zmq.Context()
         puller = context.socket(zmq.PULL)
+        puller.set_hwm(self.socket_hwm)
         exit_timeout_seconds = 5
         exit_timeout = None
         try:
