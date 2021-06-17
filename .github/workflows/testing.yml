@@ -527,7 +527,7 @@ jobs:
             n=0
             until [ "$n" -ge 5 ]
             do
-            if curl --max-time 30 -L https://uploader.codecov.io/latest/codecov-linux --output codecov-uploader; then
+            if curl --max-time 30 -L https://uploader.codecov.io/latest/codecov.exe --output codecov-uploader; then
                 break
             fi
             n=$((n+1))
@@ -535,7 +535,6 @@ jobs:
             done
         fi
         if [ -f codecov-uploader ]; then
-            chmod +x codecov-uploader
             n=0
             until [ "$n" -ge 5 ]
             do
@@ -559,7 +558,7 @@ jobs:
             n=0
             until [ "$n" -ge 5 ]
             do
-            if curl --max-time 30 -L https://uploader.codecov.io/latest/codecov-linux --output codecov-uploader; then
+            if curl --max-time 30 -L https://uploader.codecov.io/latest/codecov.exe --output codecov-uploader; then
                 break
             fi
             n=$((n+1))
@@ -567,7 +566,6 @@ jobs:
             done
         fi
         if [ -f codecov-uploader ]; then
-            chmod +x codecov-uploader
             n=0
             until [ "$n" -ge 5 ]
             do
@@ -650,7 +648,7 @@ jobs:
             n=0
             until [ "$n" -ge 5 ]
             do
-            if curl --max-time 30 -L https://uploader.codecov.io/latest/codecov-linux --output codecov-uploader; then
+            if curl --max-time 30 -L https://uploader.codecov.io/latest/codecov-macos --output codecov-uploader; then
                 break
             fi
             n=$((n+1))
@@ -682,7 +680,7 @@ jobs:
             n=0
             until [ "$n" -ge 5 ]
             do
-            if curl --max-time 30 -L https://uploader.codecov.io/latest/codecov-linux --output codecov-uploader; then
+            if curl --max-time 30 -L https://uploader.codecov.io/latest/codecov-macos --output codecov-uploader; then
                 break
             fi
             n=$((n+1))
