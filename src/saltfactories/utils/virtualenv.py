@@ -97,7 +97,7 @@ class VirtualEnv:
         :rtype: ~saltfactories.utils.processes.ProcessResult
         """
         check = kwargs.pop("check", True)
-        kwargs.setdefault("cwd", self.cwd or str(self.venv_dir))
+        kwargs.setdefault("cwd", str(self.cwd or self.venv_dir))
         kwargs.setdefault("stdout", subprocess.PIPE)
         kwargs.setdefault("stderr", subprocess.PIPE)
         kwargs.setdefault("universal_newlines", True)
