@@ -84,6 +84,7 @@ maxdepth
 minify
 msg
 msgpack
+mworker
 namespace
 netbsd
 ng
@@ -102,6 +103,7 @@ popen
 pragma
 prepend
 proc
+processpayload
 processresult
 proxied
 psutil
