@@ -1,0 +1,1 @@
+Rename the ``SaltMaster.get_salt_cli`` to ``SaltMaster.salt_cli``, forgotten on `#50 <https://github.com/saltstack/pytest-salt-factories/issues/50>`_

@@ -19,7 +19,7 @@ def minion(master):
 
 @pytest.fixture
 def salt_cli(master):
-    return master.get_salt_cli()
+    return master.salt_cli()
 
 
 @pytest.fixture

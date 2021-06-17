@@ -38,4 +38,4 @@ def salt_minion(salt_factories, minion_id, salt_master):
 
 @pytest.fixture(scope="package")
 def salt_cli(salt_master):
-    return salt_master.get_salt_cli()
+    return salt_master.salt_cli()

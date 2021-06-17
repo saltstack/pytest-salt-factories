@@ -360,7 +360,7 @@ class SaltMaster(SaltDaemon):
             **factory_class_kwargs
         )
 
-    def get_salt_cli(self, factory_class=cli.salt.Salt, **factory_class_kwargs):
+    def salt_cli(self, factory_class=cli.salt.Salt, **factory_class_kwargs):
         """
         Return a `salt` CLI process for this master instance
         """
@@ -508,7 +508,7 @@ class SaltMaster(SaltDaemon):
             **factory_class_kwargs
         )
 
-    def get_salt_client(
+    def salt_client(
         self,
         functions_known_to_return_none=None,
         factory_class=client.LocalClient,
