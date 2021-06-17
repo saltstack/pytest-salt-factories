@@ -11,7 +11,7 @@ from nox.command import CommandFailed
 from nox.logger import logger
 
 
-COVERAGE_VERSION_REQUIREMENT = "coverage==5.2"
+COVERAGE_VERSION_REQUIREMENT = "coverage==5.5"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3000.1"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
