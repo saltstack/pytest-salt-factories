@@ -1,0 +1,1 @@
+Switch to the `new codecov uploader <https://about.codecov.io/blog/introducing-codecovs-new-uploader>`_
