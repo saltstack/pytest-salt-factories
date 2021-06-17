@@ -17,7 +17,7 @@ class ExtensionVirtualEnv(VirtualEnv):
     @copy_path.default
     def _default_copy_path(self):
         _copy_path = self.tmp_path / "code"
-        shutil.copytree(self.extension_path, _copy_path)
+        shutil.copytree(str(self.extension_path), str(_copy_path))
         return _copy_path
 
     @venv.default
