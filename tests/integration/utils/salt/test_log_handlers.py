@@ -21,7 +21,7 @@ def minion(master):
 
 @pytest.fixture
 def salt_cli(master):
-    return master.get_salt_cli()
+    return master.salt_cli()
 
 
 def test_logs_forwarded_from_sub_processes(salt_cli, minion, caplog):
