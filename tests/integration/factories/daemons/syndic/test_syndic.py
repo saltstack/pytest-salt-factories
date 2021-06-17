@@ -81,7 +81,7 @@ def master_of_masters_salt_cli(master_of_masters, minion_1):
     """
     assert master_of_masters.is_running()
     assert minion_1.is_running()
-    return master_of_masters.get_salt_cli()
+    return master_of_masters.salt_cli()
 
 
 @pytest.fixture(scope="module")
@@ -93,7 +93,7 @@ def syndic_master_salt_cli(syndic_master, syndic_minion, minion_2):
     assert syndic_master.is_running()
     assert syndic_minion.is_running()
     assert minion_2.is_running()
-    return syndic_master.get_salt_cli()
+    return syndic_master.salt_cli()
 
 
 @pytest.fixture(scope="module")
