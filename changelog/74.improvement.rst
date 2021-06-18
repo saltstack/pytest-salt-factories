@@ -1,0 +1,1 @@
+Some more additional changes to the ZMQHandler to make sure it's resources are cleaned when terminating

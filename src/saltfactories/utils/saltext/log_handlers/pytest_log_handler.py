@@ -250,7 +250,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
 
         self.pid = os.getpid()
 
-    def stop(self):
+    def stop(self, flush=True):
         if self._exiting:
             return
 
@@ -266,8 +266,12 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
 
         try:
             if self.pusher is not None and not self.pusher.closed:
-                # Give it 1.5 seconds to flush any messages in it's queue
-                self.pusher.close(1500)
+                if flush:
+                    # Give it 1.5 seconds to flush any messages in it's queue
+                    linger = 1500
+                else:
+                    linger = 0
+                self.pusher.close(linger)
                 self.pusher = None
             if self.context is not None and not self.context.closed:
                 self.context.term()
@@ -282,7 +286,13 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
             sys.stderr.flush()
             raise
         finally:
-            self.context = self.pusher = self.pid = None
+            if self.pusher is not None and not self.pusher.closed:
+                self.pusher.close(0)
+                self.pusher = None
+            if self.context is not None and not self.context.closed:
+                self.context.term()
+                self.context = None
+            self.pid = None
 
     def format(self, record):
         msg = super(ZMQHandler, self).format(record)
@@ -348,6 +358,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         except (SystemExit, KeyboardInterrupt):  # pragma: no cover pylint: disable=try-except-raise
             # Catch and raise SystemExit and KeyboardInterrupt so that we can handle
             # all other exception below
+            self.stop(flush=False)
             raise
         except Exception:  # pragma: no cover pylint: disable=broad-except
             self.handleError(record)
@@ -366,7 +377,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         Tidy up any resources used by the handler.
         """
         # The logging machinery has asked to stop this handler
-        self.stop()
+        self.stop(flush=False)
         # self._exiting should already be True, nonetheless, we set it here
         # too to ensure the handler doesn't get a chance to restart itself
         self._exiting = True

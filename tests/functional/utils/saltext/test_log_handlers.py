@@ -187,7 +187,6 @@ def test_all_messages_received_multiprocessing(tempfiles, salt_factories, caplog
         def log_from_child_process(idx, parent_pid, evt):
             evt.set()  # process started, ready to start another one
             import os
-            import time
             import logging
             log = logging.getLogger("foo")
             for idx in range(1, {calls} + 1):
@@ -195,7 +194,6 @@ def test_all_messages_received_multiprocessing(tempfiles, salt_factories, caplog
             exit(0)
 
         def log_from_process(pidx, evt):
-            evt.set()  # process started, ready to start another one
 
             import os
             import logging
@@ -214,6 +212,8 @@ def test_all_messages_received_multiprocessing(tempfiles, salt_factories, caplog
                 cevt.wait()
                 cevt.clear()
                 time.sleep(0.25)
+
+            evt.set()  # process started, ready to start another one
 
             log = logging.getLogger("foo")
             for idx in range(1, {calls} + 1):
