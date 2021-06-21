@@ -151,11 +151,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to download uploader"
+            exit 1
         fi
         if [ -f codecov-uploader ]; then
             chmod +x codecov-uploader
@@ -163,11 +169,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to upload codecov stats"
+            exit 1
         fi
 
     - name: Upload Salt Factories Tests Code Coverage
@@ -183,11 +195,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to download uploader"
+            exit 1
         fi
         if [ -f codecov-uploader ]; then
             chmod +x codecov-uploader
@@ -195,11 +213,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to upload codecov stats"
+            exit 1
         fi
 
     - name: Upload Logs
@@ -293,11 +317,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to download uploader"
+            exit 1
         fi
         if [ -f codecov-uploader ]; then
             chmod +x codecov-uploader
@@ -305,11 +335,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to upload codecov stats"
+            exit 1
         fi
 
     - name: Upload Salt Factories Tests Code Coverage
@@ -325,11 +361,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to download uploader"
+            exit 1
         fi
         if [ -f codecov-uploader ]; then
             chmod +x codecov-uploader
@@ -337,11 +379,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to upload codecov stats"
+            exit 1
         fi
 
     - name: Upload Logs
@@ -429,11 +477,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to download uploader"
+            exit 1
         fi
         if [ -f codecov-uploader ]; then
             chmod +x codecov-uploader
@@ -441,11 +495,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to upload codecov stats"
+            exit 1
         fi
 
     - name: Upload Salt Factories Tests Code Coverage
@@ -461,11 +521,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to download uploader"
+            exit 1
         fi
         if [ -f codecov-uploader ]; then
             chmod +x codecov-uploader
@@ -473,11 +539,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to upload codecov stats"
+            exit 1
         fi
 
     - name: Upload Logs
@@ -568,11 +640,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to download uploader"
+            exit 1
         fi
         if [ -f codecov-uploader ]; then
             chmod +x codecov-uploader
@@ -580,11 +658,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to upload codecov stats"
+            exit 1
         fi
 
     - name: Upload Salt Factories Tests Code Coverage
@@ -600,11 +684,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to download uploader"
+            exit 1
         fi
         if [ -f codecov-uploader ]; then
             chmod +x codecov-uploader
@@ -612,11 +702,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to upload codecov stats"
+            exit 1
         fi
 
     - name: Upload Logs
@@ -710,11 +806,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to download uploader"
+            exit 1
         fi
         if [ -f codecov-uploader ]; then
             chmod +x codecov-uploader
@@ -722,11 +824,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to upload codecov stats"
+            exit 1
         fi
 
     - name: Upload Salt Factories Tests Code Coverage
@@ -742,11 +850,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to download uploader"
+            exit 1
         fi
         if [ -f codecov-uploader ]; then
             chmod +x codecov-uploader
@@ -754,11 +868,17 @@ jobs:
             until [ "$n" -ge 5 ]
             do
             if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
+                rc=$?
                 break
             fi
+            rc=$?
             n=$((n+1))
             sleep 15
             done
+        fi
+        if [ $rc -ne 0 ]; then
+            echo "Failed to upload codecov stats"
+            exit 1
         fi
 
     - name: Upload Logs
