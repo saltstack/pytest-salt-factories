@@ -246,6 +246,7 @@ jobs:
     - name: Gather CodeCov Info
       if: always()
       id: codecov-info
+      shell: bash
       run: |
         echo ::set-output name=flag-python-version::$(python -c "import sys; print('Py{}{}'.format(*sys.version_info))")
         echo ::set-output name=flag-pytest-version::$(python -c "import pytest; print('PyTest{}{}'.format(*pytest.__version__.split('.')))")
@@ -256,6 +257,7 @@ jobs:
     - name: Create CodeCov Flags
       if: always()
       id: codecov
+      shell: bash
       run: |
         echo ::set-output name=flags::$(python -c "print(','.join(['${{ steps.codecov-info.outputs.flag-runner-os }}', '${{ steps.codecov-info.outputs.flag-python-version }}', '${{ steps.codecov-info.outputs.flag-salt-version }}', '${{ steps.codecov-info.outputs.flag-pytest-version }}']))")
         echo ::set-output name=report-name::$(python -c "print('-'.join(['${{ steps.codecov-info.outputs.flag-runner-os }}', '${{ steps.codecov-info.outputs.flag-python-version }}', '${{ steps.codecov-info.outputs.flag-salt-version }}', '${{ steps.codecov-info.outputs.flag-pytest-version }}']))")
