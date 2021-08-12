@@ -25,21 +25,27 @@ class Loaders:
     """
     This class provides the required functionality for functional testing against the salt loaders
 
-    :param dict opts: The options dictionary to load the salt loaders.
+    :param dict opts:
+        The options dictionary to load the salt loaders.
+    :param ~saltfactories.utils.functional.StateFunction state_func_wrapper_cls:
+        The class to use to wrap state functions
     """
 
-    def __init__(self, opts):
+    def __init__(self, opts, state_func_wrapper_cls=None):
         self.opts = opts
+        if state_func_wrapper_cls is None:
+            state_func_wrapper_cls = StateFunction
+        self.state_func_wrapper_cls = state_func_wrapper_cls
         self.context = {}
         self._original_opts = copy.deepcopy(opts)
         self._reset_state_funcs = [self.context.clear]
         self._reload_all_funcs = [self.reset_state]
         self._grains = None
-        self._utils = None
         self._modules = None
         self._pillar = None
         self._serializers = None
         self._states = None
+        self._utils = None
         if HAS_SALT_FEATURES:
             salt.features.setup_features(self.opts)
         self.reload_all()
@@ -59,8 +65,12 @@ class Loaders:
             except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                 log.warning("Failed to run '%s': %s", func.__name__, exc, exc_info=True)
         self.opts = copy.deepcopy(self._original_opts)
-        self._grains = self._utils = self._modules = None
-        self._pillar = self._serializers = self._states = None
+        self._grains = None
+        self._modules = None
+        self._pillar = None
+        self._serializers = None
+        self._states = None
+        self._utils = None
         self.opts["grains"] = self.grains
         self.refresh_pillar()
 
@@ -105,21 +115,28 @@ class Loaders:
             # execution modules directly. This was also how the non pytest test suite worked
             # Let's load all modules now
             _states._load_all()
-            # for funcname in list(_states):
-            #    _states[funcname]
 
             # Now, we proxy loaded modules through salt.modules.state.single
-            for module_name in list(_states.loaded_modules):
-                for func_name in list(_states.loaded_modules[module_name]):
-                    full_func_name = "{}.{}".format(module_name, func_name)
-                    replacement_function = StateFunction(self.modules.state.single, full_func_name)
-                    _states._dict[full_func_name] = replacement_function
-                    _states.loaded_modules[module_name][func_name] = replacement_function
-                    setattr(
-                        _states.loaded_modules[module_name],
-                        func_name,
-                        replacement_function,
-                    )
+            if isinstance(_states.loaded_modules, dict):
+                # Old Salt?
+                for module_name in list(_states.loaded_modules):
+                    for func_name in list(_states.loaded_modules[module_name]):
+                        full_func_name = "{}.{}".format(module_name, func_name)
+                        replacement_function = self.state_func_wrapper_cls(
+                            self.modules.state.single, full_func_name
+                        )
+                        _states._dict[full_func_name] = replacement_function
+                        _states.loaded_modules[module_name][func_name] = replacement_function
+                        setattr(
+                            _states.loaded_modules[module_name],
+                            func_name,
+                            replacement_function,
+                        )
+            else:
+                # Newer version of Salt where only one dictionary with the loaded
+                # functions is maintained
+                for name in _states:
+                    _states[name] = self.state_func_wrapper_cls(self.modules.state.single, name)
             self._states = _states
         return self._states
 
@@ -128,7 +145,7 @@ class Loaders:
         if self._pillar is None:
             self._pillar = salt.pillar.get_pillar(
                 self.opts,
-                self.opts["grains"],
+                self.grains,
                 self.opts["id"],
                 saltenv=self.opts["saltenv"],
                 pillarenv=self.opts.get("pillarenv"),
@@ -182,19 +199,23 @@ class StateResult:
     def comment(self):
         return self.full_return["comment"]
 
+    @property
+    def warnings(self):
+        return self.full_return.get("warnings") or []
+
     def __eq__(self, _):
         raise TypeError(
-            "Please assert comparissons with {}.filtered instead".format(self.__class__.__name__)
+            "Please assert comparisons with {}.filtered instead".format(self.__class__.__name__)
         )
 
     def __contains__(self, _):
         raise TypeError(
-            "Please assert comparissons with {}.filtered instead".format(self.__class__.__name__)
+            "Please assert comparisons with {}.filtered instead".format(self.__class__.__name__)
         )
 
     def __bool__(self):
         raise TypeError(
-            "Please assert comparissons with {}.filtered instead".format(self.__class__.__name__)
+            "Please assert comparisons with {}.filtered instead".format(self.__class__.__name__)
         )
 
 

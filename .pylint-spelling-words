@@ -142,6 +142,7 @@ spm
 sshd
 sshddaemon
 sshddaemonfactory
+statefunction
 statsprocesses
 stderr
 stdout
