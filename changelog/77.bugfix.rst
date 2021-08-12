@@ -1,0 +1,1 @@
+Adjust to the upcoming salt loader changes
