@@ -44,7 +44,7 @@ def format_callback_to_string(callback, args=None, kwargs=None):
     """
     Convert a callback, its arguments and keyword arguments to a string suitable for logging purposes
 
-    :param ~collections.abc.Callable callback:
+    :param ~collections.abc.Callable,str callback:
         The callback function
     :param list,tuple args:
         The callback arguments
@@ -52,10 +52,11 @@ def format_callback_to_string(callback, args=None, kwargs=None):
         The callback keyword arguments
     :rtype: str
     """
-    try:
-        callback_str = "{}(".format(callback.__qualname__)
-    except AttributeError:
-        callback_str = "{}(".format(callback.__name__)
+    if not isinstance(callback, str):
+        try:
+            callback_str = "{}(".format(callback.__qualname__)
+        except AttributeError:
+            callback_str = "{}(".format(callback.__name__)
     if args:
         callback_str += ", ".join([repr(arg) for arg in args])
     if kwargs:
