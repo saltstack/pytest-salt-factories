@@ -57,6 +57,8 @@ def format_callback_to_string(callback, args=None, kwargs=None):
             callback_str = "{}(".format(callback.__qualname__)
         except AttributeError:
             callback_str = "{}(".format(callback.__name__)
+    else:
+        callback_str = "{}(".format(callback)
     if args:
         callback_str += ", ".join([repr(arg) for arg in args])
     if kwargs:
