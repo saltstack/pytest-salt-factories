@@ -6,13 +6,16 @@ Salt functional testing support
 """
 import copy
 import logging
+import operator
 
 import attr
 import salt.loader
 import salt.pillar
 
+from saltfactories.utils import format_callback_to_string
+
 try:
-    import salt.features
+    import salt.features  # pylint: disable=ungrouped-imports
 
     HAS_SALT_FEATURES = True
 except ImportError:  # pragma: no cover
@@ -31,11 +34,8 @@ class Loaders:
         The class to use to wrap state functions
     """
 
-    def __init__(self, opts, state_func_wrapper_cls=None):
+    def __init__(self, opts):
         self.opts = opts
-        if state_func_wrapper_cls is None:
-            state_func_wrapper_cls = StateFunction
-        self.state_func_wrapper_cls = state_func_wrapper_cls
         self.context = {}
         self._original_opts = copy.deepcopy(opts)
         self._reset_state_funcs = [self.context.clear]
@@ -89,9 +89,39 @@ class Loaders:
     @property
     def modules(self):
         if self._modules is None:
-            self._modules = salt.loader.minion_mods(
+            _modules = salt.loader.minion_mods(
                 self.opts, context=self.context, utils=self.utils, initial_load=True
             )
+
+            if isinstance(_modules.loaded_modules, set):
+                # Newer version of Salt where only one dictionary with the loaded functions is maintained
+
+                class ModulesLoaderDict(_modules.mod_dict_class):
+                    def __setitem__(self, key, value):
+                        """
+                        We hijack __setitem__ so that we can replace specific state functions with a
+                        wrapper which will return a more pythonic data structure to assert against.
+                        """
+
+                        if key in (
+                            "state.single",
+                            "state.sls",
+                            "state.template",
+                            "state.template_str",
+                        ):
+                            if key == "state.single":
+                                wrapper_cls = StateResult
+                            else:
+                                wrapper_cls = MultiStateResult
+                            value = StateModuleFuncWrapper(value, wrapper_cls)
+                        return super().__setitem__(key, value)
+
+                loader_dict = _modules._dict.copy()
+                _modules._dict = ModulesLoaderDict()
+                for key, value in loader_dict.items():
+                    _modules._dict[key] = value
+
+            self._modules = _modules
         return self._modules
 
     @property
@@ -114,15 +144,15 @@ class Loaders:
             # does, we actually "proxy" the call through salt.modules.state.single instead of calling the state
             # execution modules directly. This was also how the non pytest test suite worked
             # Let's load all modules now
-            _states._load_all()
 
             # Now, we proxy loaded modules through salt.modules.state.single
             if isinstance(_states.loaded_modules, dict):
                 # Old Salt?
+                _states._load_all()
                 for module_name in list(_states.loaded_modules):
                     for func_name in list(_states.loaded_modules[module_name]):
                         full_func_name = "{}.{}".format(module_name, func_name)
-                        replacement_function = self.state_func_wrapper_cls(
+                        replacement_function = StateFunction(
                             self.modules.state.single, full_func_name
                         )
                         _states._dict[full_func_name] = replacement_function
@@ -133,10 +163,30 @@ class Loaders:
                             replacement_function,
                         )
             else:
-                # Newer version of Salt where only one dictionary with the loaded
-                # functions is maintained
-                for name in _states:
-                    _states[name] = self.state_func_wrapper_cls(self.modules.state.single, name)
+                # Newer version of Salt where only one dictionary with the loaded functions is maintained
+
+                class StatesLoaderDict(_states.mod_dict_class):
+                    def __init__(self, proxy_func, *args, **kwargs):
+                        super().__init__(*args, **kwargs)
+                        self.__proxy_func__ = proxy_func
+
+                    def __setitem__(self, name, func):
+                        """
+                        We hijack __setitem__ so that we can replace the loaded functions
+                        with a wrapper
+                        For state execution modules, because we'd have to almost copy/paste what
+                        ``salt.modules.state.single`` does, we actually "proxy" the call through
+                        ``salt.modules.state.single`` instead of calling the state execution
+                        modules directly. This was also how the non pytest test suite worked
+                        """
+                        func = StateFunction(self.__proxy_func__, name)
+                        return super().__setitem__(name, func)
+
+                loader_dict = _states._dict.copy()
+                _states._dict = StatesLoaderDict(self.modules.state.single)
+                for key, value in loader_dict.items():
+                    _states._dict[key] = value
+
             self._states = _states
         return self._states
 
@@ -184,6 +234,10 @@ class StateResult:
         return _filtered
 
     @property
+    def run_num(self):
+        return self.full_return["__run_num__"]
+
+    @property
     def name(self):
         return self.full_return["name"]
 
@@ -203,12 +257,10 @@ class StateResult:
     def warnings(self):
         return self.full_return.get("warnings") or []
 
-    def __eq__(self, _):
-        raise TypeError(
-            "Please assert comparisons with {}.filtered instead".format(self.__class__.__name__)
-        )
+    def __contains__(self, value):
+        return value in self.full_return
 
-    def __contains__(self, _):
+    def __eq__(self, _):
         raise TypeError(
             "Please assert comparisons with {}.filtered instead".format(self.__class__.__name__)
         )
@@ -225,19 +277,59 @@ class StateFunction:
     state_func = attr.ib()
 
     def __call__(self, *args, **kwargs):
-        name = None
-        if args and len(args) == 1:
-            name = args[0]
-        if name is not None and "name" in kwargs:
-            raise RuntimeError(
-                "Either pass 'name' as the single argument to the call or remove 'name' as a keyword argument"
-            )
-        if name is None:
-            name = kwargs.pop("name", None)
-        if name is None:
-            raise RuntimeError(
-                "'name' was not passed as the single argument to the function nor as a keyword argument"
-            )
-        log.info("Calling state.single(%s, name=%s, %s)", self.state_func, name, kwargs)
-        result = self.proxy_func(self.state_func, name=name, **kwargs)
-        return StateResult(result)
+        log.info(
+            "Calling %s",
+            format_callback_to_string("state.single", (self.state_func,) + args, kwargs),
+        )
+        return self.proxy_func(self.state_func, *args, **kwargs)
+
+
+@attr.s
+class MultiStateResult:
+    raw = attr.ib()
+    _structured = attr.ib(init=False)
+
+    @_structured.default
+    def _set_structured(self):
+        if self.failed:
+            return []
+        state_result = [StateResult({state_id: data}) for state_id, data in self.raw.items()]
+        return sorted(state_result, key=operator.attrgetter("run_num"))
+
+    def __iter__(self):
+        return iter(self._structured)
+
+    def __contains__(self, key):
+        for state_result in self:
+            if state_result.state_id == key:
+                return True
+        return False
+
+    def __getitem__(self, state_id_or_index):
+        if isinstance(state_id_or_index, int):
+            # We're trying to get the state run by index
+            return self._structured[state_id_or_index]
+        for state_result in self:
+            if state_result.state_id == state_id_or_index:
+                return state_result
+        raise KeyError("No state by the ID of '{}' was found".format(state_id_or_index))
+
+    @property
+    def failed(self):
+        return isinstance(self.raw, list)
+
+    @property
+    def errors(self):
+        if not self.failed:
+            return []
+        return list(self.raw)
+
+
+@attr.s(frozen=True)
+class StateModuleFuncWrapper:
+    func = attr.ib()
+    wrapper = attr.ib()
+
+    def __call__(self, *args, **kwargs):
+        ret = self.func(*args, **kwargs)
+        return self.wrapper(ret)
