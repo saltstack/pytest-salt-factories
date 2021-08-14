@@ -113,6 +113,7 @@ pyproject
 pytest
 pytest's
 pytestconfig
+pythonic
 pythonpath
 pyzmq
 qux
