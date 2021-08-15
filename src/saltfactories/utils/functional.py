@@ -93,7 +93,26 @@ class Loaders:
                 self.opts, context=self.context, utils=self.utils, initial_load=True
             )
 
-            if isinstance(_modules.loaded_modules, set):
+            if isinstance(_modules.loaded_modules, dict):
+                for func_name in ("single", "sls", "template", "template_str"):
+                    full_func_name = "state.{}".format(func_name)
+
+                    if func_name == "single":
+                        wrapper_cls = StateResult
+                    else:
+                        wrapper_cls = MultiStateResult
+                    replacement_function = StateModuleFuncWrapper(
+                        _modules[full_func_name], wrapper_cls
+                    )
+
+                    _modules._dict[full_func_name] = replacement_function
+                    _modules.loaded_modules["state"][func_name] = replacement_function
+                    setattr(
+                        _modules.loaded_modules["state"],
+                        func_name,
+                        replacement_function,
+                    )
+            else:
                 # Newer version of Salt where only one dictionary with the loaded functions is maintained
 
                 class ModulesLoaderDict(_modules.mod_dict_class):
