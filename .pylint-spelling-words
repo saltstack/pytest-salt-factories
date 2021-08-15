@@ -11,6 +11,7 @@ auth
 autoclass
 autodata
 autodoc
+autouse
 basename
 basepath
 baz
@@ -45,6 +46,7 @@ eg
 env
 environ
 envs
+errmsg
 exc
 exitcode
 factorydaemonscriptbase
@@ -84,6 +86,7 @@ maxdepth
 minify
 msg
 msgpack
+multistateresult
 mworker
 namespace
 netbsd
@@ -109,6 +112,7 @@ proxied
 psutil
 py
 pyc
+pydsl
 pyproject
 pytest
 pytest's
@@ -132,6 +136,7 @@ saltmaster
 saltminion
 saltproxyminion
 saltsyndic
+serializers
 shellresult
 sigterm
 sitecustomise
@@ -144,6 +149,8 @@ sshd
 sshddaemon
 sshddaemonfactory
 statefunction
+stateresult
+staterun
 statsprocesses
 stderr
 stdout
@@ -161,6 +168,7 @@ systemdsaltdaemonimpl
 teardown
 tempfile
 tempfiles
+testfile
 testname
 tmp
 tmpdir

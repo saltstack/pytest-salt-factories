@@ -30,8 +30,31 @@ class Loaders:
 
     :param dict opts:
         The options dictionary to load the salt loaders.
-    :param ~saltfactories.utils.functional.StateFunction state_func_wrapper_cls:
-        The class to use to wrap state functions
+
+    Example usage:
+
+    .. code-block:: python
+
+        import salt.config
+        from saltfactories.utils.functional import Loaders
+
+        @pytest.fixture(scope="module")
+        def minion_opts():
+            return salt.config.minion_config(None)
+
+        @pytest.fixture(scope="module")
+        def loaders(minion_opts):
+            return Loaders(minion_opts)
+
+
+        @pytest.fixture(autouse=True)
+        def reset_loaders_state(loaders):
+            try:
+                # Run the tests
+                yield
+            finally:
+                # Reset the loaders state
+                loaders.reset_state()
     """
 
     def __init__(self, opts):
@@ -76,18 +99,27 @@ class Loaders:
 
     @property
     def grains(self):
+        """
+        The grains loaded by the salt loader
+        """
         if self._grains is None:
             self._grains = salt.loader.grains(self.opts, context=self.context)
         return self._grains
 
     @property
     def utils(self):
+        """
+        The utils loaded by the salt loader
+        """
         if self._utils is None:
             self._utils = salt.loader.utils(self.opts, context=self.context)
         return self._utils
 
     @property
     def modules(self):
+        """
+        The execution modules loaded by the salt loader
+        """
         if self._modules is None:
             _modules = salt.loader.minion_mods(
                 self.opts, context=self.context, utils=self.utils, initial_load=True
@@ -145,12 +177,18 @@ class Loaders:
 
     @property
     def serializers(self):
+        """
+        The serializers loaded by the salt loader
+        """
         if self._serializers is None:
             self._serializers = salt.loader.serializers(self.opts)
         return self._serializers
 
     @property
     def states(self):
+        """
+        The state modules loaded by the salt loader
+        """
         if self._states is None:
             _states = salt.loader.states(
                 self.opts,
@@ -211,6 +249,9 @@ class Loaders:
 
     @property
     def pillar(self):
+        """
+        The pillar loaded by the salt loader
+        """
         if self._pillar is None:
             self._pillar = salt.pillar.get_pillar(
                 self.opts,
@@ -228,6 +269,19 @@ class Loaders:
 
 @attr.s
 class StateResult:
+    """
+    This class wraps a single salt state return into a more pythonic object in order to simplify assertions
+
+    :param dict raw:
+        A single salt state return result
+
+    .. code-block:: python
+
+        def test_user_absent(loaders):
+            ret = loaders.states.user.absent(name=random_string("account-", uppercase=False))
+            assert ret.result is True
+    """
+
     raw = attr.ib()
     state_id = attr.ib(init=False)
     full_return = attr.ib(init=False)
@@ -254,30 +308,51 @@ class StateResult:
 
     @property
     def run_num(self):
-        return self.full_return["__run_num__"]
+        """
+        The ``__run_num__`` key on the full state return dictionary
+        """
+        return self.full_return["__run_num__"] or 0
 
     @property
     def name(self):
+        """
+        The ``name`` key on the full state return dictionary
+        """
         return self.full_return["name"]
 
     @property
     def result(self):
+        """
+        The ``result`` key on the full state return dictionary
+        """
         return self.full_return["result"]
 
     @property
     def changes(self):
+        """
+        The ``changes`` key on the full state return dictionary
+        """
         return self.full_return["changes"]
 
     @property
     def comment(self):
+        """
+        The ``comment`` key on the full state return dictionary
+        """
         return self.full_return["comment"]
 
     @property
     def warnings(self):
+        """
+        The ``warnings`` key on the full state return dictionary
+        """
         return self.full_return.get("warnings") or []
 
-    def __contains__(self, value):
-        return value in self.full_return
+    def __contains__(self, key):
+        """
+        Checks for the existence of ``key`` in the full state return dictionary
+        """
+        return key in self.full_return
 
     def __eq__(self, _):
         raise TypeError(
@@ -292,6 +367,11 @@ class StateResult:
 
 @attr.s
 class StateFunction:
+    """
+    Simple wrapper around Salt's state execution module functions which actually proxies the call
+    through Salt's ``state.single`` execution module
+    """
+
     proxy_func = attr.ib(repr=False)
     state_func = attr.ib()
 
@@ -305,6 +385,56 @@ class StateFunction:
 
 @attr.s
 class MultiStateResult:
+    """
+    This class wraps multiple salt state returns, for example, running the ``state.sls`` execution module,
+    into a more pythonic object in order to simplify assertions
+
+    :param dict,list raw:
+        The multiple salt state returns result, a dictionary on success or a list on failure
+
+    Example usage on the test suite:
+
+    .. code-block:: python
+
+        def test_issue_1876_syntax_error(loaders, state_tree, tmp_path):
+            testfile = tmp_path / "issue-1876.txt"
+            sls_contents = '''
+            {}:
+              file:
+                - managed
+                - source: salt://testfile
+
+              file.append:
+                - text: foo
+            '''.format(
+                testfile
+            )
+            with pytest.helpers.temp_file("issue-1876.sls", sls_contents, state_tree):
+                ret = loaders.modules.state.sls("issue-1876")
+                assert ret.failed
+                errmsg = (
+                    "ID '{}' in SLS 'issue-1876' contains multiple state declarations of the"
+                    " same type".format(testfile)
+                )
+                assert errmsg in ret.errors
+
+
+        def test_pydsl(loaders, state_tree, tmp_path):
+            testfile = tmp_path / "testfile"
+            sls_contents = '''
+            #!pydsl
+
+            state("{}").file("touch")
+            '''.format(
+                testfile
+            )
+            with pytest.helpers.temp_file("pydsl.sls", sls_contents, state_tree):
+                ret = loaders.modules.state.sls("pydsl")
+                for staterun in ret:
+                    assert staterun.result is True
+                assert testfile.exists()
+    """
+
     raw = attr.ib()
     _structured = attr.ib(init=False)
 
@@ -335,10 +465,16 @@ class MultiStateResult:
 
     @property
     def failed(self):
+        """
+        Return ``True`` or ``False`` if the multiple state run was not successful
+        """
         return isinstance(self.raw, list)
 
     @property
     def errors(self):
+        """
+        Return the list of errors in case the multiple state run was not successful
+        """
         if not self.failed:
             return []
         return list(self.raw)
@@ -346,6 +482,17 @@ class MultiStateResult:
 
 @attr.s(frozen=True)
 class StateModuleFuncWrapper:
+    """
+    This class simply wraps a single or multiple state returns into a more pythonic object,
+    :py:class:`~saltfactories.utils.functional.StateResult` or
+    py:class:`~saltfactories.utils.functional.MultiStateResult`
+
+    :param callable func:
+        A salt loader function
+    :param ~saltfactories.utils.functional.StateResult,~saltfactories.utils.functional.MultiStateResult wrapper:
+        The wrapper to use for the return of the salt loader function's return
+    """
+
     func = attr.ib()
     wrapper = attr.ib()
 
