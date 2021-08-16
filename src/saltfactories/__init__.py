@@ -44,7 +44,7 @@ VERSION_INFO_REGEX = re.compile(
 )
 try:
     __version_info__ = tuple(
-        [int(p) if p.isdigit() else p for p in VERSION_INFO_REGEX.match(__version__).groups() if p]
+        int(p) if p.isdigit() else p for p in VERSION_INFO_REGEX.match(__version__).groups() if p
     )
 except AttributeError:  # pragma: no cover
     __version_info__ = (-1, -1, -1)

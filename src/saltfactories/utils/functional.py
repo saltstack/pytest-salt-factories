@@ -38,9 +38,11 @@ class Loaders:
         import salt.config
         from saltfactories.utils.functional import Loaders
 
+
         @pytest.fixture(scope="module")
         def minion_opts():
             return salt.config.minion_config(None)
+
 
         @pytest.fixture(scope="module")
         def loaders(minion_opts):
@@ -385,7 +387,7 @@ class StateFunction:
 
 @attr.s
 class MultiStateResult:
-    """
+    '''
     This class wraps multiple salt state returns, for example, running the ``state.sls`` execution module,
     into a more pythonic object in order to simplify assertions
 
@@ -398,7 +400,7 @@ class MultiStateResult:
 
         def test_issue_1876_syntax_error(loaders, state_tree, tmp_path):
             testfile = tmp_path / "issue-1876.txt"
-            sls_contents = '''
+            sls_contents = """
             {}:
               file:
                 - managed
@@ -406,7 +408,7 @@ class MultiStateResult:
 
               file.append:
                 - text: foo
-            '''.format(
+            """.format(
                 testfile
             )
             with pytest.helpers.temp_file("issue-1876.sls", sls_contents, state_tree):
@@ -421,11 +423,11 @@ class MultiStateResult:
 
         def test_pydsl(loaders, state_tree, tmp_path):
             testfile = tmp_path / "testfile"
-            sls_contents = '''
+            sls_contents = """
             #!pydsl
 
             state("{}").file("touch")
-            '''.format(
+            """.format(
                 testfile
             )
             with pytest.helpers.temp_file("pydsl.sls", sls_contents, state_tree):
@@ -433,7 +435,7 @@ class MultiStateResult:
                 for staterun in ret:
                     assert staterun.result is True
                 assert testfile.exists()
-    """
+    '''
 
     raw = attr.ib()
     _structured = attr.ib(init=False)

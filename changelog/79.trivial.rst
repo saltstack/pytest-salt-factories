@@ -1,0 +1,6 @@
+Update to latest versions on some pre-commit hooks
+
+* ``pyupgrade``: 2.23.3
+* ``reorder_python_imports``: 2.6.0
+* ``black``: 21.b7
+* ``blacken-docs``: 1.10.0
