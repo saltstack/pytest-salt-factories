@@ -11,6 +11,7 @@ import attr
 
 from saltfactories.bases import Daemon
 from saltfactories.exceptions import FactoryFailure
+from saltfactories.utils import platform
 from saltfactories.utils import ports
 from saltfactories.utils import running_username
 from saltfactories.utils import socket
@@ -97,7 +98,8 @@ class Sshd(Daemon):
                 config_lines.append("{} {}\n".format(key, value))
 
             # Let's generate the host keys
-            self._generate_server_dsa_key()
+            if platform.is_fips_enabled() is False:
+                self._generate_server_dsa_key()
             self._generate_server_ecdsa_key()
             self._generate_server_ed25519_key()
             for host_key in pathlib.Path(self.config_dir).glob("ssh_host_*_key"):

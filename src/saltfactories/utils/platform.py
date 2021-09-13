@@ -8,6 +8,9 @@ saltfactories.utils.platform
 
 Platform related utilities
 """
+import pathlib
+import shutil
+import subprocess
 import sys
 
 import salt.utils.platform
@@ -153,4 +156,38 @@ def on_platforms(
     if aarch64 and is_aarch64():
         return True
 
+    return False
+
+
+def is_fips_enabled():
+    """
+    Check is FIPS is enabled
+
+    :return bool: Return true when enabled
+    """
+    if pathlib.Path("/etc/system-fips").exists():
+        return True
+    kernel_fips_enabled_path = pathlib.Path("/proc/sys/crypto/fips_enabled")
+    if kernel_fips_enabled_path.exists() and kernel_fips_enabled_path.read_text().strip() == "1":
+        return True
+    sysctl_path = shutil.which("sysctl")
+    if not sysctl_path:
+        return False
+    ret = subprocess.run(
+        [sysctl_path, "crypto.fips_enabled"],
+        check=False,
+        shell=False,
+        stdout=subprocess.PIPE,
+        universal_newlines=True,
+    )
+    if ret.returncode == 0:
+        stripped_output = ret.stdout.strip()
+        if not stripped_output:
+            # No output?
+            return False
+        if "=" not in stripped_output:
+            # Don't know how to parse this
+            return False
+        if stripped_output.split("=")[-1].strip() == "1":
+            return True
     return False
