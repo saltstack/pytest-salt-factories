@@ -335,7 +335,7 @@ class SaltStateTree(SaltEnvs):
             # Given the example mapping shown above ...
 
             with state_tree.base.temp_file("foo.sls") as path:
-                assert path == "/path/to/base/env/foo.sls"
+                assert str(path) == "/path/to/base/env/foo.sls"
     """
 
 
@@ -399,5 +399,5 @@ class SaltPillarTree(SaltEnvs):
             # Given the example mapping shown above ...
 
             with state_tree.base.temp_file("foo.sls") as path:
-                assert path == "/path/to/base/env/foo.sls"
+                assert str(path) == "/path/to/base/env/foo.sls"
     """
