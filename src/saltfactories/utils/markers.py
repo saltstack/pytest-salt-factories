@@ -582,6 +582,42 @@ def evaluate_markers(item):
             item._skipped_by_mark = True
             pytest.skip(reason)
 
+    skip_on_spawning_platform_marker = item.get_closest_marker("skip_on_spawning_platform")
+    if skip_on_spawning_platform_marker is not None:
+        if skip_on_spawning_platform_marker.args:
+            raise pytest.UsageError(
+                "The skip_on_spawning_platform marker does not accept any arguments"
+            )
+        reason = skip_on_spawning_platform_marker.kwargs.pop("reason", None)
+        if skip_on_spawning_platform_marker.kwargs:
+            raise pytest.UsageError(
+                "The skip_on_spawning_platform marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Skipped on spawning platforms"
+        if saltfactories.utils.platform.is_spawning_platform():
+            item._skipped_by_mark = True
+            pytest.skip(reason)
+
+    skip_unless_on_spawning_platform_marker = item.get_closest_marker(
+        "skip_unless_on_spawning_platform"
+    )
+    if skip_unless_on_spawning_platform_marker is not None:
+        if skip_unless_on_spawning_platform_marker.args:
+            raise pytest.UsageError(
+                "The skip_unless_on_spawning_platform marker does not accept any arguments"
+            )
+        reason = skip_unless_on_spawning_platform_marker.kwargs.pop("reason", None)
+        if skip_unless_on_spawning_platform_marker.kwargs:
+            raise pytest.UsageError(
+                "The skip_unless_on_spawning_platform marker only accepts 'reason' as a keyword argument."
+            )
+        if reason is None:
+            reason = "Platform does not default multiprocessing to spawn, skipped"
+        if not saltfactories.utils.platform.is_spawning_platform():
+            item._skipped_by_mark = True
+            pytest.skip(reason)
+
     skip_on_platforms_marker = item.get_closest_marker("skip_on_platforms")
     if skip_on_platforms_marker is not None:
         if skip_on_platforms_marker.args:
