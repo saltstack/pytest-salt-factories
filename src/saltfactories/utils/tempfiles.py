@@ -271,7 +271,7 @@ class SaltEnvs:
             if not isinstance(envtree, SaltEnv):
                 if isinstance(envtree, str):
                     envtree = [envtree]
-                self.envs[envname] = SaltEnv(saltenv=envname, paths=envtree)
+                self.envs[envname] = SaltEnv(name=envname, paths=envtree)
             setattr(self, envname, self.envs[envname])
 
 
