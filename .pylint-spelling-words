@@ -134,7 +134,9 @@ saltenv
 saltfactories
 saltmaster
 saltminion
+saltpillartree
 saltproxyminion
+saltstatetree
 saltsyndic
 serializers
 shellresult
