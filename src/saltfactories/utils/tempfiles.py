@@ -188,7 +188,7 @@ class SaltEnv:
     This helper class represent a Salt Environment, either for states or pillar.
     It's base purpose it to handle temporary file creation/deletion during testing.
 
-    :keyword str saltenv:
+    :keyword str name:
         The salt environment name, commonly, 'base' or 'prod'
     :keyword list paths:
         The salt environment list of paths.
@@ -200,7 +200,7 @@ class SaltEnv:
             attribute.
     """
 
-    saltenv = attr.ib()
+    name = attr.ib()
     paths = attr.ib(default=attr.Factory(list))
 
     def __attrs_post_init__(self):
@@ -318,8 +318,8 @@ class SaltStateTree(SaltEnvs):
         salt_config = {
             # ... other salt config entries ...
             "file_roots": {
-                state_tree.base.name: state_tree.base.paths,
-                state_tree.prod.name: state_tree.prod.paths,
+                state_tree.base.name: [str(p) for p in state_tree.base.paths],
+                state_tree.prod.name: [str(p) for p in state_tree.prod.paths],
             },
             # ... other salt config entries ...
         }
@@ -382,8 +382,8 @@ class SaltPillarTree(SaltEnvs):
         salt_config = {
             # ... other salt config entries ...
             "pillar_roots": {
-                pillar_tree.base.name: pillar_tree.base.paths,
-                pillar_tree.prod.name: pillar_tree.prod.paths,
+                pillar_tree.base.name: [str(p) for p in pillar_tree.base.paths],
+                pillar_tree.prod.name: [str(p) for p in pillar_tree.prod.paths],
             },
             # ... other salt config entries ...
         }
