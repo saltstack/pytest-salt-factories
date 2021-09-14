@@ -490,6 +490,46 @@ Salt factories ships with quite a few markers, skip markers.
 
 
 
+.. _markers.skip_on_spawning_platform:
+
+``skip_on_spawning_platform``
+=============================
+
+.. py:decorator:: pytest.mark.skip_on_spawning_platform(reason=None)
+
+    :keyword str reason: The skip reason
+
+    Skip test if test suite is running on a platfor which defaults
+    multiprocessing to ``spawn``.
+
+    .. code-block:: python
+
+        @pytest.mark.skip_on_spawning_platform
+        def test_func():
+            assert True
+
+
+
+.. _markers.skip_unless_on_spawning_platform:
+
+``skip_unless_on_spawning_platform``
+====================================
+
+.. py:decorator:: pytest.mark.skip_unless_on_spawning_platform(reason=None)
+
+    :keyword str reason: The skip reason
+
+    Skip test unless the test suite is not running on a platform which
+    defaults multiprocessing to ``spawn``.
+
+    .. code-block:: python
+
+        @pytest.mark.skip_unless_on_spawning_platform
+        def test_func():
+            assert True
+
+
+
 .. _markers.skip_on_platforms:
 
 ``skip_on_platforms``
@@ -507,6 +547,9 @@ Salt factories ships with quite a few markers, skip markers.
     :keyword bool openbsd: Skip on openbsd if :py:const:`True`
     :keyword bool aix: Skip on aix if :py:const:`True`
     :keyword bool aarch64: Skip on aarch64 if :py:const:`True`
+    :keyword bool spawning:
+        Skip on platforms for which multiprocessing defaults to ``spawn``
+        if :py:const:`True`
     :keyword str reason: The skip reason
 
     Pass :py:const:`True` to any of the platforms defined as keyword arguments to skip the test when running on that
@@ -537,6 +580,9 @@ Salt factories ships with quite a few markers, skip markers.
     :keyword bool openbsd: Skip unless on openbsd if :py:const:`True`
     :keyword bool aix: Skip unless on aix if :py:const:`True`
     :keyword bool aarch64: Skip on aarch64 if :py:const:`True`
+    :keyword bool spawning:
+        Skip on platforms for which multiprocessing does not default to
+        ``spawn`` if :py:const:`True`
     :keyword str reason: The skip reason
 
     Pass :py:const:`True` to any of the platforms defined as keyword arguments to skip the test when not running on

@@ -157,15 +157,23 @@ def pytest_configure(config):
     )
     config.addinivalue_line(
         "markers",
+        "skip_on_spawning_platform: Skip test on spawning platforms",
+    )
+    config.addinivalue_line(
+        "markers",
+        "skip_unless_on_spawning_platform: Skip test unless on spawning platforms",
+    )
+    config.addinivalue_line(
+        "markers",
         "skip_on_platforms(windows=False, linux=False, darwin=False, sunos=False, smartos=False, freebsd=False, "
-        "netbsd=False, openbsd=False, aix=False, aarch64=False): Pass True to one or more platform names to get the test skipped "
-        "on those platforms",
+        "netbsd=False, openbsd=False, aix=False, aarch64=False, spawning=False): Pass True to one or more keywords "
+        "to get the test skipped.",
     )
     config.addinivalue_line(
         "markers",
         "skip_unless_on_platforms(windows=False, linux=False, darwin=False, sunos=False, smartos=False, freebsd=False, "
-        "netbsd=False, openbsd=False, aix=False, aarch64=False): Pass True to one or more platform names to get the test skipped "
-        "unless the chosen platforms match",
+        "netbsd=False, openbsd=False, aix=False, aarch64=False, spawning=False): Pass True to one or more keywords "
+        "to get the test skipped unless matched.",
     )
     config.addinivalue_line(
         "markers",

@@ -8,6 +8,7 @@ saltfactories.utils.platform
 
 Platform related utilities
 """
+import multiprocessing
 import pathlib
 import shutil
 import subprocess
@@ -100,6 +101,17 @@ def is_aarch64():
         return sys.platform.startswith("aarch64")
 
 
+def is_spawning_platform():
+    """
+    Simple function to return if host is AArch64 or not
+    """
+    try:
+        return salt.utils.platform.spawning_platform()
+    except AttributeError:
+        # Salt < 3004
+        return multiprocessing.get_start_method(allow_none=False) == "spawn"
+
+
 def on_platforms(
     windows=False,
     linux=False,
@@ -111,6 +123,7 @@ def on_platforms(
     openbsd=False,
     aix=False,
     aarch64=False,
+    spawning=False,
 ):
     """
     Check to see if we're on one of the provided platforms.
@@ -125,6 +138,9 @@ def on_platforms(
     :keyword bool openbsd: When :py:const:`True`, check if running on OpenBSD.
     :keyword bool aix: When :py:const:`True`, check if running on AIX.
     :keyword bool aarch64: When :py:const:`True`, check if running on AArch64.
+    :keyword bool spawning:
+        When :py:const:`True`, check if running on a platform which defaults
+        multiprocessing to spawn
     """
     if windows and is_windows():
         return True
@@ -154,6 +170,9 @@ def on_platforms(
         return True
 
     if aarch64 and is_aarch64():
+        return True
+
+    if spawning and is_spawning_platform():
         return True
 
     return False
