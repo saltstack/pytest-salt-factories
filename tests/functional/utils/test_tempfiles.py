@@ -118,7 +118,7 @@ def test_temp_file_contents(strip_first_newline):
         assert tpath.read_text() == expected_contents
 
 
-def test_salt_env_temp_file(tmp_path):
+def test_saltenvs_temp_file(tmp_path):
     with tempfiles.temp_directory("state-tree", basepath=tmp_path) as state_tree_path:
         with tempfiles.temp_directory(
             "base1", basepath=state_tree_path
@@ -146,3 +146,19 @@ def test_salt_env_temp_file(tmp_path):
                 # We have to cast to a string because on Py3.5, the path might be an instance of pathlib2.Path
                 relpath = top_file_path.relative_to(str(base_env_path_1))
                 assert relpath
+
+
+def test_saltenvs_to_salt_config(tmp_path):
+    with tempfiles.temp_directory("state-tree", basepath=tmp_path) as state_tree_path:
+        with tempfiles.temp_directory(
+            "base1", basepath=state_tree_path
+        ) as base_env_path_1, tempfiles.temp_directory(
+            "base2", basepath=state_tree_path
+        ) as base_env_path_2:
+            saltenvs = tempfiles.SaltEnvs(envs={"base": [base_env_path_1, base_env_path_2]})
+            config = saltenvs.to_salt_config()
+            assert isinstance(config, dict)
+            for envname, paths in config.items():
+                assert isinstance(envname, str)
+                for path in paths:
+                    assert isinstance(path, str)

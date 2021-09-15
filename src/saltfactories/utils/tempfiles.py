@@ -231,6 +231,13 @@ class SaltEnv:
             strip_first_newline=strip_first_newline,
         )
 
+    def to_salt_config(self):
+        """
+        Returns a dictionary of the right types to update the salt configuration
+        :return dict:
+        """
+        return {self.name: [str(p) for p in self.paths]}
+
 
 @attr.s(kw_only=True)
 class SaltEnvs:
@@ -273,6 +280,16 @@ class SaltEnvs:
                     envtree = [envtree]
                 self.envs[envname] = SaltEnv(name=envname, paths=envtree)
             setattr(self, envname, self.envs[envname])
+
+    def to_salt_config(self):
+        """
+        Returns a dictionary of the right types to update the salt configuration
+        :return dict:
+        """
+        config = {}
+        for env in self.envs.values():
+            config.update(env.to_salt_config())
+        return config
 
 
 @attr.s(kw_only=True)

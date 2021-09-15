@@ -1,0 +1,1 @@
+Add ``to_salt_config`` method to ``SaltEnv`` and ``SaltEnvs``. This will simplify augmenting the salt configuration dictionary.
