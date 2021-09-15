@@ -334,10 +334,7 @@ class SaltStateTree(SaltEnvs):
         # Using the state_tree defined above:
         salt_config = {
             # ... other salt config entries ...
-            "file_roots": {
-                state_tree.base.name: [str(p) for p in state_tree.base.paths],
-                state_tree.prod.name: [str(p) for p in state_tree.prod.paths],
-            },
+            "file_roots": state_tree.to_salt_config()
             # ... other salt config entries ...
         }
 
@@ -398,10 +395,7 @@ class SaltPillarTree(SaltEnvs):
         # Using the pillar_tree defined above:
         salt_config = {
             # ... other salt config entries ...
-            "pillar_roots": {
-                pillar_tree.base.name: [str(p) for p in pillar_tree.base.paths],
-                pillar_tree.prod.name: [str(p) for p in pillar_tree.prod.paths],
-            },
+            "pillar_roots": pillar_tree.to_salt_config()
             # ... other salt config entries ...
         }
 
