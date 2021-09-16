@@ -148,15 +148,32 @@ def test_saltenvs_temp_file(tmp_path):
                 assert relpath
 
 
-def test_saltenvs_as_dict(tmp_path):
-    with tempfiles.temp_directory("state-tree", basepath=tmp_path) as state_tree_path:
+@pytest.mark.parametrize(
+    "klass",
+    (
+        tempfiles.SaltEnvs,
+        tempfiles.SaltPillarTree,
+        tempfiles.SaltStateTree,
+    ),
+)
+def test_saltenvs_as_dict(tmp_path, klass):
+    with tempfiles.temp_directory("tree", basepath=tmp_path) as tree_path:
         with tempfiles.temp_directory(
-            "base1", basepath=state_tree_path
+            "base1", basepath=tree_path
         ) as base_env_path_1, tempfiles.temp_directory(
-            "base2", basepath=state_tree_path
-        ) as base_env_path_2:
-            saltenvs = tempfiles.SaltEnvs(envs={"base": [base_env_path_1, base_env_path_2]})
-            config = saltenvs.as_dict()
+            "base2", basepath=tree_path
+        ) as base_env_path_2, tempfiles.temp_directory(
+            "prod1", basepath=tree_path
+        ) as prod_env_path_1, tempfiles.temp_directory(
+            "prod2", basepath=tree_path
+        ) as prod_env_path_2:
+            envs = klass(
+                envs={
+                    "base": [base_env_path_1, base_env_path_2],
+                    "prod": [prod_env_path_1, prod_env_path_2],
+                }
+            )
+            config = envs.as_dict()
             assert isinstance(config, dict)
             for envname, paths in config.items():
                 assert isinstance(envname, str)
