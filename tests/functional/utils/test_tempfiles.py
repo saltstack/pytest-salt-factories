@@ -148,7 +148,7 @@ def test_saltenvs_temp_file(tmp_path):
                 assert relpath
 
 
-def test_saltenvs_to_salt_config(tmp_path):
+def test_saltenvs_as_dict(tmp_path):
     with tempfiles.temp_directory("state-tree", basepath=tmp_path) as state_tree_path:
         with tempfiles.temp_directory(
             "base1", basepath=state_tree_path
@@ -156,7 +156,7 @@ def test_saltenvs_to_salt_config(tmp_path):
             "base2", basepath=state_tree_path
         ) as base_env_path_2:
             saltenvs = tempfiles.SaltEnvs(envs={"base": [base_env_path_1, base_env_path_2]})
-            config = saltenvs.to_salt_config()
+            config = saltenvs.as_dict()
             assert isinstance(config, dict)
             for envname, paths in config.items():
                 assert isinstance(envname, str)

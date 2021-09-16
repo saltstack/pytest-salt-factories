@@ -231,7 +231,7 @@ class SaltEnv:
             strip_first_newline=strip_first_newline,
         )
 
-    def to_salt_config(self):
+    def as_dict(self):
         """
         Returns a dictionary of the right types to update the salt configuration
         :return dict:
@@ -281,14 +281,14 @@ class SaltEnvs:
                 self.envs[envname] = SaltEnv(name=envname, paths=envtree)
             setattr(self, envname, self.envs[envname])
 
-    def to_salt_config(self):
+    def as_dict(self):
         """
         Returns a dictionary of the right types to update the salt configuration
         :return dict:
         """
         config = {}
         for env in self.envs.values():
-            config.update(env.to_salt_config())
+            config.update(env.as_dict())
         return config
 
 
@@ -334,7 +334,7 @@ class SaltStateTree(SaltEnvs):
         # Using the state_tree defined above:
         salt_config = {
             # ... other salt config entries ...
-            "file_roots": state_tree.to_salt_config()
+            "file_roots": state_tree.as_dict()
             # ... other salt config entries ...
         }
 
@@ -395,7 +395,7 @@ class SaltPillarTree(SaltEnvs):
         # Using the pillar_tree defined above:
         salt_config = {
             # ... other salt config entries ...
-            "pillar_roots": pillar_tree.to_salt_config()
+            "pillar_roots": pillar_tree.as_dict()
             # ... other salt config entries ...
         }
 
