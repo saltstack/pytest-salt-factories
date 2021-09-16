@@ -1,0 +1,1 @@
+Rename ``SaltEnv.to_salt_config()`` to ``SaltEnv.as_dict()``
