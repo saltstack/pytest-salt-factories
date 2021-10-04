@@ -9,8 +9,8 @@ import os
 import tempfile
 
 import pytest
+import pytestskipmarkers.utils.platform
 
-import saltfactories.utils.platform
 import saltfactories.utils.tempfiles
 
 log = logging.getLogger(__name__)
@@ -21,9 +21,9 @@ def pytest_tempdir_temproot():
     # Avoid ${TMPDIR} and gettempdir() on MacOS as they yield a base path too long
     # for unix sockets: ``error: AF_UNIX path too long``
     # Gentoo Portage prefers ebuild tests are rooted in ${TMPDIR}
-    if saltfactories.utils.platform.is_windows():
+    if pytestskipmarkers.utils.platform.is_windows():
         tempdir = "C:/Windows/Temp"
-    elif saltfactories.utils.platform.is_darwin():
+    elif pytestskipmarkers.utils.platform.is_darwin():
         tempdir = "/tmp"
     else:
         tempdir = os.environ.get("TMPDIR") or tempfile.gettempdir()

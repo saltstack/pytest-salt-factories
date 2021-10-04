@@ -8,11 +8,11 @@ import time
 import attr
 import psutil
 import pytest
+from pytestskipmarkers.utils import platform
 
 from saltfactories.bases import Daemon
 from saltfactories.exceptions import FactoryNotRunning
 from saltfactories.exceptions import FactoryNotStarted
-from saltfactories.utils import platform
 from saltfactories.utils.processes import _get_cmdline
 
 PROCESS_START_TIMEOUT = 2

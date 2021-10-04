@@ -22,14 +22,14 @@ import salt.utils.files
 import salt.utils.path
 import salt.utils.verify
 import salt.utils.yaml
+from pytestskipmarkers.utils import platform
+from pytestskipmarkers.utils import ports
 from salt.utils.immutabletypes import freeze
 
 from saltfactories.exceptions import FactoryNotRunning
 from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.exceptions import FactoryTimeout
 from saltfactories.utils import format_callback_to_string
-from saltfactories.utils import platform
-from saltfactories.utils import ports
 from saltfactories.utils import running_username
 from saltfactories.utils import time
 from saltfactories.utils.processes import ProcessResult

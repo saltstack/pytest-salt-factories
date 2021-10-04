@@ -1,13 +1,12 @@
-import sys
-
 import pytest
 
 from saltfactories.utils import random_string
 
-pytestmark = pytest.mark.skipif(
-    sys.platform.lower().startswith("win"),
-    reason="Disabled on windows because of multiprocessing pickle spawning issues",
-)
+pytestmark = [
+    pytest.mark.skip_on_windows(
+        reason="Disabled on windows because of multiprocessing pickle spawning issues",
+    ),
+]
 
 
 @pytest.fixture(scope="module")

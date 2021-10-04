@@ -9,17 +9,17 @@ import copy
 import logging
 import pathlib
 import shutil
-import sys
 
 import attr
 import salt.config
 import salt.utils.dictupdate
+from pytestskipmarkers.utils import platform
+from pytestskipmarkers.utils import ports
 
 from saltfactories import cli
 from saltfactories.bases import SaltDaemon
 from saltfactories.bases import SystemdSaltDaemonImpl
 from saltfactories.utils import cli_scripts
-from saltfactories.utils import ports
 from saltfactories.utils.tempfiles import SaltPillarTree
 from saltfactories.utils.tempfiles import SaltStateTree
 
@@ -221,7 +221,7 @@ class SaltProxyMinion(SaltDaemon):
 
     def get_base_script_args(self):
         script_args = super().get_base_script_args()
-        if sys.platform.startswith("win") is False:
+        if platform.is_windows() is False:
             script_args.append("--disable-keepalive")
         return script_args
 

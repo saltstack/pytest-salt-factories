@@ -9,9 +9,9 @@ import attr
 import msgpack
 import pytest
 import zmq
+from pytestskipmarkers.utils import platform
+from pytestskipmarkers.utils import ports
 
-from saltfactories.utils import platform
-from saltfactories.utils import ports
 from saltfactories.utils import time
 
 log = logging.getLogger(__name__)

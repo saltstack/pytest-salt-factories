@@ -1,0 +1,1 @@
+Switch to `pytest-skip-markers <https://pypi.org/project/pytest-skip-markers>`_.
