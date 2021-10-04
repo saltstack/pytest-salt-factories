@@ -409,6 +409,7 @@ def changelog(session, draft):
     requirements_file = os.path.join("requirements", "changelog.txt")
     install_command = ["--progress-bar=off", "-r", requirements_file]
     session.install(*install_command, silent=PIP_INSTALL_SILENT)
+    session.install("-e", ".", silent=PIP_INSTALL_SILENT)
 
     version = session.run(
         "python",
