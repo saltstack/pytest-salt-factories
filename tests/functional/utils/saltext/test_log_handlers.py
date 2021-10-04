@@ -4,8 +4,8 @@ from datetime import datetime
 from datetime import timedelta
 
 import pytest
+import pytestskipmarkers.utils.platform
 
-import saltfactories.utils.platform
 from saltfactories.bases import Process
 from saltfactories.exceptions import FactoryTimeout
 
@@ -155,9 +155,9 @@ def test_all_messages_received_multiprocessing(tempfiles, salt_factories, caplog
     # The purpose of this test is just to make sure if forked/spawned processes inherit the
     # ZMQHandler and continue logging
     if fork_method == "fork":
-        if saltfactories.utils.platform.is_windows():
+        if pytestskipmarkers.utils.platform.is_windows():
             pytest.skip("Start method '{}' is not supported on Windows".format(fork_method))
-        if sys.version_info >= (3, 8) and saltfactories.utils.platform.is_darwin():
+        if sys.version_info >= (3, 8) and pytestskipmarkers.utils.platform.is_darwin():
             pytest.skip(
                 "Start method '{}' is not supported on Darwin on Py3.8+".format(fork_method)
             )

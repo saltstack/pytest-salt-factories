@@ -8,11 +8,11 @@ import subprocess
 from datetime import datetime
 
 import attr
+from pytestskipmarkers.utils import platform
+from pytestskipmarkers.utils import ports
 
 from saltfactories.bases import Daemon
 from saltfactories.exceptions import FactoryFailure
-from saltfactories.utils import platform
-from saltfactories.utils import ports
 from saltfactories.utils import running_username
 from saltfactories.utils import socket
 

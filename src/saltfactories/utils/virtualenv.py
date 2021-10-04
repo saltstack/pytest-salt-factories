@@ -9,9 +9,9 @@ import tempfile
 import textwrap
 
 import attr
+from pytestskipmarkers.utils import platform
 
 from saltfactories.exceptions import ProcessFailed
-from saltfactories.utils import platform
 from saltfactories.utils.processes import ProcessResult
 
 log = logging.getLogger(__name__)
