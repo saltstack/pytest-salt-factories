@@ -417,9 +417,9 @@ def changelog(session, draft):
         "--version",
         silent=True,
         log=False,
-    )
+    ).strip()
 
-    town_cmd = ["towncrier", "--version={}".format(version)]
+    town_cmd = ["towncrier", "build", "--version={}".format(version)]
     if draft:
         town_cmd.append("--draft")
     session.run(*town_cmd)

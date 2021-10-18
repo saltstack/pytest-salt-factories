@@ -17,7 +17,8 @@ CHANGELOG_EXTENSIONS = (
     "doc",
     "trivial",
 )
-CHANGELOG_ENTRY_RE = re.compile(r"[\d]+\.({})\.rst?$".format("|".join(CHANGELOG_EXTENSIONS)))
+CHANGELOG_ENTRY_REREX = r"^[\d]+\.({})\.rst$".format("|".join(CHANGELOG_EXTENSIONS))
+CHANGELOG_ENTRY_RE = re.compile(CHANGELOG_ENTRY_REREX)
 
 
 def check_changelog_entries(files):
