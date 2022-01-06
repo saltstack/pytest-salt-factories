@@ -129,7 +129,6 @@ class PyTestEventForwardEngine:
             with salt.utils.event.get_event(
                 self.role,
                 sock_dir=opts["sock_dir"],
-                transport=opts["transport"],
                 opts=opts,
                 listen=True,
             ) as eventbus:
