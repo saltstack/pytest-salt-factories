@@ -1,6 +1,6 @@
 [run]
 branch = True
-cover_pylib = False
+cover_pylib = True
 parallel = True
 concurrency = multiprocessing
 relative_files = True

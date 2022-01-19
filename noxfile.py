@@ -125,7 +125,10 @@ def tests(session):
             if not pytest_version_requirement.startswith("pytest"):
                 pytest_version_requirement = "pytest{}".format(pytest_version_requirement)
             session.install(pytest_version_requirement, silent=PIP_INSTALL_SILENT)
-        session.install("-e", ".", silent=PIP_INSTALL_SILENT)
+        if system_install:
+            session.install(".", silent=PIP_INSTALL_SILENT)
+        else:
+            session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
             session, "pip", "list", "--format=json", silent=True, log=False, stderr=None
         )
@@ -199,36 +202,42 @@ def tests(session):
 
     session.run("coverage", "run", "-m", "pytest", *args, env=env)
 
-    # Always combine and generate the XML coverage report
     try:
-        session.run("coverage", "combine")
-    except CommandFailed:
-        # Sometimes some of the coverage files are corrupt which would
-        # trigger a CommandFailed exception
-        pass
-    # Generate report for saltfactories code coverage
-    session.run(
-        "coverage",
-        "xml",
-        "-o",
-        str(COVERAGE_REPORT_SALTFACTORIES),
-        "--omit=tests/*",
-        "--include=src/saltfactories/*",
-    )
-    # Generate report for tests code coverage
-    session.run(
-        "coverage",
-        "xml",
-        "-o",
-        str(COVERAGE_REPORT_TESTS),
-        "--omit=src/saltfactories/*",
-        "--include=tests/*",
-    )
-    try:
-        cmdline = ["coverage", "report", "--show-missing", "--include=src/saltfactories/*,tests/*"]
-        if system_install is False and pytest_version(session) >= (6, 2):
-            cmdline.append("--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT))
-        session.run(*cmdline)
+        if system_install is False:
+            # Always combine and generate the XML coverage report
+            try:
+                session.run("coverage", "combine")
+            except CommandFailed:
+                # Sometimes some of the coverage files are corrupt which would
+                # trigger a CommandFailed exception
+                pass
+            # Generate report for saltfactories code coverage
+            session.run(
+                "coverage",
+                "xml",
+                "-o",
+                str(COVERAGE_REPORT_SALTFACTORIES),
+                "--omit=tests/*",
+                "--include=src/saltfactories/*",
+            )
+            # Generate report for tests code coverage
+            session.run(
+                "coverage",
+                "xml",
+                "-o",
+                str(COVERAGE_REPORT_TESTS),
+                "--omit=src/saltfactories/*",
+                "--include=tests/*",
+            )
+            cmdline = [
+                "coverage",
+                "report",
+                "--show-missing",
+                "--include=src/saltfactories/*,tests/*",
+            ]
+            if system_install is False and pytest_version(session) >= (6, 2):
+                cmdline.append("--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT))
+            session.run(*cmdline)
     finally:
         if COVERAGE_REPORT_DB.exists():
             shutil.copyfile(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / ".coverage"))
