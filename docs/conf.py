@@ -44,7 +44,7 @@ addtl_paths = (
 )
 
 for addtl_path in addtl_paths:
-    sys.path.insert(0, addtl_path)
+    sys.path.insert(0, str(addtl_path))
 
 # -- Project information -----------------------------------------------------
 this_year = datetime.datetime.today().year
