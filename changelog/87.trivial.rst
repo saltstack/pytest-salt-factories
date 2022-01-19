@@ -1,0 +1,1 @@
+Remove ``transport`` keyword argument from the call to ``salt.utils.event.get_event``
