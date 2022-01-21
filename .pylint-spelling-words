@@ -119,6 +119,7 @@ pyproject
 pytest
 pytest's
 pytestconfig
+pytestsysstats
 pythonic
 pythonpath
 pyzmq
