@@ -1,9 +1,8 @@
 """
+Salt Syndic Factory.
+
 ..
     PYTEST_DONT_REWRITE
-
-
-Salt Syndic Factory
 """
 import logging
 import pathlib
@@ -11,15 +10,18 @@ import pathlib
 import attr
 import salt.config
 import salt.utils.dictupdate
+from pytestshellutils.utils import ports
 
 from saltfactories.bases import SaltDaemon
-from saltfactories.utils import ports
 
 log = logging.getLogger(__name__)
 
 
 @attr.s(kw_only=True, slots=True)
 class SaltSyndic(SaltDaemon):
+    """
+    salt-syndic daemon factory.
+    """
 
     master = attr.ib(repr=False, hash=False)
     minion = attr.ib(repr=False, hash=False)
@@ -34,6 +36,9 @@ class SaltSyndic(SaltDaemon):
         master_of_masters=None,
         system_install=False,
     ):
+        """
+        Return the default configuration.
+        """
         if defaults is None:
             defaults = {}
 
@@ -137,6 +142,9 @@ class SaltSyndic(SaltDaemon):
 
     @classmethod
     def load_config(cls, config_file, config):
+        """
+        Return the loaded configuration.
+        """
         conf_dir = pathlib.Path(config_file).parent.parent
         master_config_file = str(conf_dir / "master")
         minion_config_file = str(conf_dir / "minion")
@@ -144,6 +152,8 @@ class SaltSyndic(SaltDaemon):
 
     def get_check_events(self):
         """
+        Return salt events to check.
+
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         pytest_config = self.config["pytest-{}".format(self.config["__role"])]

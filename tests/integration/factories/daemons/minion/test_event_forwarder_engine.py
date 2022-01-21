@@ -39,7 +39,7 @@ def test_event_listener_engine(minion, salt_call_cli, event_listener):
     stop_time = start_time + 120
 
     ret = salt_call_cli.run("saltutil.refresh_pillar")
-    assert ret.exitcode == 0, ret
+    assert ret.returncode == 0, ret
 
     master_event = None
     expected_tag = salt.defaults.events.MINION_PILLAR_REFRESH_COMPLETE

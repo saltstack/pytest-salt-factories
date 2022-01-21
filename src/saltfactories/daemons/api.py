@@ -1,9 +1,8 @@
 """
+Salt API Factory.
+
 ..
     PYTEST_DONT_REWRITE
-
-
-Salt API Factory
 """
 import attr
 import pytest
@@ -13,6 +12,10 @@ from saltfactories.bases import SaltDaemon
 
 @attr.s(kw_only=True, slots=True)
 class SaltApi(SaltDaemon):
+    """
+    salt-api daemon factory.
+    """
+
     def __attrs_post_init__(self):
         if "rest_cherrypy" in self.config:
             self.check_ports = [self.config["rest_cherrypy"]["port"]]
@@ -45,6 +48,9 @@ class SaltApi(SaltDaemon):
 
     @classmethod
     def load_config(cls, config_file, config):
+        """
+        Return the loaded configuration.
+        """
         raise pytest.UsageError(
             "The salt-api daemon does not have it's own config file. It uses the salt-master config that "
             "it's attached to."
@@ -52,6 +58,8 @@ class SaltApi(SaltDaemon):
 
     def get_check_events(self):
         """
+        Return salt events to check.
+
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         return []

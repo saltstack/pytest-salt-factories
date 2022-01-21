@@ -1,9 +1,8 @@
 """
+Salt Proxy Minion Factory.
+
 ..
     PYTEST_DONT_REWRITE
-
-
-Salt Proxy Minion Factory
 """
 import copy
 import logging
@@ -27,6 +26,10 @@ log = logging.getLogger(__name__)
 
 
 class SystemdSaltProxyImpl(SystemdSaltDaemonImpl):
+    """
+    ``systemd`` salt-proxy daemon factory.
+    """
+
     def get_service_name(self):
         if self._service_name is None:
             self._service_name = "{}@{}".format(super().get_service_name(), self.factory.id)
@@ -35,6 +38,9 @@ class SystemdSaltProxyImpl(SystemdSaltDaemonImpl):
 
 @attr.s(kw_only=True, slots=True)
 class SaltProxyMinion(SaltDaemon):
+    """
+    salt-proxy daemon factory.
+    """
 
     include_proxyid_cli_flag = attr.ib(default=True, repr=False)
 
@@ -66,6 +72,9 @@ class SaltProxyMinion(SaltDaemon):
         master=None,
         system_install=False,
     ):
+        """
+        Return the default configuration.
+        """
         if defaults is None:
             defaults = {}
 
@@ -217,6 +226,9 @@ class SaltProxyMinion(SaltDaemon):
 
     @classmethod
     def load_config(cls, config_file, config):
+        """
+        Return the loaded configuration.
+        """
         return salt.config.proxy_config(config_file, minion_id=config["id"], cache_minion_id=True)
 
     def get_base_script_args(self):
@@ -226,6 +238,13 @@ class SaltProxyMinion(SaltDaemon):
         return script_args
 
     def cmdline(self, *args):
+        """
+        Construct a list of arguments to use when starting the daemon.
+
+        :param str args:
+            Additional arguments to use when starting the daemon
+
+        """
         if self.include_proxyid_cli_flag is False:
             return super().cmdline(*args)
         _args = []
@@ -238,6 +257,8 @@ class SaltProxyMinion(SaltDaemon):
 
     def get_check_events(self):
         """
+        Return salt events to check.
+
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         pytest_config = self.config["pytest-{}".format(self.config["__role"])]

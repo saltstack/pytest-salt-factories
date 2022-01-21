@@ -8,13 +8,13 @@ import subprocess
 from datetime import datetime
 
 import attr
+from pytestshellutils.exceptions import FactoryFailure
+from pytestshellutils.shell import Daemon
+from pytestshellutils.utils import ports
+from pytestshellutils.utils import socket
 from pytestskipmarkers.utils import platform
-from pytestskipmarkers.utils import ports
 
-from saltfactories.bases import Daemon
-from saltfactories.exceptions import FactoryFailure
 from saltfactories.utils import running_username
-from saltfactories.utils import socket
 
 log = logging.getLogger(__name__)
 
@@ -26,8 +26,10 @@ class Sshd(Daemon):
     listen_port = attr.ib(default=None)
     authorized_keys = attr.ib(default=None)
     sshd_config_dict = attr.ib(default=None, repr=False)
+    display_name = attr.ib(default=None)
     client_key = attr.ib(default=None, init=False, repr=False)
     sshd_config = attr.ib(default=None, init=False)
+    _ssh_keygen_path = attr.ib(default=shutil.which("ssh-keygen"))
 
     def __attrs_post_init__(self):
         if self.authorized_keys is None:
@@ -78,6 +80,14 @@ class Sshd(Daemon):
         self.sshd_config = _default_config
         self._write_config()
         super().__attrs_post_init__()
+
+    def get_display_name(self):
+        """
+        Returns a human readable name for the factory
+        """
+        if self.display_name is None:
+            self.display_name = "{}(id={!r})".format(self.__class__.__name__, self.id)
+        return super().get_display_name()
 
     def get_base_script_args(self):
         """
@@ -160,10 +170,6 @@ class Sshd(Daemon):
         return key_path_prv
 
     def _ssh_keygen(self, key_filename, key_type, bits, comment=None):
-        try:
-            ssh_keygen = self._ssh_keygen_path
-        except AttributeError:
-            ssh_keygen = self._ssh_keygen_path = shutil.which("ssh-keygen")
 
         if comment is None:
             comment = "{user}@{host}-{date}".format(
@@ -173,7 +179,7 @@ class Sshd(Daemon):
             )
 
         cmdline = [
-            ssh_keygen,
+            self._ssh_keygen_path,
             "-t",
             key_type,
             "-b",
@@ -200,5 +206,5 @@ class Sshd(Daemon):
                 cmdline=exc.args,
                 stdout=exc.stdout,
                 stderr=exc.stderr,
-                exitcode=exc.returncode,
+                returncode=exc.returncode,
             ) from exc

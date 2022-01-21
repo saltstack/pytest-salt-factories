@@ -1,9 +1,8 @@
 """
+Salt Minion Factory.
+
 ..
     PYTEST_DONT_REWRITE
-
-
-Salt Minion Factory
 """
 import copy
 import logging
@@ -27,6 +26,9 @@ log = logging.getLogger(__name__)
 
 @attr.s(kw_only=True, slots=True)
 class SaltMinion(SaltDaemon):
+    """
+    salt-minion daemon factory.
+    """
 
     state_tree = attr.ib(init=False, hash=False, repr=False)
     pillar_tree = attr.ib(init=False, hash=False, repr=False)
@@ -51,6 +53,9 @@ class SaltMinion(SaltDaemon):
         master=None,
         system_install=False,
     ):
+        """
+        Return the default configuration.
+        """
         if defaults is None:
             defaults = {}
 
@@ -208,6 +213,9 @@ class SaltMinion(SaltDaemon):
 
     @classmethod
     def load_config(cls, config_file, config):
+        """
+        Return the loaded configuration.
+        """
         return salt.config.minion_config(config_file, minion_id=config["id"], cache_minion_id=True)
 
     def get_script_args(self):
@@ -218,6 +226,8 @@ class SaltMinion(SaltDaemon):
 
     def get_check_events(self):
         """
+        Return salt events to check.
+
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         pytest_config = self.config["pytest-{}".format(self.config["__role"])]

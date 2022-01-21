@@ -29,8 +29,8 @@ def test_logs_forwarded_from_sub_processes(salt_cli, minion, caplog):
 
     with caplog.at_level(logging.DEBUG):
         ret = salt_cli.run("test.ping", minion_tgt=minion.id)
-        assert ret.exitcode == 0, ret
-        assert ret.json is True
+        assert ret.returncode == 0, ret
+        assert ret.data is True
 
     non_main_processes_count = 0
     for record in caplog.records:

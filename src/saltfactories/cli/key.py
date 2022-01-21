@@ -1,9 +1,8 @@
 """
+``salt-key`` CLI factory.
+
 ..
     PYTEST_DONT_REWRITE
-
-
-``salt-key`` CLI factory
 """
 import re
 
@@ -22,7 +21,7 @@ except AttributeError:  # pragma: no cover
 @attr.s(kw_only=True, slots=True)
 class SaltKey(SaltCli):
     """
-    salt-key CLI factory
+    salt-key CLI factory.
     """
 
     _output_replace_re = attr.ib(

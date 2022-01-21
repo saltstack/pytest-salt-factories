@@ -120,8 +120,8 @@ def test_minion_1(master_of_masters_salt_cli):
     Just test that we can ping minion-1
     """
     ret = master_of_masters_salt_cli.run("test.ping", minion_tgt="minion-1", _timeout=60)
-    assert ret.exitcode == 0, ret
-    assert ret.json is True, ret
+    assert ret.returncode == 0, ret
+    assert ret.data is True, ret
 
 
 def test_minion_syndic_1(syndic_master_salt_cli):
@@ -129,8 +129,8 @@ def test_minion_syndic_1(syndic_master_salt_cli):
     Just test that we can ping minion-1
     """
     ret = syndic_master_salt_cli.run("test.ping", minion_tgt="syndic-1", _timeout=60)
-    assert ret.exitcode == 0, ret
-    assert ret.json is True, ret
+    assert ret.returncode == 0, ret
+    assert ret.data is True, ret
 
 
 def test_minion_2(syndic_master_salt_cli):
@@ -138,8 +138,8 @@ def test_minion_2(syndic_master_salt_cli):
     Just test that we can ping minion-2
     """
     ret = syndic_master_salt_cli.run("test.ping", minion_tgt="minion-2", _timeout=60)
-    assert ret.exitcode == 0, ret
-    assert ret.json is True, ret
+    assert ret.returncode == 0, ret
+    assert ret.data is True, ret
 
 
 @pytest.mark.skip("Syndics are still broken. Moving on for now")
@@ -147,19 +147,19 @@ def test_syndic(syndic, salt_cli):
     assert syndic.is_running()
     # Are we able to ping the minion connected to the master-of-masters
     ret = salt_cli.run("test.ping", minion_tgt="minion-1", _timeout=60)
-    assert ret.exitcode == 0, ret
-    assert ret.json is True, ret
+    assert ret.returncode == 0, ret
+    assert ret.data is True, ret
     # Are we able to ping the minions connected to the syndic-master
     ret = salt_cli.run("test.ping", minion_tgt="syndic-1", _timeout=60)
-    assert ret.exitcode == 0, ret
-    assert ret.json is True, ret
+    assert ret.returncode == 0, ret
+    assert ret.data is True, ret
     ret = salt_cli.run("test.ping", minion_tgt="minion-2", _timeout=60)
-    assert ret.exitcode == 0, ret
-    assert ret.json is True, ret
+    assert ret.returncode == 0, ret
+    assert ret.data is True, ret
     # Are we able to ping all of them?
     ret = salt_cli.run("test.ping", minion_tgt="*", _timeout=60)
-    assert ret.exitcode == 0, ret
-    assert "minion-1" in ret.json
-    assert ret.json["minion-1"] is True
-    assert "minion-2" in ret.json
-    assert ret.json["minion-2"] is True
+    assert ret.returncode == 0, ret
+    assert "minion-1" in ret.data
+    assert ret.data["minion-1"] is True
+    assert "minion-2" in ret.data
+    assert ret.data["minion-2"] is True

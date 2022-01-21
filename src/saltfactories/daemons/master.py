@@ -1,9 +1,8 @@
 """
+Salt Master Factory,
+
 ..
     PYTEST_DONT_REWRITE
-
-
-Salt Master Factory
 """
 import copy
 import pathlib
@@ -13,12 +12,12 @@ from functools import partial
 import attr
 import salt.config
 import salt.utils.dictupdate
+from pytestskipmarkers.utils import ports
 
 from saltfactories import cli
 from saltfactories import client
 from saltfactories.bases import SaltDaemon
 from saltfactories.utils import cli_scripts
-from saltfactories.utils import ports
 from saltfactories.utils import running_username
 from saltfactories.utils.tempfiles import SaltPillarTree
 from saltfactories.utils.tempfiles import SaltStateTree
@@ -26,6 +25,10 @@ from saltfactories.utils.tempfiles import SaltStateTree
 
 @attr.s(kw_only=True, slots=True)
 class SaltMaster(SaltDaemon):
+    """
+    salt-master daemon factory.
+    """
+
     on_auth_event_callback = attr.ib(repr=False, default=None)
 
     state_tree = attr.ib(init=False, hash=False, repr=False)
@@ -67,6 +70,9 @@ class SaltMaster(SaltDaemon):
         master_of_masters=None,
         system_install=False,
     ):
+        """
+        Return the default configuration.
+        """
         if defaults is None:
             defaults = {}
 
@@ -254,6 +260,9 @@ class SaltMaster(SaltDaemon):
 
     @classmethod
     def load_config(cls, config_file, config):
+        """
+        Return the loaded configuration.
+        """
         return salt.config.master_config(config_file)
 
     def _on_auth_event(self, payload):
@@ -264,10 +273,12 @@ class SaltMaster(SaltDaemon):
         salt_key_cli = self.salt_key_cli()
         if keystate == "pend":
             ret = salt_key_cli.run("--yes", "--accept", minion_id)
-            assert ret.exitcode == 0
+            assert ret.returncode == 0
 
     def get_check_events(self):
         """
+        Return salt events to check.
+
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         yield self.config["id"], "salt/master/{id}/start".format(**self.config)
@@ -286,25 +297,25 @@ class SaltMaster(SaltDaemon):
 
     def salt_minion_daemon(self, minion_id, **kwargs):
         """
-        Please see the documentation in :py:class:`~saltfactories.manager.FactoriesManager.configure_salt_minion`
+        Please see the documentation in :py:class:`~saltfactories.manager.FactoriesManager.configure_salt_minion`.
         """
         return self.factories_manager.salt_minion_daemon(minion_id, master=self, **kwargs)
 
     def salt_proxy_minion_daemon(self, minion_id, **kwargs):
         """
-        Please see the documentation in :py:class:`~saltfactories.manager.FactoriesManager.salt_proxy_minion_daemon`
+        Please see the documentation in :py:class:`~saltfactories.manager.FactoriesManager.salt_proxy_minion_daemon`.
         """
         return self.factories_manager.salt_proxy_minion_daemon(minion_id, master=self, **kwargs)
 
     def salt_api_daemon(self, **kwargs):
         """
-        Please see the documentation in :py:class:`~saltfactories.manager.FactoriesManager.salt_api_daemon`
+        Please see the documentation in :py:class:`~saltfactories.manager.FactoriesManager.salt_api_daemon`.
         """
         return self.factories_manager.salt_api_daemon(self, **kwargs)
 
     def salt_syndic_daemon(self, syndic_id, **kwargs):
         """
-        Please see the documentation in :py:class:`~saltfactories.manager.FactoriesManager.salt_syndic_daemon`
+        Please see the documentation in :py:class:`~saltfactories.manager.FactoriesManager.salt_syndic_daemon`.
         """
         return self.factories_manager.salt_syndic_daemon(
             syndic_id, master_of_masters=self, **kwargs
@@ -318,7 +329,7 @@ class SaltMaster(SaltDaemon):
         **factory_class_kwargs
     ):
         """
-        Return a salt-cloud CLI instance
+        Return a salt-cloud CLI instance.
 
         Args:
             defaults(dict):
@@ -362,7 +373,7 @@ class SaltMaster(SaltDaemon):
 
     def salt_cli(self, factory_class=cli.salt.Salt, **factory_class_kwargs):
         """
-        Return a `salt` CLI process for this master instance
+        Return a `salt` CLI process for this master instance.
         """
         if self.system_install is False:
             script_path = cli_scripts.generate_script(
@@ -383,7 +394,7 @@ class SaltMaster(SaltDaemon):
 
     def salt_cp_cli(self, factory_class=cli.cp.SaltCp, **factory_class_kwargs):
         """
-        Return a `salt-cp` CLI process for this master instance
+        Return a `salt-cp` CLI process for this master instance.
         """
         if self.system_install is False:
             script_path = cli_scripts.generate_script(
@@ -404,7 +415,7 @@ class SaltMaster(SaltDaemon):
 
     def salt_key_cli(self, factory_class=cli.key.SaltKey, **factory_class_kwargs):
         """
-        Return a `salt-key` CLI process for this master instance
+        Return a `salt-key` CLI process for this master instance.
         """
         if self.system_install is False:
             script_path = cli_scripts.generate_script(
@@ -425,7 +436,7 @@ class SaltMaster(SaltDaemon):
 
     def salt_run_cli(self, factory_class=cli.run.SaltRun, **factory_class_kwargs):
         """
-        Return a `salt-run` CLI process for this master instance
+        Return a `salt-run` CLI process for this master instance.
         """
         if self.system_install is False:
             script_path = cli_scripts.generate_script(
@@ -446,7 +457,7 @@ class SaltMaster(SaltDaemon):
 
     def salt_spm_cli(self, factory_class=cli.spm.Spm, **factory_class_kwargs):
         """
-        Return a `spm` CLI process for this master instance
+        Return a `spm` CLI process for this master instance.
         """
         if self.system_install is False:
             script_path = cli_scripts.generate_script(
@@ -475,7 +486,7 @@ class SaltMaster(SaltDaemon):
         **factory_class_kwargs
     ):
         """
-        Return a `salt-ssh` CLI process for this master instance
+        Return a `salt-ssh` CLI process for this master instance.
 
         Args:
             roster_file(str):
@@ -514,7 +525,7 @@ class SaltMaster(SaltDaemon):
         factory_class=client.LocalClient,
     ):
         """
-        Return a local salt client object
+        Return a local salt client object.
         """
         return factory_class(
             master_config=self.config.copy(),

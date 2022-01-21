@@ -119,6 +119,7 @@ pyproject
 pytest
 pytest's
 pytestconfig
+pytestshellutils
 pytestsysstats
 pythonic
 pythonpath
@@ -137,10 +138,12 @@ saltenv
 saltfactories
 saltmaster
 saltminion
+saltmixin
 saltpillartree
 saltproxyminion
 saltstatetree
 saltsyndic
+scriptsubprocess
 sdist
 serializers
 shellresult

@@ -8,15 +8,15 @@ pytestmark = [
 def test_text(salt_call_cli):
     echo_str = "Echoed!"
     ret = salt_call_cli.run("echo.text", echo_str)
-    assert ret.exitcode == 0
-    assert ret.json
-    assert ret.json == echo_str
+    assert ret.returncode == 0
+    assert ret.data
+    assert ret.data == echo_str
 
 
 def test_reverse(salt_call_cli):
     echo_str = "Echoed!"
     expected = echo_str[::-1]
     ret = salt_call_cli.run("echo.reverse", echo_str)
-    assert ret.exitcode == 0
-    assert ret.json
-    assert ret.json == expected
+    assert ret.returncode == 0
+    assert ret.data
+    assert ret.data == expected

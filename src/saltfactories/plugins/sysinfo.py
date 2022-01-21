@@ -1,10 +1,9 @@
 """
-..
-    PYTEST_DONT_REWRITE
-
-
 System Information
 ==================
+
+..
+    PYTEST_DONT_REWRITE
 """
 import io
 import pathlib

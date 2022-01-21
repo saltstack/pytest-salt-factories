@@ -1,8 +1,8 @@
 """
+Utility functions.
+
 ..
     PYTEST_DONT_REWRITE
-
-Utility functions
 """
 import random
 import string

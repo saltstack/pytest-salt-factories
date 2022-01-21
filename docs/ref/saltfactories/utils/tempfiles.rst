@@ -1,3 +1,6 @@
+Temporary files utilities
+=========================
+
 .. automodule:: saltfactories.utils.tempfiles
    :members:
    :show-inheritance:

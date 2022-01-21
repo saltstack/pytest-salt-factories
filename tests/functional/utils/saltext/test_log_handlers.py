@@ -5,14 +5,13 @@ from datetime import timedelta
 
 import pytest
 import pytestskipmarkers.utils.platform
-
-from saltfactories.bases import Process
-from saltfactories.exceptions import FactoryTimeout
+from pytestshellutils.exceptions import FactoryTimeout
+from pytestshellutils.shell import ScriptSubprocess
 
 
 def test_handler_does_not_block_when_not_connected(tempfiles):
     log_forwarding_socket_hwm = 5
-    shell = Process(script_name=sys.executable, timeout=10)
+    shell = ScriptSubprocess(script_name=sys.executable, timeout=10)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -65,13 +64,13 @@ def test_handler_does_not_block_when_not_connected(tempfiles):
     # Foo {log_forwarding_socket_hwm + 1} logged to the console.
     # If we don't, the handler blocked the process
     assert "Foo {}".format(log_forwarding_socket_hwm + 1) in result.stderr
-    assert result.exitcode == 0
+    assert result.returncode == 0
 
 
 def test_all_messages_received(tempfiles, salt_factories, caplog):
     log_forwarding_socket_hwm = 500
     log_forwarding_calls = log_forwarding_socket_hwm * 2
-    shell = Process(script_name=sys.executable, timeout=10)
+    shell = ScriptSubprocess(script_name=sys.executable, timeout=10)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -122,7 +121,7 @@ def test_all_messages_received(tempfiles, salt_factories, caplog):
         assert "Logging finished" in result.stdout
         expected_log_message = "Foo:{}".format(log_forwarding_calls)
         assert expected_log_message in result.stderr
-        assert result.exitcode == 0
+        assert result.returncode == 0
 
         timeout = datetime.utcnow() + timedelta(seconds=120)
         while True:
@@ -163,7 +162,7 @@ def test_all_messages_received_multiprocessing(tempfiles, salt_factories, caplog
             )
     num_processes = 2
     log_forwarding_calls = 10
-    shell = Process(script_name=sys.executable, timeout=30)
+    shell = ScriptSubprocess(script_name=sys.executable, timeout=30)
     script = tempfiles.makepyfile(
         """
         # coding=utf-8
@@ -266,7 +265,7 @@ def test_all_messages_received_multiprocessing(tempfiles, salt_factories, caplog
         # listener.
         assert "Logging started" in result.stdout
         assert "Logging finished" in result.stdout
-        assert result.exitcode == 0
+        assert result.returncode == 0
 
         # It can take quite a while to receive all these messages,
         # Specially for Windows and macOS under CI

@@ -1,6 +1,6 @@
 import pytest
+from pytestshellutils.utils import ports
 
-from saltfactories.utils import ports
 from saltfactories.utils import random_string
 
 

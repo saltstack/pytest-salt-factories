@@ -1,25 +1,25 @@
 """
+Container based factories.
+
 ..
     PYTEST_DONT_REWRITE
-
-
-Container based factories
 """
 import atexit
 import logging
 import os
 
 import attr
+from pytestshellutils.exceptions import FactoryNotStarted
+from pytestshellutils.shell import BaseFactory
+from pytestshellutils.utils import format_callback_to_string
+from pytestshellutils.utils import ports
+from pytestshellutils.utils import time
+from pytestshellutils.utils.processes import ProcessResult
 
 from saltfactories import bases
 from saltfactories import CODE_ROOT_DIR
 from saltfactories.daemons import minion
-from saltfactories.exceptions import FactoryNotStarted
-from saltfactories.utils import format_callback_to_string
-from saltfactories.utils import ports
 from saltfactories.utils import random_string
-from saltfactories.utils import time
-from saltfactories.utils.processes import ProcessResult
 
 try:
     import docker
@@ -58,9 +58,14 @@ log = logging.getLogger(__name__)
 
 
 @attr.s(kw_only=True)
-class Container(bases.Factory):
+class Container(BaseFactory):
+    """
+    Docker containers daemon implementation.
+    """
+
     image = attr.ib()
     name = attr.ib(default=None)
+    display_name = attr.ib(default=None)
     check_ports = attr.ib(default=None)
     docker_client = attr.ib(repr=False, default=None)
     container_run_kwargs = attr.ib(repr=False, default=attr.Factory(dict))
@@ -74,7 +79,6 @@ class Container(bases.Factory):
     _terminate_result = attr.ib(repr=False, hash=False, init=False, default=None)
 
     def __attrs_post_init__(self):
-        super().__attrs_post_init__()
         if self.name is None:
             self.name = random_string("factories-")
         if self.docker_client is None:
@@ -86,7 +90,7 @@ class Container(bases.Factory):
 
     def before_start(self, callback, *args, **kwargs):
         """
-        Register a function callback to run before the container starts
+        Register a function callback to run before the container starts.
 
         :param ~collections.abc.Callable callback:
             The function to call back
@@ -99,7 +103,7 @@ class Container(bases.Factory):
 
     def after_start(self, callback, *args, **kwargs):
         """
-        Register a function callback to run after the container starts
+        Register a function callback to run after the container starts.
 
         :param ~collections.abc.Callable callback:
             The function to call back
@@ -112,7 +116,7 @@ class Container(bases.Factory):
 
     def before_terminate(self, callback, *args, **kwargs):
         """
-        Register a function callback to run before the container terminates
+        Register a function callback to run before the container terminates.
 
         :param ~collections.abc.Callable callback:
             The function to call back
@@ -125,7 +129,7 @@ class Container(bases.Factory):
 
     def after_terminate(self, callback, *args, **kwargs):
         """
-        Register a function callback to run after the container terminates
+        Register a function callback to run after the container terminates.
 
         :param ~collections.abc.Callable callback:
             The function to call back
@@ -135,6 +139,14 @@ class Container(bases.Factory):
             The keyword arguments to pass to the callback
         """
         self._after_terminate_callbacks.append((callback, args, kwargs))
+
+    def get_display_name(self):
+        """
+        Returns a human readable name for the factory.
+        """
+        if self.display_name is None:
+            self.display_name = "{}(id={!r})".format(self.__class__.__name__, self.id)
+        return super().get_display_name()
 
     def start(self, *command, max_start_attempts=None, start_timeout=None):
         if self.is_running():
@@ -259,7 +271,7 @@ class Container(bases.Factory):
             ),
             stdout=result.stdout,
             stderr=result.stderr,
-            exitcode=result.exitcode,
+            returncode=result.returncode,
         )
 
     def started(self, *command, max_start_attempts=None, start_timeout=None):
@@ -315,7 +327,7 @@ class Container(bases.Factory):
                         exc,
                         exc_info=True,
                     )
-        self._terminate_result = ProcessResult(exitcode=0, stdout=stdout, stderr=stderr)
+        self._terminate_result = ProcessResult(returncode=0, stdout=stdout, stderr=stderr)
         return self._terminate_result
 
     def get_check_ports(self):
@@ -325,6 +337,9 @@ class Container(bases.Factory):
         return self.check_ports or []
 
     def is_running(self):
+        """
+        Returns true if the container is running.
+        """
         if self.container is None:
             return False
 
@@ -338,7 +353,7 @@ class Container(bases.Factory):
         # We force dmux to True so that we always get back both stdout and stderr
         container = self.docker_client.containers.get(self.name)
         ret = container.exec_run(cmd, demux=True, **kwargs)
-        exitcode = ret.exit_code
+        returncode = ret.exit_code
         stdout = stderr = None
         if ret.output:
             stdout, stderr = ret.output
@@ -346,7 +361,7 @@ class Container(bases.Factory):
             stdout = stdout.decode()
         if stderr is not None:
             stderr = stderr.decode()
-        return ProcessResult(exitcode=exitcode, stdout=stdout, stderr=stderr, cmdline=cmd)
+        return ProcessResult(returncode=returncode, stdout=stdout, stderr=stderr, cmdline=cmd)
 
     @staticmethod
     def client_connectable(docker_client):
@@ -430,9 +445,19 @@ class SaltDaemon(bases.SaltDaemon, Container):
         self.container_run_kwargs.setdefault("auto_remove", True)
 
     def cmdline(self, *args):
+        """
+        Construct a list of arguments to use when starting the container.
+
+        :param str args:
+            Additional arguments to use when starting the container
+
+        """
         return ["docker", "exec", "-i", self.name] + super().cmdline(*args)
 
     def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
+        """
+        Start the daemon.
+        """
         # Start the container
         Container.start(self, max_start_attempts=max_start_attempts, start_timeout=start_timeout)
         self.daemon_starting = True
@@ -446,12 +471,18 @@ class SaltDaemon(bases.SaltDaemon, Container):
         return self.daemon_started
 
     def terminate(self):
+        """
+        Terminate the container.
+        """
         self.daemon_started = self.daemon_starting = False
         ret = bases.SaltDaemon.terminate(self)
         Container.terminate(self)
         return ret
 
     def is_running(self):
+        """
+        Returns true if the container is running.
+        """
         running = Container.is_running(self)
         if running is False:
             return running
@@ -461,7 +492,7 @@ class SaltDaemon(bases.SaltDaemon, Container):
 
     def get_check_ports(self):
         """
-        Return a list of ports to check against to ensure the daemon is running
+        Return a list of ports to check against to ensure the daemon is running.
         """
         return Container.get_check_ports(self) + bases.SaltDaemon.get_check_ports(self)
 
@@ -469,7 +500,7 @@ class SaltDaemon(bases.SaltDaemon, Container):
         self, callback, *args, on_container=False, **kwargs
     ):  # pylint: disable=arguments-differ
         """
-        Register a function callback to run before the daemon starts
+        Register a function callback to run before the daemon starts.
 
         :param ~collections.abc.Callable callback:
             The function to call back
@@ -489,7 +520,7 @@ class SaltDaemon(bases.SaltDaemon, Container):
         self, callback, *args, on_container=False, **kwargs
     ):  # pylint: disable=arguments-differ
         """
-        Register a function callback to run after the daemon starts
+        Register a function callback to run after the daemon starts.
 
         :param ~collections.abc.Callable callback:
             The function to call back
@@ -509,7 +540,7 @@ class SaltDaemon(bases.SaltDaemon, Container):
         self, callback, *args, on_container=False, **kwargs
     ):  # pylint: disable=arguments-differ
         """
-        Register a function callback to run before the daemon terminates
+        Register a function callback to run before the daemon terminates.
 
         :param ~collections.abc.Callable callback:
             The function to call back
@@ -529,7 +560,7 @@ class SaltDaemon(bases.SaltDaemon, Container):
         self, callback, *args, on_container=False, **kwargs
     ):  # pylint: disable=arguments-differ
         """
-        Register a function callback to run after the daemon terminates
+        Register a function callback to run after the daemon terminates.
 
         :param ~collections.abc.Callable callback:
             The function to call back
@@ -547,7 +578,7 @@ class SaltDaemon(bases.SaltDaemon, Container):
 
     def started(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
         """
-        Start the daemon and return it's instance so it can be used as a context manager
+        Start the daemon and return it's instance so it can be used as a context manager.
         """
         return bases.SaltDaemon.started(
             self,
@@ -558,6 +589,8 @@ class SaltDaemon(bases.SaltDaemon, Container):
 
     def get_check_events(self):
         """
+        Return salt events to check.
+
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         raise NotImplementedError
@@ -566,14 +599,19 @@ class SaltDaemon(bases.SaltDaemon, Container):
 @attr.s(kw_only=True, slots=True)
 class SaltMinion(SaltDaemon, minion.SaltMinion):
     """
-    Salt minion daemon implementation running in a docker container
+    Salt minion daemon implementation running in a docker container.
     """
 
     def get_check_events(self):
         """
+        Return salt events to check.
+
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         return minion.SaltMinion.get_check_events(self)
 
     def run_start_checks(self, started_at, timeout_at):
+        """
+        Run checks to confirm that the container has started.
+        """
         return minion.SaltMinion.run_start_checks(self, started_at, timeout_at)
