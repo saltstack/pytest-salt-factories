@@ -56,7 +56,7 @@ class FactoriesManager:
         can be written down to disk.
     :keyword int start_timeout:
         The amount of time, in seconds, to wait, until a subprocess is considered as not started.
-    :type stats_processes: saltfactories.plugins.sysstats.StatsProcesses
+    :type stats_processes: pytestsysstats.plugin.StatsProcesses
     :keyword stats_processes:
         This will be an `StatsProcesses` class instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
         hook accessible as a session scoped `stats_processes` fixture.
