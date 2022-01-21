@@ -1,8 +1,8 @@
 import pytest
+from pytestshellutils.utils import ports
+from pytestshellutils.utils import socket
 
 from saltfactories.daemons.container import Container
-from saltfactories.utils import ports
-from saltfactories.utils import socket
 
 docker = pytest.importorskip("docker")
 from docker.errors import DockerException
@@ -72,10 +72,10 @@ def test_spawn_container(docker_container, echo_server_port):
 @pytest.mark.skip_on_windows
 def test_container_run(docker_container):
     ret = docker_container.run("echo", "foo")
-    assert ret.exitcode == 0
+    assert ret.returncode == 0
     assert ret.stdout == "foo\n"
     assert ret.stderr is None
     ret = docker_container.run("sh", "-c", ">&2 echo foo")
-    assert ret.exitcode == 0
+    assert ret.returncode == 0
     assert ret.stdout is None
     assert ret.stderr == "foo\n"

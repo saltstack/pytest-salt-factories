@@ -1,8 +1,5 @@
 """
-    tests.functional.markers.test_requires_salt_modules
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Test the ``@pytest.mark.requires_salt_modules`` marker
+Test the ``@pytest.mark.requires_salt_modules`` marker.
 """
 import pytest
 

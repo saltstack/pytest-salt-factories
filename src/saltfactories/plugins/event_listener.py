@@ -17,9 +17,9 @@ import attr
 import msgpack
 import pytest
 import zmq
+from pytestshellutils.utils import ports
+from pytestshellutils.utils import time
 
-from saltfactories.utils import ports
-from saltfactories.utils import time
 
 log = logging.getLogger(__name__)
 
@@ -437,9 +437,9 @@ def event_listener(request):
             data = {"event.fire": "just test it!!!!"}
             start_time = time.time()
             ret = salt_call_cli.run("event.send", event_tag, data=data)
-            assert ret.exitcode == 0
-            assert ret.json
-            assert ret.json is True
+            assert ret.returncode == 0
+            assert ret.data
+            assert ret.data is True
 
             event_pattern = (salt_master.id, event_tag)
             matched_events = event_listener.wait_for_events(

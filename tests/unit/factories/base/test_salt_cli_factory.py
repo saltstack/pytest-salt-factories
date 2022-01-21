@@ -6,9 +6,9 @@ from collections import OrderedDict
 from unittest import mock
 
 import pytest
+from pytestshellutils.utils.processes import ProcessResult
 
 from saltfactories.bases import SaltCli
-from saltfactories.utils.processes import ProcessResult
 
 
 @pytest.fixture
@@ -178,7 +178,9 @@ def test_cli_timeout_lesser_than_timeout_kw(minion_id, config_dir, config_file, 
     popen_mock = mock.MagicMock()
     popen_mock.pid = os.getpid()
     popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
-    terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
+    terminate_mock = mock.MagicMock(
+        return_value=ProcessResult(returncode=0, stdout="", stderr="", cmdline=())
+    )
     popen_mock.terminate = terminate_mock
 
     proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
@@ -219,7 +221,9 @@ def test_cli_timeout_matches_timeout_kw(minion_id, config_dir, config_file, cli_
     popen_mock = mock.MagicMock()
     popen_mock.pid = os.getpid()
     popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
-    terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
+    terminate_mock = mock.MagicMock(
+        return_value=ProcessResult(returncode=0, stdout="", stderr="", cmdline=())
+    )
     popen_mock.terminate = terminate_mock
 
     proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
@@ -260,7 +264,9 @@ def test_cli_timeout_greater_than_timeout_kw(minion_id, config_dir, config_file,
     popen_mock = mock.MagicMock()
     popen_mock.pid = os.getpid()
     popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
-    terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
+    terminate_mock = mock.MagicMock(
+        return_value=ProcessResult(returncode=0, stdout="", stderr="", cmdline=())
+    )
     popen_mock.terminate = terminate_mock
 
     proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
@@ -300,8 +306,10 @@ def test_cli_timeout_updates_to_timeout_kw_plus_10(
     popen_mock = mock.MagicMock()
     popen_mock.pid = os.getpid()
     popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
-    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
-    terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", ""))
+    popen_mock.terminate = mock.MagicMock(
+        return_value=ProcessResult(returncode=0, stdout="", stderr="", cmdline=())
+    )
+    terminate_mock = mock.MagicMock(return_value=ProcessResult(returncode=0, stdout="", stderr=""))
 
     proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     with mock.patch.object(proc.impl, "init_terminal", popen_mock), mock.patch.object(
@@ -339,8 +347,10 @@ def test_cli_timeout_updates_to_default_timeout_plus_10(
     popen_mock = mock.MagicMock()
     popen_mock.pid = os.getpid()
     popen_mock.poll = mock.MagicMock(side_effect=[None, None, None, None, True])
-    popen_mock.terminate = mock.MagicMock(return_value=ProcessResult(0, "", "", cmdline=()))
-    terminate_mock = mock.MagicMock(return_value=ProcessResult(0, "", ""))
+    popen_mock.terminate = mock.MagicMock(
+        return_value=ProcessResult(returncode=0, stdout="", stderr="", cmdline=())
+    )
+    terminate_mock = mock.MagicMock(return_value=ProcessResult(returncode=0, stdout="", stderr=""))
 
     proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     with mock.patch.object(proc.impl, "init_terminal", popen_mock), mock.patch.object(

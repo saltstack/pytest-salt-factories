@@ -3,8 +3,8 @@ import tempfile
 
 import pytest
 import salt.defaults.exitcodes
+from pytestshellutils.exceptions import FactoryNotStarted
 
-from saltfactories.exceptions import FactoryNotStarted
 from saltfactories.utils import random_string
 
 
@@ -58,8 +58,8 @@ def test_master(master):
 def test_salt_run(master, salt_run):
     max_open_files_config_value = master.config["max_open_files"]
     ret = salt_run.run("config.get", "max_open_files")
-    assert ret.exitcode == 0, ret
-    assert ret.json == max_open_files_config_value
+    assert ret.returncode == 0, ret
+    assert ret.data == max_open_files_config_value
 
 
 def test_salt_cp(master, minion, salt_cp, tempfiles):
@@ -75,8 +75,8 @@ def test_salt_cp(master, minion, salt_cp, tempfiles):
         assert master.is_running()
         assert minion.is_running()
         ret = salt_cp.run(minion.id, sls, dest)
-        assert ret.exitcode == 0, ret
-        assert ret.json == {minion.id: {dest: True}}, ret
+        assert ret.returncode == 0, ret
+        assert ret.data == {minion.id: {dest: True}}, ret
         assert os.path.exists(dest)
         with open(dest) as rfh:
             assert rfh.read() == contents
@@ -93,8 +93,8 @@ def test_salt_cp(master, minion, salt_cp, tempfiles):
         assert master.is_running()
         assert minion.is_running()
         ret = salt_cp.run(sls, dest, minion_tgt=minion.id)
-        assert ret.exitcode == 0, ret
-        assert ret.json == {dest: True}, ret
+        assert ret.returncode == 0, ret
+        assert ret.data == {dest: True}, ret
         assert os.path.exists(dest)
         with open(dest) as rfh:
             assert rfh.read() == contents
@@ -116,8 +116,8 @@ def test_salt_cp_no_match(master, minion, salt_cp, tempfiles):
         assert master.is_running()
         assert minion.is_running()
         ret = salt_cp.run(sls, dest, minion_tgt="minion-2")
-        assert ret.exitcode == 0, ret
-        assert not ret.json, ret
+        assert ret.returncode == 0, ret
+        assert not ret.data, ret
         assert not os.path.exists(dest)
     finally:  # pragma: no cover
         if os.path.exists(dest):
@@ -127,8 +127,8 @@ def test_salt_cp_no_match(master, minion, salt_cp, tempfiles):
 @pytest.mark.skip_on_salt_system_install
 def test_salt_key(master, minion, minion_3, salt_key):
     ret = salt_key.run("--list-all")
-    assert ret.exitcode == 0, ret
-    assert ret.json == {
+    assert ret.returncode == 0, ret
+    assert ret.data == {
         "minions": [minion.id, minion_3.id],
         "minions_pre": [],
         "minions_denied": [],
@@ -143,8 +143,8 @@ def test_exit_status_unknown_user(salt_factories):
     with pytest.raises(FactoryNotStarted) as exc:
         master.start(max_start_attempts=1)
 
-    assert exc.value.exitcode == salt.defaults.exitcodes.EX_NOUSER, str(exc.value)
-    assert "The user is not available." in exc.value.stderr, str(exc.value)
+    assert exc.value.process_result.returncode == salt.defaults.exitcodes.EX_NOUSER, str(exc.value)
+    assert "The user is not available." in exc.value.process_result.stderr, str(exc.value)
 
 
 def test_state_tree(master, salt_call):
@@ -154,4 +154,4 @@ def test_state_tree(master, salt_call):
     """
     with master.state_tree.base.temp_file("foo.sls", sls_contents):
         ret = salt_call.run("state.sls", "foo")
-        assert ret.exitcode == 0
+        assert ret.returncode == 0

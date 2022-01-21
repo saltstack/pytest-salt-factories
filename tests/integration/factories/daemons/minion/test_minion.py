@@ -30,40 +30,40 @@ def salt_call_cli(minion):
 def test_minion(minion, salt_cli):
     assert minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt=minion.id)
-    assert ret.exitcode == 0, ret
-    assert ret.json is True
+    assert ret.returncode == 0, ret
+    assert ret.data is True
 
 
 def test_no_match(minion, salt_cli):
     assert minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt="minion-2")
-    assert ret.exitcode == 2, ret
-    assert not ret.json
+    assert ret.returncode == 2, ret
+    assert not ret.data
 
 
 def test_show_jid(minion, salt_cli):
     assert minion.is_running()
     ret = salt_cli.run("--show-jid", "test.ping", minion_tgt=minion.id)
-    assert ret.exitcode == 0, ret
-    assert ret.json is True
+    assert ret.returncode == 0, ret
+    assert ret.data is True
 
 
 def test_minion_salt_call(minion, salt_call_cli):
     assert minion.is_running()
     ret = salt_call_cli.run("test.ping")
-    assert ret.exitcode == 0, ret
-    assert ret.json is True
+    assert ret.returncode == 0, ret
+    assert ret.data is True
     # Now with --local
     ret = salt_call_cli.run("--local", "test.ping")
-    assert ret.exitcode == 0, ret
-    assert ret.json is True
+    assert ret.returncode == 0, ret
+    assert ret.data is True
 
 
 def test_salt_call_exception_handling_doesnt_timeout(minion, salt_call_cli):
     ret = salt_call_cli.run(
         "test.raise_exception", "OSError", "2", "No such file or directory", "/tmp/foo.txt"
     )
-    assert ret.exitcode == 1, ret
+    assert ret.returncode == 1, ret
 
 
 def test_state_tree(minion, salt_call_cli):
@@ -73,4 +73,4 @@ def test_state_tree(minion, salt_call_cli):
     """
     with minion.state_tree.base.temp_file("foo.sls", sls_contents):
         ret = salt_call_cli.run("--local", "state.sls", "foo")
-        assert ret.exitcode == 0
+        assert ret.returncode == 0

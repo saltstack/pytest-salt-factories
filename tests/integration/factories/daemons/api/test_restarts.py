@@ -1,6 +1,6 @@
 import pytest
+from pytestskipmarkers.utils import ports
 
-from saltfactories.utils import ports
 from saltfactories.utils import random_string
 
 

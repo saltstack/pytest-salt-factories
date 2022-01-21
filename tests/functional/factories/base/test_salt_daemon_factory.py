@@ -1,9 +1,9 @@
 import shutil
 
 import pytest
+from pytestshellutils.exceptions import FactoryNotStarted
 
 from saltfactories.bases import SaltDaemon
-from saltfactories.exceptions import FactoryNotStarted
 
 
 @pytest.fixture
@@ -77,4 +77,4 @@ def test_extra_cli_arguments_after_first_failure(
         "{} --config-dir={} --log-level=debug".format(script, config_dir),
     ]
     assert output_file_contents == expected
-    assert "Exitcode: 1" in str_exc
+    assert "Returncode: 1" in str_exc

@@ -1,8 +1,8 @@
 """
+Salt Client in-process implementation.
+
 ..
     PYTEST_DONT_REWRITE
-
-Salt Client in-process implementation
 """
 import logging
 import re
@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 @attr.s(kw_only=True, slots=True)
 class LocalClient:
     """
-    Wrapper class around Salt's local client
+    Wrapper class around Salt's local client.
     """
 
     STATE_FUNCTION_RUNNING_RE = re.compile(

@@ -1,9 +1,8 @@
 """
+``salt-cloud`` CLI factory.
+
 ..
     PYTEST_DONT_REWRITE
-
-
-``salt-cloud`` CLI factory
 """
 import logging
 import pathlib
@@ -25,11 +24,14 @@ log = logging.getLogger(__name__)
 @attr.s(kw_only=True, slots=True)
 class SaltCloud(SaltCli):
     """
-    salt-cloud CLI factory
+    salt-cloud CLI factory.
     """
 
     @staticmethod
     def default_config(root_dir, master_id, defaults=None, overrides=None):
+        """
+        Return the default configuration for the daemon.
+        """
         if defaults is None:
             defaults = {}
 
@@ -89,6 +91,9 @@ class SaltCloud(SaltCli):
 
     @classmethod
     def write_config(cls, config):
+        """
+        Verify the loaded configuration.
+        """
         cls.verify_config(config)
         config_file = config.pop("conf_file")
         log.debug(

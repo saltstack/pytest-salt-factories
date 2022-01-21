@@ -1,11 +1,11 @@
 """
-..
-    PYTEST_DONT_REWRITE
-
 Daemon & CLI Factories
 ======================
 
-Salt Daemon Factories PyTest Plugin
+Salt Daemon Factories PyTest Plugin.
+
+..
+    PYTEST_DONT_REWRITE
 """
 import logging
 import os
@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 @pytest.fixture(scope="session")
 def _salt_factories_config(request):
     """
-    Return a dictionary with the keyword arguments for FactoriesManager
+    Return a dictionary with the keyword arguments for FactoriesManager.
     """
     log_server = request.config.pluginmanager.get_plugin("saltfactories-log-server")
     return {

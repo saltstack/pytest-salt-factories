@@ -9,10 +9,9 @@ import tempfile
 import textwrap
 
 import attr
+from pytestshellutils.exceptions import ProcessFailed
+from pytestshellutils.utils.processes import ProcessResult
 from pytestskipmarkers.utils import platform
-
-from saltfactories.exceptions import ProcessFailed
-from saltfactories.utils.processes import ProcessResult
 
 log = logging.getLogger(__name__)
 
@@ -94,7 +93,7 @@ class VirtualEnv:
         """
         Run a shell command
 
-        :rtype: ~saltfactories.utils.processes.ProcessResult
+        :rtype: ~pytestshellutils.utils.processes.ProcessResult
         """
         check = kwargs.pop("check", True)
         kwargs.setdefault("cwd", str(self.cwd or self.venv_dir))
@@ -104,7 +103,7 @@ class VirtualEnv:
         kwargs.setdefault("env", self.environ)
         proc = subprocess.run(args, check=False, **kwargs)
         ret = ProcessResult(
-            exitcode=proc.returncode,
+            returncode=proc.returncode,
             stdout=proc.stdout,
             stderr=proc.stderr,
             cmdline=proc.args,
@@ -119,7 +118,7 @@ class VirtualEnv:
                     cmdline=proc.args,
                     stdout=proc.stdout,
                     stderr=proc.stderr,
-                    exitcode=proc.returncode,
+                    returncode=proc.returncode,
                 ) from exc
         return ret
 

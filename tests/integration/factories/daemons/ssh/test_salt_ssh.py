@@ -53,5 +53,5 @@ def salt_ssh_cli(sshd, salt_factories, master):
 @pytest.mark.skip_on_windows
 def test_salt_ssh(salt_ssh_cli):
     ret = salt_ssh_cli.run("--ignore-host-keys", "test.echo", "It Works!", minion_tgt="localhost")
-    assert ret.exitcode == 0
-    assert ret.json == "It Works!"
+    assert ret.returncode == 0
+    assert ret.data == "It Works!"

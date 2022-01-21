@@ -1,3 +1,6 @@
+Salt Extensions
+===============
+
 .. automodule:: saltfactories.utils.saltext
    :members:
    :show-inheritance:

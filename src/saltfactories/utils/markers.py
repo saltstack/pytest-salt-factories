@@ -1,12 +1,6 @@
 """
 ..
     PYTEST_DONT_REWRITE
-
-
-saltfactories.utils.markers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-PyTest Markers related utilities
 """
 import fnmatch
 import logging

@@ -1,12 +1,6 @@
 """
 ..
     PYTEST_DONT_REWRITE
-
-
-saltfactories.utils.tempfiles
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Temporary files utilities
 """
 import logging
 import os

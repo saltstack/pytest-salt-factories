@@ -39,15 +39,15 @@ def salt_call_cli(proxy_minion):
 def test_proxy_minion(proxy_minion, salt_cli):
     assert proxy_minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt=proxy_minion.id)
-    assert ret.exitcode == 0, ret
-    assert ret.json is True
+    assert ret.returncode == 0, ret
+    assert ret.data is True
 
 
 def test_no_match(proxy_minion, salt_cli):
     assert proxy_minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt="proxy-minion-2")
-    assert ret.exitcode == 2, ret
-    assert not ret.json
+    assert ret.returncode == 2, ret
+    assert not ret.data
 
 
 def test_show_jid(proxy_minion, salt_cli):
@@ -58,19 +58,19 @@ def test_show_jid(proxy_minion, salt_cli):
         )
     assert proxy_minion.is_running()
     ret = salt_cli.run("--show-jid", "test.ping", minion_tgt=proxy_minion.id)
-    assert ret.exitcode == 0, ret
-    assert ret.json is True
+    assert ret.returncode == 0, ret
+    assert ret.data is True
 
 
 def test_proxy_minion_salt_call(proxy_minion, salt_call_cli):
     assert proxy_minion.is_running()
     ret = salt_call_cli.run("test.ping")
-    assert ret.exitcode == 0, ret
-    assert ret.json is True
+    assert ret.returncode == 0, ret
+    assert ret.data is True
     # Now with --local
     ret = salt_call_cli.run("--proxyid={}".format(proxy_minion.id), "test.ping")
-    assert ret.exitcode == 0, ret
-    assert ret.json is True
+    assert ret.returncode == 0, ret
+    assert ret.data is True
 
 
 def test_state_tree(proxy_minion, salt_call_cli):
@@ -80,4 +80,4 @@ def test_state_tree(proxy_minion, salt_call_cli):
     """
     with proxy_minion.state_tree.base.temp_file("foo.sls", sls_contents):
         ret = salt_call_cli.run("--local", "state.sls", "foo")
-        assert ret.exitcode == 0
+        assert ret.returncode == 0

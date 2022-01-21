@@ -1,10 +1,11 @@
 """
+Salt Factories Manager.
+
 ..
     PYTEST_DONT_REWRITE
-
-Salt Factories Manager
 """
 import logging
+import os
 import pathlib
 import sys
 
@@ -12,7 +13,7 @@ import attr
 
 from saltfactories import CODE_ROOT_DIR
 from saltfactories import daemons
-from saltfactories.bases import Salt
+from saltfactories.bases import SaltMixin
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import running_username
 
@@ -22,6 +23,8 @@ log = logging.getLogger(__name__)
 @attr.s(kw_only=True, slots=True)
 class FactoriesManager:
     """
+    Factories manager implementation.
+
     The :class:`FactoriesManager` is responsible for configuring and spawning Salt Daemons and
     making sure that any salt CLI tools are "targeted" to the right daemon.
 
@@ -73,8 +76,8 @@ class FactoriesManager:
     code_dir = attr.ib(default=None)
     inject_coverage = attr.ib(default=False)
     inject_sitecustomize = attr.ib(default=False)
-    cwd = attr.ib(default=None)
-    environ = attr.ib(default=None)
+    cwd = attr.ib(factory=pathlib.Path.cwd)
+    environ = attr.ib(factory=os.environ.copy)
     slow_stop = attr.ib(default=True)
     start_timeout = attr.ib(default=None)
     stats_processes = attr.ib(repr=False, default=None)
@@ -545,7 +548,6 @@ class FactoriesManager:
             environ=self.environ,
             cwd=self.cwd,
             max_start_attempts=max_start_attempts,
-            factories_manager=self,
             script_name=script_name,
             display_name=display_name or "SSHD",
             config_dir=config_dir,
@@ -658,7 +660,7 @@ class FactoriesManager:
                 root_dir = pathlib.Path(defaults["root_dir"]).resolve()
             root_dir.mkdir(parents=True, exist_ok=True)
             return root_dir
-        if self.system_install is True and issubclass(factory_class, Salt):
+        if self.system_install is True and issubclass(factory_class, SaltMixin):
             return self.root_dir
         elif self.system_install is True:
             root_dir = self.tmp_root_dir
