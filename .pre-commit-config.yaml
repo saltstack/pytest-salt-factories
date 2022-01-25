@@ -67,7 +67,7 @@ repos:
     hooks:
       - id: blacken-docs
         args: [--skip-errors]
-        files: ^(docs/.*\.rst|src/saltfactories/.*\.py)$
+        files: ^(.*\.rst|docs/.*\.rst|src/saltfactories/.*\.py)$
         additional_dependencies: [black==21.7b0]
 
   - repo: https://github.com/pre-commit/mirrors-pylint
