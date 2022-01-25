@@ -62,6 +62,7 @@ funcname
 getsockname
 gettempdir
 globals
+gz
 hookspec
 hostname
 https
@@ -86,6 +87,7 @@ maxdepth
 minify
 msg
 msgpack
+mtime
 multistateresult
 mworker
 namespace
@@ -138,6 +140,7 @@ saltpillartree
 saltproxyminion
 saltstatetree
 saltsyndic
+sdist
 serializers
 shellresult
 sigterm

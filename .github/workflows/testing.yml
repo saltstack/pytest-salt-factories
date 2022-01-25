@@ -907,12 +907,12 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
-    - name: Install pypa/build
+    - name: Install Nox
       run: |
-        python -m pip install build
+        python -m pip install nox
     - name: Build a binary wheel and a source tarball
       run: |
-        python -m build --sdist --wheel --outdir dist/
+        nox -e build
 
     - name: Publish distribution 📦 to Test PyPI
       if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
