@@ -1,0 +1,4 @@
+Switch to the extracted pytest plugins
+
+* Switch to pytest-system-statistics
+* Switch to pytest-shell-utilities
