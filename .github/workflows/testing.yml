@@ -896,6 +896,7 @@ jobs:
     needs:
       - Docs
       - Linux
+      - Linux_3_5
       - Windows
       - macOS
       - Linux-System-Install
