@@ -10,8 +10,8 @@ write_to_template = "# pylint: skip-file\n\n__version__ = \"{version}\"\n"
 package = "saltfactories"
 filename = "CHANGELOG.rst"
 directory = "changelog/"
-title_format = "salt-factories {version} ({project_date})"
-template = "changelog/_template.rst"
+title_format = "{version} ({project_date})"
+issue_format = "`#{issue} <https://github.com/saltstack/pytest-salt-factories/issues/{issue}>`_"
 
   [[tool.towncrier.type]]
   directory = "breaking"
