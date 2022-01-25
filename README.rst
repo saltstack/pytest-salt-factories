@@ -42,7 +42,7 @@ What is Salt Factories
 It's a `pytest <https://docs.pytest.org/>`_ plugin, and also the evolution of
 `pytest-salt <https://github.com/saltstack/pytest-salt>`_, a great start, but ...
 
-.. image:: https://math.now.sh?from=%286t%5E3%20%2B%201%29%5E3%20-%20%286t%5E3%20-%201%29%5E3%20-%20%286t%5E2%29%5E3%20%3D%202&color=DodgerBlue
+.. image:: https://user-images.githubusercontent.com/300048/150960404-20f73e8d-c02b-45e2-a7a3-cc7dab8b58e8.svg
    :alt: Complicated way to get a result of ``2``
    :target: https://arxiv.org/pdf/1802.06776.pdf
 
@@ -52,7 +52,7 @@ over-engineered.
 From the ground up, pytest-salt-factories was created to be ...
 
 
-.. image:: https://math.now.sh?from=1%20%2B%201%20%3D%202&color=DodgerBlue
+.. image:: https://user-images.githubusercontent.com/300048/150960401-fa2b378c-4b28-485a-99c5-add5d7c54ffc.svg
    :alt: Simpler way to get a result of 2
 
 
