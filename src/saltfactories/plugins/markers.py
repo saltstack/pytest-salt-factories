@@ -7,7 +7,7 @@ import saltfactories.utils.functional
 import saltfactories.utils.markers
 
 
-@pytest.hookimpl(tryfirst=True)
+@pytest.hookimpl(trylast=True)
 def pytest_runtest_setup(item):
     """
     Fixtures injection based on markers or test skips based on CLI arguments.

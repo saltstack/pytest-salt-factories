@@ -6,12 +6,14 @@ import stat
 import tempfile
 import textwrap
 
+import _pytest._version
 import pytest
 import salt.version
 
 log = logging.getLogger(__name__)
 
 TESTS_PATH = pathlib.Path(__file__).resolve().parent
+PYTEST_GE_7 = getattr(_pytest._version, "version_tuple", (-1, -1)) >= (7, 0)
 
 
 try:  # pragma: no cover
@@ -133,11 +135,14 @@ def pytest_configure(config):
     )
 
 
-@pytest.hookimpl(tryfirst=True)
+@pytest.hookimpl(trylast=True)
 def pytest_runtest_setup(item):
     salt_factories_fixture = item._request.getfixturevalue("salt_factories")
     if salt_factories_fixture.system_install is False:
         return
+    exc_kwargs = {}
+    if PYTEST_GE_7:
+        exc_kwargs["_use_item_location"] = True
     system_install_skip_paths = (
         # There's no point on running these tests against a system install of salt
         str(TESTS_PATH / "unit"),
@@ -148,10 +153,14 @@ def pytest_runtest_setup(item):
         str(TESTS_PATH / "integration" / "factories" / "daemons" / "container"),
     )
     if str(item.fspath).startswith(system_install_skip_paths):
-        item._skipped_by_mark = True
-        pytest.skip("Test should not run against system install of Salt")
+        raise pytest.skip.Exception(
+            "Test should not run against system install of Salt",
+            **exc_kwargs,
+        )
 
     skip_on_salt_system_install_marker = item.get_closest_marker("skip_on_salt_system_install")
     if skip_on_salt_system_install_marker is not None:
-        item._skipped_by_mark = True
-        pytest.skip("Test should not run against system install of Salt")
+        raise pytest.skip.Exception(
+            "Test should not run against system install of Salt",
+            **exc_kwargs,
+        )
