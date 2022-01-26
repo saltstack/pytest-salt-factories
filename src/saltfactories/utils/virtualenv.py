@@ -125,13 +125,7 @@ class VirtualEnv:
             try:
                 proc.check_returncode()
             except subprocess.CalledProcessError as exc:  # pragma: no cover
-                raise ProcessFailed(
-                    "Command failed return code check",
-                    cmdline=proc.args,
-                    stdout=proc.stdout,
-                    stderr=proc.stderr,
-                    returncode=proc.returncode,
-                ) from exc
+                raise ProcessFailed("Command failed return code check", process_result=ret) from exc
         return ret
 
     @staticmethod

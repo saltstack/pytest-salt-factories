@@ -343,7 +343,7 @@ class SystemdSaltDaemonImpl(DaemonImpl):
     _process = attr.ib(init=False, repr=False, default=None)
     _service_name = attr.ib(init=False, repr=False, default=None)
 
-    def cmdline(self, *args):
+    def cmdline(self, *args):  # pylint: disable=arguments-differ
         """
         Construct a list of arguments to use when starting the subprocess.
 
