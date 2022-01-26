@@ -63,6 +63,9 @@ nox.options.error_on_missing_interpreters = False
 
 
 def pytest_version(session):
+    """
+    Return the pytest version installed on the virtualenv.
+    """
     try:
         return session._runner._pytest_version_info
     except AttributeError:
@@ -81,6 +84,9 @@ def pytest_version(session):
 
 
 def session_run_always(session, *command, **kwargs):
+    """
+    Patch nox to allow running some commands which would be skipped if --install-only is passed.
+    """
     try:
         # Guess we weren't the only ones wanting this
         # https://github.com/theacodes/nox/pull/331
@@ -100,7 +106,7 @@ def session_run_always(session, *command, **kwargs):
 @nox.session(python=("3", "3.5", "3.6", "3.7", "3.8", "3.9"))
 def tests(session):
     """
-    Run tests
+    Run tests.
     """
     env = {}
     system_install = False
@@ -314,7 +320,7 @@ def lint_tests(session):
 @nox.session(python="3")
 def docs(session):
     """
-    Build Docs
+    Build Docs.
     """
     if SKIP_REQUIREMENTS_INSTALL is False:
         session.install(
@@ -341,7 +347,7 @@ def docs(session):
 @nox.session(name="docs-dev", python="3")
 def docs_dev(session):
     """
-    Build Docs
+    Build Docs.
     """
     if SKIP_REQUIREMENTS_INSTALL is False:
         session.install(
@@ -359,7 +365,7 @@ def docs_dev(session):
 @nox.session(name="docs-crosslink-info", python="3")
 def docs_crosslink_info(session):
     """
-    Report intersphinx cross links information
+    Report intersphinx cross links information.
     """
     if SKIP_REQUIREMENTS_INSTALL is False:
         session.install(
@@ -402,7 +408,7 @@ def docs_crosslink_info(session):
 @nox.session(name="gen-api-docs", python="3")
 def gen_api_docs(session):
     """
-    Generate API Docs
+    Generate API Docs.
     """
     if SKIP_REQUIREMENTS_INSTALL is False:
         session.install(
@@ -420,7 +426,7 @@ def gen_api_docs(session):
 @nox.parametrize("draft", [False, True])
 def changelog(session, draft):
     """
-    Generate salt's changelog
+    Generate salt-factories changelog.
     """
     if SKIP_REQUIREMENTS_INSTALL is False:
         requirements_file = os.path.join("requirements", "changelog.txt")
