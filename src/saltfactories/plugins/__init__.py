@@ -1,8 +1,5 @@
 """
-saltfactories.plugins
-~~~~~~~~~~~~~~~~~~~~~
-
-Salt Factories PyTest plugin interface
+Salt Factories PyTest plugin interface.
 """
 import logging
 import os
@@ -17,6 +14,9 @@ log = logging.getLogger(__name__)
 
 
 def pytest_tempdir_temproot():
+    """
+    Define the temp directory to use as a base for the test run.
+    """
     # Taken from https://github.com/saltstack/salt/blob/v2019.2.0/tests/support/paths.py
     # Avoid ${TMPDIR} and gettempdir() on MacOS as they yield a base path too long
     # for unix sockets: ``error: AF_UNIX path too long``
@@ -39,7 +39,7 @@ def pytest_tempdir_basename():
 
 def pytest_runtest_logstart(nodeid):
     """
-    signal the start of running a single test item.
+    Signal the start of running a single test item.
 
     This hook will be called **before** :func:`pytest_runtest_setup`, :func:`pytest_runtest_call` and
     :func:`pytest_runtest_teardown` hooks.
@@ -52,7 +52,7 @@ def pytest_runtest_logstart(nodeid):
 
 def pytest_runtest_logfinish(nodeid):
     """
-    signal the complete finish of running a single test item.
+    Signal the complete finish of running a single test item.
 
     This hook will be called **after** :func:`pytest_runtest_setup`, :func:`pytest_runtest_call` and
     :func:`pytest_runtest_teardown` hooks.
@@ -65,6 +65,8 @@ def pytest_runtest_logfinish(nodeid):
 
 def pytest_runtest_logreport(report):
     """
+    Log the test running.
+
     Process the :py:class:`_pytest.reports.TestReport` produced for each
     of the setup, call and teardown runtest phases of an item.
     See :func:`pytest_runtest_protocol` for a description of the runtest protocol.
@@ -76,7 +78,7 @@ def pytest_runtest_logreport(report):
 @pytest.hookimpl(trylast=True)
 def pytest_load_initial_conftests(*_):
     """
-    Register our pytest helpers
+    Register our pytest helpers.
     """
     if "temp_directory" not in pytest.helpers:
         pytest.helpers.register(saltfactories.utils.tempfiles.temp_directory, name="temp_directory")

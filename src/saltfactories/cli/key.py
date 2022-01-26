@@ -36,9 +36,15 @@ class SaltKey(SaltCli):
     )
 
     def get_minion_tgt(self, minion_tgt=None):
+        """
+        Overridden method because salt-key does not target minions.
+        """
         return None
 
     def process_output(self, stdout, stderr, cmdline=None):
+        """
+        Process the returned output.
+        """
         # salt-key print()s to stdout regardless of output chosen
         stdout = self._output_replace_re.sub("", stdout)
         return super().process_output(stdout, stderr, cmdline=cmdline)

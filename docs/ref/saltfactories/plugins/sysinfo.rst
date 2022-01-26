@@ -1,3 +1,6 @@
+System Information
+==================
+
 .. automodule:: saltfactories.plugins.sysinfo
    :members:
    :show-inheritance:

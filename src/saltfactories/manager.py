@@ -88,6 +88,9 @@ class FactoriesManager:
     scripts_dir = attr.ib(default=None, init=False, repr=False)
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         self.tmp_root_dir = pathlib.Path(self.root_dir.strpath)
         self.tmp_root_dir.mkdir(exist_ok=True)
         if self.system_install is False:
@@ -109,18 +112,21 @@ class FactoriesManager:
     @staticmethod
     def get_salt_log_handlers_path():
         """
-        Returns the path to the Salt log handler this plugin provides
+        Returns the path to the Salt log handler this plugin provides.
         """
         return CODE_ROOT_DIR / "utils" / "saltext" / "log_handlers"
 
     @staticmethod
     def get_salt_engines_path():
         """
-        Returns the path to the Salt engine this plugin provides
+        Returns the path to the Salt engine this plugin provides.
         """
         return CODE_ROOT_DIR / "utils" / "saltext" / "engines"
 
     def final_minion_config_tweaks(self, config):
+        """
+        Final tweaks to the minion configuration.
+        """
         pytest_key = "pytest-minion"
         if pytest_key not in config:  # pragma: no cover
             config[pytest_key] = {}
@@ -128,6 +134,9 @@ class FactoriesManager:
         self.final_common_config_tweaks(config, "minion")
 
     def final_master_config_tweaks(self, config):
+        """
+        Final tweaks to the master configuration.
+        """
         pytest_key = "pytest-master"
         if pytest_key not in config:  # pragma: no cover
             config[pytest_key] = {}
@@ -135,15 +144,27 @@ class FactoriesManager:
         self.final_common_config_tweaks(config, "master")
 
     def final_syndic_config_tweaks(self, config):
+        """
+        Final tweaks to the syndic configuration.
+        """
         self.final_common_config_tweaks(config, "syndic")
 
     def final_proxy_minion_config_tweaks(self, config):
+        """
+        Final tweaks to the proxy-minion configuration.
+        """
         self.final_common_config_tweaks(config, "minion")
 
     def final_cloud_config_tweaks(self, config):
+        """
+        Final tweaks to the cloud configuration.
+        """
         self.final_common_config_tweaks(config, "cloud")
 
     def final_common_config_tweaks(self, config, role):
+        """
+        Final common tweaks to the configuration.
+        """
         config.setdefault("engines", [])
         if "pytest" not in config["engines"]:
             config["engines"].append("pytest")
@@ -189,7 +210,7 @@ class FactoriesManager:
         **factory_class_kwargs
     ):
         """
-        Configure a salt-master
+        Return a salt-master instance.
 
         Args:
             master_id(str):
@@ -249,7 +270,7 @@ class FactoriesManager:
         **factory_class_kwargs
     ):
         """
-        Spawn a salt-minion
+        Return a salt-minion instance.
 
         Args:
             minion_id(str):
@@ -312,7 +333,7 @@ class FactoriesManager:
         **factory_class_kwargs
     ):
         """
-        Spawn a salt-syndic
+        Return a salt-syndic instance.
 
         Args:
             syndic_id(str):
@@ -338,7 +359,6 @@ class FactoriesManager:
             :py:class:`~saltfactories.daemons.syndic.SaltSyndic`:
                 The syndic process class instance
         """
-
         root_dir = self.get_root_dir_for_daemon(
             syndic_id, defaults=defaults, factory_class=factory_class
         )
@@ -424,7 +444,7 @@ class FactoriesManager:
         **factory_class_kwargs
     ):
         """
-        Spawn a salt-proxy
+        Return a salt proxy-minion instance.
 
         Args:
             proxy_minion_id(str):
@@ -479,7 +499,7 @@ class FactoriesManager:
         **factory_class_kwargs
     ):
         """
-        Spawn a salt-api
+        Return a salt-api instance.
 
         Please see py:class:`~saltfactories.manager.FactoriesManager.salt_master_daemon` for argument
         documentation.
@@ -512,7 +532,7 @@ class FactoriesManager:
         **factory_class_kwargs
     ):
         """
-        Start an sshd daemon
+        Return an SSHD daemon instance.
 
         Args:
             max_start_attempts(int):
@@ -569,7 +589,7 @@ class FactoriesManager:
         **factory_class_kwargs
     ):
         """
-        Start a docker container
+        Return a container instance.
 
         Args:
             container_name(str):
@@ -631,7 +651,7 @@ class FactoriesManager:
         **factory_class_kwargs
     ):
         """
-        Helper method to instantiate daemon factories
+        Helper method to instantiate daemon factories.
         """
         if self.system_install:
             script_path = script_name
@@ -653,6 +673,9 @@ class FactoriesManager:
         return factory
 
     def get_root_dir_for_daemon(self, daemon_id, defaults=None, factory_class=None):
+        """
+        Return a root directory for the passed daemon.
+        """
         if defaults and "root_dir" in defaults:
             try:
                 root_dir = pathlib.Path(defaults["root_dir"].strpath).resolve()

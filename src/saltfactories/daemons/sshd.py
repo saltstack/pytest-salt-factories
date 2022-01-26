@@ -1,5 +1,5 @@
 """
-SSHD daemon factory implementation
+SSHD daemon factory implementation.
 """
 import logging
 import pathlib
@@ -21,6 +21,10 @@ log = logging.getLogger(__name__)
 
 @attr.s(kw_only=True, slots=True)
 class Sshd(Daemon):
+    """
+    SSHD implementation.
+    """
+
     config_dir = attr.ib()
     listen_address = attr.ib(default=None)
     listen_port = attr.ib(default=None)
@@ -32,6 +36,9 @@ class Sshd(Daemon):
     _ssh_keygen_path = attr.ib(default=shutil.which("ssh-keygen"))
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         if self.authorized_keys is None:
             self.authorized_keys = []
         if self.sshd_config_dict is None:
@@ -83,7 +90,7 @@ class Sshd(Daemon):
 
     def get_display_name(self):
         """
-        Returns a human readable name for the factory
+        Returns a human readable name for the factory.
         """
         if self.display_name is None:
             self.display_name = "{}(id={!r})".format(self.__class__.__name__, self.id)
@@ -91,7 +98,7 @@ class Sshd(Daemon):
 
     def get_base_script_args(self):
         """
-        Returns any additional arguments to pass to the CLI script
+        Returns any additional arguments to pass to the CLI script.
         """
         return ["-D", "-e", "-f", str(self.config_dir / "sshd_config"), "-p", str(self.listen_port)]
 

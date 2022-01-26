@@ -1,8 +1,5 @@
 """
-    tests.functional.factories.cli.test_cloud
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Test the ``salt-cloud`` CLI functionality
+Test the ``salt-cloud`` CLI functionality.
 """
 import pathlib
 

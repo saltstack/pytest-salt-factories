@@ -1,6 +1,5 @@
 """
-System Information
-==================
+Salt Factories System Information Plugin.
 
 ..
     PYTEST_DONT_REWRITE
@@ -18,7 +17,7 @@ import salt.version
 
 def pytest_addoption(parser):
     """
-    register argparse-style options and ini-style config values.
+    Register argparse-style options and ini-style config values.
     """
     output_options_group = parser.getgroup("Output Options")
     output_options_group.addoption(
@@ -32,7 +31,10 @@ def pytest_addoption(parser):
 
 @pytest.hookimpl(hookwrapper=True, trylast=True)
 def pytest_sessionstart(session):
-    """called after the ``Session`` object has been created and before performing collection
+    """
+    Setup the plugin when the test session starts.
+
+    Called after the ``Session`` object has been created and before performing collection
     and entering the run test loop.
 
     :param _pytest.main.Session session: the pytest session object

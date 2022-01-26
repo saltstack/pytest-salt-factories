@@ -93,8 +93,14 @@ class SaltMinion(SaltDaemon):
                 "pki_dir": str(pki_dir),
                 "log_file": str(logs_dir / "minion.log"),
                 "log_level_logfile": "debug",
-                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_console": (
+                    "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
+                "log_fmt_logfile": (
+                    "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
                 "file_roots": {
                     "base": [str(state_tree_root)],
                 },
@@ -140,8 +146,14 @@ class SaltMinion(SaltDaemon):
                 "log_file": "logs/minion.log",
                 "log_level_logfile": "debug",
                 "loop_interval": 0.05,
-                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_console": (
+                    "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
+                "log_fmt_logfile": (
+                    "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
                 "file_roots": {
                     "base": [str(state_tree_root_base)],
                     "prod": [str(state_tree_root_prod)],
@@ -219,6 +231,9 @@ class SaltMinion(SaltDaemon):
         return salt.config.minion_config(config_file, minion_id=config["id"], cache_minion_id=True)
 
     def get_script_args(self):
+        """
+        Return the script arguments.
+        """
         args = super().get_script_args()
         if platform.is_windows() is False:
             args.append("--disable-keepalive")
@@ -245,7 +260,7 @@ class SaltMinion(SaltDaemon):
 
     def salt_call_cli(self, factory_class=cli.call.SaltCall, **factory_class_kwargs):
         """
-        Return a `salt-call` CLI process for this minion instance
+        Return a `salt-call` CLI process for this minion instance.
         """
         if self.system_install is False:
             script_path = cli_scripts.generate_script(

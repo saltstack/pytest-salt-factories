@@ -1,6 +1,5 @@
 """
-Event Listener
-==============
+Salt Factories Event Listener.
 
 A salt events store for all daemons started by salt-factories
 """
@@ -35,6 +34,8 @@ def _convert_stamp(stamp):
 @attr.s(kw_only=True, slots=True, hash=True, frozen=True)
 class Event:
     """
+    Event wrapper class.
+
     The ``Event`` class is a container for a salt event which will live on the
     :py:class:`~saltfactories.plugins.event_listener.EventListener` store.
 
@@ -78,6 +79,8 @@ class Event:
 @attr.s(kw_only=True, slots=True, hash=True, frozen=True)
 class MatchedEvents:
     """
+    MatchedEvents implementation.
+
     The ``MatchedEvents`` class is a container which is returned by
     :py:func:`~saltfactories.plugins.event_listener.EventListener.wait_for_events`.
 
@@ -107,12 +110,17 @@ class MatchedEvents:
         return (not self.missed) is True
 
     def __iter__(self):
+        """
+        Iterate through the matched events.
+        """
         return iter(self.matches)
 
 
 @attr.s(kw_only=True, slots=True, hash=True)
 class EventListener:
     """
+    EventListener implementation.
+
     The ``EventListener`` is a service started by salt-factories which receives all the events of all the
     salt masters that it starts. The service runs throughout the whole pytest session.
 
@@ -131,6 +139,9 @@ class EventListener:
     auth_event_handlers = attr.ib(init=False, repr=False, hash=False)
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         self.store = deque(maxlen=10000)
         self.address = "tcp://127.0.0.1:{}".format(ports.get_unused_localhost_port())
         self.running_event = threading.Event()
@@ -239,6 +250,9 @@ class EventListener:
             log.debug("%s store size after cleanup: %s", self, len(self.store))
 
     def start(self):
+        """
+        Start the event listener.
+        """
         if self.running_event.is_set():  # pragma: no cover
             return
         log.debug("%s is starting", self)
@@ -250,6 +264,9 @@ class EventListener:
         self.cleanup_thread.start()
 
     def stop(self):
+        """
+        Stop the event listener.
+        """
         if self.running_event.is_set() is False:  # pragma: no cover
             return
         log.debug("%s is stopping", self)
@@ -414,7 +431,7 @@ class EventListener:
 
     def unregister_auth_event_handler(self, master_id):
         """
-        Un-register the authentication event callback, if any, for the provided master ID
+        Un-register the authentication event callback, if any, for the provided master ID.
 
         :param str master_id:
             The master ID for which the callback is registered
@@ -425,6 +442,8 @@ class EventListener:
 @pytest.fixture(scope="session")
 def event_listener(request):
     """
+    Event listener session scoped fixture.
+
     All started daemons will forward their events into an instance of
     :py:class:`~saltfactories.plugins.event_listener.EventListener`.
 
@@ -466,17 +485,26 @@ def event_listener(request):
 
 
 def pytest_configure(config):
+    """
+    Configure the plugins.
+    """
     event_listener = EventListener()
     config.pluginmanager.register(event_listener, "saltfactories-event-listener")
 
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_sessionstart(session):
+    """
+    Start the event listener plugin.
+    """
     event_listener = session.config.pluginmanager.get_plugin("saltfactories-event-listener")
     event_listener.start()
 
 
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session):
+    """
+    Stop the event listener plugin.
+    """
     event_listener = session.config.pluginmanager.get_plugin("saltfactories-event-listener")
     event_listener.stop()

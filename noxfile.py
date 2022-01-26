@@ -246,13 +246,14 @@ def tests(session):
 
 
 def _lint(session, rcfile, flags, paths):
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "lint.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    session.run("pylint", "--version")
+    if SKIP_REQUIREMENTS_INSTALL is False:
+        session.install(
+            "--progress-bar=off",
+            "-r",
+            os.path.join("requirements", "lint.txt"),
+            silent=PIP_INSTALL_SILENT,
+        )
+        session.run("pylint", "--version")
     pylint_report_path = os.environ.get("PYLINT_REPORT")
 
     cmd_args = ["pylint", "--rcfile={}".format(rcfile)] + list(flags) + list(paths)
@@ -315,13 +316,14 @@ def docs(session):
     """
     Build Docs
     """
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "docs.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    session.install("-e", ".", silent=PIP_INSTALL_SILENT)
+    if SKIP_REQUIREMENTS_INSTALL is False:
+        session.install(
+            "--progress-bar=off",
+            "-r",
+            os.path.join("requirements", "docs.txt"),
+            silent=PIP_INSTALL_SILENT,
+        )
+        session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     os.chdir("docs/")
     session.run("make", "clean", external=True)
     session.run("make", "linkcheck", "SPHINXOPTS=-W", external=True)
@@ -341,13 +343,14 @@ def docs_dev(session):
     """
     Build Docs
     """
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "docs.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    session.install("-e", ".", silent=PIP_INSTALL_SILENT)
+    if SKIP_REQUIREMENTS_INSTALL is False:
+        session.install(
+            "--progress-bar=off",
+            "-r",
+            os.path.join("requirements", "docs.txt"),
+            silent=PIP_INSTALL_SILENT,
+        )
+        session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     os.chdir("docs/")
     session.run("make", "html", "SPHINXOPTS=-W", external=True, env={"LOCAL_DEV_BUILD": "1"})
     os.chdir("..")
@@ -358,13 +361,14 @@ def docs_crosslink_info(session):
     """
     Report intersphinx cross links information
     """
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "docs.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    session.install("-e", ".", silent=PIP_INSTALL_SILENT)
+    if SKIP_REQUIREMENTS_INSTALL is False:
+        session.install(
+            "--progress-bar=off",
+            "-r",
+            os.path.join("requirements", "docs.txt"),
+            silent=PIP_INSTALL_SILENT,
+        )
+        session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     os.chdir("docs/")
     intersphinx_mapping = json.loads(
         session.run(
@@ -400,13 +404,14 @@ def gen_api_docs(session):
     """
     Generate API Docs
     """
-    session.install(
-        "--progress-bar=off",
-        "-r",
-        os.path.join("requirements", "docs.txt"),
-        silent=PIP_INSTALL_SILENT,
-    )
-    session.install("-e", ".", silent=PIP_INSTALL_SILENT)
+    if SKIP_REQUIREMENTS_INSTALL is False:
+        session.install(
+            "--progress-bar=off",
+            "-r",
+            os.path.join("requirements", "docs.txt"),
+            silent=PIP_INSTALL_SILENT,
+        )
+        session.install("-e", ".", silent=PIP_INSTALL_SILENT)
     shutil.rmtree("docs/ref", ignore_errors=True)
     session.run("sphinx-apidoc", "--module-first", "-o", "docs/ref/", "src/saltfactories/")
 
@@ -417,10 +422,11 @@ def changelog(session, draft):
     """
     Generate salt's changelog
     """
-    requirements_file = os.path.join("requirements", "changelog.txt")
-    install_command = ["--progress-bar=off", "-r", requirements_file]
-    session.install(*install_command, silent=PIP_INSTALL_SILENT)
-    session.install("-e", ".", silent=PIP_INSTALL_SILENT)
+    if SKIP_REQUIREMENTS_INSTALL is False:
+        requirements_file = os.path.join("requirements", "changelog.txt")
+        install_command = ["--progress-bar=off", "-r", requirements_file]
+        session.install(*install_command, silent=PIP_INSTALL_SILENT)
+        session.install("-e", ".", silent=PIP_INSTALL_SILENT)
 
     version = session.run(
         "python",
@@ -550,7 +556,10 @@ def build(session):
         git show -s --format=%at HEAD
     """
     shutil.rmtree("dist/", ignore_errors=True)
-    session.install("--progress-bar=off", "-r", "requirements/build.txt", silent=PIP_INSTALL_SILENT)
+    if SKIP_REQUIREMENTS_INSTALL is False:
+        session.install(
+            "--progress-bar=off", "-r", "requirements/build.txt", silent=PIP_INSTALL_SILENT
+        )
 
     timestamp = session.run(
         "git",

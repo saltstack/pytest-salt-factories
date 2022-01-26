@@ -1,8 +1,5 @@
 """
-saltfactories.utils.functional
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Salt functional testing support
+Salt functional testing support.
 """
 import copy
 import logging
@@ -11,8 +8,7 @@ import operator
 import attr
 import salt.loader
 import salt.pillar
-
-from saltfactories.utils import format_callback_to_string
+from pytestshellutils.utils import format_callback_to_string
 
 try:
     import salt.features  # pylint: disable=ungrouped-imports
@@ -26,7 +22,7 @@ log = logging.getLogger(__name__)
 
 class Loaders:
     """
-    This class provides the required functionality for functional testing against the salt loaders
+    This class provides the required functionality for functional testing against the salt loaders.
 
     :param dict opts:
         The options dictionary to load the salt loaders.
@@ -80,10 +76,16 @@ class Loaders:
         self.reload_all()
 
     def reset_state(self):
+        """
+        Reset the state functions state.
+        """
         for func in self._reset_state_funcs:
             func()
 
     def reload_all(self):
+        """
+        Reload all loaders.
+        """
         for func in self._reload_all_funcs:
             try:
                 func()
@@ -102,7 +104,7 @@ class Loaders:
     @property
     def grains(self):
         """
-        The grains loaded by the salt loader
+        The grains loaded by the salt loader.
         """
         if self._grains is None:
             self._grains = salt.loader.grains(self.opts, context=self.context)
@@ -111,7 +113,7 @@ class Loaders:
     @property
     def utils(self):
         """
-        The utils loaded by the salt loader
+        The utils loaded by the salt loader.
         """
         if self._utils is None:
             self._utils = salt.loader.utils(self.opts, context=self.context)
@@ -120,7 +122,7 @@ class Loaders:
     @property
     def modules(self):
         """
-        The execution modules loaded by the salt loader
+        The execution modules loaded by the salt loader.
         """
         if self._modules is None:
             _modules = salt.loader.minion_mods(
@@ -152,10 +154,11 @@ class Loaders:
                 class ModulesLoaderDict(_modules.mod_dict_class):
                     def __setitem__(self, key, value):
                         """
+                        Intercept method.
+
                         We hijack __setitem__ so that we can replace specific state functions with a
                         wrapper which will return a more pythonic data structure to assert against.
                         """
-
                         if key in (
                             "state.single",
                             "state.sls",
@@ -180,7 +183,7 @@ class Loaders:
     @property
     def serializers(self):
         """
-        The serializers loaded by the salt loader
+        The serializers loaded by the salt loader.
         """
         if self._serializers is None:
             self._serializers = salt.loader.serializers(self.opts)
@@ -189,7 +192,7 @@ class Loaders:
     @property
     def states(self):
         """
-        The state modules loaded by the salt loader
+        The state modules loaded by the salt loader.
         """
         if self._states is None:
             _states = salt.loader.states(
@@ -231,6 +234,8 @@ class Loaders:
 
                     def __setitem__(self, name, func):
                         """
+                        Intercept method.
+
                         We hijack __setitem__ so that we can replace the loaded functions
                         with a wrapper
                         For state execution modules, because we'd have to almost copy/paste what
@@ -252,7 +257,7 @@ class Loaders:
     @property
     def pillar(self):
         """
-        The pillar loaded by the salt loader
+        The pillar loaded by the salt loader.
         """
         if self._pillar is None:
             self._pillar = salt.pillar.get_pillar(
@@ -265,6 +270,9 @@ class Loaders:
         return self._pillar
 
     def refresh_pillar(self):
+        """
+        Refresh the pillar.
+        """
         self._pillar = None
         self.opts["pillar"] = self.pillar
 
@@ -272,7 +280,7 @@ class Loaders:
 @attr.s
 class StateResult:
     """
-    This class wraps a single salt state return into a more pythonic object in order to simplify assertions
+    This class wraps a single salt state return into a more pythonic object in order to simplify assertions.
 
     :param dict raw:
         A single salt state return result
@@ -311,57 +319,63 @@ class StateResult:
     @property
     def run_num(self):
         """
-        The ``__run_num__`` key on the full state return dictionary
+        The ``__run_num__`` key on the full state return dictionary.
         """
         return self.full_return["__run_num__"] or 0
 
     @property
     def name(self):
         """
-        The ``name`` key on the full state return dictionary
+        The ``name`` key on the full state return dictionary.
         """
         return self.full_return["name"]
 
     @property
     def result(self):
         """
-        The ``result`` key on the full state return dictionary
+        The ``result`` key on the full state return dictionary.
         """
         return self.full_return["result"]
 
     @property
     def changes(self):
         """
-        The ``changes`` key on the full state return dictionary
+        The ``changes`` key on the full state return dictionary.
         """
         return self.full_return["changes"]
 
     @property
     def comment(self):
         """
-        The ``comment`` key on the full state return dictionary
+        The ``comment`` key on the full state return dictionary.
         """
         return self.full_return["comment"]
 
     @property
     def warnings(self):
         """
-        The ``warnings`` key on the full state return dictionary
+        The ``warnings`` key on the full state return dictionary.
         """
         return self.full_return.get("warnings") or []
 
     def __contains__(self, key):
         """
-        Checks for the existence of ``key`` in the full state return dictionary
+        Checks for the existence of ``key`` in the full state return dictionary.
         """
         return key in self.full_return
 
     def __eq__(self, _):
+        """
+        Override method.
+        """
         raise TypeError(
             "Please assert comparisons with {}.filtered instead".format(self.__class__.__name__)
         )
 
     def __bool__(self):
+        """
+        Override method.
+        """
         raise TypeError(
             "Please assert comparisons with {}.filtered instead".format(self.__class__.__name__)
         )
@@ -370,6 +384,8 @@ class StateResult:
 @attr.s
 class StateFunction:
     """
+    Salt state module functions wrapper.
+
     Simple wrapper around Salt's state execution module functions which actually proxies the call
     through Salt's ``state.single`` execution module
     """
@@ -378,6 +394,9 @@ class StateFunction:
     state_func = attr.ib()
 
     def __call__(self, *args, **kwargs):
+        """
+        Call the state module function.
+        """
         log.info(
             "Calling %s",
             format_callback_to_string("state.single", (self.state_func,) + args, kwargs),
@@ -388,6 +407,8 @@ class StateFunction:
 @attr.s
 class MultiStateResult:
     '''
+    Multiple state returns wrapper class.
+
     This class wraps multiple salt state returns, for example, running the ``state.sls`` execution module,
     into a more pythonic object in order to simplify assertions
 
@@ -448,15 +469,24 @@ class MultiStateResult:
         return sorted(state_result, key=operator.attrgetter("run_num"))
 
     def __iter__(self):
+        """
+        Iterate through the state return.
+        """
         return iter(self._structured)
 
     def __contains__(self, key):
+        """
+        Check the presence of ``key`` in the state return.
+        """
         for state_result in self:
             if state_result.state_id == key:
                 return True
         return False
 
     def __getitem__(self, state_id_or_index):
+        """
+        Get an item from the state return.
+        """
         if isinstance(state_id_or_index, int):
             # We're trying to get the state run by index
             return self._structured[state_id_or_index]
@@ -468,14 +498,14 @@ class MultiStateResult:
     @property
     def failed(self):
         """
-        Return ``True`` or ``False`` if the multiple state run was not successful
+        Return ``True`` or ``False`` if the multiple state run was not successful.
         """
         return isinstance(self.raw, list)
 
     @property
     def errors(self):
         """
-        Return the list of errors in case the multiple state run was not successful
+        Return the list of errors in case the multiple state run was not successful.
         """
         if not self.failed:
             return []
@@ -485,7 +515,8 @@ class MultiStateResult:
 @attr.s(frozen=True)
 class StateModuleFuncWrapper:
     """
-    This class simply wraps a single or multiple state returns into a more pythonic object,
+    This class simply wraps a single or multiple state returns into a more pythonic object.
+
     :py:class:`~saltfactories.utils.functional.StateResult` or
     py:class:`~saltfactories.utils.functional.MultiStateResult`
 
@@ -499,5 +530,8 @@ class StateModuleFuncWrapper:
     wrapper = attr.ib()
 
     def __call__(self, *args, **kwargs):
+        """
+        Call the state module function.
+        """
         ret = self.func(*args, **kwargs)
         return self.wrapper(ret)

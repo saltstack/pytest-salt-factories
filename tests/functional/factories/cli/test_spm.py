@@ -1,8 +1,5 @@
 """
-    tests.functional.factories.cli.test_spm
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Test the ``spm`` CLI functionality
+Test the ``spm`` CLI functionality.
 """
 import pathlib
 

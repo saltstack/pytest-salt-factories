@@ -1,6 +1,5 @@
 """
-Log Server
-==========
+Salt Factories Log Server.
 """
 import logging
 import threading
@@ -18,6 +17,10 @@ log = logging.getLogger(__name__)
 
 @attr.s(kw_only=True, slots=True, hash=True)
 class LogServer:
+    """
+    Log server plugin.
+    """
+
     log_host = attr.ib()
     log_port = attr.ib()
     log_level = attr.ib()
@@ -43,6 +46,9 @@ class LogServer:
         return 1000000
 
     def start(self):
+        """
+        Start the log server.
+        """
         log.info("%s starting...", self)
         self.sentinel_event = threading.Event()
         self.running_event = threading.Event()
@@ -55,6 +61,9 @@ class LogServer:
         log.info("%s started", self)
 
     def stop(self):
+        """
+        Stop the log server.
+        """
         log.info("%s stopping...", self)
         address = "tcp://{}:{}".format(self.log_host, self.log_port)
         context = zmq.Context()
@@ -89,6 +98,9 @@ class LogServer:
                 log.warning("%s The logging server thread is still running...", self)
 
     def process_logs(self):
+        """
+        Process the logs returned.
+        """
         address = "tcp://{}:{}".format(self.log_host, self.log_port)
         context = zmq.Context()
         puller = context.socket(zmq.PULL)
@@ -170,6 +182,9 @@ class LogServer:
 
 @pytest.hookimpl(trylast=True)
 def pytest_configure(config):
+    """
+    Configure the pytest plugin.
+    """
     # If PyTest has no logging configured, default to ERROR level
     levels = [logging.ERROR]
     logging_plugin = config.pluginmanager.get_plugin("logging-plugin")
@@ -200,11 +215,17 @@ def pytest_configure(config):
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_sessionstart(session):
+    """
+    Start the pytest plugin.
+    """
     log_server = session.config.pluginmanager.get_plugin("saltfactories-log-server")
     log_server.start()
 
 
 @pytest.hookimpl(trylast=True)
 def pytest_sessionfinish(session):
+    """
+    Stop the pytest plugin.
+    """
     log_server = session.config.pluginmanager.get_plugin("saltfactories-log-server")
     log_server.stop()

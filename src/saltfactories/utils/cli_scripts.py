@@ -1,8 +1,5 @@
 """
-saltfactories.utils.cli_scripts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Code to generate Salt CLI scripts for test runs
+Code to generate Salt CLI scripts for test runs.
 """
 import logging
 import pathlib
@@ -159,7 +156,8 @@ def generate_script(
     inject_sitecustomize=False,
 ):
     """
-    Generate a CLI script
+    Generate a CLI script.
+
     :param ~pathlib.Path bin_dir: The path to the directory which will contain the CLI scripts
     :param str script_name: The CLI script name
     :param ~pathlib.Path code_dir: The project's being tested root directory path

@@ -1,4 +1,6 @@
 """
+CLI Entry Point.
+
 The ``salt-factories`` CLI script is meant to be used to get an absolute path to the directory containing
 ``sitecustomize.py`` so that it can be injected into ``PYTHONPATH`` when running tests to track subprocesses
 code coverage.
@@ -10,6 +12,9 @@ import saltfactories
 
 
 def main():
+    """
+    Main CLI entry-point.
+    """
     parser = argparse.ArgumentParser(description="PyTest Salt Factories")
     parser.add_argument(
         "--coverage",

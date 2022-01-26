@@ -47,8 +47,9 @@ class LocalClient:
 
     def run(self, function, *args, minion_tgt="minion", timeout=300, **kwargs):
         """
-        Run a single salt function and condition the return down to match the
-        behavior of the raw function call
+        Run a single salt function.
+
+        Additional condition the return down to match the behavior of the raw function call.
         """
         if "f_arg" in kwargs:
             kwargs["arg"] = kwargs.pop("f_arg")

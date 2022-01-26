@@ -1,3 +1,6 @@
+"""
+Salt Factories Markers.
+"""
 import pytest
 
 import saltfactories.utils.functional
@@ -7,7 +10,7 @@ import saltfactories.utils.markers
 @pytest.hookimpl(tryfirst=True)
 def pytest_runtest_setup(item):
     """
-    Fixtures injection based on markers or test skips based on CLI arguments
+    Fixtures injection based on markers or test skips based on CLI arguments.
     """
     __tracebackhide__ = True
     saltfactories.utils.markers.evaluate_markers(item)
@@ -16,7 +19,9 @@ def pytest_runtest_setup(item):
 @pytest.mark.trylast
 def pytest_configure(config):
     """
-    called after command line options have been parsed
+    Configure the pytest plugin.
+
+    Called after command line options have been parsed
     and all plugins and initial conftest files been loaded.
     """
     # Expose the markers we use to pytest CLI
@@ -32,6 +37,9 @@ def pytest_configure(config):
 
 @pytest.fixture(scope="session")
 def session_markers_loader(salt_factories):
+    """
+    Session scoped loaders fixture.
+    """
     minion_id = "session-markers-minion"
     overrides = {
         "file_client": "local",

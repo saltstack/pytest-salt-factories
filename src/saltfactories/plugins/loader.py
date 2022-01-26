@@ -1,8 +1,5 @@
 """
-Loader
-======
-
-Salt loader mock support for tests
+Salt loader mock support for tests.
 """
 import logging
 
@@ -16,6 +13,8 @@ log = logging.getLogger(__name__)
 @pytest.hookimpl(trylast=True)
 def pytest_collection_modifyitems(items):
     """
+    Modify the collected items.
+
     Iterate through the collected items, in particular their test modules, to see if there's a function
     named ``configure_loader_modules``. If there is, assert that it's a fixture. If not, raise an error.
     """
@@ -65,7 +64,7 @@ def pytest_collection_modifyitems(items):
 @pytest.fixture(autouse=True)
 def setup_loader_mock(request):
     """
-    Setup Salt's loader mocking/patching if the test module defines a ``configure_loader_modules`` fixture
+    Setup Salt's loader mocking/patching if the test module defines a ``configure_loader_modules`` fixture.
     """
     # If the test module defines a configure_loader_modules function, we'll setup the LoaderModuleMock
     # which is what actually sets up the salt loader mocking, if not, it's a no-op

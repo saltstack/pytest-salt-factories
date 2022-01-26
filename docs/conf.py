@@ -163,6 +163,9 @@ intersphinx_mapping = {
     "salt": ("https://docs.saltproject.io/en/latest", None),
     "psutil": ("https://psutil.readthedocs.io/en/latest/", None),
     "coverage": ("https://coverage.readthedocs.io/en/latest/", None),
+    "pytestshellutils": ("https://pytest-shell-utilities.readthedocs.io/en/latest/", None),
+    "pytestsysstats": ("https://pytest-system-statistics.readthedocs.io/en/latest/", None),
+    "pytestskipmarkers": ("https://pytest-skip-markers.readthedocs.io/en/latest/", None),
 }
 # <---- Intersphinx Config -----------------------------------------------------------------------------------------
 

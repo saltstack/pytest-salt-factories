@@ -1,8 +1,5 @@
 """
-pytest_log_handler
-~~~~~~~~~~~~~~~~~~
-
-Salt External Logging Handler
+Salt External Logging Handler.
 """
 import copy
 import logging
@@ -36,7 +33,7 @@ except ImportError:  # pragma: no cover
 
         class NewStyleClassMixin(object):
             """
-            A copy of Salt's previous NewStyleClassMixin implementation
+            A copy of Salt's previous NewStyleClassMixin implementation.
             """
 
 
@@ -83,6 +80,9 @@ def __virtual__():
 
 
 def setup_handlers():
+    """
+    Setup the handlers.
+    """
     role = __opts__["__role"]
     pytest_key = "pytest-{}".format(role)
     pytest_config = __opts__[pytest_key]
@@ -130,6 +130,9 @@ def setup_handlers():
 
 
 class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMixin):
+    """
+    ZMQ logging handler implementation.
+    """
 
     # We implement a lazy start approach which is deferred until sending the
     # first message because, logging handlers, on platforms which support
@@ -171,9 +174,12 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
     formatter = property(_get_formatter, _set_formatter, _del_formatter)
 
     def setFormatter(self, _):
+        """
+        Overridden method to show an error.
+        """
         raise RuntimeError("Do not set a formatter on {}".format(self.__class__.__name__))
 
-    def __getstate__(self):
+    def __getstate__(self):  # noqa: D105
         return {
             "host": self.host,
             "port": self.port,
@@ -182,12 +188,12 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
             "socket_hwm": self.socket_hwm,
         }
 
-    def __setstate__(self, state):
+    def __setstate__(self, state):  # noqa: D105
         self.__init__(**state)
         self.stop()
         self._exiting = False
 
-    def __repr__(self):
+    def __repr__(self):  # noqa: D105
         return "<{} host={} port={} level={}>".format(
             self.__class__.__name__, self.host, self.port, logging.getLevelName(self.level)
         )
@@ -203,6 +209,9 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         return log_prefix.format(cli_name=cli_name)
 
     def start(self):
+        """
+        Start the handler.
+        """
         if self.pid != os.getpid():
             self.stop()
             self._exiting = False
@@ -251,6 +260,9 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
         self.pid = os.getpid()
 
     def stop(self, flush=True):
+        """
+        Stop the handler.
+        """
         if self._exiting:
             return
 
@@ -295,12 +307,18 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMix
             self.pid = None
 
     def format(self, record):
+        """
+        Format the log record.
+        """
         msg = super(ZMQHandler, self).format(record)
         if self.log_prefix:
             msg = "[{}] {}".format(to_unicode(self.log_prefix), to_unicode(msg))
         return msg
 
     def prepare(self, record):
+        """
+        Prepare the log record.
+        """
         msg = self.format(record)
         record = copy.copy(record)
         record.msg = msg
