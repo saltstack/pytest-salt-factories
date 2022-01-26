@@ -24,7 +24,8 @@ def test_has_required_salt_state(pytester, modules):
         )
     )
     res = pytester.runpytest()
-    res.assert_outcomes(passed=1)
+    # res.assert_outcomes(passed=1)
+    assert res.parseoutcomes()["passed"] == 1
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
@@ -48,7 +49,8 @@ def test_missing_required_salt_state(pytester, modules):
         )
     )
     res = pytester.runpytest()
-    res.assert_outcomes(skipped=1)
+    # res.assert_outcomes(skipped=1)
+    assert res.parseoutcomes()["skipped"] == 1
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
@@ -104,7 +106,8 @@ def test_has_required_custom_salt_state(pytester):
         """
     )
     res = pytester.runpytest()
-    res.assert_outcomes(passed=1)
+    # res.assert_outcomes(passed=1)
+    assert res.parseoutcomes()["passed"] == 1
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
 
 
@@ -119,7 +122,8 @@ def test_marker_does_not_accept_keyword_argument(pytester):
         """
     )
     res = pytester.runpytest()
-    res.assert_outcomes(errors=1)
+    # res.assert_outcomes(errors=1)
+    assert res.parseoutcomes()["errors"] == 1
     res.stdout.fnmatch_lines(
         ["*UsageError: The 'required_salt_states' marker does not accept keyword arguments*"]
     )
@@ -136,7 +140,8 @@ def test_marker_only_accepts_string_arguments(pytester):
         """
     )
     res = pytester.runpytest()
-    res.assert_outcomes(errors=1)
+    # res.assert_outcomes(errors=1)
+    assert res.parseoutcomes()["errors"] == 1
     res.stdout.fnmatch_lines(
         ["*UsageError: The 'required_salt_states' marker only accepts strings as arguments*"]
     )
@@ -153,7 +158,8 @@ def test_marker_errors_with_no_arguments(pytester):
         """
     )
     res = pytester.runpytest()
-    res.assert_outcomes(errors=1)
+    # res.assert_outcomes(errors=1)
+    assert res.parseoutcomes()["errors"] == 1
     res.stdout.fnmatch_lines(
         [
             "*UsageError: The 'required_salt_states' marker needs at least one state module name to be passed*"
