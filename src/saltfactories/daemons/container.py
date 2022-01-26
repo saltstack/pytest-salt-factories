@@ -281,9 +281,7 @@ class Container(BaseFactory):
                 time.time() - start_time,
                 start_timeout or self.start_timeout,
             ),
-            stdout=result.stdout,
-            stderr=result.stderr,
-            returncode=result.returncode,
+            process_result=result,
         )
 
     def started(self, *command, max_start_attempts=None, start_timeout=None):

@@ -12,6 +12,7 @@ from pytestshellutils.exceptions import FactoryFailure
 from pytestshellutils.shell import Daemon
 from pytestshellutils.utils import ports
 from pytestshellutils.utils import socket
+from pytestshellutils.utils.processes import ProcessResult
 from pytestskipmarkers.utils import platform
 
 from saltfactories.utils import running_username
@@ -208,10 +209,12 @@ class Sshd(Daemon):
                 stderr=subprocess.PIPE,
             )
         except subprocess.CalledProcessError as exc:
-            raise FactoryFailure(
-                "Failed to generate ssh key.",
+            process_result = ProcessResult(
                 cmdline=exc.args,
                 stdout=exc.stdout,
                 stderr=exc.stderr,
                 returncode=exc.returncode,
+            )
+            raise FactoryFailure(
+                "Failed to generate ssh key.", process_result=process_result
             ) from exc
