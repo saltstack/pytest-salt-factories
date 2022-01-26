@@ -1,8 +1,5 @@
 """
-    tests.functional.test_sys_info
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Tests related to system information reports enabled by the `--sys-info` flag.
+Tests related to system information reports enabled by the `--sys-info` flag..
 """
 import pytest
 

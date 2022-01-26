@@ -72,10 +72,16 @@ class SaltCloud(SaltCli):
         overrides=None,
         **configure_kwargs
     ):
+        """
+        Configure the CLI.
+        """
         return cls.default_config(root_dir, daemon_id, defaults=defaults, overrides=overrides)
 
     @classmethod
     def verify_config(cls, config):
+        """
+        Verify the configuration dictionary.
+        """
         prepend_root_dirs = []
         for config_key in ("log_file",):
             if urllib.parse.urlparse(config.get(config_key, "")).scheme == "":

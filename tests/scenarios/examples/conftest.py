@@ -24,7 +24,7 @@ class ExtensionVirtualEnv(VirtualEnv):
     def _init_virtualenv(self):
         return VirtualEnv(self.tmp_path / ".venv", cwd=self.copy_path)
 
-    def __enter__(self):
+    def __enter__(self):  # noqa: D105
         self.venv.__enter__()
         self.venv.run("git", "init", ".")
         self.venv.run("git", "add", ".")
@@ -34,7 +34,7 @@ class ExtensionVirtualEnv(VirtualEnv):
         self.venv.install(".[tests]")
         return self.venv
 
-    def __exit__(self, *_):
+    def __exit__(self, *_):  # noqa: D105
         self.venv.__exit__(*_)
 
 

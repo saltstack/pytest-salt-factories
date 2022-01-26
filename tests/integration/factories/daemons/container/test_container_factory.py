@@ -5,7 +5,7 @@ from pytestshellutils.utils import socket
 from saltfactories.daemons.container import Container
 
 docker = pytest.importorskip("docker")
-from docker.errors import DockerException
+from docker.errors import DockerException  # noqa: E402
 
 
 @pytest.fixture(scope="module")

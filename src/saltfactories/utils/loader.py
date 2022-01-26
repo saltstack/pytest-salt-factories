@@ -1,9 +1,5 @@
 """
-saltfactories.utils.loader
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Salt's Loader PyTest Mock Support
-
+Salt's Loader PyTest Mock Support.
 """
 import logging
 import sys
@@ -13,14 +9,16 @@ from unittest.mock import patch
 
 import attr
 import pytest
-
-from saltfactories.utils import format_callback_to_string
+from pytestshellutils.utils import format_callback_to_string
 
 log = logging.getLogger(__name__)
 
 
 @attr.s(init=True, slots=True, frozen=True)
 class LoaderModuleMock:
+    """
+    Salt Loader mock class.
+    """
 
     setup_loader_modules = attr.ib(init=True)
     # These dunders should always exist at the module global scope
@@ -73,6 +71,9 @@ class LoaderModuleMock:
     _finalizers = attr.ib(init=False, repr=False, hash=False, default=attr.Factory(deque))
 
     def start(self):
+        """
+        Start mocks.
+        """
         module_globals = {dunder: {} for dunder in self.salt_module_dunders}
         for module, globals_to_mock in self.setup_loader_modules.items():
             log.trace("Setting up loader globals for %s; globals: %s", module, globals_to_mock)
@@ -105,6 +106,9 @@ class LoaderModuleMock:
             self._patch_module_globals(module, globals_to_mock, module_globals.copy())
 
     def stop(self):
+        """
+        Stop mocks.
+        """
         while self._finalizers:
             func, args, kwargs = self._finalizers.popleft()
             func_repr = format_callback_to_string(func, args, kwargs)
@@ -121,7 +125,7 @@ class LoaderModuleMock:
 
     def addfinalizer(self, func, *args, **kwargs):
         """
-        Register a function to run when stopping
+        Register a function to run when stopping.
         """
         self._finalizers.append((func, args, kwargs))
 
@@ -180,8 +184,14 @@ class LoaderModuleMock:
         self.addfinalizer(patcher.stop)
 
     def __enter__(self):
+        """
+        Use the mock class as a context manager.
+        """
         self.start()
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *_):
+        """
+        Exit context manager.
+        """
         self.stop()

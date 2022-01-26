@@ -30,7 +30,9 @@ except ImportError:  # pragma: no cover
     HAS_DOCKER = False
 
     class APIError(Exception):
-        pass
+        """
+        Define APIError to avoid NameError.
+        """
 
 
 try:
@@ -41,7 +43,9 @@ except ImportError:  # pragma: no cover
     HAS_REQUESTS = False
 
     class RequestsConnectionError(ConnectionError):
-        pass
+        """
+        Define RequestsConnectionError to avoid NameError.
+        """
 
 
 try:
@@ -51,7 +55,9 @@ try:
 except ImportError:
 
     class PyWinTypesError(Exception):
-        pass
+        """
+        Define PyWinTypesError to avoid NameError.
+        """
 
 
 log = logging.getLogger(__name__)
@@ -79,6 +85,9 @@ class Container(BaseFactory):
     _terminate_result = attr.ib(repr=False, hash=False, init=False, default=None)
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         if self.name is None:
             self.name = random_string("factories-")
         if self.docker_client is None:
@@ -149,6 +158,9 @@ class Container(BaseFactory):
         return super().get_display_name()
 
     def start(self, *command, max_start_attempts=None, start_timeout=None):
+        """
+        Start the container.
+        """
         if self.is_running():
             log.warning("%s is already running.", self)
             return True
@@ -276,12 +288,15 @@ class Container(BaseFactory):
 
     def started(self, *command, max_start_attempts=None, start_timeout=None):
         """
-        Start the container and return it's instance so it can be used as a context manager
+        Start the container and return it's instance so it can be used as a context manager.
         """
         self.start(*command, max_start_attempts=max_start_attempts, start_timeout=start_timeout)
         return self
 
     def terminate(self):
+        """
+        Terminate the container.
+        """
         if self._terminate_result is not None:
             # The factory is already terminated
             return self._terminate_result
@@ -332,7 +347,7 @@ class Container(BaseFactory):
 
     def get_check_ports(self):
         """
-        Return a list of ports to check against to ensure the daemon is running
+        Return a list of ports to check against to ensure the daemon is running.
         """
         return self.check_ports or []
 
@@ -347,6 +362,9 @@ class Container(BaseFactory):
         return self.container.status == "running"
 
     def run(self, *cmd, **kwargs):
+        """
+        Run a command inside the container.
+        """
         if len(cmd) == 1:
             cmd = cmd[0]
         log.info("%s is running %r ...", self, cmd)
@@ -365,6 +383,9 @@ class Container(BaseFactory):
 
     @staticmethod
     def client_connectable(docker_client):
+        """
+        Check if the docker client can connect to the docker daemon.
+        """
         try:
             if not docker_client.ping():
                 return "The docker client failed to get a ping response from the docker daemon"
@@ -373,6 +394,9 @@ class Container(BaseFactory):
             return "The docker client failed to ping the docker server: {}".format(exc)
 
     def run_container_start_checks(self, started_at, timeout_at):
+        """
+        Run startup checks.
+        """
         checks_start_time = time.time()
         while time.time() <= timeout_at:
             if not self.is_running():
@@ -405,6 +429,9 @@ class Container(BaseFactory):
         return True
 
     def __enter__(self):
+        """
+        Use as a context manager.
+        """
         if not self.is_running():
             raise RuntimeError(
                 "Factory not yet started. Perhaps you're after something like:\n\n"
@@ -414,12 +441,22 @@ class Container(BaseFactory):
         return self
 
     def __exit__(self, *_):
+        """
+        Exit context manager.
+        """
         self.terminate()
 
 
 @attr.s(kw_only=True)
 class SaltDaemon(bases.SaltDaemon, Container):
+    """
+    Salt Daemon inside a container implementation.
+    """
+
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         self.daemon_started = self.daemon_starting = False
         if self.python_executable is None:
             # Default to whatever is the default python in the container

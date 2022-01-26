@@ -1,8 +1,5 @@
 """
-    tests.functional.factories.cli.test_salt
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Test the ``salt`` CLI functionality
+Test the ``salt`` CLI functionality.
 """
 import pathlib
 

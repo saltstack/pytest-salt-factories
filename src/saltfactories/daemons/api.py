@@ -17,6 +17,9 @@ class SaltApi(SaltDaemon):
     """
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         if "rest_cherrypy" in self.config:
             self.check_ports = [self.config["rest_cherrypy"]["port"]]
         elif "rest_tornado" in self.config:

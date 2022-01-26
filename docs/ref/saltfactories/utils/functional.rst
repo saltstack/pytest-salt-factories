@@ -1,3 +1,6 @@
+saltfactories.utils.functional
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 .. automodule:: saltfactories.utils.functional
    :members:
    :show-inheritance:

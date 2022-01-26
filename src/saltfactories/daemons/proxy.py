@@ -31,6 +31,9 @@ class SystemdSaltProxyImpl(SystemdSaltDaemonImpl):
     """
 
     def get_service_name(self):
+        """
+        Return the systemd service name.
+        """
         if self._service_name is None:
             self._service_name = "{}@{}".format(super().get_service_name(), self.factory.id)
         return self._service_name
@@ -112,8 +115,14 @@ class SaltProxyMinion(SaltDaemon):
                 "log_file": str(logs_dir / "proxy.log"),
                 "log_level_logfile": "debug",
                 "loop_interval": 0.05,
-                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_console": (
+                    "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
+                "log_fmt_logfile": (
+                    "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
                 "file_roots": {
                     "base": [str(state_tree_root)],
                 },
@@ -160,8 +169,14 @@ class SaltProxyMinion(SaltDaemon):
                 "log_file": "logs/proxy.log",
                 "log_level_logfile": "debug",
                 "loop_interval": 0.05,
-                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_console": (
+                    "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
+                "log_fmt_logfile": (
+                    "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
                 "file_roots": {
                     "base": [str(state_tree_root_base)],
                     "prod": [str(state_tree_root_prod)],
@@ -232,6 +247,9 @@ class SaltProxyMinion(SaltDaemon):
         return salt.config.proxy_config(config_file, minion_id=config["id"], cache_minion_id=True)
 
     def get_base_script_args(self):
+        """
+        Return the base arguments for the daemon.
+        """
         script_args = super().get_base_script_args()
         if platform.is_windows() is False:
             script_args.append("--disable-keepalive")
@@ -276,7 +294,7 @@ class SaltProxyMinion(SaltDaemon):
 
     def salt_call_cli(self, factory_class=cli.call.SaltCall, **factory_class_kwargs):
         """
-        Return a `salt-call` CLI process for this minion instance
+        Return a `salt-call` CLI process for this minion instance.
         """
         if self.system_install is False:
             script_path = cli_scripts.generate_script(

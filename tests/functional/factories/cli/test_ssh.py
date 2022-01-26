@@ -1,8 +1,5 @@
 """
-    tests.functional.factories.cli.test_ssh
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Test the ``salt-ssh`` CLI functionality
+Test the ``salt-ssh`` CLI functionality.
 """
 import pathlib
 

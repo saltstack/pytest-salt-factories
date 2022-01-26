@@ -1,5 +1,5 @@
 """
-Salt Master Factory,
+Salt Master Factory.
 
 ..
     PYTEST_DONT_REWRITE
@@ -35,6 +35,9 @@ class SaltMaster(SaltDaemon):
     pillar_tree = attr.ib(init=False, hash=False, repr=False)
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         super().__attrs_post_init__()
         if self.config.get("open_mode", False) is False:
             # If the master is not configured to be in open mode, register an auth event callback
@@ -125,8 +128,14 @@ class SaltMaster(SaltDaemon):
                 "log_level_logfile": "debug",
                 "api_logfile": str(logs_dir / "api.log"),
                 "key_logfile": str(logs_dir / "key.log"),
-                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_console": (
+                    "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
+                "log_fmt_logfile": (
+                    "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
                 "file_roots": {
                     "base": [str(state_tree_root)],
                 },
@@ -184,8 +193,14 @@ class SaltMaster(SaltDaemon):
                 "token_dir": "tokens",
                 "token_file": str(root_dir / "ksfjhdgiuebfgnkefvsikhfjdgvkjahcsidk"),
                 "file_buffer_size": 8192,
-                "log_fmt_console": "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
-                "log_fmt_logfile": "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s][%(processName)18s(%(process)d)] %(message)s",
+                "log_fmt_console": (
+                    "%(asctime)s,%(msecs)03.0f [%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
+                "log_fmt_logfile": (
+                    "[%(asctime)s,%(msecs)03.0f][%(name)-17s:%(lineno)-4d][%(levelname)-8s]"
+                    "[%(processName)18s(%(process)d)] %(message)s"
+                ),
                 "file_roots": {
                     "base": [str(state_tree_root_base)],
                     "prod": [str(state_tree_root_prod)],
@@ -341,7 +356,6 @@ class SaltMaster(SaltDaemon):
             :py:class:`~saltfactories.cli.cloud.SaltCloud`:
                 The salt-cloud CLI script process class instance
         """
-
         root_dir = pathlib.Path(self.config["root_dir"])
 
         config = factory_class.configure(
@@ -497,7 +511,7 @@ class SaltMaster(SaltDaemon):
                 The path to the private ssh key to use to connect
             ssh_user(str):
                 The remote username to connect as
-        """
+        """  # noqa: D417
         if self.system_install is False:
             script_path = cli_scripts.generate_script(
                 self.factories_manager.scripts_dir,

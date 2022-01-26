@@ -6,7 +6,7 @@ pytestmark = pytest.mark.skip(reason="Skipping until we devote time to fix syndi
 @pytest.fixture(scope="module")
 def master_of_masters(salt_factories):
     """
-    This is the master of all masters, top of the chain
+    This is the master of all masters, top of the chain.
     """
     factory = salt_factories.salt_master_daemon("master-of-masters", order_masters=True)
     with factory.started():
@@ -16,7 +16,7 @@ def master_of_masters(salt_factories):
 @pytest.fixture(scope="module")
 def minion_1(master_of_masters):
     """
-    This minion connects to the master-of-masters directly
+    This minion connects to the master-of-masters directly.
     """
     assert master_of_masters.is_running()
     factory = master_of_masters.salt_minion_daemon("minion-1")
@@ -27,6 +27,8 @@ def minion_1(master_of_masters):
 @pytest.fixture(scope="module")
 def configure_salt_syndic(master_of_masters, minion_1):
     """
+    Configure the salt-syndic.
+
     This syndic will run in tandem with a master and minion which share the same ID, connected to the upstream
     master-of-masters master.
     """
@@ -65,7 +67,7 @@ def syndic_minion(syndic_master):
 @pytest.fixture(scope="module")
 def minion_2(syndic_master):
     """
-    This minion will connect to the syndic-1 master
+    This minion will connect to the syndic-1 master.
     """
     assert syndic_master.is_running()
     factory = syndic_master.salt_minion_daemon("minion-2")
@@ -77,6 +79,7 @@ def minion_2(syndic_master):
 def master_of_masters_salt_cli(master_of_masters, minion_1):
     """
     This is the 'salt' CLI tool, connected to master-of-masters.
+
     Should be able to ping minion-1 directly connected to it and minion-2 through the syndic
     """
     assert master_of_masters.is_running()
@@ -88,6 +91,7 @@ def master_of_masters_salt_cli(master_of_masters, minion_1):
 def syndic_master_salt_cli(syndic_master, syndic_minion, minion_2):
     """
     This is the 'salt' CLI tool, connected to master-of-masters.
+
     Should be able to ping minion-1 directly connected to it and minion-2 through the syndic
     """
     assert syndic_master.is_running()
@@ -99,6 +103,8 @@ def syndic_master_salt_cli(syndic_master, syndic_minion, minion_2):
 @pytest.fixture(scope="module")
 def syndic(salt_factories, master_of_masters, minion_1, syndic_master, syndic_minion, minion_2):
     """
+    Configure a syndic.
+
     This syndic will run in tandem with master-2, connected to the upstream
     master-of-masters master.
     """
@@ -117,7 +123,7 @@ def salt_cli(master_of_masters_salt_cli, syndic_master_salt_cli, syndic):
 
 def test_minion_1(master_of_masters_salt_cli):
     """
-    Just test that we can ping minion-1
+    Just test that we can ping minion-1.
     """
     ret = master_of_masters_salt_cli.run("test.ping", minion_tgt="minion-1", _timeout=60)
     assert ret.returncode == 0, ret
@@ -126,7 +132,7 @@ def test_minion_1(master_of_masters_salt_cli):
 
 def test_minion_syndic_1(syndic_master_salt_cli):
     """
-    Just test that we can ping minion-1
+    Just test that we can ping minion-1.
     """
     ret = syndic_master_salt_cli.run("test.ping", minion_tgt="syndic-1", _timeout=60)
     assert ret.returncode == 0, ret
@@ -135,7 +141,7 @@ def test_minion_syndic_1(syndic_master_salt_cli):
 
 def test_minion_2(syndic_master_salt_cli):
     """
-    Just test that we can ping minion-2
+    Just test that we can ping minion-2.
     """
     ret = syndic_master_salt_cli.run("test.ping", minion_tgt="minion-2", _timeout=60)
     assert ret.returncode == 0, ret

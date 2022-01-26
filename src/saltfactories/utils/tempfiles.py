@@ -1,4 +1,6 @@
 """
+Temporary files helpers.
+
 ..
     PYTEST_DONT_REWRITE
 """
@@ -19,6 +21,7 @@ log = logging.getLogger(__name__)
 def temp_directory(name=None, basepath=None):
     """
     This helper creates a temporary directory.
+
     It should be used as a context manager which returns the temporary directory path, and, once out of context,
     deletes it.
 
@@ -84,6 +87,8 @@ def temp_directory(name=None, basepath=None):
 @contextmanager
 def temp_file(name=None, contents=None, directory=None, strip_first_newline=True):
     """
+    Create a temporary file as a context manager.
+
     This helper creates a temporary file. It should be used as a context manager
     which returns the temporary file path, and, once out of context, deletes it.
 
@@ -180,6 +185,7 @@ def _write_or_touch(file_path, contents, strip_first_newline=True):
 class SaltEnv:
     """
     This helper class represent a Salt Environment, either for states or pillar.
+
     It's base purpose it to handle temporary file creation/deletion during testing.
 
     :keyword str name:
@@ -198,6 +204,9 @@ class SaltEnv:
     paths = attr.ib(default=attr.Factory(list))
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         for idx, path in enumerate(self.paths[:]):
             if not isinstance(path, pathlib.Path):
                 # We have to cast path to a string because on Py3.5, path might be an instance of pathlib2.Path
@@ -208,7 +217,7 @@ class SaltEnv:
     @property
     def write_path(self):
         """
-        The path where temporary files are created
+        The path where temporary files are created.
         """
         return self.paths[0]
 
@@ -227,7 +236,8 @@ class SaltEnv:
 
     def as_dict(self):
         """
-        Returns a dictionary of the right types to update the salt configuration
+        Returns a dictionary of the right types to update the salt configuration.
+
         :return dict:
         """
         return {self.name: [str(p) for p in self.paths]}
@@ -268,6 +278,9 @@ class SaltEnvs:
     envs = attr.ib()
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         for envname, envtree in self.envs.items():
             if not isinstance(envtree, SaltEnv):
                 if isinstance(envtree, str):
@@ -277,7 +290,8 @@ class SaltEnvs:
 
     def as_dict(self):
         """
-        Returns a dictionary of the right types to update the salt configuration
+        Returns a dictionary of the right types to update the salt configuration.
+
         :return dict:
         """
         config = {}

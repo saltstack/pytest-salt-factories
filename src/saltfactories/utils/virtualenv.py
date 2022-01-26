@@ -1,3 +1,6 @@
+"""
+VirtualEnv helper class.
+"""
 import json
 import logging
 import os
@@ -25,7 +28,7 @@ def _cast_to_pathlib_path(value):
 @attr.s(frozen=True, slots=True)
 class VirtualEnv:
     """
-    Helper class to create and use a virtual environment
+    Helper class to create and use a virtual environment.
 
     :keyword str,~pathlib.Path venv_dir:
         The path to the directory where the virtual environment should be created
@@ -77,21 +80,30 @@ class VirtualEnv:
         return pathlib.Path(self.venv_python).parent
 
     def __enter__(self):
+        """
+        Use as a context manager.
+        """
         try:
             self._create_virtualenv()
         except subprocess.CalledProcessError as exc:
             raise AssertionError("Failed to create virtualenv") from exc
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *_):
+        """
+        Exit the context manager.
+        """
         shutil.rmtree(str(self.venv_dir), ignore_errors=True)
 
     def install(self, *args, **kwargs):
+        """
+        Install a python package into the virtualenv.
+        """
         return self.run(self.venv_python, "-m", "pip", "install", *args, **kwargs)
 
     def run(self, *args, **kwargs):
         """
-        Run a shell command
+        Run a shell command.
 
         :rtype: ~pytestshellutils.utils.processes.ProcessResult
         """
@@ -125,6 +137,8 @@ class VirtualEnv:
     @staticmethod
     def get_real_python():
         """
+        Return the path to the real python executable.
+
         The reason why the virtualenv creation is proxied by this function is mostly
         because under windows, we can't seem to properly create a virtualenv off of
         another virtualenv(we can on Linux) and also because, we really don't want to
@@ -158,7 +172,7 @@ class VirtualEnv:
 
     def run_code(self, code_string, **kwargs):
         """
-        Run python code using the virtualenv python environment
+        Run python code using the virtualenv python environment.
 
         :param str code_string:
 
@@ -172,6 +186,8 @@ class VirtualEnv:
 
     def get_installed_packages(self):
         """
+        Return installed packages in the virtualenv.
+
         Get a dictionary of the installed packages where the keys are the package
         names and the values their versions
         """

@@ -1,8 +1,5 @@
 """
-tests.utils.test_cli_scripts
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Test saltfactories.utils.cli_scripts
+Test saltfactories.utils.cli_scripts.
 """
 import os
 import pathlib

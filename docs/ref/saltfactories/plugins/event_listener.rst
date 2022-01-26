@@ -1,3 +1,6 @@
+Event Listener
+==============
+
 .. automodule:: saltfactories.plugins.event_listener
    :members:
    :show-inheritance:

@@ -1,8 +1,5 @@
 """
-    tests.functional.factories.cli.test_run
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Test the ``salt-run`` CLI functionality
+Test the ``salt-run`` CLI functionality.
 """
 import pathlib
 

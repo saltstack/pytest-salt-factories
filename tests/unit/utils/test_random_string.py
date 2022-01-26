@@ -1,8 +1,5 @@
 """
-    tests.unit.utils.test_random_string
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-    Unit tests for the random string generator
+Unit tests for the random string generator.
 """
 import pytest
 

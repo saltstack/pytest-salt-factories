@@ -234,7 +234,7 @@ def test_cli_timeout_matches_timeout_kw(minion_id, config_dir, config_file, cli_
         # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
-        ret = proc.run(*args, **kwargs)
+        proc.run(*args, **kwargs)
         assert proc.impl._terminal_timeout == cli_timeout + 10
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
@@ -277,7 +277,7 @@ def test_cli_timeout_greater_than_timeout_kw(minion_id, config_dir, config_file,
         # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
-        ret = proc.run(*args, **kwargs)
+        proc.run(*args, **kwargs)
         assert proc.impl._terminal_timeout == cli_timeout + 10
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
@@ -319,7 +319,7 @@ def test_cli_timeout_updates_to_timeout_kw_plus_10(
         # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
-        ret = proc.run(*args, **kwargs)
+        proc.run(*args, **kwargs)
         assert proc.impl._terminal_timeout == explicit_timeout + 10
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
@@ -360,7 +360,7 @@ def test_cli_timeout_updates_to_default_timeout_plus_10(
         # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
-        ret = proc.run(*args, **kwargs)
+        proc.run(*args, **kwargs)
         assert proc.impl._terminal_timeout == timeout + 10
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 

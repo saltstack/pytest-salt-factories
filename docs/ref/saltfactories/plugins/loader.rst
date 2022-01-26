@@ -1,3 +1,6 @@
+Loader
+======
+
 .. automodule:: saltfactories.plugins.loader
    :members:
    :show-inheritance:

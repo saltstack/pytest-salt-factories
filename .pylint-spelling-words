@@ -7,6 +7,7 @@ args
 artefacts
 ascii
 attr
+attrs
 auth
 autoclass
 autodata
@@ -95,6 +96,7 @@ netbsd
 ng
 nocover
 nodeid
+noqa
 nox
 openbsd
 ordereddict

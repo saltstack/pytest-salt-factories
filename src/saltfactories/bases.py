@@ -57,6 +57,9 @@ class SaltMixin:
     display_name = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         if self.python_executable is None and self.system_install is False:
             self.python_executable = sys.executable
         # We really do not want buffered output
@@ -131,6 +134,9 @@ class SaltCli(SaltMixin, ScriptSubprocess):
         return SaltCliImpl
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         ScriptSubprocess.__attrs_post_init__(self)
         SaltMixin.__attrs_post_init__(self)
 
@@ -143,6 +149,9 @@ class SaltCli(SaltMixin, ScriptSubprocess):
         return ["--hard-crash"]
 
     def get_minion_tgt(self, minion_tgt=None):
+        """
+        Return the minion target ID.
+        """
         return minion_tgt
 
     def cmdline(
@@ -459,6 +468,9 @@ class SystemdSaltDaemonImpl(DaemonImpl):
 
     @property
     def pid(self):
+        """
+        Return the ``pid`` of the running process.
+        """
         if self.is_running():
             return self._process.pid
 
@@ -479,6 +491,9 @@ class SaltDaemon(SaltMixin, Daemon):
     started_at = attr.ib(repr=False, default=None)
 
     def __attrs_post_init__(self):
+        """
+        Post attrs initialization routines.
+        """
         Daemon.__attrs_post_init__(self)
         SaltMixin.__attrs_post_init__(self)
 
@@ -536,6 +551,9 @@ class SaltDaemon(SaltMixin, Daemon):
 
     @classmethod
     def verify_config(cls, config):
+        """
+        Verify the configuration dictionary.
+        """
         salt.utils.verify.verify_env(
             cls._get_verify_config_entries(config),
             running_username(),

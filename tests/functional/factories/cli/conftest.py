@@ -1,8 +1,3 @@
-"""
-tests.functional.factories.cli.conftest
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-"""
 import pytest
 
 

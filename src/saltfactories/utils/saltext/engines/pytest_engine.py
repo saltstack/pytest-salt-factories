@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-pytest_engine
-~~~~~~~~~~~~~
+Salt Factories Engine For Salt.
 
 Simple salt engine which will setup a socket to accept connections allowing us to know
 when a daemon is up and running
@@ -57,6 +56,9 @@ def __virtual__():
 
 
 def start():
+    """
+    Method to start the engine.
+    """
     opts = __opts__  # pylint: disable=undefined-variable
     try:
         pytest_engine = PyTestEventForwardEngine(opts=opts)
@@ -68,7 +70,7 @@ def start():
 
 def ext_type_encoder(obj):
     """
-    Convert any types that msgpack cannot handle on it's own
+    Convert any types that msgpack cannot handle on it's own.
     """
     if isinstance(obj, (datetime.datetime, datetime.date)):
         # msgpack doesn't support datetime.datetime and datetime.date datatypes.
@@ -93,6 +95,9 @@ def ext_type_encoder(obj):
 
 
 class PyTestEventForwardEngine:
+    """
+    Salt Engine instance.
+    """
 
     __slots__ = ("opts", "id", "role", "returner_address", "running_event")
 
@@ -103,7 +108,7 @@ class PyTestEventForwardEngine:
         self.returner_address = self.opts["pytest-{}".format(self.role)]["returner_address"]
         self.running_event = threading.Event()
 
-    def __repr__(self):
+    def __repr__(self):  # noqa: D105
         return "<{} role={!r} id={!r}, returner_address={!r} running={!r}>".format(
             self.__class__.__name__,
             self.role,
@@ -113,6 +118,9 @@ class PyTestEventForwardEngine:
         )
 
     def start(self):
+        """
+        Start the engine.
+        """
         if self.running_event.is_set():
             return
         log.info("%s is starting", self)
@@ -166,6 +174,9 @@ class PyTestEventForwardEngine:
                 context.term()
 
     def stop(self):
+        """
+        Stop the engine.
+        """
         if self.running_event.is_set() is False:
             return
 

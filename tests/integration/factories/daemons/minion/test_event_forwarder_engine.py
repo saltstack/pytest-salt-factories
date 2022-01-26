@@ -34,7 +34,6 @@ def test_event_listener_engine(minion, salt_call_cli, event_listener):
     We test if we're receiving those
     """
     assert minion.is_running()
-    event_pattern = (minion.id, salt.defaults.events.MINION_PILLAR_REFRESH_COMPLETE)
     start_time = time.time()
     stop_time = start_time + 120
 

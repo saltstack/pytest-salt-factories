@@ -120,7 +120,9 @@ def salt_version():
 @pytest.mark.trylast
 def pytest_configure(config):
     """
-    called after command line options have been parsed
+    Add our markers to PyTest.
+
+    Called after command line options have been parsed
     and all plugins and initial conftest files been loaded.
     """
     # Expose the markers we use to pytest CLI

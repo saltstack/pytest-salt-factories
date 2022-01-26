@@ -1,7 +1,3 @@
-"""
-CLI
-===
-"""
 from . import call
 from . import cloud
 from . import cp
