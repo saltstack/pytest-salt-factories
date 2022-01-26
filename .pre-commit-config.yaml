@@ -2,7 +2,7 @@
 minimum_pre_commit_version: 1.15.2
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.1.0
+    rev: v4.1.0
     hooks:
       - id: check-merge-conflict  # Check for files that contain merge conflict strings.
       - id: trailing-whitespace   # Trims trailing whitespace.
@@ -30,20 +30,12 @@ repos:
 
   # ----- Formatting ------------------------------------------------------------------------------------------------>
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.23.3
+    rev: v2.31.0
     hooks:
       - id: pyupgrade
         name: Rewrite Code to be Py3.5+
         args: [--py3-plus]
         exclude: (^src/saltfactories/utils/saltext/.*\.py)
-
-  - repo: https://github.com/hakancelik96/unimport
-    rev: "31cc123640880e385159c719d2f12b5cf8586495"
-    hooks:
-      - id: unimport
-        name: Remove unused imports
-        args: [--remove]
-        exclude: ^(docs/.*\.py|src/saltfactories/(cli|daemons)/__init__\.py)$
 
   - repo: https://github.com/asottile/reorder_python_imports
     rev: v2.6.0
@@ -56,36 +48,24 @@ repos:
         exclude: src/saltfactories/version.py
 
   - repo: https://github.com/psf/black
-    rev: 21.7b0
+    rev: 21.12b0
     hooks:
       - id: black
         args: [-l 100]
         exclude: src/saltfactories/version.py
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: v1.10.0
+    rev: v1.12.0
     hooks:
       - id: blacken-docs
         args: [--skip-errors]
         files: ^(.*\.rst|docs/.*\.rst|src/saltfactories/.*\.py)$
-        additional_dependencies: [black==21.7b0]
-
-  - repo: https://github.com/pre-commit/mirrors-pylint
-    rev: v2.4.4
-    hooks:
-      - id: pylint
-        name: PyLint
-        args: [--output-format=parseable, --rcfile=.pylintrc]
-        exclude: src/saltfactories/version.py
-        additional_dependencies:
-          - saltpylint
-          - pyenchant
-          - salt>=3001
+        additional_dependencies: [black==21.12b0]
   # <---- Formatting -------------------------------------------------------------------------------------------------
 
   # ----- Security -------------------------------------------------------------------------------------------------->
   - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.0"
+    rev: "1.7.1"
     hooks:
       - id: bandit
         alias: bandit-salt
@@ -96,7 +76,7 @@ repos:
                 tests/.*
             )$
   - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.0"
+    rev: "1.7.1"
     hooks:
       - id: bandit
         alias: bandit-tests
@@ -104,3 +84,43 @@ repos:
         args: [--silent, -lll, --skip, B701]
         files: ^tests/.*
   # <---- Security ---------------------------------------------------------------------------------------------------
+
+  # ----- Code Analysis --------------------------------------------------------------------------------------------->
+  - repo: https://github.com/pycqa/flake8
+    rev: '4.0.1'
+    hooks:
+      - id: flake8
+        exclude: ^(src/saltfactories/version\.py|\.pre-commit-hooks/.*\.py)$
+        additional_dependencies:
+        - flake8-mypy-fork
+        - flake8-docstrings
+        - flake8-typing-imports
+        - pydocstyle>=6.1.1
+
+#  - repo: https://github.com/pre-commit/mirrors-mypy
+#    rev: v0.931
+#    hooks:
+#      - id: mypy
+#        name: Run mypy against source
+#        files: ^src/.*\.py$
+#        args: [--strict]
+#        additional_dependencies:
+#          - attrs
+#          - types-attrs
+#          - types-requests
+#          - types-setuptools
+#
+#  - repo: https://github.com/pre-commit/mirrors-mypy
+#    rev: v0.931
+#    hooks:
+#      - id: mypy
+#        name: Run mypy against tests
+#        files: ^tests/.*\.py$
+#        args: []
+#        additional_dependencies:
+#          - pytest
+#          - attrs
+#          - types-attrs
+#          - types-requests
+#          - types-setuptools
+  # <---- Code Analysis ----------------------------------------------------------------------------------------------
