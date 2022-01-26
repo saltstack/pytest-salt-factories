@@ -4,40 +4,26 @@ on: [push, pull_request]
 
 jobs:
   Pre-Commit:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.7
-    - id: changed-files
-      name: Get Changed Files
-      uses: dorny/paths-filter@v2
-      with:
-        token: ${{ github.token }}
-        list-files: shell
-        filters: |
-          repo:
-            - added|modified:
-              - '**'
+        python-version: 3.9
     - name: Set Cache Key
       run: echo "PY=$(python --version --version | sha256sum | cut -d' ' -f1)" >> $GITHUB_ENV
     - uses: actions/cache@v2
       with:
         path: ~/.cache/pre-commit
-        key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}
-    - name: Check ALL Files On Branch
-      uses: pre-commit/action@v2.0.0
-      if: github.event_name != 'pull_request'
-    - name: Check Changed Files On PR
-      uses: pre-commit/action@v2.0.0
-      if: github.event_name == 'pull_request'
-      with:
-        extra_args: --files ${{ steps.changed-files.outputs.repo_files }}
-
+        key: pre-commit|${{ env.PY }}|${{ hashFiles('.pre-commit-config.yaml') }}|${{ hashFiles('.pre-commit-hooks/*') }}
+    - name: Install Dependencies
+      run: |
+        python -m pip install pre-commit
+        pre-commit install --install-hooks
+    - name: Run Pre-Commit
+      run: |
+        pre-commit run --show-diff-on-failure --color=always --all-files
 
   Docs:
     runs-on: ubuntu-20.04
