@@ -1,9 +1,89 @@
+# pylint: disable=wrong-spelling-in-docstring
 """
-Salt Factories System Information Plugin.
+The system information plugin can be enabled by passing ``--sys-info`` to pytest.
+
+When enabled it will include some output sections when starting pytest.
+Here's an example of the output(partial, for brevity):
+
+.. code-block:: console
+
+   >>>>>>>>>>>>>>>>>>>>>>>>>>> System Information >>>>>>>>>>>>>>>>>>>>>>>>>>>
+   -------------------------- Salt Versions Report --------------------------
+     Salt Version:
+               Salt: 3003
+
+     Dependency Versions:
+               cffi: Not Installed
+           cherrypy: Not Installed
+           dateutil: Not Installed
+          docker-py: 5.0.0
+              gitdb: Not Installed
+          gitpython: Not Installed
+             Jinja2: 3.0.1
+            libgit2: Not Installed
+           M2Crypto: Not Installed
+               Mako: Not Installed
+            msgpack: 1.0.2
+       msgpack-pure: Not Installed
+       mysql-python: Not Installed
+          pycparser: Not Installed
+           pycrypto: Not Installed
+       pycryptodome: 3.10.1
+             pygit2: Not Installed
+             Python: 3.7.7 (default, Oct 24 2021, 07:30:53)
+       python-gnupg: Not Installed
+             PyYAML: 5.4.1
+              PyZMQ: 22.1.0
+              smmap: Not Installed
+            timelib: Not Installed
+            Tornado: 4.5.3
+                ZMQ: 4.3.4
+
+     System Versions:
+               dist: arch rolling n/a
+             locale: UTF-8
+            machine: x86_64
+            release: 5.16.2-arch1-1
+             system: Linux
+            version: Arch Linux rolling n/a
+   -------------------------- System Grains Report --------------------------
+     biosreleasedate: 12/06/2019
+     biosversion: N1EET87W (1.60 )
+     cpu_flags:
+     - fpu
+     - vme
+     gpus:
+      - model: HD Graphics 530
+        vendor: intel
+      - model: GM107GLM [Quadro M1000M]
+        vendor: nvidia
+     kernelrelease: 5.16.2-arch1-1
+     kernelversion: '#1 SMP PREEMPT Thu, 20 Jan 2022 16:18:29 +0000'
+     locale_info:
+       defaultencoding: UTF-8
+       defaultlanguage: pt_PT
+       detectedencoding: UTF-8
+       timezone: unknown
+     mem_total: 64137
+     num_cpus: 8
+     num_gpus: 2
+     os: Arch
+     os_family: Arch
+     osarch: x86_64
+     oscodename: n/a
+     osfinger: Arch-rolling
+     osfullname: Arch
+     osrelease: rolling
+     virtual: physical
+     zfs_feature_flags: false
+     zfs_support: false
+     zmqversion: 4.3.4
+   <<<<<<<<<<<<<<<<<<<<<<<<<<< System Information <<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 ..
     PYTEST_DONT_REWRITE
 """
+# pylint: enable=wrong-spelling-in-docstring
 import io
 import pathlib
 import tempfile

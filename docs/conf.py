@@ -160,7 +160,7 @@ napoleon_use_rtype = True
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "pytest": ("https://docs.pytest.org/en/stable/", None),
-    "salt": ("https://docs.saltproject.io/en/latest", None),
+    "salt": ("https://docs.saltproject.io/en/latest/", None),
     "psutil": ("https://psutil.readthedocs.io/en/latest/", None),
     "coverage": ("https://coverage.readthedocs.io/en/latest/", None),
     "pytestshellutils": ("https://pytest-shell-utilities.readthedocs.io/en/latest/", None),
