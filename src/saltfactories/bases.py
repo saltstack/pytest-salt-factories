@@ -10,8 +10,8 @@ import json
 import logging
 import os
 import pprint
-import subprocess
 import sys
+from typing import TYPE_CHECKING
 
 import attr
 import psutil
@@ -23,6 +23,7 @@ from pytestshellutils.exceptions import FactoryNotStarted
 from pytestshellutils.shell import Daemon
 from pytestshellutils.shell import DaemonImpl
 from pytestshellutils.shell import ScriptSubprocess
+from pytestshellutils.shell import Subprocess
 from pytestshellutils.shell import SubprocessImpl
 from pytestshellutils.utils import time
 from pytestshellutils.utils.processes import ProcessResult
@@ -368,37 +369,37 @@ class SystemdSaltDaemonImpl(DaemonImpl):
             self._service_name = script_path
         return self._service_name
 
+    def _internal_run(self, *cmdline):
+        """
+        Run the given command synchronously.
+        """
+        result = Subprocess(
+            cwd=self.factory.cwd,
+            environ=self.factory.environ.copy(),
+            system_encoding=self.factory.system_encoding,
+        ).run(*cmdline)
+        log.info("%s %s", self.factory.__class__.__name__, result)
+        return result
+
     def is_running(self):
         """
         Returns true if the sub-process is alive.
         """
         if self._process is None:
-            ret = self.internal_run("systemctl", "show", "-p", "MainPID", self.get_service_name())
-            _, mainpid = ret.stdout.split("=")
+            ret = self._internal_run("systemctl", "show", "-p", "MainPID", self.get_service_name())
+            mainpid = ret.stdout.split("=")[-1].strip()
             if mainpid == "0":
                 return False
             self._process = psutil.Process(int(mainpid))
         return self._process.is_running()
 
-    def internal_run(self, *args, **kwargs):
+    @property
+    def pid(self):
         """
-        Run the given command synchronously.
+        Return the ``pid`` of the running process.
         """
-        result = subprocess.run(
-            args,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            universal_newlines=True,
-            check=False,
-            **kwargs
-        )
-        stdout = result.stdout.strip()
-        stderr = result.stderr.strip()
-        process_result = ProcessResult(
-            returncode=result.returncode, stdout=stdout, stderr=stderr, cmdline=result.args
-        )
-        log.info("%s %s", self.factory.__class__.__name__, process_result)
-        return process_result
+        if self.is_running():
+            return self._process.pid
 
     def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
         """
@@ -414,20 +415,37 @@ class SystemdSaltDaemonImpl(DaemonImpl):
         """
         This method actually terminates the started daemon.
         """
+        # We completely override the parent class method because we're not using the
+        # self._terminal property, it's a systemd service
         if self._process is None:  # pragma: no cover
+            if TYPE_CHECKING:
+                # Make mypy happy
+                assert self._terminal_result
             return self._terminal_result  # pylint: disable=access-member-before-definition
+
         atexit.unregister(self.terminate)
         log.info("Stopping %s", self.factory)
+        pid = self.pid
         # Collect any child processes information before terminating the process
         with contextlib.suppress(psutil.NoSuchProcess):
-            for child in psutil.Process(self.pid).children(recursive=True):
+            for child in psutil.Process(pid).children(recursive=True):
                 if child not in self._children:  # pylint: disable=access-member-before-definition
                     self._children.append(child)  # pylint: disable=access-member-before-definition
 
-        pid = self.pid
-        cmdline = self._process.cmdline()
-        self.internal_run("systemctl", "stop", self.get_service_name())
         if self._process.is_running():  # pragma: no cover
+            cmdline = self._process.cmdline()
+        else:
+            # The main pid is not longer alive, try to get the cmdline from systemd
+            ret = self._internal_run(
+                "systemctl", "show", "-p", "ExecStart", self.get_service_name()
+            )
+            cmdline = ret.stdout.split("argv[]=")[-1].split(";")[0].strip().split()
+
+        # Tell systemd to stop the service
+        self._internal_run("systemctl", "stop", self.get_service_name())
+
+        if self._process.is_running():  # pragma: no cover
+            cmdline = self._process.cmdline()
             try:
                 self._process.wait()
             except psutil.TimeoutExpired:
@@ -436,8 +454,10 @@ class SystemdSaltDaemonImpl(DaemonImpl):
                     self._process.wait()
                 except psutil.TimeoutExpired:
                     pass
+
         exitcode = self._process.wait() or 0
 
+        # Dereference the internal _process attribute
         self._process = None
         # Lets log and kill any child processes left behind, including the main subprocess
         # if it failed to properly stop
@@ -448,10 +468,12 @@ class SystemdSaltDaemonImpl(DaemonImpl):
             slow_stop=self.factory.slow_stop,
         )
 
-        self._terminal_stdout.close()  # pylint: disable=access-member-before-definition
-        self._terminal_stderr.close()  # pylint: disable=access-member-before-definition
+        if self._terminal_stdout is not None:
+            self._terminal_stdout.close()  # pylint: disable=access-member-before-definition
+        if self._terminal_stderr is not None:
+            self._terminal_stderr.close()  # pylint: disable=access-member-before-definition
         stdout = ""
-        ret = self.internal_run("journalctl", "--no-pager", "-u", self.get_service_name())
+        ret = self._internal_run("journalctl", "--no-pager", "-u", self.get_service_name())
         stderr = ret.stdout
         try:
             self._terminal_result = ProcessResult(
@@ -465,14 +487,6 @@ class SystemdSaltDaemonImpl(DaemonImpl):
             self._terminal_stderr = None
             self._terminal_timeout = None
             self._children = []
-
-    @property
-    def pid(self):
-        """
-        Return the ``pid`` of the running process.
-        """
-        if self.is_running():
-            return self._process.pid
 
 
 @attr.s(kw_only=True)
