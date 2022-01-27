@@ -38,6 +38,7 @@ darwin
 datatypes
 datetime
 deepcopy
+dereference
 dmux
 dns
 dunder
@@ -91,6 +92,7 @@ msgpack
 mtime
 multistateresult
 mworker
+mypy
 namespace
 netbsd
 ng
