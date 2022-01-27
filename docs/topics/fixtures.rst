@@ -16,5 +16,5 @@ Fixtures
 
 The fixture **must** return a dictionary, where the keys are the salt modules that need to be patched, and the values
 are dictionaries. These dictionaries should have the
-:py:data:`salt dunders <salt:dunder-dictionaries>` as keys. These dunders are dictionaries that the
+:ref:`salt dunders <salt:dunder-dictionaries>` as keys. These dunders are dictionaries that the
 salt loader injects at runtime, so, they are not available outside of Salt's runtime.

@@ -18,6 +18,7 @@ basepath
 baz
 bool
 booleans
+caplog
 changelog
 cli
 cli's
@@ -81,6 +82,7 @@ ips
 iterable
 json
 kwargs
+levelname
 linenum
 linux
 localhost

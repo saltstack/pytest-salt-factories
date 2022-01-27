@@ -1,5 +1,27 @@
 """
-Salt Factories Log Server.
+The Salt Factories Log Server is responsible to receive log records from the salt daemons.
+
+Because all of Salt's daemons and CLI tools are started in subprocesses, there's really no easy way to get those logs
+into the main process where the test suite is running.
+
+However, salt is extensible by nature, and it provides a way to attach custom log handlers into python's logging
+machinery.
+
+We take advantage of that and add a custom logging handler into subprocesses we start for salt. That logging handler
+will then forward **all** log records into this log server, which in turn, injects them into the logging machinery
+running in the test suite.
+
+This allows one to use PyTest's :fixture:`caplog fixture <pytest:caplog>` to assert against log messages.
+
+As an example:
+
+.. code-block:: python
+
+    def test_baz(caplog):
+        func_under_test()
+        for record in caplog.records:
+            assert record.levelname != "CRITICAL"
+        assert "wally" not in caplog.text
 """
 import logging
 import threading
