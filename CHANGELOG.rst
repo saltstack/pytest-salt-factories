@@ -20,6 +20,18 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc1 (2022-01-27)
+=====================
+
+Breaking Changes
+----------------
+
+- Switch to the extracted pytest plugins
+
+  * Switch to pytest-system-statistics
+  * Switch to pytest-shell-utilities (`#90 <https://github.com/saltstack/pytest-salt-factories/issues/90>`_)
+
+
 0.912.0 (2022-01-25)
 ====================
 
