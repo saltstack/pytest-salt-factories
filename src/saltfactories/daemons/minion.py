@@ -82,7 +82,7 @@ class SaltMinion(SaltDaemon):
             pillar_tree_root.mkdir(parents=True, exist_ok=True)
 
             _defaults = {
-                "id": master_id,
+                "id": minion_id,
                 "conf_file": conf_file,
                 "root_dir": str(root_dir),
                 "interface": "127.0.0.1",
