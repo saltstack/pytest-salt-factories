@@ -11,9 +11,9 @@ import urllib.parse
 
 import attr
 import salt.config
-import salt.utils.dictupdate
 import yaml
 
+import saltfactories.utils.salt.dictupdate
 from saltfactories.bases import SaltCli
 from saltfactories.utils import running_username
 
@@ -53,11 +53,11 @@ class SaltCloud(SaltCli):
             },
         }
         # Merge in the initial default options with the internal _defaults
-        salt.utils.dictupdate.update(defaults, _defaults, merge_lists=True)
+        saltfactories.utils.salt.dictupdate.update(defaults, _defaults, merge_lists=True)
 
         if overrides:
             # Merge in the default options with the master_overrides
-            salt.utils.dictupdate.update(defaults, overrides, merge_lists=True)
+            saltfactories.utils.salt.dictupdate.update(defaults, overrides, merge_lists=True)
 
         return defaults
 

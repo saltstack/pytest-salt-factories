@@ -9,9 +9,9 @@ import pathlib
 
 import attr
 import salt.config
-import salt.utils.dictupdate
 from pytestshellutils.utils import ports
 
+import saltfactories.utils.salt.dictupdate
 from saltfactories.bases import SaltDaemon
 
 log = logging.getLogger(__name__)
@@ -105,11 +105,11 @@ class SaltSyndic(SaltDaemon):
                 },
             }
         # Merge in the initial default options with the internal _defaults
-        salt.utils.dictupdate.update(defaults, _defaults, merge_lists=True)
+        saltfactories.utils.salt.dictupdate.update(defaults, _defaults, merge_lists=True)
 
         if overrides:
             # Merge in the default options with the syndic_overrides
-            salt.utils.dictupdate.update(defaults, overrides, merge_lists=True)
+            saltfactories.utils.salt.dictupdate.update(defaults, overrides, merge_lists=True)
         return defaults
 
     @classmethod

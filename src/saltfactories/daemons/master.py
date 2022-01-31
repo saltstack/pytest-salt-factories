@@ -11,9 +11,9 @@ from functools import partial
 
 import attr
 import salt.config
-import salt.utils.dictupdate
 from pytestskipmarkers.utils import ports
 
+import saltfactories.utils.salt.dictupdate
 from saltfactories import cli
 from saltfactories import client
 from saltfactories.bases import SaltDaemon
@@ -218,11 +218,11 @@ class SaltMaster(SaltDaemon):
                 },
             }
         # Merge in the initial default options with the internal _defaults
-        salt.utils.dictupdate.update(defaults, _defaults, merge_lists=True)
+        saltfactories.utils.salt.dictupdate.update(defaults, _defaults, merge_lists=True)
 
         if overrides:
             # Merge in the default options with the master_overrides
-            salt.utils.dictupdate.update(defaults, overrides, merge_lists=True)
+            saltfactories.utils.salt.dictupdate.update(defaults, overrides, merge_lists=True)
 
         return defaults
 
