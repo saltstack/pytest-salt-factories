@@ -12,8 +12,7 @@ import urllib.parse
 import attr
 import salt.config
 import salt.utils.dictupdate
-import salt.utils.files
-import salt.utils.yaml
+import yaml
 
 from saltfactories.bases import SaltCli
 from saltfactories.utils import running_username
@@ -109,6 +108,6 @@ class SaltCloud(SaltCli):
         )
 
         # Write down the computed configuration into the config file
-        with salt.utils.files.fopen(config_file, "w") as wfh:
-            salt.utils.yaml.safe_dump(config, wfh, default_flow_style=False)
+        with pathlib.Path(config_file).open("w", encoding="utf-8") as wfh:
+            yaml.safe_dump(config, wfh, default_flow_style=False)
         return salt.config.cloud_config(config_file)

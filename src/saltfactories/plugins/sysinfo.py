@@ -93,6 +93,7 @@ import salt.config
 import salt.loader
 import salt.utils.yaml
 import salt.version
+import yaml
 
 
 def pytest_addoption(parser):
@@ -153,7 +154,7 @@ def pytest_sessionstart(session):
         minion_config = salt.config.minion_config(None, defaults=minion_config_defaults)
         grains = salt.loader.grains(minion_config)
         grains_output_file = io.StringIO()
-        salt.utils.yaml.safe_dump(grains, grains_output_file, default_flow_style=False)
+        yaml.safe_dump(grains, grains_output_file, default_flow_style=False)
         grains_output_file.seek(0)
         terminal_reporter.section("System Grains Report", sep="-")
         terminal_reporter.write(
