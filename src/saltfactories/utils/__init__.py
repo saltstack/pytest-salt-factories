@@ -4,6 +4,7 @@ Utility functions.
 ..
     PYTEST_DONT_REWRITE
 """
+import pathlib
 import random
 import string
 from functools import lru_cache
@@ -41,3 +42,15 @@ def running_username():
     Return the username that is running the code.
     """
     return salt.utils.user.get_user()
+
+
+def cast_to_pathlib_path(value):
+    """
+    Cast the passed value to an instance of ``pathlib.Path``.
+    """
+    if isinstance(value, pathlib.Path):
+        return value
+    try:
+        return pathlib.Path(value.strpath)
+    except AttributeError:
+        return pathlib.path(str(value))

@@ -1,0 +1,1 @@
+Allow configuring ``root_dir`` in ``setup_salt_factories`` fixture
