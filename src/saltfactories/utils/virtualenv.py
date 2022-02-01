@@ -16,13 +16,9 @@ from pytestshellutils.exceptions import ProcessFailed
 from pytestshellutils.utils.processes import ProcessResult
 from pytestskipmarkers.utils import platform
 
+from saltfactories.utils import cast_to_pathlib_path
+
 log = logging.getLogger(__name__)
-
-
-def _cast_to_pathlib_path(value):
-    if isinstance(value, pathlib.Path):
-        return value
-    return pathlib.Path(str(value))
 
 
 @attr.s(frozen=True, slots=True)
@@ -49,7 +45,7 @@ class VirtualEnv:
             assert "pep8" in venv.get_installed_packages()
     """
 
-    venv_dir = attr.ib(converter=_cast_to_pathlib_path)
+    venv_dir = attr.ib(converter=cast_to_pathlib_path)
     venv_create_args = attr.ib(default=attr.Factory(list))
     env = attr.ib(default=None)
     cwd = attr.ib(default=None)

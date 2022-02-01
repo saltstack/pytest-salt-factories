@@ -62,9 +62,7 @@ def salt_factories(
         "Instantiating the Salt Factories Manager with the following keyword arguments:\n%s",
         pprint.pformat(factories_config),
     )
+    factories_config.setdefault("root_dir", tempdir)
     return FactoriesManager(
-        root_dir=tempdir,
-        stats_processes=stats_processes,
-        event_listener=event_listener,
-        **factories_config
+        stats_processes=stats_processes, event_listener=event_listener, **factories_config
     )

@@ -14,6 +14,7 @@ import attr
 from saltfactories import CODE_ROOT_DIR
 from saltfactories import daemons
 from saltfactories.bases import SaltMixin
+from saltfactories.utils import cast_to_pathlib_path
 from saltfactories.utils import cli_scripts
 from saltfactories.utils import running_username
 
@@ -68,7 +69,7 @@ class FactoriesManager:
         salt system paths apply.
     """
 
-    root_dir = attr.ib()
+    root_dir = attr.ib(converter=cast_to_pathlib_path)
     tmp_root_dir = attr.ib(init=False)
     log_server_port = attr.ib()
     log_server_level = attr.ib()
@@ -91,7 +92,7 @@ class FactoriesManager:
         """
         Post attrs initialization routines.
         """
-        self.tmp_root_dir = pathlib.Path(self.root_dir.strpath)
+        self.tmp_root_dir = pathlib.Path(self.root_dir)
         self.tmp_root_dir.mkdir(exist_ok=True)
         if self.system_install is False:
             self.root_dir = self.tmp_root_dir
