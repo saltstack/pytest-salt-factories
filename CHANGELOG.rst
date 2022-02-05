@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+0.912.1 (2022-02-05)
+====================
+
+Improvements
+------------
+
+- Set lower required python version to 3.5.2 (`#97 <https://github.com/saltstack/pytest-salt-factories/issues/97>`_)
+
+
 0.912.0 (2022-01-25)
 ====================
 
