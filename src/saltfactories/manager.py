@@ -145,20 +145,10 @@ class FactoriesManager:
         if "pytest" not in config["engines"]:
             config["engines"].append("pytest")
 
-        if "engines_dirs" not in config:
-            config["engines_dirs"] = []
-        config["engines_dirs"].insert(0, str(FactoriesManager.get_salt_engines_path()))
         config.setdefault("user", running_username())
         if not config["user"]:  # pragma: no cover
             # If this value is empty, None, False, just remove it
             config.pop("user")
-        if "log_forwarding_consumer" not in config:
-            # Still using old logging, let's add our custom log handler
-            if "log_handlers_dirs" not in config:
-                config["log_handlers_dirs"] = []
-            config["log_handlers_dirs"].insert(
-                0, str(FactoriesManager.get_salt_log_handlers_path())
-            )
 
         pytest_key = "pytest-{}".format(role)
         if pytest_key not in config:
