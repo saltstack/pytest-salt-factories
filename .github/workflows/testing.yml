@@ -265,8 +265,8 @@ jobs:
         python-version:
           - 3.7
         salt-version:
-          - salt==3002.6
-          - salt==3003
+          - salt~=3003.0
+          - salt~=3004.0
         pytest-version:
           - "~=6.2.0"
 
@@ -431,8 +431,8 @@ jobs:
         python-version:
           - 3.7
         salt-version:
-          - salt==3002.6
-          - salt==3003
+          - salt~=3003.0
+          - salt~=3004.0
         pytest-version:
           - "~=6.2.0"
 
@@ -592,8 +592,8 @@ jobs:
         python-version:
           - 3.5
         salt-version:
-          - salt==3002.6
-          - salt==3003
+          - salt~=3003.0
+          - salt~=3004.0
         pytest-version:
           - "~=6.0.0"
           - "~=6.1.0"
@@ -757,8 +757,8 @@ jobs:
           - 3.8
           - 3.9
         salt-version:
-          - salt==3002.6
-          - salt==3003
+          - salt~=3003.0
+          - salt~=3004.0
         pytest-version:
           - "~=6.0.0"
           - "~=6.1.0"
