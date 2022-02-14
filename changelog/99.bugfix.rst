@@ -1,0 +1,1 @@
+Fix ``pathlib.path`` typo

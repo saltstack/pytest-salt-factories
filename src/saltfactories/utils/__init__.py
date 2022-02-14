@@ -53,4 +53,4 @@ def cast_to_pathlib_path(value):
     try:
         return pathlib.Path(value.strpath)
     except AttributeError:
-        return pathlib.path(str(value))
+        return pathlib.Path(str(value))
