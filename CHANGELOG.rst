@@ -20,6 +20,22 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc2 (2022-02-14)
+=====================
+
+Improvements
+------------
+
+- Improve documentation (`#92 <https://github.com/saltstack/pytest-salt-factories/issues/92>`_)
+
+
+Bug Fixes
+---------
+
+- Fix issue where, on system installations, the minion ID on the configuration, if not explicitly passed on ``overrides`` or ``defaults``, would default to the master ID used to create the salt minion factory. (`#93 <https://github.com/saltstack/pytest-salt-factories/issues/93>`_)
+- Allow configuring ``root_dir`` in ``setup_salt_factories`` fixture (`#95 <https://github.com/saltstack/pytest-salt-factories/issues/95>`_)
+
+
 0.912.2 (2022-02-14)
 ====================
 

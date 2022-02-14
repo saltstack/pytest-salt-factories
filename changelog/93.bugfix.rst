@@ -1,1 +1,0 @@
-Fix issue where, on system installations, the minion ID on the configuration, if not explicitly passed on ``overrides`` or ``defaults``, would default to the master ID used to create the salt minion factory.
