@@ -22,19 +22,6 @@ except ImportError:  # pragma: no cover
     # This likely due to running backwards compatibility tests against older minions
     from salt.log.setup import LOG_LEVELS
     from salt.log.mixins import ExcInfoOnLogLevelFormatMixIn as ExcInfoOnLogLevelFormatMixin
-try:
-    from salt._logging.mixins import NewStyleClassMixin
-except ImportError:  # pragma: no cover
-    try:
-        # This likely due to running backwards compatibility tests against older minions
-        from salt.log.mixins import NewStyleClassMixIn as NewStyleClassMixin
-    except ImportError:  # pragma: no cover
-        # NewStyleClassMixin was removed from salt
-
-        class NewStyleClassMixin(object):
-            """
-            A copy of Salt's previous NewStyleClassMixin implementation.
-            """
 
 
 try:
@@ -129,7 +116,7 @@ def setup_handlers():
     return handler
 
 
-class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler, NewStyleClassMixin):
+class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler):
     """
     ZMQ logging handler implementation.
     """
