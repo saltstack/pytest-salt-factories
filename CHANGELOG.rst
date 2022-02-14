@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+0.912.2 (2022-02-14)
+====================
+
+Bug Fixes
+---------
+
+- Use salt's entry-points instead of relying on loader ``*_dirs`` configs (`#98 <https://github.com/saltstack/pytest-salt-factories/issues/98>`_)
+
+
 0.912.1 (2022-02-05)
 ====================
 
