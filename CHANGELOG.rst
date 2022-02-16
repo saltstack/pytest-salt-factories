@@ -20,6 +20,16 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc3 (2022-02-16)
+=====================
+
+Bug Fixes
+---------
+
+- Fix ``pathlib.path`` typo (`#99 <https://github.com/saltstack/pytest-salt-factories/issues/99>`_)
+- Fixed issue with ``sdist`` recompression for reproducible packages not iterating though subdirectories contents. (`#100 <https://github.com/saltstack/pytest-salt-factories/issues/100>`_)
+
+
 1.0.0rc2 (2022-02-14)
 =====================
 
