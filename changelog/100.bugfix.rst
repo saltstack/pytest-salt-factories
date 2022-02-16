@@ -1,0 +1,1 @@
+Fixed issue with ``sdist`` recompression for reproducible packages not iterating though subdirectories contents.

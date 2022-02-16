@@ -528,8 +528,8 @@ class Recompress:
         with tarfile.open(d_tar, "w|") as wfile:
             with tarfile.open(targz, "r:gz") as rfile:
                 rfile.extractall(d_src)
-                extracted_dir = list(pathlib.Path(d_src).glob("*"))[0]
-                for name in sorted(extracted_dir.iterdir()):
+                extracted_dir = next(pathlib.Path(d_src).iterdir())
+                for name in sorted(extracted_dir.rglob("*")):
                     wfile.add(
                         str(name),
                         filter=self.tar_reset,
