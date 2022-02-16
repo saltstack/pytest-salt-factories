@@ -1,6 +1,3 @@
-import os
-import tempfile
-
 import pytest
 import salt.defaults.exitcodes
 from pytestshellutils.exceptions import FactoryNotStarted
@@ -62,70 +59,66 @@ def test_salt_run(master, salt_run):
     assert ret.data == max_open_files_config_value
 
 
-def test_salt_cp(master, minion, salt_cp, tempfiles):
+def test_salt_cp_minion_id_as_first_argument(master, minion, salt_cp, tempfiles, tmp_path):
+    """
+    Test copying a file from the master any minions connected
+    """
+    dest = tmp_path / "copied-file.txt"
+    contents = "id: foo"
+    sls = tempfiles.makeslsfile(contents)
+    assert master.is_running()
+    assert minion.is_running()
+    ret = salt_cp.run(minion.id, sls, str(dest))
+    assert ret.returncode == 0, ret
+    assert ret.data == {minion.id: {str(dest): True}}
+    assert dest.is_file()
+    assert dest.read_text() == contents
+
+
+def test_salt_cp_explicit_minion_tgt(master, minion, salt_cp, tempfiles, tmp_path):
     """
     Test copying a file from the master to the minion
     """
-    tfile = tempfile.NamedTemporaryFile(delete=True)
-    tfile.close()
-    dest = tfile.name
-    try:
-        contents = "id: foo"
-        sls = tempfiles.makeslsfile(contents)
-        assert master.is_running()
-        assert minion.is_running()
-        ret = salt_cp.run(minion.id, sls, dest)
-        assert ret.returncode == 0, ret
-        assert ret.data == {minion.id: {dest: True}}, ret
-        assert os.path.exists(dest)
-        with open(dest) as rfh:
-            assert rfh.read() == contents
-    finally:  # pragma: no cover
-        if os.path.exists(dest):
-            os.unlink(dest)
-
-    tfile = tempfile.NamedTemporaryFile(delete=True)
-    tfile.close()
-    dest = tfile.name
-    try:
-        contents = "id: foo"
-        sls = tempfiles.makeslsfile(contents)
-        assert master.is_running()
-        assert minion.is_running()
-        ret = salt_cp.run(sls, dest, minion_tgt=minion.id)
-        assert ret.returncode == 0, ret
-        assert ret.data == {dest: True}, ret
-        assert os.path.exists(dest)
-        with open(dest) as rfh:
-            assert rfh.read() == contents
-    finally:  # pragma: no cover
-        if os.path.exists(dest):
-            os.unlink(dest)
+    dest = tmp_path / "copied-file.txt"
+    contents = "id: foo"
+    sls = tempfiles.makeslsfile(contents)
+    assert master.is_running()
+    assert minion.is_running()
+    ret = salt_cp.run(sls, str(dest), minion_tgt=minion.id)
+    assert ret.returncode == 0, ret
+    assert ret.data == {str(dest): True}
+    assert dest.is_file()
+    assert dest.read_text() == contents
 
 
-def test_salt_cp_no_match(master, minion, salt_cp, tempfiles):
+def test_salt_cp_no_match(master, minion, salt_cp, tempfiles, tmp_path):
     assert master.is_running()
     assert minion.is_running()
 
-    tfile = tempfile.NamedTemporaryFile(delete=True)
-    tfile.close()
-    dest = tfile.name
-    try:
-        contents = "id: foo"
-        sls = tempfiles.makeslsfile(contents)
-        assert master.is_running()
-        assert minion.is_running()
-        ret = salt_cp.run(sls, dest, minion_tgt="minion-2")
-        assert ret.returncode == 0, ret
-        assert not ret.data, ret
-        assert not os.path.exists(dest)
-    finally:  # pragma: no cover
-        if os.path.exists(dest):
-            os.unlink(dest)
+    dest = tmp_path / "copied-file.txt"
+    contents = "id: foo"
+    sls = tempfiles.makeslsfile(contents)
+    assert master.is_running()
+    assert minion.is_running()
+    ret = salt_cp.run(sls, str(dest), minion_tgt="minion-2")
+    assert ret.returncode == 0, ret
+    assert not ret.data
+    assert not dest.is_file()
+
+
+def test_state_tree(master, salt_call, minion):
+    assert minion.is_running()
+    sls_contents = """
+    test:
+      test.succeed_without_changes
+    """
+    with master.state_tree.base.temp_file("foo.sls", sls_contents):
+        ret = salt_call.run("state.sls", "foo")
+        assert ret.returncode == 0
 
 
 @pytest.mark.skip_on_salt_system_install
-def test_salt_key(master, minion, minion_3, salt_key):
+def test_salt_key(minion, minion_3, salt_key):
     ret = salt_key.run("--list-all")
     assert ret.returncode == 0, ret
     assert ret.data == {
@@ -145,13 +138,3 @@ def test_exit_status_unknown_user(salt_factories):
 
     assert exc.value.process_result.returncode == salt.defaults.exitcodes.EX_NOUSER, str(exc.value)
     assert "The user is not available." in exc.value.process_result.stderr, str(exc.value)
-
-
-def test_state_tree(master, salt_call):
-    sls_contents = """
-    test:
-      test.succeed_without_changes
-    """
-    with master.state_tree.base.temp_file("foo.sls", sls_contents):
-        ret = salt_call.run("state.sls", "foo")
-        assert ret.returncode == 0
