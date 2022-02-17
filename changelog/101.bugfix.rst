@@ -1,1 +1,0 @@
-Properly handle missing keys in the configuration for the pytest salt logging handler.

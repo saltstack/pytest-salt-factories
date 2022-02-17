@@ -1,1 +1,0 @@
-Fix passing ``--timeout`` to Salt's CLI's

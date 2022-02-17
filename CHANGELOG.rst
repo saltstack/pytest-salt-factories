@@ -20,6 +20,16 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc4 (2022-02-17)
+=====================
+
+Bug Fixes
+---------
+
+- Properly handle missing keys in the configuration for the pytest salt logging handler. (`#101 <https://github.com/saltstack/pytest-salt-factories/issues/101>`_)
+- Fix passing ``--timeout`` to Salt's CLI's (`#102 <https://github.com/saltstack/pytest-salt-factories/issues/102>`_)
+
+
 1.0.0rc3 (2022-02-16)
 =====================
 
