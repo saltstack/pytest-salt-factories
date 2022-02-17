@@ -8,6 +8,7 @@ from unittest import mock
 import pytest
 from pytestshellutils.utils.processes import ProcessResult
 
+from saltfactories.bases import SALT_TIMEOUT_FLAG_INCREASE
 from saltfactories.bases import SaltCli
 
 
@@ -235,7 +236,7 @@ def test_cli_timeout_matches_timeout_kw(minion_id, config_dir, config_file, cli_
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         proc.run(*args, **kwargs)
-        assert proc.impl._terminal_timeout == cli_timeout + 10
+        assert proc.impl._terminal_timeout == cli_timeout + SALT_TIMEOUT_FLAG_INCREASE
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
 
@@ -278,7 +279,7 @@ def test_cli_timeout_greater_than_timeout_kw(minion_id, config_dir, config_file,
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         proc.run(*args, **kwargs)
-        assert proc.impl._terminal_timeout == cli_timeout + 10
+        assert proc.impl._terminal_timeout == cli_timeout + SALT_TIMEOUT_FLAG_INCREASE
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
 
@@ -320,7 +321,7 @@ def test_cli_timeout_updates_to_timeout_kw_plus_10(
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         proc.run(*args, **kwargs)
-        assert proc.impl._terminal_timeout == explicit_timeout + 10
+        assert proc.impl._terminal_timeout == explicit_timeout + SALT_TIMEOUT_FLAG_INCREASE
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
 
@@ -361,7 +362,7 @@ def test_cli_timeout_updates_to_default_timeout_plus_10(
         # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
         proc.__cli_timeout_supported__ = True
         proc.run(*args, **kwargs)
-        assert proc.impl._terminal_timeout == timeout + 10
+        assert proc.impl._terminal_timeout == timeout + SALT_TIMEOUT_FLAG_INCREASE
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
 
@@ -401,7 +402,7 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
     assert cmdline == expected
     # Let's also confirm that we also parsed the timeout flag value and set the SaltScriptBase
     # _terminal_timeout to that value plus 10
-    assert proc.impl._terminal_timeout == flag_value + 10
+    assert proc.impl._terminal_timeout == flag_value + SALT_TIMEOUT_FLAG_INCREASE
 
 
 @pytest.mark.parametrize("flag", ["-t", "--timeout", "--timeout="])

@@ -34,6 +34,10 @@ from saltfactories.utils import running_username
 
 log = logging.getLogger(__name__)
 
+# If any --timeout is passed on the CLI, we'll feed it to salt,
+# and will increase it internally as a hard timeout by the following amount
+SALT_TIMEOUT_FLAG_INCREASE = 20
+
 
 @attr.s(kw_only=True)
 class SaltMixin:
@@ -199,9 +203,6 @@ class SaltCli(SaltMixin, ScriptSubprocess):
 
         # Handle the timeout CLI flag, if supported
         if self.__cli_timeout_supported__:
-            # If any timeout is passed on the CLI, we'll feed it to salt,
-            # and will increase it internally as a hard timeout by the following amount
-            hard_timeout_increase = 20
             salt_cli_timeout_next = False
             for arg in args:
                 if arg.startswith("--timeout="):
@@ -213,9 +214,13 @@ class SaltCli(SaltMixin, ScriptSubprocess):
                         # Not a number? Let salt do it's error handling
                         break
                     if self.impl._terminal_timeout is None:
-                        self.impl._terminal_timeout = int(salt_cli_timeout) + hard_timeout_increase
+                        self.impl._terminal_timeout = (
+                            int(salt_cli_timeout) + SALT_TIMEOUT_FLAG_INCREASE
+                        )
                     elif salt_cli_timeout >= self.impl._terminal_timeout:
-                        self.impl._terminal_timeout = int(salt_cli_timeout) + hard_timeout_increase
+                        self.impl._terminal_timeout = (
+                            int(salt_cli_timeout) + SALT_TIMEOUT_FLAG_INCREASE
+                        )
                     break
                 if salt_cli_timeout_next:
                     try:
@@ -224,9 +229,13 @@ class SaltCli(SaltMixin, ScriptSubprocess):
                         # Not a number? Let salt do it's error handling
                         break
                     if self.impl._terminal_timeout is None:
-                        self.impl._terminal_timeout = int(salt_cli_timeout) + hard_timeout_increase
+                        self.impl._terminal_timeout = (
+                            int(salt_cli_timeout) + SALT_TIMEOUT_FLAG_INCREASE
+                        )
                     if salt_cli_timeout >= self.impl._terminal_timeout:
-                        self.impl._terminal_timeout = int(salt_cli_timeout) + hard_timeout_increase
+                        self.impl._terminal_timeout = (
+                            int(salt_cli_timeout) + SALT_TIMEOUT_FLAG_INCREASE
+                        )
                     break
                 if arg == "-t" or arg.startswith("--timeout"):
                     salt_cli_timeout_next = True
@@ -234,7 +243,7 @@ class SaltCli(SaltMixin, ScriptSubprocess):
             else:
                 salt_cli_timeout = self.impl._terminal_timeout
                 if salt_cli_timeout:
-                    self.impl._terminal_timeout = salt_cli_timeout + hard_timeout_increase
+                    self.impl._terminal_timeout = salt_cli_timeout + SALT_TIMEOUT_FLAG_INCREASE
                     # Add it to the salt command CLI flags
                     cmdline.append("--timeout={}".format(salt_cli_timeout))
 
