@@ -4,6 +4,8 @@ Salt functional testing support.
 import copy
 import logging
 import operator
+import pathlib
+import shutil
 
 import attr
 import salt.loader
@@ -58,8 +60,9 @@ class Loaders:
     def __init__(self, opts):
         self.opts = opts
         self.context = {}
+        self._cachedir = pathlib.Path(opts["cachedir"])
         self._original_opts = copy.deepcopy(opts)
-        self._reset_state_funcs = [self.context.clear]
+        self._reset_state_funcs = [self.context.clear, self._cleanup_cache]
         self._reload_all_funcs = [self.reset_state]
         self._grains = None
         self._modules = None
@@ -74,6 +77,10 @@ class Loaders:
         self.modules.saltutil.sync_all()
         # Now reload again so that the loader takes into account said cache
         self.reload_all()
+
+    def _cleanup_cache(self):
+        shutil.rmtree(str(self._cachedir), ignore_errors=True)
+        self._cachedir.mkdir(exist_ok=True, parents=True)
 
     def reset_state(self):
         """
