@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc6 (2022-02-17)
+=====================
+
+Bug Fixes
+---------
+
+- Include the started daemons in the ``stats_processes`` dictionary (`#104 <https://github.com/saltstack/pytest-salt-factories/issues/104>`_)
+
+
 1.0.0rc5 (2022-02-17)
 =====================
 

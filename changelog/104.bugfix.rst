@@ -1,1 +1,0 @@
-Include the started daemons in the ``stats_processes`` dictionary
