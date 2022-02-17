@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc5 (2022-02-17)
+=====================
+
+Improvements
+------------
+
+- Wipe the ``cachedir`` for on each ``saltfactories.utils.functional.Loaders`` reset (`#103 <https://github.com/saltstack/pytest-salt-factories/issues/103>`_)
+
+
 1.0.0rc4 (2022-02-17)
 =====================
 

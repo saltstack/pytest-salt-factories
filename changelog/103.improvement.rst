@@ -1,1 +1,0 @@
-Wipe the ``cachedir`` for on each ``saltfactories.utils.functional.Loaders`` reset
