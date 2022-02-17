@@ -209,7 +209,9 @@ class SaltCli(SaltMixin, ScriptSubprocess):
                     except ValueError:
                         # Not a number? Let salt do it's error handling
                         break
-                    if salt_cli_timeout >= self.impl._terminal_timeout:
+                    if self.impl._terminal_timeout is None:
+                        self.impl._terminal_timeout = int(salt_cli_timeout) + 10
+                    elif salt_cli_timeout >= self.impl._terminal_timeout:
                         self.impl._terminal_timeout = int(salt_cli_timeout) + 10
                     break
                 if salt_cli_timeout_next:
@@ -218,6 +220,8 @@ class SaltCli(SaltMixin, ScriptSubprocess):
                     except ValueError:
                         # Not a number? Let salt do it's error handling
                         break
+                    if self.impl._terminal_timeout is None:
+                        self.impl._terminal_timeout = int(salt_cli_timeout) + 10
                     if salt_cli_timeout >= self.impl._terminal_timeout:
                         self.impl._terminal_timeout = int(salt_cli_timeout) + 10
                     break
