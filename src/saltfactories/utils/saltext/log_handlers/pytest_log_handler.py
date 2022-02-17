@@ -47,6 +47,12 @@ def __virtual__():
     role = __opts__["__role"]
     pytest_key = "pytest-{}".format(role)
 
+    if pytest_key not in __opts__ and "pytest" not in __opts__:
+        return False, "Neither '{}' nor 'pytest' keys in opts dictionary".format(pytest_key)
+
+    if pytest_key not in __opts__:
+        pytest_key = "pytest"
+
     pytest_config = __opts__[pytest_key]
     if "log" not in pytest_config:
         return False, "No 'log' key in opts {} dictionary".format(pytest_key)
