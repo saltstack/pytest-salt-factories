@@ -130,7 +130,7 @@ def temp_file(name=None, contents=None, directory=None, strip_first_newline=True
 
             assert temp_path.is_file() is False
 
-    To create files under a subdirectory, one has two choices:
+    To create files under a sub-directory, one has two choices:
 
     .. code-block:: python
 

@@ -40,6 +40,7 @@ datatypes
 datetime
 deepcopy
 dereference
+destpath
 dmux
 dns
 dunder
@@ -191,6 +192,7 @@ toc
 toctree
 toml
 towncrier
+txt
 un
 undoc
 unix
