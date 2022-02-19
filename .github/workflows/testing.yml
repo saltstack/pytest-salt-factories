@@ -810,7 +810,7 @@ jobs:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
-        nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
+        nox --force-color -e tests-${{ matrix.python-version }} -- -vv --sys-stats tests/
 
     - name: Upload Salt Factories Code Coverage
       if: always()
