@@ -239,7 +239,7 @@ class FactoriesManager:
         )
         self.final_master_config_tweaks(config)
         loaded_config = factory_class.write_config(config)
-        if self.stats_processes:
+        if self.stats_processes is not None:
             factory_class_kwargs.setdefault("stats_processes", self.stats_processes)
         return self._get_factory_class_instance(
             "salt-master",
@@ -298,7 +298,7 @@ class FactoriesManager:
         )
         self.final_minion_config_tweaks(config)
         loaded_config = factory_class.write_config(config)
-        if self.stats_processes:
+        if self.stats_processes is not None:
             factory_class_kwargs.setdefault("stats_processes", self.stats_processes)
         return self._get_factory_class_instance(
             "salt-minion",
@@ -372,7 +372,7 @@ class FactoriesManager:
                 master_config.pop(key)
         self.final_master_config_tweaks(master_config)
         master_loaded_config = master_factory_class.write_config(master_config)
-        if self.stats_processes:
+        if self.stats_processes is not None:
             factory_class_kwargs.setdefault("stats_processes", self.stats_processes)
         master_factory = self._get_factory_class_instance(
             "salt-master",
@@ -477,7 +477,7 @@ class FactoriesManager:
         )
         self.final_proxy_minion_config_tweaks(config)
         loaded_config = factory_class.write_config(config)
-        if self.stats_processes:
+        if self.stats_processes is not None:
             factory_class_kwargs.setdefault("stats_processes", self.stats_processes)
         return self._get_factory_class_instance(
             "salt-proxy",
@@ -560,7 +560,7 @@ class FactoriesManager:
             config_dir = pathlib.Path(config_dir.strpath).resolve()
         except AttributeError:
             config_dir = pathlib.Path(config_dir).resolve()
-        if self.stats_processes:
+        if self.stats_processes is not None:
             factory_class_kwargs.setdefault("stats_processes", self.stats_processes)
         return factory_class(
             start_timeout=start_timeout or self.start_timeout,
@@ -614,8 +614,6 @@ class FactoriesManager:
             :py:class:`~saltfactories.daemons.container.Container`:
                 The factory instance
         """
-        if self.stats_processes:
-            factory_class_kwargs.setdefault("stats_processes", self.stats_processes)
         return factory_class(
             name=container_name,
             image=image_name,
