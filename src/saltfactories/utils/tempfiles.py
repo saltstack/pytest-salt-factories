@@ -115,7 +115,7 @@ def temp_file(name=None, contents=None, directory=None, strip_first_newline=True
             with temp_file(name="blah.txt") as temp_path:
                 assert temp_path.is_file()
 
-            assert not temp_path.is_file() is False
+            assert temp_path.is_file() is False
 
     Or, it can be used as a pytest helper function:
 
@@ -128,7 +128,55 @@ def temp_file(name=None, contents=None, directory=None, strip_first_newline=True
             with pytest.helpers.temp_file("blah.txt") as temp_path:
                 assert temp_path.is_file()
 
+            assert temp_path.is_file() is False
+
+    To create files under a subdirectory, one has two choices:
+
+    .. code-block:: python
+
+        import pytest
+
+
+        def test_relative_subdirectory():
+            with pytest.helpers.temp_file("foo/blah.txt") as temp_path:
+                assert temp_path.is_file()
+                assert temp_path.parent.is_dir()
+                assert temp_path.parent.name == "foo"
+
             assert not temp_path.is_file() is False
+            assert not temp_path.parent.is_dir() is False
+
+
+    .. code-block:: python
+
+        import os
+        import pytest
+        import tempfile
+
+        ROOT_DIR = tempfile.gettempdir()
+
+
+        def test_absolute_subdirectory_1():
+            destpath = os.path.join(ROOT_DIR, "foo")
+            with pytest.helpers.temp_file("blah.txt", directory=destpath) as temp_path:
+                assert temp_path.is_file()
+                assert temp_path.parent.is_dir()
+                assert temp_path.parent.name == "foo"
+
+            assert not temp_path.is_file() is False
+            assert not temp_path.parent.is_dir() is False
+
+
+        def test_absolute_subdirectory_2():
+            destpath = os.path.join(ROOT_DIR, "foo", "blah.txt")
+            with pytest.helpers.temp_file(destpath) as temp_path:
+                assert temp_path.is_file()
+                assert temp_path.parent.is_dir()
+                assert temp_path.parent.name == "foo"
+
+            assert temp_path.is_file() is False
+            assert temp_path.parent.is_dir() is False
+
     """
     if directory is None:
         directory = tempfile.gettempdir()
