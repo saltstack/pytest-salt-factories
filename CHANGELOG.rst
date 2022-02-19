@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc7 (2022-02-19)
+=====================
+
+Bug Fixes
+---------
+
+- The containers factory does not accept the ``stats_processes`` keyword. (`#105 <https://github.com/saltstack/pytest-salt-factories/issues/105>`_)
+
+
 1.0.0rc6 (2022-02-17)
 =====================
 
