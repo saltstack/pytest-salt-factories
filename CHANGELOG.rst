@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc8 (2022-03-12)
+=====================
+
+Bug Fixes
+---------
+
+- Instead of just removing `saltfactories.utils.ports` and `saltfactories.utils.processes`, redirect the imports to the right library and show a deprecation warning. (`#106 <https://github.com/saltstack/pytest-salt-factories/issues/106>`_)
+
+
 1.0.0rc7 (2022-02-19)
 =====================
 
