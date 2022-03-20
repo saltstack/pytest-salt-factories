@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc9 (2022-03-20)
+=====================
+
+Improvements
+------------
+
+- Use old-style Salt entrypoints for improved backwards compatibility. (`#98 <https://github.com/saltstack/pytest-salt-factories/issues/98>`_)
+
+
 1.0.0rc8 (2022-03-12)
 =====================
 
