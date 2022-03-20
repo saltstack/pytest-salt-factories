@@ -39,6 +39,7 @@ darwin
 datatypes
 datetime
 deepcopy
+defaultdict
 dereference
 destpath
 dmux
@@ -90,6 +91,7 @@ localhost
 macos
 maxdepth
 minify
+mixin
 msg
 msgpack
 mtime
@@ -196,10 +198,13 @@ towncrier
 txt
 un
 undoc
+unicode
 unix
 uss
 utils
 venv
+versionadded
 virtualenv
 virtualenvs
+yaml
 zmq
