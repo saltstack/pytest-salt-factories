@@ -44,6 +44,12 @@ log = logging.getLogger(__name__)
 
 
 def __virtual__():
+    if HAS_MSGPACK is False:
+        return False, "msgpack was not importable. Please install msgpack."
+    if HAS_ZMQ is False:
+        return False, "zmq was not importable. Please install pyzmq."
+    if "__role" not in __opts__:
+        return False, "The required '__role' key could not be found in the options dictionary"
     role = __opts__["__role"]
     pytest_key = "pytest-{}".format(role)
 
@@ -65,10 +71,6 @@ def __virtual__():
                 __opts__["role"]
             ),
         )
-    if HAS_MSGPACK is False:
-        return False, "msgpack was not importable. Please install msgpack."
-    if HAS_ZMQ is False:
-        return False, "zmq was not importable. Please install pyzmq."
     return True
 
 

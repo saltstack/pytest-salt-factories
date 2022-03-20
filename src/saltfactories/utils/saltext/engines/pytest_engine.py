@@ -9,20 +9,21 @@ import atexit
 import datetime
 import logging
 import threading
+from collections.abc import MutableMapping
 
-import zmq
-
-try:
-    from collections.abc import MutableMapping
-except ImportError:
-    # Py2 compat
-    from collections import MutableMapping
 try:
     import msgpack
 
     HAS_MSGPACK = True
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_MSGPACK = False
+try:
+    import zmq
+
+    HAS_ZMQ = True
+except ImportError:  # pragma: no cover
+    HAS_ZMQ = False
+
 
 import salt.utils.event
 
@@ -42,6 +43,12 @@ __virtualname__ = "pytest"
 
 
 def __virtual__():
+    if HAS_MSGPACK is False:
+        return False, "msgpack was not importable. Please install msgpack."
+    if HAS_ZMQ is False:
+        return False, "zmq was not importable. Please install pyzmq."
+    if "__role" not in __opts__:
+        return False, "The required '__role' key could not be found in the options dictionary"
     role = __opts__["__role"]
     pytest_key = "pytest-{}".format(role)
     if pytest_key not in __opts__:
@@ -50,8 +57,6 @@ def __virtual__():
     pytest_config = __opts__[pytest_key]
     if "returner_address" not in pytest_config:
         return False, "No 'returner_address' key in opts['{}'] dictionary".format(pytest_key)
-    if HAS_MSGPACK is False:
-        return False, "msgpack was not importable. Please install msgpack."
     return True
 
 
