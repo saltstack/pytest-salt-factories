@@ -1,0 +1,1 @@
+Base classes for the ``SaltDaemon`` containers order is now fixed.

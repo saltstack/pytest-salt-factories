@@ -501,6 +501,12 @@ class SaltDaemon(bases.SaltDaemon, Container):
         self.container_run_kwargs.setdefault("hostname", self.name)
         self.container_run_kwargs.setdefault("auto_remove", True)
 
+    def run(self, *cmd, **kwargs):
+        """
+        Run a command inside the container.
+        """
+        return Container.run(self, *cmd, **kwargs)
+
     def cmdline(self, *args):
         """
         Construct a list of arguments to use when starting the container.
