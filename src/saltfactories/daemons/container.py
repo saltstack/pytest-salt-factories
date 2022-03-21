@@ -9,6 +9,7 @@ import logging
 import os
 
 import attr
+import pytest
 from pytestshellutils.exceptions import FactoryNotStarted
 from pytestshellutils.shell import BaseFactory
 from pytestshellutils.utils import format_callback_to_string
@@ -78,6 +79,8 @@ class Container(BaseFactory):
     container = attr.ib(init=False, default=None, repr=False)
     start_timeout = attr.ib(repr=False, default=30)
     max_start_attempts = attr.ib(repr=False, default=3)
+    pull_before_start = attr.ib(repr=False, default=True)
+    skip_on_pull_failure = attr.ib(repr=False, default=False)
     _before_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     _before_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     _after_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
@@ -96,6 +99,8 @@ class Container(BaseFactory):
             if not HAS_REQUESTS:
                 raise RuntimeError("The requests python library was not found installed")
             self.docker_client = docker.from_env()
+        if self.pull_before_start:
+            self.before_start(self._pull_container)
 
     def before_start(self, callback, *args, **kwargs):
         """
@@ -425,6 +430,23 @@ class Container(BaseFactory):
 
     def _container_start_checks(self):
         return True
+
+    def _pull_container(self):
+        connectable = Container.client_connectable(self.docker_client)
+        if connectable is not True:
+            pytest.fail(connectable)
+        log.info("Pulling docker image '%s' before starting it", self.image)
+        try:
+            self.docker_client.images.pull(self.image)
+        except APIError as exc:
+            if self.skip_on_pull_failure:
+                pytest.skip(
+                    "Failed to pull docker image '{}': {}".format(
+                        self.image,
+                        exc,
+                    )
+                )
+            raise
 
     def __enter__(self):
         """
