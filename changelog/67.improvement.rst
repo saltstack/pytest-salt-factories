@@ -1,0 +1,1 @@
+Provide a ``SECURITY.md`` file for the project
