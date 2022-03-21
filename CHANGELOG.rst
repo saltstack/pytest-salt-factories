@@ -20,6 +20,22 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc10 (2022-03-21)
+======================
+
+Improvements
+------------
+
+- The docker container daemon now pulls the image by default prior to starting it. (`#109 <https://github.com/saltstack/pytest-salt-factories/issues/109>`_)
+
+
+Bug Fixes
+---------
+
+- Provide backwards compatibility imports for the old factory exceptions, now in pytest-shell-utilities (`#108 <https://github.com/saltstack/pytest-salt-factories/issues/108>`_)
+- Base classes for the ``SaltDaemon`` containers order is now fixed. (`#110 <https://github.com/saltstack/pytest-salt-factories/issues/110>`_)
+
+
 1.0.0rc9 (2022-03-20)
 =====================
 

@@ -1,1 +1,0 @@
-The docker container daemon now pulls the image by default prior to starting it.
