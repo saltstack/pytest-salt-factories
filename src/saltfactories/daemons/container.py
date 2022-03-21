@@ -499,7 +499,7 @@ class SaltDaemon(bases.SaltDaemon, Container):
             self.container_run_kwargs["volumes"] = {}
         self.container_run_kwargs["volumes"].update(volumes)
         self.container_run_kwargs.setdefault("hostname", self.name)
-        self.container_run_kwargs.setdefault("auto_remove", True)
+        self.container_run_kwargs.setdefault("auto_remove", False)
 
     def run(self, *cmd, **kwargs):
         """
