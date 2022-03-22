@@ -1,0 +1,1 @@
+It's no longer necessary to pass a docker client instance as ``docker_client`` when using containers.

@@ -10,7 +10,7 @@ def test_missing_docker_library():
         "saltfactories.daemons.container.HAS_DOCKER",
         new_callable=mock.PropertyMock(return_value=False),
     ):
-        with pytest.raises(RuntimeError) as exc:
+        with pytest.raises(pytest.fail.Exception) as exc:
             Container(name="foo", image="bar")
 
         assert str(exc.value) == "The docker python library was not found installed"
@@ -24,7 +24,7 @@ def test_missing_requests_library():
         "saltfactories.daemons.container.HAS_REQUESTS",
         new_callable=mock.PropertyMock(return_value=False),
     ):
-        with pytest.raises(RuntimeError) as exc:
+        with pytest.raises(pytest.fail.Exception) as exc:
             Container(name="foo", image="bar")
 
         assert str(exc.value) == "The requests python library was not found installed"

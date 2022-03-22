@@ -8,6 +8,7 @@ import atexit
 import logging
 import os
 
+import _pytest._version
 import attr
 import pytest
 from pytestshellutils.exceptions import FactoryNotStarted
@@ -63,6 +64,8 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
+PYTEST_GE_7 = getattr(_pytest._version, "version_tuple", (-1, -1)) >= (7, 0)
+
 
 @attr.s(kw_only=True)
 class Container(BaseFactory):
@@ -71,16 +74,17 @@ class Container(BaseFactory):
     """
 
     image = attr.ib()
-    name = attr.ib(default=None)
+    name = attr.ib()
     display_name = attr.ib(default=None)
     check_ports = attr.ib(default=None)
-    docker_client = attr.ib(repr=False, default=None)
     container_run_kwargs = attr.ib(repr=False, default=attr.Factory(dict))
     container = attr.ib(init=False, default=None, repr=False)
     start_timeout = attr.ib(repr=False, default=30)
     max_start_attempts = attr.ib(repr=False, default=3)
     pull_before_start = attr.ib(repr=False, default=True)
     skip_on_pull_failure = attr.ib(repr=False, default=False)
+    skip_if_docker_client_not_connectable = attr.ib(repr=False, default=False)
+    docker_client = attr.ib(repr=False)
     _before_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     _before_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     _after_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
@@ -91,16 +95,42 @@ class Container(BaseFactory):
         """
         Post attrs initialization routines.
         """
-        if self.name is None:
-            self.name = random_string("factories-")
-        if self.docker_client is None:
-            if not HAS_DOCKER:
-                raise RuntimeError("The docker python library was not found installed")
-            if not HAS_REQUESTS:
-                raise RuntimeError("The requests python library was not found installed")
-            self.docker_client = docker.from_env()
+        # Check that the docker client is connectable before starting
+        self.before_start(self._check_for_connectable_docker_client)
         if self.pull_before_start:
             self.before_start(self._pull_container)
+
+    @name.default
+    def _default_name(self):
+        return random_string("factories-")
+
+    @docker_client.default
+    def _default_docker_client(self):
+        exc_kwargs = {}
+        if PYTEST_GE_7:
+            exc_kwargs["_use_item_location"] = True
+        if not HAS_DOCKER:
+            message = "The docker python library was not found installed"
+            if self.skip_if_docker_client_not_connectable:
+                raise pytest.skip.Exception(message, **exc_kwargs)
+            else:
+                pytest.fail(message)
+        if not HAS_REQUESTS:
+            message = "The requests python library was not found installed"
+            if self.skip_if_docker_client_not_connectable:
+                raise pytest.skip.Exception(message, **exc_kwargs)
+            else:
+                pytest.fail(message)
+        try:
+            docker_client = docker.from_env()
+        except APIError as exc:
+            message = "Failed to instantiate the docker client: {}".format(exc)
+            if self.skip_if_docker_client_not_connectable:
+                raise pytest.skip.Exception(message, **exc_kwargs) from exc
+            else:
+                pytest.fail(message)
+        else:
+            return docker_client
 
     def before_start(self, callback, *args, **kwargs):
         """
@@ -169,10 +199,6 @@ class Container(BaseFactory):
         if self.is_running():
             log.warning("%s is already running.", self)
             return True
-        connectable = Container.client_connectable(self.docker_client)
-        if connectable is not True:
-            self.terminate()
-            raise RuntimeError(connectable)
         self._terminate_result = None
         atexit.register(self.terminate)
         factory_started = False
@@ -205,7 +231,7 @@ class Container(BaseFactory):
                 detach=True,
                 stdin_open=True,
                 command=list(command) or None,
-                **self.container_run_kwargs
+                **self.container_run_kwargs,
             )
             while time.time() <= start_running_timeout:
                 # Don't know why, but if self.container wasn't previously in a running
@@ -431,6 +457,17 @@ class Container(BaseFactory):
     def _container_start_checks(self):
         return True
 
+    def _check_for_connectable_docker_client(self):
+        connectable = Container.client_connectable(self.docker_client)
+        if connectable is not True:
+            if self.skip_if_docker_client_not_connectable:
+                exc_kwargs = {}
+                if PYTEST_GE_7:
+                    exc_kwargs["_use_item_location"] = True
+                raise pytest.skip.Exception(connectable, **exc_kwargs)
+            else:
+                pytest.fail(connectable)
+
     def _pull_container(self):
         connectable = Container.client_connectable(self.docker_client)
         if connectable is not True:
@@ -440,12 +477,16 @@ class Container(BaseFactory):
             self.docker_client.images.pull(self.image)
         except APIError as exc:
             if self.skip_on_pull_failure:
-                pytest.skip(
+                exc_kwargs = {}
+                if PYTEST_GE_7:
+                    exc_kwargs["_use_item_location"] = True
+                raise pytest.skip.Exception(
                     "Failed to pull docker image '{}': {}".format(
                         self.image,
                         exc,
-                    )
-                )
+                    ),
+                    **exc_kwargs,
+                ) from exc
             raise
 
     def __enter__(self):
@@ -529,7 +570,7 @@ class SaltDaemon(bases.SaltDaemon, Container):
             self,
             *extra_cli_arguments,
             max_start_attempts=max_start_attempts,
-            start_timeout=start_timeout
+            start_timeout=start_timeout,
         )
         return self.daemon_started
 
@@ -647,7 +688,7 @@ class SaltDaemon(bases.SaltDaemon, Container):
             self,
             *extra_cli_arguments,
             max_start_attempts=max_start_attempts,
-            start_timeout=start_timeout
+            start_timeout=start_timeout,
         )
 
     def get_check_events(self):

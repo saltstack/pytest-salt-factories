@@ -581,7 +581,6 @@ class FactoriesManager:
         self,
         container_name,
         image_name,
-        docker_client=None,
         display_name=None,
         factory_class=daemons.container.Container,
         max_start_attempts=3,
@@ -596,8 +595,6 @@ class FactoriesManager:
                 The name to give the container
             image_name(str):
                 The image to use
-            docker_client:
-                An instance of the docker client to use
             display_name(str):
                 Human readable name for the factory
             factory_class:
@@ -617,7 +614,6 @@ class FactoriesManager:
         return factory_class(
             name=container_name,
             image=image_name,
-            docker_client=docker_client,
             display_name=display_name or container_name,
             environ=self.environ,
             cwd=self.cwd,
