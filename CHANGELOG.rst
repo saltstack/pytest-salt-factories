@@ -20,6 +20,16 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc11 (2022-03-22)
+======================
+
+Improvements
+------------
+
+- Provide a ``SECURITY.md`` file for the project (`#67 <https://github.com/saltstack/pytest-salt-factories/issues/67>`_)
+- It's no longer necessary to pass a docker client instance as ``docker_client`` when using containers. (`#111 <https://github.com/saltstack/pytest-salt-factories/issues/111>`_)
+
+
 1.0.0rc10 (2022-03-21)
 ======================
 
