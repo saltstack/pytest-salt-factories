@@ -25,7 +25,7 @@ from saltfactories.utils import random_string
 
 try:
     import docker
-    from docker.errors import APIError
+    from docker.errors import APIError, NotFound
 
     HAS_DOCKER = True
 except ImportError:  # pragma: no cover
@@ -34,6 +34,11 @@ except ImportError:  # pragma: no cover
     class APIError(Exception):
         """
         Define APIError to avoid NameError.
+        """
+
+    class NotFound(Exception):
+        """
+        Define NotFound to avoid NameError.
         """
 
 
@@ -280,7 +285,7 @@ class Container(BaseFactory):
                 try:
                     self.container.remove(force=True)
                     self.container.wait()
-                except docker.errors.NotFound:
+                except NotFound:
                     pass
                 self.container = None
         else:
@@ -358,7 +363,7 @@ class Container(BaseFactory):
                     container.remove(force=True)
                     container.wait()
                 self.container = None
-        except docker.errors.NotFound:
+        except NotFound:
             pass
         finally:
             for callback, args, kwargs in self._after_terminate_callbacks:
