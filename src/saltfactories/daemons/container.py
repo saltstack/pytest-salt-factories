@@ -285,7 +285,7 @@ class Container(BaseFactory):
                 try:
                     self.container.remove(force=True)
                     self.container.wait()
-                except NotFound:
+                except APIError:
                     pass
                 self.container = None
         else:
@@ -360,8 +360,11 @@ class Container(BaseFactory):
                 elif stdout:
                     log.info("Stopped Container Logs:\n%s", stdout)
                 if container.status == "running":
-                    container.remove(force=True)
-                    container.wait()
+                    try:
+                        self.container.remove(force=True)
+                        self.container.wait()
+                    except APIError:
+                        pass
                 self.container = None
         except NotFound:
             pass
@@ -545,7 +548,8 @@ class SaltDaemon(bases.SaltDaemon, Container):
             self.container_run_kwargs["volumes"] = {}
         self.container_run_kwargs["volumes"].update(volumes)
         self.container_run_kwargs.setdefault("hostname", self.name)
-        self.container_run_kwargs.setdefault("auto_remove", False)
+        self.container_run_kwargs.setdefault("remove", True)
+        self.container_run_kwargs.setdefault("auto_remove", True)
 
     def run(self, *cmd, **kwargs):
         """
