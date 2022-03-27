@@ -1,1 +1,0 @@
-Catch ``APIError`` when removing containers

@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc12 (2022-03-27)
+======================
+
+Bug Fixes
+---------
+
+- Catch ``APIError`` when removing containers (`#112 <https://github.com/saltstack/pytest-salt-factories/issues/112>`_)
+
+
 1.0.0rc11 (2022-03-22)
 ======================
 
