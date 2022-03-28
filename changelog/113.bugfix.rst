@@ -1,1 +1,0 @@
-Handle docker client initialization error on macOS.

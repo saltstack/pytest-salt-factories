@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc13 (2022-03-28)
+======================
+
+Bug Fixes
+---------
+
+- Handle docker client initialization error on macOS. (`#113 <https://github.com/saltstack/pytest-salt-factories/issues/113>`_)
+
+
 1.0.0rc12 (2022-03-27)
 ======================
 
