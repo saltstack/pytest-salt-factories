@@ -25,11 +25,16 @@ from saltfactories.utils import random_string
 
 try:
     import docker
-    from docker.errors import APIError, NotFound
+    from docker.errors import DockerException, APIError, NotFound
 
     HAS_DOCKER = True
 except ImportError:  # pragma: no cover
     HAS_DOCKER = False
+
+    class DockerException(Exception):
+        """
+        Define DockerException to avoid NameError.
+        """
 
     class APIError(Exception):
         """
@@ -128,7 +133,7 @@ class Container(BaseFactory):
                 pytest.fail(message)
         try:
             docker_client = docker.from_env()
-        except APIError as exc:
+        except DockerException as exc:
             message = "Failed to instantiate the docker client: {}".format(exc)
             if self.skip_if_docker_client_not_connectable:
                 raise pytest.skip.Exception(message, **exc_kwargs) from exc
