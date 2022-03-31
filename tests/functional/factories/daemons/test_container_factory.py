@@ -2,6 +2,21 @@ from unittest import mock
 
 import pytest
 
+from saltfactories.daemons.container import Container
+
+docker = pytest.importorskip("docker")
+
+
+@pytest.fixture(scope="module", autouse=True)
+def _connectable_docker_client():
+    try:
+        client = docker.from_env()
+        connectable = Container.client_connectable(client)
+        if not connectable:
+            pytest.skip(connectable)
+    except docker.errors.DockerException as exc:
+        pytest.skip("Failed to instantiate a docker client: {}".format(exc))
+
 
 @pytest.mark.parametrize("skip_on_pull_failure", [True, False])
 def test_skip_on_pull_failure(pytester, skip_on_pull_failure):
