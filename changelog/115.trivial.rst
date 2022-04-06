@@ -1,1 +1,0 @@
-Pin click on the black pre-commit hooks

@@ -20,6 +20,21 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc14 (2022-04-06)
+======================
+
+Bug Fixes
+---------
+
+- Fixed container tests not passing on macOS (`#114 <https://github.com/saltstack/pytest-salt-factories/issues/114>`_)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Pin click on the black pre-commit hooks (`#115 <https://github.com/saltstack/pytest-salt-factories/issues/115>`_)
+
+
 1.0.0rc13 (2022-03-28)
 ======================
 
