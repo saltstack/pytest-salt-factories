@@ -53,6 +53,8 @@ repos:
       - id: black
         args: [-l 100]
         exclude: src/saltfactories/version.py
+        additional_dependencies:
+          - click<8.1.0
 
   - repo: https://github.com/asottile/blacken-docs
     rev: v1.12.0
@@ -60,7 +62,9 @@ repos:
       - id: blacken-docs
         args: [--skip-errors]
         files: ^(.*\.rst|docs/.*\.rst|src/saltfactories/.*\.py)$
-        additional_dependencies: [black==21.12b0]
+        additional_dependencies:
+          - click<8.1.0
+          - black==21.12b0
   # <---- Formatting -------------------------------------------------------------------------------------------------
 
   # ----- Security -------------------------------------------------------------------------------------------------->
