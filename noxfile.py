@@ -130,9 +130,16 @@ def tests(session):
             )
         pytest_version_requirement = os.environ.get("PYTEST_VERSION_REQUIREMENT") or None
         if pytest_version_requirement:
+            # Account that, under CI, when we test previous version of pytest
+            # we need to pin pytest-subtests to a lower version so that pytest
+            # itself does not get upgraded
+            pytest_requirements = []
             if not pytest_version_requirement.startswith("pytest"):
                 pytest_version_requirement = "pytest{}".format(pytest_version_requirement)
-            session.install(pytest_version_requirement, silent=PIP_INSTALL_SILENT)
+            pytest_requirements.append(pytest_version_requirement)
+            if pytest_version_requirement.startswith("pytest~=6"):
+                pytest_requirements.append("pytest-subtests<0.7.0")
+            session.install(*pytest_requirements, silent=PIP_INSTALL_SILENT)
         if system_install:
             session.install(".", silent=PIP_INSTALL_SILENT)
         else:
