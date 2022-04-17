@@ -29,28 +29,28 @@ def salt_call_cli(minion, salt_cli_timeout):
 
 def test_minion(minion, salt_cli):
     assert minion.is_running()
-    ret = salt_cli.run("test.ping", minion_tgt=minion.id)
+    ret = salt_cli.run("-ldebug", "test.ping", minion_tgt=minion.id)
     assert ret.returncode == 0, ret
     assert ret.data is True
 
 
 def test_no_match(minion, salt_cli):
     assert minion.is_running()
-    ret = salt_cli.run("test.ping", minion_tgt="minion-2")
+    ret = salt_cli.run("-ldebug", "test.ping", minion_tgt="minion-2")
     assert ret.returncode == 2, ret
     assert not ret.data
 
 
 def test_show_jid(minion, salt_cli):
     assert minion.is_running()
-    ret = salt_cli.run("--show-jid", "test.ping", minion_tgt=minion.id)
+    ret = salt_cli.run("-ldebug", "--show-jid", "test.ping", minion_tgt=minion.id)
     assert ret.returncode == 0, ret
     assert ret.data is True
 
 
 def test_minion_salt_call(minion, salt_call_cli):
     assert minion.is_running()
-    ret = salt_call_cli.run("test.ping")
+    ret = salt_call_cli.run("-ldebug", "test.ping")
     assert ret.returncode == 0, ret
     assert ret.data is True
     # Now with --local
