@@ -18,7 +18,7 @@ def salt_master(salt_factories, master_id):
     """
     overrides = {"open_mode": True}
     factory = salt_factories.salt_master_daemon(master_id, overrides=overrides)
-    with factory.started():
+    with factory.started("-ldebug"):
         yield factory
 
 
@@ -28,7 +28,7 @@ def salt_minion(salt_factories, minion_id, salt_master):
     This fixture just configures and starts a salt-minion.
     """
     factory = salt_master.salt_minion_daemon(minion_id)
-    with factory.started():
+    with factory.started("-ldebug"):
         yield factory
 
 
