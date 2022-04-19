@@ -1,12 +1,12 @@
 """
-Test the ``salt`` CLI functionality.
+Test the ``salt-cp`` CLI functionality.
 """
 import shutil
 import sys
 
 import pytest
 
-from saltfactories.cli.salt import Salt
+from saltfactories.cli.cp import SaltCp
 
 
 @pytest.fixture
@@ -44,37 +44,6 @@ def cli_script_name(pytester):
         py_file.unlink()
 
 
-def test_missing_minion_id_raises_exception(minion_id, config_dir, config_file, cli_script_name):
-    config = {"conf_file": config_file, "id": "the-id"}
-    args = ["test.ping"]
-    proc = Salt(script_name=cli_script_name, config=config)
-    with pytest.raises(pytest.UsageError) as exc:
-        proc.cmdline(*args)
-    assert (
-        str(exc.value) == "The `minion_tgt` keyword argument is mandatory for the salt CLI factory"
-    )
-
-
-@pytest.mark.parametrize("flag", ["-V", "--version", "--versions-report", "--help"])
-def test_missing_minion_id_does_not_raise_exception(
-    minion_id, config_dir, config_file, cli_script_name, flag
-):
-    """
-    Assert that certain flag, which just output something and then exit, don't raise an exception
-    """
-    config = {"conf_file": config_file, "id": "the-id"}
-    args = ["test.ping"] + [flag]
-    proc = Salt(script_name=cli_script_name, config=config)
-    try:
-        proc.cmdline(*args)
-    except RuntimeError:
-        pytest.fail(
-            "The Salt class raised RuntimeError when the CLI flag '{}' was present in args".format(
-                flag
-            )
-        )
-
-
 def test_default_timeout_config(minion_id, config_dir, config_file, cli_script_name):
     """
     Assert against the default timeout provided in the config.
@@ -83,7 +52,7 @@ def test_default_timeout_config(minion_id, config_dir, config_file, cli_script_n
         wfh.write("timeout: 15\n")
     config = {"conf_file": config_file, "id": "the-id", "timeout": 15}
     args = ["test.ping"]
-    proc = Salt(script_name=cli_script_name, config=config)
+    proc = SaltCp(script_name=cli_script_name, config=config)
     expected = [
         sys.executable,
         cli_script_name,
@@ -104,7 +73,7 @@ def test_default_timeout_construct(minion_id, config_dir, config_file, cli_scrip
     """
     config = {"conf_file": config_file, "id": "the-id"}
     args = ["test.ping"]
-    proc = Salt(script_name=cli_script_name, config=config, timeout=15)
+    proc = SaltCp(script_name=cli_script_name, config=config, timeout=15)
     expected = [
         sys.executable,
         cli_script_name,

@@ -14,6 +14,9 @@ class SaltRun(SaltCli):
 
     __cli_timeout_supported__ = attr.ib(repr=False, init=False, default=True)
 
+    def _get_default_timeout(self):
+        return self.config.get("timeout")
+
     def get_minion_tgt(self, minion_tgt=None):
         """
         Overridden method because salt-run does not target minions.
