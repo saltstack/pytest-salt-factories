@@ -1,0 +1,1 @@
+Now that the new logging changes are merged into Salt's master branch, adjust detection of those changes on ``SaltKey``.

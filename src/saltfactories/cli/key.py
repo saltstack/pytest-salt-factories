@@ -15,7 +15,12 @@ try:
     SALT_KEY_LOG_LEVEL_SUPPORTED = SaltKeyOptionParser._skip_console_logging_config_ is False
 except AttributeError:  # pragma: no cover
     # New logging is in place
-    SALT_KEY_LOG_LEVEL_SUPPORTED = True
+    try:
+        SALT_KEY_LOG_LEVEL_SUPPORTED = (
+            "--log-level" in SaltKeyOptionParser._console_log_level_cli_flags
+        )
+    except AttributeError:
+        SALT_KEY_LOG_LEVEL_SUPPORTED = True
 
 
 @attr.s(kw_only=True, slots=True)
