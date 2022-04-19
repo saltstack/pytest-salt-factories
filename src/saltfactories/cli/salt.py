@@ -15,6 +15,9 @@ class Salt(SaltCli):
 
     __cli_timeout_supported__ = attr.ib(repr=False, init=False, default=True)
 
+    def _get_default_timeout(self):
+        return self.config.get("timeout")
+
     def cmdline(self, *args, minion_tgt=None, **kwargs):  # pylint: disable=arguments-differ
         """
         Build the command line for the CLI in question.
