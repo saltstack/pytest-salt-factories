@@ -265,8 +265,8 @@ jobs:
         python-version:
           - 3.7
         salt-version:
-          - salt~=3003.0
-          - salt~=3004.0
+          - salt~=3003.0,!=3003.4
+          - salt~=3004.0,!=3004.1
         pytest-version:
           - "~=6.2.0"
           - "~=7.0.0"
