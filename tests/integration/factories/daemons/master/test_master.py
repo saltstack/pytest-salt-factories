@@ -29,13 +29,13 @@ def minion_3(master):
 
 
 @pytest.fixture
-def salt_run(master, salt_cli_timeout):
-    return master.salt_run_cli(timeout=salt_cli_timeout)
+def salt_run(master):
+    return master.salt_run_cli()
 
 
 @pytest.fixture
-def salt_cp(master, salt_cli_timeout):
-    return master.salt_cp_cli(timeout=salt_cli_timeout)
+def salt_cp(master):
+    return master.salt_cp_cli()
 
 
 @pytest.fixture
@@ -44,8 +44,8 @@ def salt_key(master):
 
 
 @pytest.fixture
-def salt_call(minion, salt_cli_timeout):
-    return minion.salt_call_cli(timeout=salt_cli_timeout)
+def salt_call(minion):
+    return minion.salt_call_cli()
 
 
 def test_master(master):

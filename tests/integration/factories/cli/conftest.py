@@ -32,6 +32,6 @@ def salt_minion(salt_factories, minion_id, salt_master):
         yield factory
 
 
-@pytest.fixture
-def salt_cli(salt_master, salt_cli_timeout):
-    return salt_master.salt_cli(timeout=salt_cli_timeout)
+@pytest.fixture(scope="package")
+def salt_cli(salt_master):
+    return salt_master.salt_cli()

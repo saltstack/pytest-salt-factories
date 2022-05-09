@@ -7,9 +7,9 @@ Salt Factories Manager.
 import logging
 import os
 import pathlib
+import sys
 
 import attr
-from pytestskipmarkers.utils import platform
 
 from saltfactories import CODE_ROOT_DIR
 from saltfactories import daemons
@@ -99,7 +99,7 @@ class FactoriesManager:
         else:
             self.root_dir = pathlib.Path("/")
         if self.start_timeout is None:
-            if not platform.is_spawning_platform():
+            if not sys.platform.startswith(("win", "darwin")):
                 self.start_timeout = 60
             else:
                 # Windows and macOS are just slower
