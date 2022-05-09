@@ -260,7 +260,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      max-parallel: 9
+      max-parallel: 3
       matrix:
         python-version:
           - 3.7
@@ -430,7 +430,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      max-parallel: 9
+      max-parallel: 3
       matrix:
         python-version:
           - 3.7
