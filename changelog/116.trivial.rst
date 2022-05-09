@@ -1,8 +1,0 @@
-Test PyTest 7.0.x and 7.1.x & Fix tests requirements
-
-* Don't allow ``pytest-subtests`` to upgrade pytest
-* Test under PyTest 7.0.x and 7.1.x
-* Force Jinja2 to be < 3.1 on Salt 3003.x
-* Fix the requirements of the example ``echo-extension``
-* Explicitly pass a timeout to Salt CLI's on spawning platforms.
-* Windows builds were not getting passed the ``PYTEST_VERSION_REQUIREMENT`` env var.

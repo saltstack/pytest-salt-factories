@@ -20,6 +20,34 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc15 (2022-05-09)
+======================
+
+Improvements
+------------
+
+- Now that the new logging changes are merged into Salt's master branch, adjust detection of those changes on ``SaltKey``. (`#118 <https://github.com/saltstack/pytest-salt-factories/issues/118>`_)
+
+
+Bug Fixes
+---------
+
+- ``--timeout`` is now correctly passed for CLI factories when either ``timeout`` is defined on the configuration or when ``timeout`` is passed to the CLI factory constructor. (`#117 <https://github.com/saltstack/pytest-salt-factories/issues/117>`_)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Test PyTest 7.0.x and 7.1.x & Fix tests requirements
+
+  * Don't allow ``pytest-subtests`` to upgrade pytest
+  * Test under PyTest 7.0.x and 7.1.x
+  * Force Jinja2 to be < 3.1 on Salt 3003.x
+  * Fix the requirements of the example ``echo-extension``
+  * Explicitly pass a timeout to Salt CLI's on spawning platforms.
+  * Windows builds were not getting passed the ``PYTEST_VERSION_REQUIREMENT`` env var. (`#116 <https://github.com/saltstack/pytest-salt-factories/issues/116>`_)
+
+
 1.0.0rc14 (2022-04-06)
 ======================
 
