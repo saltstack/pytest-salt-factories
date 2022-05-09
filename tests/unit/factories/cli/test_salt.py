@@ -2,7 +2,6 @@
 Test the ``salt`` CLI functionality.
 """
 import shutil
-import sys
 
 import pytest
 
@@ -73,47 +72,3 @@ def test_missing_minion_id_does_not_raise_exception(
                 flag
             )
         )
-
-
-def test_default_timeout_config(minion_id, config_dir, config_file, cli_script_name):
-    """
-    Assert against the default timeout provided in the config.
-    """
-    with open(config_file, "a") as wfh:
-        wfh.write("timeout: 15\n")
-    config = {"conf_file": config_file, "id": "the-id", "timeout": 15}
-    args = ["test.ping"]
-    proc = Salt(script_name=cli_script_name, config=config)
-    expected = [
-        sys.executable,
-        cli_script_name,
-        "--config-dir={}".format(config_dir),
-        "--timeout=15",
-        "--out=json",
-        "--out-indent=0",
-        "--log-level=critical",
-        minion_id,
-    ] + ["test.ping"]
-    cmdline = proc.cmdline(*args, minion_tgt=minion_id)
-    assert cmdline == expected
-
-
-def test_default_timeout_construct(minion_id, config_dir, config_file, cli_script_name):
-    """
-    Assert against the default timeout provided in the config.
-    """
-    config = {"conf_file": config_file, "id": "the-id"}
-    args = ["test.ping"]
-    proc = Salt(script_name=cli_script_name, config=config, timeout=15)
-    expected = [
-        sys.executable,
-        cli_script_name,
-        "--config-dir={}".format(config_dir),
-        "--timeout=15",
-        "--out=json",
-        "--out-indent=0",
-        "--log-level=critical",
-        minion_id,
-    ] + ["test.ping"]
-    cmdline = proc.cmdline(*args, minion_tgt=minion_id)
-    assert cmdline == expected

@@ -14,9 +14,6 @@ class SaltCp(SaltCli):
 
     __cli_timeout_supported__ = attr.ib(repr=False, init=False, default=True)
 
-    def _get_default_timeout(self):
-        return self.config.get("timeout")
-
     def process_output(self, stdout, stderr, cmdline=None):
         """
         Process the returned output.

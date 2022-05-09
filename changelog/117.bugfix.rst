@@ -1,1 +1,0 @@
-``--timeout`` is now correctly passed for CLI factories when either ``timeout`` is defined on the configuration or when ``timeout`` is passed to the CLI factory constructor.

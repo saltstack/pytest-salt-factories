@@ -241,12 +241,7 @@ class SaltCli(SaltMixin, ScriptSubprocess):
                     salt_cli_timeout_next = True
                     continue
             else:
-                salt_cli_timeout = self.timeout
-                if salt_cli_timeout and self.impl._terminal_timeout:
-                    if self.impl._terminal_timeout > salt_cli_timeout:
-                        salt_cli_timeout = self.impl._terminal_timeout
-                if not salt_cli_timeout and self.impl._terminal_timeout:
-                    salt_cli_timeout = self.impl._terminal_timeout
+                salt_cli_timeout = self.impl._terminal_timeout
                 if salt_cli_timeout:
                     self.impl._terminal_timeout = salt_cli_timeout + SALT_TIMEOUT_FLAG_INCREASE
                     # Add it to the salt command CLI flags
