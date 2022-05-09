@@ -310,7 +310,6 @@ jobs:
       shell: bash
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        PYTEST_VERSION_REQUIREMENT: pytest${{ matrix.pytest-version }}
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
@@ -320,7 +319,6 @@ jobs:
       shell: bash
       env:
         SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        PYTEST_VERSION_REQUIREMENT: pytest${{ matrix.pytest-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
