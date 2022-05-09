@@ -283,7 +283,7 @@ def test_cli_timeout_greater_than_timeout_kw(minion_id, config_dir, config_file,
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
 
-def test_cli_timeout_updates_to_timeout_kw_plus_default_increase(
+def test_cli_timeout_updates_to_timeout_kw_plus_10(
     minion_id, config_dir, config_file, cli_script_name
 ):
     # _timeout is passed, the value of --timeout is _timeout, internal timeout is added 10 seconds
@@ -325,7 +325,7 @@ def test_cli_timeout_updates_to_timeout_kw_plus_default_increase(
         assert popen_mock.call_args[0][0] == expected  # pylint: disable=unsubscriptable-object
 
 
-def test_cli_timeout_updates_to_default_timeout_plus_default_increase(
+def test_cli_timeout_updates_to_default_timeout_plus_10(
     minion_id, config_dir, config_file, cli_script_name
 ):
     # Neither _timeout nor --timeout are passed, --timeout equals the default timeout, internal timeout is added 10
