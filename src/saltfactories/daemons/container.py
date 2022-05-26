@@ -352,8 +352,12 @@ class Container(BaseFactory):
                 )
         stdout = stderr = None
         try:
-            if self.container is not None:
+            if self.container is None:
                 container = self.docker_client.containers.get(self.name)
+            else:
+                container = self.container
+            self.container = None
+            if container is not None:
                 logs = container.logs(stdout=True, stderr=True, stream=False)
                 if isinstance(logs, bytes):
                     stdout = logs.decode()
@@ -364,13 +368,11 @@ class Container(BaseFactory):
                     log.info("Stopped Container Logs:\n%s\n%s", stdout, stderr)
                 elif stdout:
                     log.info("Stopped Container Logs:\n%s", stdout)
-                if container.status == "running":
-                    try:
-                        self.container.remove(force=True)
-                        self.container.wait()
-                    except APIError:
-                        pass
-                self.container = None
+                try:
+                    container.remove(force=True)
+                    container.wait()
+                except APIError:
+                    pass
         except NotFound:
             pass
         finally:
