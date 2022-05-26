@@ -11,9 +11,9 @@ import os
 import _pytest._version
 import attr
 import pytest
+from pytestshellutils.customtypes import Callback
 from pytestshellutils.exceptions import FactoryNotStarted
 from pytestshellutils.shell import BaseFactory
-from pytestshellutils.utils import format_callback_to_string
 from pytestshellutils.utils import ports
 from pytestshellutils.utils import time
 from pytestshellutils.utils.processes import ProcessResult
@@ -153,7 +153,7 @@ class Container(BaseFactory):
         :keyword kwargs:
             The keyword arguments to pass to the callback
         """
-        self._before_start_callbacks.append((callback, args, kwargs))
+        self._before_start_callbacks.append(Callback(func=callback, args=args, kwargs=kwargs))
 
     def after_start(self, callback, *args, **kwargs):
         """
@@ -166,7 +166,7 @@ class Container(BaseFactory):
         :keyword kwargs:
             The keyword arguments to pass to the callback
         """
-        self._after_start_callbacks.append((callback, args, kwargs))
+        self._after_start_callbacks.append(Callback(func=callback, args=args, kwargs=kwargs))
 
     def before_terminate(self, callback, *args, **kwargs):
         """
@@ -179,7 +179,7 @@ class Container(BaseFactory):
         :keyword kwargs:
             The keyword arguments to pass to the callback
         """
-        self._before_terminate_callbacks.append((callback, args, kwargs))
+        self._before_terminate_callbacks.append(Callback(func=callback, args=args, kwargs=kwargs))
 
     def after_terminate(self, callback, *args, **kwargs):
         """
@@ -212,13 +212,13 @@ class Container(BaseFactory):
         self._terminate_result = None
         atexit.register(self.terminate)
         factory_started = False
-        for callback, args, kwargs in self._before_start_callbacks:
+        for callback in self._before_start_callbacks:
             try:
-                callback(*args, **kwargs)
+                callback()
             except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                 log.info(
                     "Exception raised when running %s: %s",
-                    format_callback_to_string(callback, args, kwargs),
+                    callback,
                     exc,
                     exc_info=True,
                 )
@@ -297,13 +297,13 @@ class Container(BaseFactory):
             # The factory failed to confirm it's running status
             self.terminate()
         if factory_started:
-            for callback, args, kwargs in self._after_start_callbacks:
+            for callback in self._after_start_callbacks:
                 try:
-                    callback(*args, **kwargs)
+                    callback()
                 except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
-                        format_callback_to_string(callback, args, kwargs),
+                        callback,
                         exc,
                         exc_info=True,
                     )
@@ -340,13 +340,13 @@ class Container(BaseFactory):
             # The factory is already terminated
             return self._terminate_result
         atexit.unregister(self.terminate)
-        for callback, args, kwargs in self._before_terminate_callbacks:
+        for callback in self._before_terminate_callbacks:
             try:
-                callback(*args, **kwargs)
+                callback()
             except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                 log.info(
                     "Exception raised when running %s: %s",
-                    format_callback_to_string(callback, args, kwargs),
+                    callback,
                     exc,
                     exc_info=True,
                 )
@@ -374,13 +374,13 @@ class Container(BaseFactory):
         except NotFound:
             pass
         finally:
-            for callback, args, kwargs in self._after_terminate_callbacks:
+            for callback in self._after_terminate_callbacks:
                 try:
-                    callback(*args, **kwargs)
+                    callback()
                 except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                     log.info(
                         "Exception raised when running %s: %s",
-                        format_callback_to_string(callback, args, kwargs),
+                        callback,
                         exc,
                         exc_info=True,
                     )
