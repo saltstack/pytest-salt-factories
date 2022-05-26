@@ -4,7 +4,7 @@ pytest-tempdir>=2019.9.16
 pytest-helpers-namespace>=2021.4.29
 pytest-skip-markers>=1.1.3
 pytest-system-statistics>=1.0.2
-pytest-shell-utilities>=1.0.5
+pytest-shell-utilities>=1.4.0
 psutil
 pyzmq
 msgpack
