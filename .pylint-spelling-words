@@ -185,6 +185,7 @@ sysinfo
 sysstats
 systemd
 systemdsaltdaemonimpl
+tcp
 teardown
 tempfile
 tempfiles

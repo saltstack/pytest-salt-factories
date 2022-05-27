@@ -389,9 +389,52 @@ class Container(BaseFactory):
 
     def get_check_ports(self):
         """
-        Return a list of ports to check against to ensure the daemon is running.
+        Return a list of TCP ports to check against to ensure the daemon is running.
         """
-        return self.check_ports or []
+        ports = list(self.check_ports or [])
+        if self.container:
+            self.container.reload()
+            for container_binding in self.container.ports:
+                port, proto = container_binding.split("/")
+                if proto != "tcp":
+                    continue
+                ports.append(self.get_host_port_binding(port, protocol="tcp", ipv6=False))
+        return ports
+
+    def get_host_port_binding(self, port, protocol="tcp", ipv6=False):
+        """
+        Return the host binding for a port on the container.
+
+        Args:
+            :keyword str protocol: The port protocol. Defaults to ``tcp``.
+            :keyword bool ipv6:
+                If true, return the ipv6 port binding.
+
+        Returns:
+            int: The matched port binding on the host.
+            None: When not port binding was matched.
+        """
+        if self.container is None:
+            return None
+        ports = self.container.ports
+        log.debug("Container Ports for %s: %s", self, ports)
+        if not ports:
+            return None
+        container_binding = "{}/{}".format(port, protocol)
+        if container_binding not in ports:
+            return None
+        host_port_bindings = ports[container_binding]
+        if not host_port_bindings:
+            # This means the host is using the same port as the container
+            return int(port)
+        for host_binding_details in host_port_bindings:
+            host_ip = host_binding_details["HostIp"]
+            host_port = host_binding_details["HostPort"]
+            if "::" in host_ip:
+                if ipv6:
+                    return int(host_port)
+                continue
+            return int(host_port)
 
     def is_running(self):
         """
