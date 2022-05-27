@@ -33,6 +33,11 @@ def pytest_configure(config):
         "markers",
         "requires_salt_states(*required_state_names): Skip if at least one state module is not available.",
     )
+    config.addinivalue_line(
+        "markers",
+        "skip_on_salt_system_install(reason=None): Marker to skip tests when testing against salt "
+        "installed in the system.",
+    )
 
 
 @pytest.fixture(scope="session")
