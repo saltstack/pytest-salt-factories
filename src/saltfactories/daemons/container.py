@@ -5,6 +5,7 @@ Container based factories.
     PYTEST_DONT_REWRITE
 """
 import atexit
+import contextlib
 import logging
 import os
 
@@ -99,6 +100,7 @@ class Container(BaseFactory):
     _before_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     _after_start_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
     _after_terminate_callbacks = attr.ib(repr=False, hash=False, default=attr.Factory(list))
+    _container_start_checks_callbacks = attr.ib(repr=False, hash=False, factory=list)
     _terminate_result = attr.ib(repr=False, hash=False, init=False, default=None)
 
     def __attrs_post_init__(self):
@@ -109,6 +111,9 @@ class Container(BaseFactory):
         self.before_start(self._check_for_connectable_docker_client)
         if self.pull_before_start:
             self.before_start(self._pull_container)
+
+        # Register start check function
+        self.container_start_check(self._check_listening_ports)
 
     @name.default
     def _default_name(self):
@@ -193,6 +198,39 @@ class Container(BaseFactory):
             The keyword arguments to pass to the callback
         """
         self._after_terminate_callbacks.append((callback, args, kwargs))
+
+    def container_start_check(self, callback, *args, **kwargs):
+        """
+        Register a function to run after the container starts to confirm readiness for work.
+
+        The callback must accept as the first argument ``timeout_at`` which is a float.
+        The callback must stop trying to confirm running behavior once ``time.time() > timeout_at``.
+        The callback should return ``True`` to confirm that the daemon is ready for work.
+
+        For example:
+
+        .. code-block:: python
+
+            def check_running_state(timeout_at: float) -> bool
+                while time.time() <= timeout_at:
+                    # run some checks
+                    ...
+                    # if all is good
+                    break
+                else:
+                    return False
+                return True
+
+        :param ~collections.abc.Callable callback:
+            The function to call back
+        :keyword args:
+            The arguments to pass to the callback
+        :keyword kwargs:
+            The keyword arguments to pass to the callback
+        """
+        self._container_start_checks_callbacks.append(
+            Callback(func=callback, args=args, kwargs=kwargs)
+        )
 
     def get_display_name(self):
         """
@@ -325,12 +363,16 @@ class Container(BaseFactory):
             process_result=result,
         )
 
+    @contextlib.contextmanager
     def started(self, *command, max_start_attempts=None, start_timeout=None):
         """
         Start the container and return it's instance so it can be used as a context manager.
         """
-        self.start(*command, max_start_attempts=max_start_attempts, start_timeout=start_timeout)
-        return self
+        try:
+            self.start(*command, max_start_attempts=max_start_attempts, start_timeout=start_timeout)
+            yield self
+        finally:
+            self.terminate()
 
     def terminate(self):
         """
@@ -438,6 +480,12 @@ class Container(BaseFactory):
                 continue
             return int(host_port)
 
+    def get_container_start_check_callbacks(self):
+        """
+        Return a list of the start check callbacks.
+        """
+        return self._container_start_checks_callbacks or []
+
     def is_running(self):
         """
         Returns true if the container is running.
@@ -484,21 +532,56 @@ class Container(BaseFactory):
         """
         Run startup checks.
         """
+        log.debug("Running container start checks...")
+        start_check_callbacks = list(self.get_container_start_check_callbacks())
+        if not start_check_callbacks:
+            log.debug("No container start check callbacks to run for %s", self)
+            return True
         checks_start_time = time.time()
+        log.debug("%s is running container start checks", self)
         while time.time() <= timeout_at:
             if not self.is_running():
                 raise FactoryNotStarted("{} is no longer running".format(self))
-            if self._container_start_checks():
+            if not start_check_callbacks:
                 break
-        else:
+            start_check = start_check_callbacks[0]
+            try:
+                ret = start_check(timeout_at)
+                if ret is True:
+                    start_check_callbacks.pop(0)
+            except Exception as exc:  # pylint: disable=broad-except
+                log.info(
+                    "Exception raised when running %s: %s",
+                    start_check,
+                    exc,
+                    exc_info=True,
+                )
+        if start_check_callbacks:
             log.error(
-                "Failed to run container start checks after %1.2f seconds",
+                "Failed to run container start check callbacks after %1.2f seconds for %s. "
+                "Remaining container start check callbacks: %s",
                 time.time() - checks_start_time,
+                self,
+                start_check_callbacks,
             )
             return False
+        log.debug("All container start check callbacks executed for %s", self)
+        return True
+
+    def _check_listening_ports(self, timeout_at: float) -> bool:
+        """
+        Check if the defined ports are in a listening state.
+
+        This callback will run when trying to assess if the daemon is ready
+        to accept work by trying to connect to each of the ports it's supposed
+        to be listening.
+        """
         check_ports = set(self.get_check_ports())
         if not check_ports:
+            log.debug("No ports to check connection to for %s", self)
             return True
+        log.debug("Listening ports to check for %s: %s", self, set(self.get_check_ports()))
+        checks_start_time = time.time()
         while time.time() <= timeout_at:
             if not self.is_running():
                 raise FactoryNotStarted("{} is no longer running".format(self))
@@ -508,11 +591,14 @@ class Container(BaseFactory):
             if check_ports:
                 time.sleep(0.5)
         else:
-            log.error("Failed to check ports after %1.2f seconds", time.time() - checks_start_time)
+            log.error(
+                "Failed to check ports after %1.2f seconds for %s. Remaining ports to check: %s",
+                time.time() - checks_start_time,
+                self,
+                check_ports,
+            )
             return False
-        return True
-
-    def _container_start_checks(self):
+        log.debug("All listening ports checked for %s: %s", self, set(self.get_check_ports()))
         return True
 
     def _check_for_connectable_docker_client(self):
@@ -600,6 +686,7 @@ class SaltDaemon(bases.SaltDaemon, Container):
         self.container_run_kwargs.setdefault("hostname", self.name)
         self.container_run_kwargs.setdefault("remove", True)
         self.container_run_kwargs.setdefault("auto_remove", True)
+        log.debug("%s container_run_kwargs: %s", self, self.container_run_kwargs)
 
     def run(self, *cmd, **kwargs):
         """
@@ -622,7 +709,11 @@ class SaltDaemon(bases.SaltDaemon, Container):
         Start the daemon.
         """
         # Start the container
-        Container.start(self, max_start_attempts=max_start_attempts, start_timeout=start_timeout)
+        running = Container.start(
+            self, max_start_attempts=max_start_attempts, start_timeout=start_timeout
+        )
+        if not running:
+            return running
         self.daemon_starting = True
         # Now that the container is up, let's start the daemon
         self.daemon_started = bases.SaltDaemon.start(
@@ -739,16 +830,29 @@ class SaltDaemon(bases.SaltDaemon, Container):
         else:
             bases.SaltDaemon.after_terminate(self, callback, *args, **kwargs)
 
+    @contextlib.contextmanager
     def started(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
         """
         Start the daemon and return it's instance so it can be used as a context manager.
         """
-        return bases.SaltDaemon.started(
-            self,
-            *extra_cli_arguments,
-            max_start_attempts=max_start_attempts,
-            start_timeout=start_timeout,
-        )
+        try:
+            # Start the container
+            with Container.started(
+                self,
+                *extra_cli_arguments,
+                max_start_attempts=max_start_attempts,
+                start_timeout=start_timeout,
+            ):
+                # Start the daemon
+                with bases.SaltDaemon.started(
+                    self,
+                    *extra_cli_arguments,
+                    max_start_attempts=max_start_attempts,
+                    start_timeout=start_timeout,
+                ):
+                    yield self
+        finally:
+            self.terminate()
 
     def get_check_events(self):
         """
@@ -772,9 +876,3 @@ class SaltMinion(SaltDaemon, minion.SaltMinion):
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         return minion.SaltMinion.get_check_events(self)
-
-    def run_start_checks(self, started_at, timeout_at):
-        """
-        Run checks to confirm that the container has started.
-        """
-        return minion.SaltMinion.run_start_checks(self, started_at, timeout_at)

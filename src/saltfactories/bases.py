@@ -521,7 +521,7 @@ class SaltDaemon(SaltMixin, Daemon):
     display_name = attr.ib(init=False, default=None)
     event_listener = attr.ib(repr=False, default=None)
     factories_manager = attr.ib(repr=False, hash=False, default=None)
-    started_at = attr.ib(repr=False, default=None)
+    _started_at = attr.ib(repr=False, default=None)
 
     def __attrs_post_init__(self):
         """
@@ -543,6 +543,11 @@ class SaltDaemon(SaltMixin, Daemon):
                     break
             else:
                 self.extra_cli_arguments_after_first_start_failure.append("--log-level=debug")
+
+        # Register before start function
+        self.before_start(self._set_started_at)
+        # Register start check function
+        self.start_check(self._check_start_events)
 
     def _get_impl_class(self):
         if self.system_install:
@@ -672,12 +677,16 @@ class SaltDaemon(SaltMixin, Daemon):
                 cmdline.insert(0, self.python_executable)
         return cmdline
 
-    def run_start_checks(self, started_at, timeout_at):
+    def _set_started_at(self):
         """
-        Run checks to confirm that the daemon has started.
+        Set the ``_started_at`` attribute on the daemon instance.
         """
-        if not super().run_start_checks(started_at, timeout_at):
-            return False
+        self._started_at = time.time()
+
+    def _check_start_events(self, timeout_at):
+        """
+        Check for start events in the Salt event bus to confirm that the daemon is running.
+        """
         if not self.event_listener:  # pragma: no cover
             log.debug("The 'event_listener' attribute is not set. Not checking events...")
             return True
@@ -686,6 +695,7 @@ class SaltDaemon(SaltMixin, Daemon):
         if not check_events:
             log.debug("No events to listen to for %s", self)
             return True
+
         log.debug("Events to check for %s: %s", self, set(self.get_check_events()))
         checks_start_time = time.time()
         while time.time() <= timeout_at:
@@ -695,7 +705,9 @@ class SaltDaemon(SaltMixin, Daemon):
                 break
             check_events -= {
                 (event.daemon_id, event.tag)
-                for event in self.event_listener.get_events(check_events, after_time=started_at)
+                for event in self.event_listener.get_events(
+                    check_events, after_time=self._started_at
+                )
             }
             if check_events:
                 time.sleep(1.5)
