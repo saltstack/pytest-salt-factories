@@ -4,17 +4,12 @@ import logging
 import pytest
 import salt.version
 
-from saltfactories.daemons.container import Container
 from saltfactories.daemons.container import SaltMinion
 from saltfactories.utils import random_string
 
 docker = pytest.importorskip("docker")
 import docker.types  # noqa: E402
 from docker.errors import DockerException  # noqa: E402
-
-pytestmark = [
-    pytest.mark.skip_if_binaries_missing("docker"),
-]
 
 log = logging.getLogger(__name__)
 
@@ -31,18 +26,6 @@ RUN pip install {requirements}
 
 CMD . $VIRTUAL_ENV/bin/activate
 """
-
-
-@pytest.fixture(scope="session")
-def docker_client():
-    try:
-        client = docker.from_env()
-    except DockerException:
-        pytest.skip("Failed to get a connection to docker running on the system")
-    connectable = Container.client_connectable(client)
-    if connectable is not True:  # pragma: no cover
-        pytest.skip(connectable)
-    return client
 
 
 @pytest.fixture(scope="session")
