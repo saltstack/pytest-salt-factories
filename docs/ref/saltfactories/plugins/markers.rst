@@ -46,3 +46,22 @@ Additional markers used in Salt's test suite are provided by the `skip-markers`_
         @pytest.mark.requires_salt_states("pkg", "archive.extracted")
         def test_func():
             assert True
+
+
+
+.. _markers.skip_on_salt_system_install:
+
+``skip_on_salt_system_install``
+===============================
+
+.. py:decorator:: pytest.mark.skip_on_salt_system_install(reason=None)
+
+    :keyword str reason:
+      Custom skip reason. Defaults to "Test should not run against system
+      install of Salt".
+
+    .. code-block:: python
+
+        @pytest.mark.skip_on_salt_system_install
+        def test_func():
+            assert True

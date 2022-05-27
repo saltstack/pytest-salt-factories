@@ -13,6 +13,15 @@ from docker.errors import DockerException  # noqa: E402
 
 log = logging.getLogger(__name__)
 
+pytestmark = [
+    # We can't pass ``extra_cli_arguments_after_first_start_failure``, but this is solvable,
+    # but we also rely on container volume binds, which, when running against the system,
+    # means trying to bind `/`, which is not possible, hence, we're skipping this test.
+    pytest.mark.skip_on_salt_system_install,
+    pytest.mark.skip_on_darwin,
+    pytest.mark.skip_on_windows,
+]
+
 
 DOCKERFILE = """
 FROM {from_container}
@@ -158,10 +167,6 @@ def salt_cli(salt_master, salt_cli_timeout):
     return salt_master.salt_cli(timeout=salt_cli_timeout)
 
 
-# We can't pass ``extra_cli_arguments_after_first_start_failure``, but this is solvable,
-# but we also rely on container volume binds, which, when running against the system,
-# means trying to bind `/`, which is not possible, hence, we're skipping this test.
-@pytest.mark.skip_on_salt_system_install
 def test_minion(salt_minion, salt_cli):
     assert salt_minion.is_running()
     ret = salt_cli.run("test.ping", minion_tgt=salt_minion.id)
