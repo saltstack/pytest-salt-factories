@@ -2,23 +2,6 @@ import pytest
 from pytestshellutils.utils import ports
 from pytestshellutils.utils import socket
 
-from saltfactories.daemons.container import Container
-
-docker = pytest.importorskip("docker")
-from docker.errors import DockerException  # noqa: E402
-
-
-@pytest.fixture(scope="module")
-def docker_client():
-    try:
-        client = docker.from_env()
-    except DockerException:
-        pytest.skip("Failed to get a connection to docker running on the system")
-    connectable = Container.client_connectable(client)
-    if connectable is not True:  # pragma: no cover
-        pytest.skip(connectable)
-    return client
-
 
 @pytest.fixture(scope="module")
 def echo_server_port():
