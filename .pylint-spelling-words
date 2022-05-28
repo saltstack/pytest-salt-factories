@@ -141,6 +141,7 @@ returncode
 rst
 rtype
 runtest
+runtime
 saltapi
 saltcloud
 saltenv

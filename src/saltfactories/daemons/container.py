@@ -82,12 +82,73 @@ PYTEST_GE_7 = getattr(_pytest._version, "version_tuple", (-1, -1)) >= (7, 0)
 class Container(BaseFactory):
     """
     Docker containers daemon implementation.
+
+    Args:
+        :param str image:
+            The container image to use, for example 'centos:7'
+        :param str name:
+            The name to give to the started container.
+        :keyword dict check_ports:
+            This dictionary is a mapping where the keys are the container port bindings and the
+            values are the host port bindings.
+
+            If this mapping is empty, the container class will inspect the
+            :py:attr:`~saltfactories.daemons.container.Container.container_run_kwargs` for a
+            ``ports`` key to build this mapping.
+
+            Take as an example the following ``container_run_kwargs``:
+
+            .. code-block:: python
+
+                container_run_kwargs = {
+                    "ports": {
+                        "5000/tcp": None,
+                        "12345/tcp": 54321,
+                    }
+                }
+
+            This would build the following check ports mapping:
+
+            .. code-block:: python
+
+                {5000: None, 12345: 54321}
+
+            At runtime, the :py:class:`~saltfactories.daemons.container.Container` class would query docker
+            for the host port binding to the container port binding of 5000.
+
+        :keyword dict container_run_kwargs:
+            This mapping will be passed directly to the python docker library:
+
+            .. code-block:: python
+
+                container = self.docker_client.containers.run(
+                    self.image,
+                    name=self.name,
+                    detach=True,
+                    stdin_open=True,
+                    command=list(command) or None,
+                    **self.container_run_kwargs,
+                )
+
+        :keyword int start_timeout:
+            The maximum number of seconds we should wait until the container is running.
+        :keyword int max_start_attempts:
+            The maximum number of attempts to try and start the container
+        :keyword bool pull_before_start:
+            When ``True``, the image is pulled before trying to start it
+        :keyword bool skip_on_pull_failure:
+            When ``True``, and there's a failure when pulling the image, the test is skipped.
+        :keyword bool skip_if_docker_client_not_connectable:
+            When ``True``, it skips the test if there's a failure when connecting to docker
+        :keyword Docker docker_client:
+            An instance of the python docker client to use.
+            When nothing is passed, a default docker client is instantiated.
     """
 
     image = attr.ib()
     name = attr.ib()
     display_name = attr.ib(default=None)
-    check_ports = attr.ib(default=None)
+    check_ports = attr.ib(default=attr.Factory(dict))
     container_run_kwargs = attr.ib(repr=False, default=attr.Factory(dict))
     container = attr.ib(init=False, default=None, repr=False)
     start_timeout = attr.ib(repr=False, default=30)
@@ -114,6 +175,23 @@ class Container(BaseFactory):
 
         # Register start check function
         self.container_start_check(self._check_listening_ports)
+
+        if self.check_ports and not isinstance(self.check_ports, dict):
+            check_ports = {}
+            for port in self.check_ports:
+                if not isinstance(port, tuple):
+                    container_binding, host_binding = port, port
+                check_ports[container_binding] = host_binding
+            self.check_ports = check_ports
+
+        if self.container_run_kwargs and "ports" in self.container_run_kwargs:
+            ports = self.container_run_kwargs["ports"]
+            for container_binding, host_binding in ports.items():
+                port, proto = container_binding.split("/")
+                if proto != "tcp":
+                    continue
+                if int(port) not in self.check_ports:
+                    self.check_ports[int(port)] = host_binding
 
     @name.default
     def _default_name(self):
@@ -211,7 +289,7 @@ class Container(BaseFactory):
 
         .. code-block:: python
 
-            def check_running_state(timeout_at: float) -> bool
+            def check_running_state(timeout_at: float) -> bool:
                 while time.time() <= timeout_at:
                     # run some checks
                     ...
@@ -435,14 +513,17 @@ class Container(BaseFactory):
         """
         Return a list of TCP ports to check against to ensure the daemon is running.
         """
-        ports = list(self.check_ports or [])
+        ports = self.check_ports.copy()
         if self.container:
             self.container.reload()
-            for container_binding in self.container.ports:
-                port, proto = container_binding.split("/")
-                if proto != "tcp":
+            for container_binding, host_binding in ports.items():
+                if isinstance(host_binding, int):
                     continue
-                ports.append(self.get_host_port_binding(port, protocol="tcp", ipv6=False))
+                host_binding = self.get_host_port_binding(
+                    container_binding, protocol="tcp", ipv6=False
+                )
+                if host_binding:
+                    ports[container_binding] = host_binding
         return ports
 
     def get_host_port_binding(self, port, protocol="tcp", ipv6=False):
@@ -576,12 +657,13 @@ class Container(BaseFactory):
         to accept work by trying to connect to each of the ports it's supposed
         to be listening.
         """
-        check_ports = set(self.get_check_ports())
-        if not check_ports:
+        check_ports_mapping = self.get_check_ports().copy()
+        if not check_ports_mapping:
             log.debug("No ports to check connection to for %s", self)
             return True
-        log.debug("Listening ports to check for %s: %s", self, set(self.get_check_ports()))
+        log.debug("Listening ports to check for %s: %s", self, check_ports_mapping)
         checks_start_time = time.time()
+        check_ports = set(check_ports_mapping.values())
         while time.time() <= timeout_at:
             if not self.is_running():
                 raise FactoryNotStarted("{} is no longer running".format(self))
@@ -589,16 +671,19 @@ class Container(BaseFactory):
                 break
             check_ports -= ports.get_connectable_ports(check_ports)
             if check_ports:
+                for container_binding, host_binding in check_ports_mapping.copy().items():
+                    if host_binding not in check_ports:
+                        check_ports_mapping.pop(container_binding)
                 time.sleep(0.5)
         else:
             log.error(
                 "Failed to check ports after %1.2f seconds for %s. Remaining ports to check: %s",
                 time.time() - checks_start_time,
                 self,
-                check_ports,
+                check_ports_mapping,
             )
             return False
-        log.debug("All listening ports checked for %s: %s", self, set(self.get_check_ports()))
+        log.debug("All listening ports checked for %s: %s", self, self.get_check_ports())
         return True
 
     def _check_for_connectable_docker_client(self):
@@ -653,7 +738,7 @@ class Container(BaseFactory):
 
 
 @attr.s(kw_only=True)
-class SaltDaemon(bases.SaltDaemon, Container):
+class SaltDaemon(Container, bases.SaltDaemon):
     """
     Salt Daemon inside a container implementation.
     """
@@ -748,7 +833,9 @@ class SaltDaemon(bases.SaltDaemon, Container):
         """
         Return a list of ports to check against to ensure the daemon is running.
         """
-        return Container.get_check_ports(self) + bases.SaltDaemon.get_check_ports(self)
+        ports = {port: port for port in bases.SaltDaemon.get_check_ports(self)}
+        ports.update(Container.get_check_ports(self))
+        return ports
 
     def before_start(
         self, callback, *args, on_container=False, **kwargs
