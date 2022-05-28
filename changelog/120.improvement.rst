@@ -1,9 +1,0 @@
-Switch to internal start check ``callables``.
-
-Additionally, significant container improvements, like:
-
-* Get host ports to check from the container port bindings.
-* Always terminate the containers.
-* Support randomly assigned host port bindings
-
-``skip_on_salt_system_install`` is now also a marker provided by ``pytest-salt-factories``.

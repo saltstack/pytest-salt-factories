@@ -20,6 +20,23 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc16 (2022-05-28)
+======================
+
+Improvements
+------------
+
+- Switch to internal start check ``callables``.
+
+  Additionally, significant container improvements, like:
+
+  * Get host ports to check from the container port bindings.
+  * Always terminate the containers.
+  * Support randomly assigned host port bindings
+
+  ``skip_on_salt_system_install`` is now also a marker provided by ``pytest-salt-factories``. (`#120 <https://github.com/saltstack/pytest-salt-factories/issues/120>`_)
+
+
 1.0.0rc15 (2022-05-09)
 ======================
 
