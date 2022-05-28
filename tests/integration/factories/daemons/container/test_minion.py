@@ -1,6 +1,7 @@
 import io
 import logging
 
+import _pytest._version
 import pytest
 import salt.version
 
@@ -12,6 +13,8 @@ import docker.types  # noqa: E402
 from docker.errors import DockerException  # noqa: E402
 
 log = logging.getLogger(__name__)
+
+PYTEST_GE_7 = getattr(_pytest._version, "version_tuple", (-1, -1)) >= (7, 0)
 
 pytestmark = [
     # We can't pass ``extra_cli_arguments_after_first_start_failure``, but this is solvable,
@@ -35,6 +38,18 @@ RUN pip install {requirements}
 
 CMD . $VIRTUAL_ENV/bin/activate
 """
+
+
+@pytest.fixture(scope="session")
+def docker_client(salt_factories, docker_client):
+    if salt_factories.system_install:
+        exc_kwargs = {}
+        if PYTEST_GE_7:
+            exc_kwargs["_use_item_location"] = True
+        raise pytest.skip.Exception(
+            "Test should not run against system install of Salt", **exc_kwargs
+        )
+    return docker_client
 
 
 @pytest.fixture(scope="session")
