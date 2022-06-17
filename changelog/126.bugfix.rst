@@ -1,1 +1,0 @@
-Try to pass ``loaded_base_name`` to each of Salt's loaders used in our ``Loaders`` class, if not supported, patch it at runtime.
