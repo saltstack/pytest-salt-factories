@@ -6,6 +6,7 @@ import logging
 import operator
 import pathlib
 import shutil
+from unittest import mock
 
 import attr
 import salt.loader
@@ -18,6 +19,14 @@ try:
     HAS_SALT_FEATURES = True
 except ImportError:  # pragma: no cover
     HAS_SALT_FEATURES = False
+
+try:
+    from salt.loader.lazy import LOADED_BASE_NAME
+
+    PATCH_TARGET = "salt.loader.lazy.LOADED_BASE_NAME"
+except ImportError:
+    LOADED_BASE_NAME = salt.loader.LOADED_BASE_NAME
+    PATCH_TARGET = "salt.loader.LOADED_BASE_NAME"
 
 log = logging.getLogger(__name__)
 
@@ -57,8 +66,9 @@ class Loaders:
                 loaders.reset_state()
     """
 
-    def __init__(self, opts):
+    def __init__(self, opts, loaded_base_name=LOADED_BASE_NAME):
         self.opts = opts
+        self.loaded_base_name = loaded_base_name
         self.context = {}
         self._cachedir = pathlib.Path(opts["cachedir"])
         self._original_opts = copy.deepcopy(opts)
@@ -114,7 +124,14 @@ class Loaders:
         The grains loaded by the salt loader.
         """
         if self._grains is None:
-            self._grains = salt.loader.grains(self.opts, context=self.context)
+            try:
+                self._grains = salt.loader.grains(
+                    self.opts, context=self.context, loaded_base_name=self.loaded_base_name
+                )
+            except TypeError:
+                # Salt < 3005
+                with mock.patch(PATCH_TARGET, self.loaded_base_name):
+                    self._grains = salt.loader.grains(self.opts, context=self.context)
         return self._grains
 
     @property
@@ -123,7 +140,14 @@ class Loaders:
         The utils loaded by the salt loader.
         """
         if self._utils is None:
-            self._utils = salt.loader.utils(self.opts, context=self.context)
+            try:
+                self._utils = salt.loader.utils(
+                    self.opts, context=self.context, loaded_base_name=self.loaded_base_name
+                )
+            except TypeError:
+                # Salt < 3005
+                with mock.patch(PATCH_TARGET, self.loaded_base_name):
+                    self._utils = salt.loader.utils(self.opts, context=self.context)
         return self._utils
 
     @property
@@ -133,7 +157,11 @@ class Loaders:
         """
         if self._modules is None:
             _modules = salt.loader.minion_mods(
-                self.opts, context=self.context, utils=self.utils, initial_load=True
+                self.opts,
+                context=self.context,
+                utils=self.utils,
+                initial_load=True,
+                loaded_base_name=self.loaded_base_name,
             )
 
             if isinstance(_modules.loaded_modules, dict):
@@ -193,7 +221,15 @@ class Loaders:
         The serializers loaded by the salt loader.
         """
         if self._serializers is None:
-            self._serializers = salt.loader.serializers(self.opts)
+            try:
+                self._serializers = salt.loader.serializers(
+                    self.opts,
+                    loaded_base_name=self.loaded_base_name,
+                )
+            except TypeError:
+                # Salt < 3005
+                with mock.patch(PATCH_TARGET, self.loaded_base_name):
+                    self._serializers = salt.loader.serializers(self.opts)
         return self._serializers
 
     @property
@@ -202,13 +238,25 @@ class Loaders:
         The state modules loaded by the salt loader.
         """
         if self._states is None:
-            _states = salt.loader.states(
-                self.opts,
-                functions=self.modules,
-                utils=self.utils,
-                serializers=self.serializers,
-                context=self.context,
-            )
+            try:
+                _states = salt.loader.states(
+                    self.opts,
+                    functions=self.modules,
+                    utils=self.utils,
+                    serializers=self.serializers,
+                    context=self.context,
+                    loaded_base_name=self.loaded_base_name,
+                )
+            except TypeError:
+                # Salt < 3005
+                with mock.patch(PATCH_TARGET, self.loaded_base_name):
+                    _states = salt.loader.states(
+                        self.opts,
+                        functions=self.modules,
+                        utils=self.utils,
+                        serializers=self.serializers,
+                        context=self.context,
+                    )
             # For state execution modules, because we'd have to almost copy/paste what salt.modules.state.single
             # does, we actually "proxy" the call through salt.modules.state.single instead of calling the state
             # execution modules directly. This was also how the non pytest test suite worked
@@ -267,13 +315,25 @@ class Loaders:
         The pillar loaded by the salt loader.
         """
         if self._pillar is None:
-            self._pillar = salt.pillar.get_pillar(
-                self.opts,
-                self.grains,
-                self.opts["id"],
-                saltenv=self.opts["saltenv"],
-                pillarenv=self.opts.get("pillarenv"),
-            ).compile_pillar()
+            try:
+                self._pillar = salt.pillar.get_pillar(
+                    self.opts,
+                    self.grains,
+                    self.opts["id"],
+                    saltenv=self.opts["saltenv"],
+                    pillarenv=self.opts.get("pillarenv"),
+                    loaded_base_name=self.loaded_base_name,
+                ).compile_pillar()
+            except TypeError:
+                # Salt < 3005
+                with mock.patch(PATCH_TARGET, self.loaded_base_name):
+                    self._pillar = salt.pillar.get_pillar(
+                        self.opts,
+                        self.grains,
+                        self.opts["id"],
+                        saltenv=self.opts["saltenv"],
+                        pillarenv=self.opts.get("pillarenv"),
+                    ).compile_pillar()
         return self._pillar
 
     def refresh_pillar(self):
