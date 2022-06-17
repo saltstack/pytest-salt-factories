@@ -20,6 +20,17 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc17 (2022-06-17)
+======================
+
+Bug Fixes
+---------
+
+- Bump deprecations targeted for 2.0.0 to 3.0.0 (`#122 <https://github.com/saltstack/pytest-salt-factories/issues/122>`_)
+- Try to pass ``loaded_base_name`` to each of Salt's loaders used in our ``Loaders`` class, if not supported, patch it at runtime. (`#126 <https://github.com/saltstack/pytest-salt-factories/issues/126>`_)
+- ``saltfactories.utils.warn_until()`` is now aware of Pytest's rewrite calls and properly reports the offending code. (`#127 <https://github.com/saltstack/pytest-salt-factories/issues/127>`_)
+
+
 1.0.0rc16 (2022-05-28)
 ======================
 
