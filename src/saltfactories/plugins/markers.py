@@ -54,7 +54,10 @@ def session_markers_loader(salt_factories):
         minion_id,
         overrides=overrides,
     )
-    loader_instance = saltfactories.utils.functional.Loaders(factory.config.copy())
+    loader_instance = saltfactories.utils.functional.Loaders(
+        factory.config.copy(),
+        loaded_base_name="{}.loaded".format(__name__),
+    )
     # Sync Everything
     loader_instance.modules.saltutil.sync_all()
     # Reload Everything - This is required or custom modules in _modules will not be found
