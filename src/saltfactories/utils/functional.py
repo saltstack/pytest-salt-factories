@@ -108,13 +108,25 @@ class Loaders:
                 func()
             except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                 log.warning("Failed to run '%s': %s", func.__name__, exc, exc_info=True)
+        if self._modules is not None:
+            self._modules.clean_modules()
+            self._modules.clear()
+            self._modules = None
+        if self._serializers is not None:
+            self._serializers.clean_modules()
+            self._serializers.clear()
+            self._serializers = None
+        if self._states is not None:
+            self._states.clean_modules()
+            self._states.clear()
+            self._states = None
+        if self._utils is not None:
+            self._utils.clean_modules()
+            self._utils.clear()
+            self._utils = None
         self.opts = copy.deepcopy(self._original_opts)
-        self._grains = None
-        self._modules = None
         self._pillar = None
-        self._serializers = None
-        self._states = None
-        self._utils = None
+        self._grains = None
         self.opts["grains"] = self.grains
         self.refresh_pillar()
 
