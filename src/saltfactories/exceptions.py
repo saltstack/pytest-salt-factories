@@ -11,7 +11,7 @@ if sys.version_info >= (3, 7):
             from saltfactories.utils import warn_until
 
             warn_until(
-                "2.0.0",
+                "3.0.0",
                 "The '{}' exception is now in 'pytestshellutils.exceptions' and importing it "
                 "from 'saltfactories.exceptions' is deprecated and will cease to work after "
                 "pytest-salt-factories {{version}}.".format(name),
