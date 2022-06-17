@@ -5,6 +5,7 @@ Utility functions.
     PYTEST_DONT_REWRITE
 """
 import inspect
+import os
 import pathlib
 import random
 import string
@@ -103,8 +104,20 @@ def warn_until(
         # Attribute the warning to the calling function, not to warn_until()
         stacklevel = 3
 
+    _pytest_is_rewriting = False
+    caller = inspect.getframeinfo(sys._getframe(stacklevel - 1))
+    caller_filename = pathlib.Path(caller.filename)
+
+    if str(caller_filename.as_posix()).endswith("/_pytest/assertion/rewrite.py"):
+        # Pytest is rewriting code, increase stack level so that the right
+        # module triggering the warning is shown.
+        stacklevel += 1
+        _pytest_is_rewriting = True
+
     if _pkg_version >= _version:
-        caller = inspect.getframeinfo(sys._getframe(stacklevel - 1))
+        if _pytest_is_rewriting:
+            # We need to grab the caller with the new stack level
+            caller = inspect.getframeinfo(sys._getframe(stacklevel - 1))
         raise RuntimeError(
             "The warning triggered on filename '{filename}', line number "
             "{lineno}, is supposed to be shown until version "
