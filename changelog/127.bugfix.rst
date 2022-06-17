@@ -1,1 +1,0 @@
-``saltfactories.utils.warn_until()`` is now aware of Pytest's rewrite calls and properly reports the offending code.
