@@ -1,5 +1,5 @@
 """
-Test the ``@pytest.mark.skip_on_salt_system_install`` marker.
+Test the ``@pytest.mark.skip_on_salt_system_service`` marker.
 """
 import os
 from unittest import mock
@@ -10,12 +10,12 @@ def test_skipped_test(pytester):
         """
         import pytest
 
-        @pytest.mark.skip_on_salt_system_install
+        @pytest.mark.skip_on_salt_system_service
         def test_one():
             assert True
         """
     )
-    with mock.patch.dict(os.environ, {"SALT_FACTORIES_SYSTEM_INSTALL": "1"}):
+    with mock.patch.dict(os.environ, {"SALT_FACTORIES_SYSTEM_SERVICE": "1"}):
         res = pytester.runpytest_subprocess()
     # res.assert_outcomes(passed=1)
     assert res.parseoutcomes()["skipped"] == 1
@@ -27,12 +27,12 @@ def test_not_skipped_test(pytester):
         """
         import pytest
 
-        @pytest.mark.skip_on_salt_system_install
+        @pytest.mark.skip_on_salt_system_service
         def test_one():
             assert True
         """
     )
-    with mock.patch.dict(os.environ, {"SALT_FACTORIES_SYSTEM_INSTALL": "0"}):
+    with mock.patch.dict(os.environ, {"SALT_FACTORIES_SYSTEM_SERVICE": "0"}):
         res = pytester.runpytest_subprocess()
     # res.assert_outcomes(passed=1)
     assert res.parseoutcomes()["passed"] == 1
@@ -44,7 +44,7 @@ def test_marker_does_not_accept_arguments(pytester):
         """
         import pytest
 
-        @pytest.mark.skip_on_salt_system_install("foo")
+        @pytest.mark.skip_on_salt_system_service("foo")
         def test_one():
             assert True
         """
@@ -53,7 +53,7 @@ def test_marker_does_not_accept_arguments(pytester):
     # res.assert_outcomes(errors=1)
     assert res.parseoutcomes()["errors"] == 1
     res.stdout.fnmatch_lines(
-        ["*UsageError: The 'skip_on_salt_system_install' marker does not accept any arguments*"]
+        ["*UsageError: The 'skip_on_salt_system_service' marker does not accept any arguments*"]
     )
 
 
@@ -62,7 +62,7 @@ def test_marker_does_not_accept_keyword_argument(pytester):
         """
         import pytest
 
-        @pytest.mark.skip_on_salt_system_install(foo=True)
+        @pytest.mark.skip_on_salt_system_service(foo=True)
         def test_one():
             assert True
         """
@@ -72,6 +72,6 @@ def test_marker_does_not_accept_keyword_argument(pytester):
     assert res.parseoutcomes()["errors"] == 1
     res.stdout.fnmatch_lines(
         [
-            "*UsageError: The 'skip_on_salt_system_install' marker only accepts 'reason' as a keyword argument*"
+            "*UsageError: The 'skip_on_salt_system_service' marker only accepts 'reason' as a keyword argument*"
         ]
     )

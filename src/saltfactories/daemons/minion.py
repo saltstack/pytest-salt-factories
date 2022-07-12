@@ -51,7 +51,7 @@ class SaltMinion(SaltDaemon):
         defaults=None,
         overrides=None,
         master=None,
-        system_install=False,
+        system_service=False,
     ):
         """
         Return the default configuration.
@@ -66,7 +66,7 @@ class SaltMinion(SaltDaemon):
             # Match transport if not set
             defaults.setdefault("transport", master.config["transport"])
 
-        if system_install is True:
+        if system_service is True:
 
             conf_dir = root_dir / "etc" / "salt"
             conf_dir.mkdir(parents=True, exist_ok=True)
@@ -195,7 +195,7 @@ class SaltMinion(SaltDaemon):
             defaults=defaults,
             overrides=overrides,
             master=master,
-            system_install=factories_manager.system_install,
+            system_service=factories_manager.system_service,
         )
 
     @classmethod
@@ -262,7 +262,7 @@ class SaltMinion(SaltDaemon):
         """
         Return a `salt-call` CLI process for this minion instance.
         """
-        if self.system_install is False:
+        if self.system_service is False:
             script_path = cli_scripts.generate_script(
                 self.factories_manager.scripts_dir,
                 "salt-call",
@@ -275,6 +275,6 @@ class SaltMinion(SaltDaemon):
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
-            system_install=self.factories_manager.system_install,
+            system_service=self.factories_manager.system_service,
             **factory_class_kwargs
         )

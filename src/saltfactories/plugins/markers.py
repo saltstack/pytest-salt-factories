@@ -35,7 +35,7 @@ def pytest_configure(config):
     )
     config.addinivalue_line(
         "markers",
-        "skip_on_salt_system_install(reason=None): Marker to skip tests when testing against salt "
+        "skip_on_salt_system_service(reason=None): Marker to skip tests when testing against salt "
         "installed in the system.",
     )
 

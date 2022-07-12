@@ -29,7 +29,7 @@ def _salt_factories_config(request):
         "log_server_host": log_server.log_host,
         "log_server_port": log_server.log_port,
         "log_server_level": log_server.log_level,
-        "system_install": os.environ.get("SALT_FACTORIES_SYSTEM_INSTALL", "0") == "1",
+        "system_service": os.environ.get("SALT_FACTORIES_SYSTEM_SERVICE", "0") == "1",
     }
 
 

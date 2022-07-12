@@ -92,7 +92,7 @@ jobs:
         nox --force-color -e lint
 
 
-  Linux-System-Install:
+  Linux-System-Service:
     runs-on: ubuntu-20.04
     needs: Pre-Commit
 
@@ -771,7 +771,7 @@ jobs:
       - Linux
       - Windows
       - macOS
-      - Linux-System-Install
+      - Linux-System-Service
     steps:
     - uses: actions/checkout@v2
       with:

@@ -117,7 +117,7 @@ def test_state_tree(master, salt_call, minion):
         assert ret.returncode == 0
 
 
-@pytest.mark.skip_on_salt_system_install
+@pytest.mark.skip_on_salt_system_service
 def test_salt_key(minion, minion_3, salt_key):
     ret = salt_key.run("--list-all")
     assert ret.returncode == 0, ret
@@ -130,7 +130,7 @@ def test_salt_key(minion, minion_3, salt_key):
 
 
 @pytest.mark.skip_on_windows
-@pytest.mark.skip_on_salt_system_install
+@pytest.mark.skip_on_salt_system_service
 def test_exit_status_unknown_user(salt_factories):
     master = salt_factories.salt_master_daemon("set-exitcodes", overrides={"user": "unknown-user"})
     with pytest.raises(FactoryNotStarted) as exc:

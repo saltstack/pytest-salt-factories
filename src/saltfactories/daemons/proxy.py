@@ -51,7 +51,7 @@ class SaltProxyMinion(SaltDaemon):
     pillar_tree = attr.ib(init=False, hash=False, repr=False)
 
     def _get_impl_class(self):
-        if self.system_install:
+        if self.system_service:
             return SystemdSaltProxyImpl
         return super()._get_impl_class()
 
@@ -73,7 +73,7 @@ class SaltProxyMinion(SaltDaemon):
         defaults=None,
         overrides=None,
         master=None,
-        system_install=False,
+        system_service=False,
     ):
         """
         Return the default configuration.
@@ -88,7 +88,7 @@ class SaltProxyMinion(SaltDaemon):
             # Match transport if not set
             defaults.setdefault("transport", master.config["transport"])
 
-        if system_install is True:
+        if system_service is True:
             conf_dir = root_dir / "etc" / "salt"
             conf_dir.mkdir(parents=True, exist_ok=True)
             conf_file = str(conf_dir / "proxy")
@@ -219,7 +219,7 @@ class SaltProxyMinion(SaltDaemon):
             defaults=defaults,
             overrides=overrides,
             master=master,
-            system_install=factories_manager.system_install,
+            system_service=factories_manager.system_service,
         )
 
     @classmethod
@@ -296,7 +296,7 @@ class SaltProxyMinion(SaltDaemon):
         """
         Return a `salt-call` CLI process for this minion instance.
         """
-        if self.system_install is False:
+        if self.system_service is False:
             script_path = cli_scripts.generate_script(
                 self.factories_manager.scripts_dir,
                 "salt-call",
@@ -310,6 +310,6 @@ class SaltProxyMinion(SaltDaemon):
             script_name=script_path,
             config=self.config.copy(),
             base_script_args=["--proxyid={}".format(self.id)],
-            system_install=self.factories_manager.system_install,
+            system_service=self.factories_manager.system_service,
             **factory_class_kwargs
         )
