@@ -118,7 +118,7 @@ def salt_version():
 
 
 def pytest_collection_modifyitems(items):
-    system_install_skip_paths = (
+    system_service_skip_paths = (
         # There's no point on running these tests against a system install of salt
         str(TESTS_PATH / "unit"),
         str(TESTS_PATH / "functional"),
@@ -128,8 +128,8 @@ def pytest_collection_modifyitems(items):
         str(TESTS_PATH / "integration" / "factories" / "daemons" / "container"),
     )
     for item in items:
-        skip_marker = pytest.mark.skip_on_salt_system_install(
+        skip_marker = pytest.mark.skip_on_salt_system_service(
             reason="There's no added value in running these tests against Salt intalled on the system."
         )
-        if str(item.fspath).startswith(system_install_skip_paths):
+        if str(item.fspath).startswith(system_service_skip_paths):
             item.add_marker(skip_marker)

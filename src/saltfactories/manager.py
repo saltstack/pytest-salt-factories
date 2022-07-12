@@ -64,7 +64,7 @@ class FactoriesManager:
     :keyword stats_processes:
         This will be an `StatsProcesses` class instantiated on the :py:func:`~_pytest.hookspec.pytest_sessionstart`
         hook accessible as a session scoped `stats_processes` fixture.
-    :keyword bool system_install:
+    :keyword bool system_service:
         If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
         salt system paths apply.
     """
@@ -82,7 +82,7 @@ class FactoriesManager:
     slow_stop = attr.ib(default=True)
     start_timeout = attr.ib(default=None)
     stats_processes = attr.ib(repr=False, default=None)
-    system_install = attr.ib(repr=False, default=False)
+    system_service = attr.ib(repr=False, default=False)
     event_listener = attr.ib(repr=False)
 
     # Internal attributes
@@ -94,7 +94,7 @@ class FactoriesManager:
         """
         self.tmp_root_dir = pathlib.Path(self.root_dir)
         self.tmp_root_dir.mkdir(exist_ok=True)
-        if self.system_install is False:
+        if self.system_service is False:
             self.root_dir = self.tmp_root_dir
         else:
             self.root_dir = pathlib.Path("/")
@@ -105,7 +105,7 @@ class FactoriesManager:
                 # Windows and macOS are just slower
                 self.start_timeout = 120
 
-        if self.system_install is False:
+        if self.system_service is False:
             # Setup the internal attributes
             self.scripts_dir = self.root_dir / "scripts"
             self.scripts_dir.mkdir(exist_ok=True)
@@ -408,7 +408,7 @@ class FactoriesManager:
             defaults=defaults,
             overrides=overrides,
             master_of_masters=master_of_masters,
-            system_install=self.system_install,
+            system_service=self.system_service,
         )
         self.final_syndic_config_tweaks(syndic_config)
         syndic_loaded_config = factory_class.write_config(syndic_config)
@@ -626,7 +626,7 @@ class FactoriesManager:
         """
         Return the path to the customized script path, generating one if needed.
         """
-        if self.system_install is True:
+        if self.system_service is True:
             return script_name
         return cli_scripts.generate_script(
             self.scripts_dir,
@@ -649,7 +649,7 @@ class FactoriesManager:
         """
         Helper method to instantiate daemon factories.
         """
-        if self.system_install:
+        if self.system_service:
             script_path = script_name
         else:
             script_path = self.get_salt_script_path(script_name)
@@ -663,7 +663,7 @@ class FactoriesManager:
             event_listener=self.event_listener,
             factories_manager=self,
             script_name=script_path,
-            system_install=self.system_install,
+            system_service=self.system_service,
             **factory_class_kwargs
         )
         return factory
@@ -679,9 +679,9 @@ class FactoriesManager:
                 root_dir = pathlib.Path(defaults["root_dir"]).resolve()
             root_dir.mkdir(parents=True, exist_ok=True)
             return root_dir
-        if self.system_install is True and issubclass(factory_class, SaltMixin):
+        if self.system_service is True and issubclass(factory_class, SaltMixin):
             return self.root_dir
-        elif self.system_install is True:
+        elif self.system_service is True:
             root_dir = self.tmp_root_dir
         else:
             root_dir = self.root_dir

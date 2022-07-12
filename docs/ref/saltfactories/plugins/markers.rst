@@ -49,12 +49,12 @@ Additional markers used in Salt's test suite are provided by the `skip-markers`_
 
 
 
-.. _markers.skip_on_salt_system_install:
+.. _markers.skip_on_salt_system_service:
 
-``skip_on_salt_system_install``
+``skip_on_salt_system_service``
 ===============================
 
-.. py:decorator:: pytest.mark.skip_on_salt_system_install(reason=None)
+.. py:decorator:: pytest.mark.skip_on_salt_system_service(reason=None)
 
     :keyword str reason:
       Custom skip reason. Defaults to "Test should not run against system
@@ -62,6 +62,6 @@ Additional markers used in Salt's test suite are provided by the `skip-markers`_
 
     .. code-block:: python
 
-        @pytest.mark.skip_on_salt_system_install
+        @pytest.mark.skip_on_salt_system_service
         def test_func():
             assert True

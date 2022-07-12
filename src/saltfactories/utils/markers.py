@@ -136,19 +136,19 @@ def evaluate_markers(item):
                 )
             )
 
-    skip_on_salt_system_install_marker = item.get_closest_marker("skip_on_salt_system_install")
-    if skip_on_salt_system_install_marker is not None:
-        if skip_on_salt_system_install_marker.args:
+    skip_on_salt_system_service_marker = item.get_closest_marker("skip_on_salt_system_service")
+    if skip_on_salt_system_service_marker is not None:
+        if skip_on_salt_system_service_marker.args:
             raise pytest.UsageError(
-                "The 'skip_on_salt_system_install' marker does not accept any arguments"
+                "The 'skip_on_salt_system_service' marker does not accept any arguments"
             )
-        reason = skip_on_salt_system_install_marker.kwargs.pop("reason", None)
+        reason = skip_on_salt_system_service_marker.kwargs.pop("reason", None)
         if reason is None:
             reason = "Test should not run against system install of Salt"
-        if skip_on_salt_system_install_marker.kwargs:
+        if skip_on_salt_system_service_marker.kwargs:
             raise pytest.UsageError(
-                "The 'skip_on_salt_system_install' marker only accepts 'reason' as a keyword argument"
+                "The 'skip_on_salt_system_service' marker only accepts 'reason' as a keyword argument"
             )
         salt_factories = item._request.getfixturevalue("salt_factories")
-        if salt_factories.system_install is True:
+        if salt_factories.system_service is True:
             raise pytest.skip.Exception(reason, **exc_kwargs)

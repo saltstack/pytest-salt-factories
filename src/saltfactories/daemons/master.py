@@ -71,7 +71,7 @@ class SaltMaster(SaltDaemon):
         overrides=None,
         order_masters=False,
         master_of_masters=None,
-        system_install=False,
+        system_service=False,
     ):
         """
         Return the default configuration.
@@ -91,7 +91,7 @@ class SaltMaster(SaltDaemon):
             # Match transport if not set
             defaults.setdefault("transport", master_of_masters.config["transport"])
 
-        if system_install is True:
+        if system_service is True:
 
             conf_dir = root_dir / "etc" / "salt"
             conf_dir.mkdir(parents=True, exist_ok=True)
@@ -244,7 +244,7 @@ class SaltMaster(SaltDaemon):
             defaults=defaults,
             overrides=overrides,
             order_masters=order_masters,
-            system_install=factories_manager.system_install,
+            system_service=factories_manager.system_service,
         )
 
     @classmethod
@@ -368,7 +368,7 @@ class SaltMaster(SaltDaemon):
         self.factories_manager.final_cloud_config_tweaks(config)
         config = factory_class.write_config(config)
 
-        if self.system_install is False:
+        if self.system_service is False:
             script_path = cli_scripts.generate_script(
                 self.factories_manager.scripts_dir,
                 "salt-cloud",
@@ -381,7 +381,7 @@ class SaltMaster(SaltDaemon):
         return factory_class(
             script_name=script_path,
             config=config,
-            system_install=self.factories_manager.system_install,
+            system_service=self.factories_manager.system_service,
             **factory_class_kwargs
         )
 
@@ -389,7 +389,7 @@ class SaltMaster(SaltDaemon):
         """
         Return a `salt` CLI process for this master instance.
         """
-        if self.system_install is False:
+        if self.system_service is False:
             script_path = cli_scripts.generate_script(
                 self.factories_manager.scripts_dir,
                 "salt",
@@ -402,7 +402,7 @@ class SaltMaster(SaltDaemon):
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
-            system_install=self.factories_manager.system_install,
+            system_service=self.factories_manager.system_service,
             **factory_class_kwargs
         )
 
@@ -410,7 +410,7 @@ class SaltMaster(SaltDaemon):
         """
         Return a `salt-cp` CLI process for this master instance.
         """
-        if self.system_install is False:
+        if self.system_service is False:
             script_path = cli_scripts.generate_script(
                 self.factories_manager.scripts_dir,
                 "salt-cp",
@@ -423,7 +423,7 @@ class SaltMaster(SaltDaemon):
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
-            system_install=self.factories_manager.system_install,
+            system_service=self.factories_manager.system_service,
             **factory_class_kwargs
         )
 
@@ -431,7 +431,7 @@ class SaltMaster(SaltDaemon):
         """
         Return a `salt-key` CLI process for this master instance.
         """
-        if self.system_install is False:
+        if self.system_service is False:
             script_path = cli_scripts.generate_script(
                 self.factories_manager.scripts_dir,
                 "salt-key",
@@ -444,7 +444,7 @@ class SaltMaster(SaltDaemon):
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
-            system_install=self.factories_manager.system_install,
+            system_service=self.factories_manager.system_service,
             **factory_class_kwargs
         )
 
@@ -452,7 +452,7 @@ class SaltMaster(SaltDaemon):
         """
         Return a `salt-run` CLI process for this master instance.
         """
-        if self.system_install is False:
+        if self.system_service is False:
             script_path = cli_scripts.generate_script(
                 self.factories_manager.scripts_dir,
                 "salt-run",
@@ -465,7 +465,7 @@ class SaltMaster(SaltDaemon):
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
-            system_install=self.factories_manager.system_install,
+            system_service=self.factories_manager.system_service,
             **factory_class_kwargs
         )
 
@@ -473,7 +473,7 @@ class SaltMaster(SaltDaemon):
         """
         Return a `spm` CLI process for this master instance.
         """
-        if self.system_install is False:
+        if self.system_service is False:
             script_path = cli_scripts.generate_script(
                 self.factories_manager.scripts_dir,
                 "spm",
@@ -486,7 +486,7 @@ class SaltMaster(SaltDaemon):
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
-            system_install=self.factories_manager.system_install,
+            system_service=self.factories_manager.system_service,
             **factory_class_kwargs
         )
 
@@ -512,7 +512,7 @@ class SaltMaster(SaltDaemon):
             ssh_user(str):
                 The remote username to connect as
         """  # noqa: D417
-        if self.system_install is False:
+        if self.system_service is False:
             script_path = cli_scripts.generate_script(
                 self.factories_manager.scripts_dir,
                 "salt-ssh",
@@ -529,7 +529,7 @@ class SaltMaster(SaltDaemon):
             target_host=target_host,
             client_key=client_key,
             ssh_user=ssh_user or running_username(),
-            system_install=self.factories_manager.system_install,
+            system_service=self.factories_manager.system_service,
             **factory_class_kwargs
         )
 

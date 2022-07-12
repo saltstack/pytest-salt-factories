@@ -109,14 +109,14 @@ def tests(session):
     Run tests.
     """
     env = {}
-    system_install = False
+    system_service = False
     if session.python is False:
         # This is running against the system
         logger.warning(
-            "Adding SALT_FACTORIES_SYSTEM_INSTALL=1 to the environ so that tests run against the sytem python"
+            "Adding SALT_FACTORIES_SYSTEM_SERVICE=1 to the environ so that tests run against the sytem python"
         )
-        env["SALT_FACTORIES_SYSTEM_INSTALL"] = "1"
-        system_install = True
+        env["SALT_FACTORIES_SYSTEM_SERVICE"] = "1"
+        system_service = True
     if SKIP_REQUIREMENTS_INSTALL is False:
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
@@ -125,7 +125,7 @@ def tests(session):
         if "3003" in SALT_REQUIREMENT:
             salt_requirements.append("jinja2<3.1")
         salt_requirements.append(SALT_REQUIREMENT)
-        if session.python is not False and system_install is False:
+        if session.python is not False and system_service is False:
             session.install(
                 *salt_requirements,
                 silent=PIP_INSTALL_SILENT,
@@ -144,7 +144,7 @@ def tests(session):
             if pytest_version_requirement.startswith("pytest~=6"):
                 pytest_requirements.append("pytest-subtests<0.7.0")
             session.install(*pytest_requirements, silent=PIP_INSTALL_SILENT)
-        if system_install:
+        if system_service:
             session.install(".", silent=PIP_INSTALL_SILENT)
         else:
             session.install("-e", ".", silent=PIP_INSTALL_SILENT)
@@ -222,7 +222,7 @@ def tests(session):
     session.run("coverage", "run", "-m", "pytest", *args, env=env)
 
     try:
-        if system_install is False:
+        if system_service is False:
             # Always combine and generate the XML coverage report
             try:
                 session.run("coverage", "combine")
@@ -254,7 +254,7 @@ def tests(session):
                 "--show-missing",
                 "--include=src/saltfactories/*,tests/*",
             ]
-            if system_install is False and pytest_version(session) >= (6, 2):
+            if system_service is False and pytest_version(session) >= (6, 2):
                 cmdline.append("--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT))
             session.run(*cmdline)
     finally:

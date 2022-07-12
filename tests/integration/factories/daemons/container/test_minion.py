@@ -20,7 +20,7 @@ pytestmark = [
     # We can't pass ``extra_cli_arguments_after_first_start_failure``, but this is solvable,
     # but we also rely on container volume binds, which, when running against the system,
     # means trying to bind `/`, which is not possible, hence, we're skipping this test.
-    pytest.mark.skip_on_salt_system_install,
+    pytest.mark.skip_on_salt_system_service,
     pytest.mark.skip_on_darwin,
     pytest.mark.skip_on_windows,
 ]
@@ -42,7 +42,7 @@ CMD . $VIRTUAL_ENV/bin/activate
 
 @pytest.fixture(scope="session")
 def docker_client(salt_factories, docker_client):
-    if salt_factories.system_install:
+    if salt_factories.system_service:
         exc_kwargs = {}
         if PYTEST_GE_7:
             exc_kwargs["_use_item_location"] = True

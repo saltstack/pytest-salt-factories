@@ -34,7 +34,7 @@ class SaltSyndic(SaltDaemon):
         defaults=None,
         overrides=None,
         master_of_masters=None,
-        system_install=False,
+        system_service=False,
     ):
         """
         Return the default configuration.
@@ -52,7 +52,7 @@ class SaltSyndic(SaltDaemon):
             # Match transport if not set
             defaults.setdefault("transport", master_of_masters.config["transport"])
 
-        if system_install is True:
+        if system_service is True:
             conf_dir = root_dir / "etc" / "salt"
             conf_dir.mkdir(parents=True, exist_ok=True)
             conf_d_dir = conf_dir / "master.d"
@@ -128,7 +128,7 @@ class SaltSyndic(SaltDaemon):
             defaults=defaults,
             overrides=overrides,
             master_of_masters=master_of_masters,
-            system_install=factories_manager.system_install,
+            system_service=factories_manager.system_service,
         )
 
     @classmethod

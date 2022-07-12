@@ -1,0 +1,1 @@
+Renamed the ``system_install`` configuration flag, markers and behaviours when set to ``system_service`` to better reflect what it's actually used for.

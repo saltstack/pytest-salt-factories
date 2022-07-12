@@ -48,7 +48,7 @@ class SaltMixin:
         The Salt config dictionary
     :param str python_executable:
         The path to the python executable to use
-    :param bool system_install:
+    :param bool system_service:
         If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
         salt system paths apply.
     """
@@ -58,14 +58,14 @@ class SaltMixin:
     config_dir = attr.ib(init=False, default=None)
     config_file = attr.ib(init=False, default=None)
     python_executable = attr.ib(default=None)
-    system_install = attr.ib(repr=False, default=False)
+    system_service = attr.ib(repr=False, default=False)
     display_name = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
         """
         Post attrs initialization routines.
         """
-        if self.python_executable is None and self.system_install is False:
+        if self.python_executable is None and self.system_service is False:
             self.python_executable = sys.executable
         # We really do not want buffered output
         self.environ.setdefault("PYTHONUNBUFFERED", "1")
@@ -530,12 +530,12 @@ class SaltDaemon(SaltMixin, Daemon):
         Daemon.__attrs_post_init__(self)
         SaltMixin.__attrs_post_init__(self)
 
-        if self.system_install is True and self.extra_cli_arguments_after_first_start_failure:
+        if self.system_service is True and self.extra_cli_arguments_after_first_start_failure:
             raise pytest.UsageError(
                 "You cannot pass `extra_cli_arguments_after_first_start_failure` to a salt "
                 "system installation setup."
             )
-        elif self.system_install is False:
+        elif self.system_service is False:
             for arg in self.extra_cli_arguments_after_first_start_failure:
                 if arg in ("-l", "--log-level"):
                     break
@@ -550,7 +550,7 @@ class SaltDaemon(SaltMixin, Daemon):
         self.start_check(self._check_start_events)
 
     def _get_impl_class(self):
-        if self.system_install:
+        if self.system_service:
             return SystemdSaltDaemonImpl
         return super()._get_impl_class()
 
