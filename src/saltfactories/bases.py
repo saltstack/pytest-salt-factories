@@ -10,7 +10,6 @@ import json
 import logging
 import os
 import pprint
-import sys
 from typing import TYPE_CHECKING
 
 import attr
@@ -65,8 +64,6 @@ class SaltMixin:
         """
         Post attrs initialization routines.
         """
-        if self.python_executable is None and self.system_service is False:
-            self.python_executable = sys.executable
         # We really do not want buffered output
         self.environ.setdefault("PYTHONUNBUFFERED", "1")
         # Don't write .pyc files or create them in __pycache__ directories
