@@ -1,0 +1,3 @@
+Inject ``engines_dirs`` and ``log_handlers_dirs`` when ``system_service=True`` or ``scripts_path`` is not ``None``
+These flags suggest that the salt being imported and used by salt-factories might not be the same as the one being tested.
+So, in this case, make sure events and logging from started daemons still get forwarded to salt-factories.
