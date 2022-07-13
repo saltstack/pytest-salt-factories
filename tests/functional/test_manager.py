@@ -146,3 +146,98 @@ def test_scripts_dir_config_fixture(pytester, scripts_dir):
 
     res = pytester.runpytest_subprocess()
     res.assert_outcomes(passed=3)
+
+
+def _system_service_ids(value):
+    return "system-service({})".format(value)
+
+
+@pytest.mark.parametrize("system_service", [True, False], ids=_system_service_ids)
+def test_system_service_cli(pytester, system_service, tmp_path):
+    args = []
+    if system_service:
+        args.append("--system-service")
+
+    pytester.makepyfile(
+        """
+        import pathlib
+
+        def test_factories(salt_factories):
+            assert salt_factories.system_service is {system_service}
+
+        def test_master(salt_factories):
+            # We set root_dir here to allow tests to run without being root
+            salt_factories.root_dir = pathlib.Path('{root_dir}')
+
+            factory = salt_factories.salt_master_daemon("foo-master")
+            assert factory.system_service is {system_service}
+            if {system_service}:
+                assert "engines_dirs" in factory.config
+                assert factory.config["engines_dirs"]
+                assert "log_handlers_dirs" in factory.config
+                assert factory.config["log_handlers_dirs"]
+        """.format(
+            root_dir=tmp_path,
+            system_service=system_service,
+        )
+    )
+
+    res = pytester.runpytest_subprocess(*args)
+    res.assert_outcomes(passed=2)
+
+
+@pytest.mark.parametrize("system_service", [True, False], ids=_system_service_ids)
+def test_system_service_config_fixture(pytester, system_service, tmp_path):
+    pytester.makeconftest(
+        """
+        import pytest
+
+        @pytest.fixture(scope="session")
+        def salt_factories_config():
+            return {{
+                "root_dir": '{}',
+                "system_service": {},
+            }}
+        """.format(
+            tmp_path,
+            system_service,
+        )
+    )
+    args = []
+    if system_service:
+        args.append("--system-service")
+
+    pytester.makepyfile(
+        """
+        import pathlib
+
+        def test_root_dir(salt_factories):
+            # The default root dir when system_service is True
+            if {system_service}:
+                assert str(salt_factories.root_dir) == '/'
+            else:
+                assert str(salt_factories.root_dir) == '{root_dir}'
+
+        def test_factories(salt_factories):
+            assert salt_factories.system_service is {system_service}
+
+        def test_master(salt_factories):
+            if {system_service}:
+                # We set root_dir here to allow tests to run without being root
+                salt_factories.root_dir = pathlib.Path('{root_dir}')
+
+            factory = salt_factories.salt_master_daemon("foo-master")
+            assert factory.system_service is {system_service}
+            if {system_service}:
+                assert "engines_dirs" in factory.config
+                assert factory.config["engines_dirs"]
+                assert "log_handlers_dirs" in factory.config
+                assert factory.config["log_handlers_dirs"]
+        """.format(
+            root_dir=tmp_path,
+            system_service=system_service,
+        )
+    )
+
+    res = pytester.runpytest_subprocess(*args)
+    res.assert_outcomes(passed=3)
