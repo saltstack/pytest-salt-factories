@@ -33,6 +33,7 @@ def _salt_factories_config(request):
             request.config.getoption("--system-service")
             or os.environ.get("SALT_FACTORIES_SYSTEM_SERVICE", "0") == "1"
         ),
+        "python_executable": request.config.getoption("--python-executable"),
     }
 
 
@@ -83,5 +84,13 @@ def pytest_addoption(parser):
             "Tell salt-factories to use the salt daemons system services, previously "
             "installed, instead of starting them from the available(and importable) "
             "salt checkout."
+        ),
+    )
+    group.addoption(
+        "--python-executable",
+        default=None,
+        help=(
+            "Tell salt-factories which python executable should be used when it "
+            "needs to prefix CLI commands with it. Defaults to ``sys.executable``."
         ),
     )
