@@ -29,7 +29,10 @@ def _salt_factories_config(request):
         "log_server_host": log_server.log_host,
         "log_server_port": log_server.log_port,
         "log_server_level": log_server.log_level,
-        "system_service": os.environ.get("SALT_FACTORIES_SYSTEM_SERVICE", "0") == "1",
+        "system_service": (
+            request.config.getoption("--system-service")
+            or os.environ.get("SALT_FACTORIES_SYSTEM_SERVICE", "0") == "1"
+        ),
     }
 
 
@@ -64,4 +67,21 @@ def salt_factories(
     factories_config.setdefault("root_dir", tempdir)
     return FactoriesManager(
         stats_processes=stats_processes, event_listener=event_listener, **factories_config
+    )
+
+
+def pytest_addoption(parser):
+    """
+    Register argparse-style options and ini-style config values.
+    """
+    group = parser.getgroup("Salt Factories")
+    group.addoption(
+        "--system-service",
+        default=False,
+        action="store_true",
+        help=(
+            "Tell salt-factories to use the salt daemons system services, previously "
+            "installed, instead of starting them from the available(and importable) "
+            "salt checkout."
+        ),
     )

@@ -5,7 +5,7 @@ import os
 from unittest import mock
 
 
-def test_skipped_test(pytester):
+def test_skipped_test_from_env(pytester):
     pytester.makepyfile(
         """
         import pytest
@@ -17,6 +17,22 @@ def test_skipped_test(pytester):
     )
     with mock.patch.dict(os.environ, {"SALT_FACTORIES_SYSTEM_SERVICE": "1"}):
         res = pytester.runpytest_subprocess()
+    # res.assert_outcomes(passed=1)
+    assert res.parseoutcomes()["skipped"] == 1
+    res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
+
+
+def test_skipped_test_from_cli_flag(pytester):
+    pytester.makepyfile(
+        """
+        import pytest
+
+        @pytest.mark.skip_on_salt_system_service
+        def test_one():
+            assert True
+        """
+    )
+    res = pytester.runpytest_subprocess("--system-service")
     # res.assert_outcomes(passed=1)
     assert res.parseoutcomes()["skipped"] == 1
     res.stdout.no_fnmatch_line("*PytestUnknownMarkWarning*")
