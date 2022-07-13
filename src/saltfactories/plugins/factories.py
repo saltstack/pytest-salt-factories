@@ -6,6 +6,7 @@ Salt Daemon Factories PyTest Plugin.
 """
 import logging
 import os
+import pathlib
 import pprint
 
 import pytest
@@ -34,6 +35,7 @@ def _salt_factories_config(request):
             or os.environ.get("SALT_FACTORIES_SYSTEM_SERVICE", "0") == "1"
         ),
         "python_executable": request.config.getoption("--python-executable"),
+        "scripts_dir": request.config.getoption("--scripts-dir"),
     }
 
 
@@ -91,6 +93,17 @@ def pytest_addoption(parser):
         default=None,
         help=(
             "Tell salt-factories which python executable should be used when it "
-            "needs to prefix CLI commands with it. Defaults to ``sys.executable``."
+            "needs to prefix CLI commands with it. Defaults to `sys.executable`."
+        ),
+    )
+    group.addoption(
+        "--scripts-dir",
+        default=None,
+        type=pathlib.Path,
+        help=(
+            "Tell salt-factories where to look for the Salt daemon and CLI scripts. "
+            "The several scripts to the Salt daemons and CLI's MUST exist. "
+            "Passing this option will also make salt-factories NOT generate "
+            "said scripts and set `python_executable` to `None`."
         ),
     )

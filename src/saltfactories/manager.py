@@ -7,6 +7,7 @@ Salt Factories Manager.
 import logging
 import os
 import pathlib
+import shutil
 import sys
 
 import attr
@@ -51,6 +52,10 @@ class FactoriesManager:
             The python executable to use, where needed.
             If ``scripts_dir`` is not ``None``, then ``python_executable`` will default to
             ``None``, otherwise, defaults to py:attr:`sys.executable`.
+        scripts_dir:
+            The paths to the directory containing the Salt CLI scripts. The several scripts to
+            the Salt daemons and CLI's **must** exist. Passing this option will also make
+            salt-factories **NOT** generate said scripts and set ``python_executable`` to ``None``.
         code_dir:
             The path to the code root directory of the project being tested. This is important for proper
             code-coverage paths.
@@ -76,15 +81,15 @@ class FactoriesManager:
             fixture.
         system_service:
             If true, the daemons and CLI's are run against a system installed salt setup, ie, the default
-            salt system paths apply.
+            salt system paths apply and the daemon and CLI scripts will be searched for in ``$PATH``.
     """
 
     root_dir = attr.ib(converter=cast_to_pathlib_path)
-    tmp_root_dir = attr.ib(init=False)
     log_server_port = attr.ib()
     log_server_level = attr.ib()
     log_server_host = attr.ib()
     python_executable = attr.ib(default=None)
+    scripts_dir = attr.ib(default=None, converter=cast_to_pathlib_path)
     code_dir = attr.ib(default=None)
     inject_coverage = attr.ib(default=False)
     inject_sitecustomize = attr.ib(default=False)
@@ -97,7 +102,8 @@ class FactoriesManager:
     event_listener = attr.ib(repr=False)
 
     # Internal attributes
-    scripts_dir = attr.ib(default=None, init=False, repr=False)
+    tmp_root_dir = attr.ib(init=False)
+    generate_scripts = attr.ib(init=False, repr=False, default=True)
 
     def __attrs_post_init__(self):
         """
@@ -109,6 +115,15 @@ class FactoriesManager:
             self.root_dir = self.tmp_root_dir
         else:
             self.root_dir = pathlib.Path("/")
+
+        if self.scripts_dir is not None:
+            self.python_executable = None
+            self.generate_scripts = False
+        elif self.system_service is True:
+            self.generate_scripts = False
+        elif self.system_service is False:
+            self.scripts_dir = self.root_dir / "scripts"
+            self.scripts_dir.mkdir(exist_ok=True)
         if self.start_timeout is None:
             if not platform.is_spawning_platform():
                 self.start_timeout = 60
@@ -116,13 +131,15 @@ class FactoriesManager:
                 # Windows and macOS are just slower
                 self.start_timeout = 120
 
-        if self.system_service is False:
+        if self.system_service is False and self.generate_scripts is True:
             # Setup the internal attributes
             self.scripts_dir = self.root_dir / "scripts"
             self.scripts_dir.mkdir(exist_ok=True)
 
-        if self.python_executable is None and self.system_service is False:
+        if self.python_executable is None and self.generate_scripts:
             self.python_executable = sys.executable
+
+        log.warning(self)
 
     @staticmethod
     def get_salt_log_handlers_path():
@@ -640,15 +657,25 @@ class FactoriesManager:
         """
         Return the path to the customized script path, generating one if needed.
         """
-        if self.system_service is True:
-            return script_name
-        return cli_scripts.generate_script(
-            self.scripts_dir,
-            script_name,
-            code_dir=self.code_dir,
-            inject_coverage=self.inject_coverage,
-            inject_sitecustomize=self.inject_sitecustomize,
-        )
+        if self.generate_scripts:
+            return cli_scripts.generate_script(
+                self.scripts_dir,
+                script_name,
+                code_dir=self.code_dir,
+                inject_coverage=self.inject_coverage,
+                inject_sitecustomize=self.inject_sitecustomize,
+            )
+        if self.system_service:
+            script_path = shutil.which(script_name)
+            if not script_path:
+                raise FileNotFoundError(
+                    "Salt CLI script '{}' was not found in $PATH".format(script_name)
+                )
+            return script_path
+        script_path = self.scripts_dir / script_name
+        if not script_path.exists():
+            raise FileNotFoundError("Salt CLI script '{}' not found".format(script_path))
+        return str(script_path)
 
     def _get_factory_class_instance(
         self,
@@ -663,10 +690,7 @@ class FactoriesManager:
         """
         Helper method to instantiate daemon factories.
         """
-        if self.system_service:
-            script_path = script_name
-        else:
-            script_path = self.get_salt_script_path(script_name)
+        script_path = self.get_salt_script_path(script_name)
         factory = factory_class(
             config=daemon_config,
             start_timeout=start_timeout or self.start_timeout,

@@ -57,6 +57,8 @@ def cast_to_pathlib_path(value):
     """
     Cast the passed value to an instance of ``pathlib.Path``.
     """
+    if value is None:
+        return value
     if isinstance(value, pathlib.Path):
         return value
     try:
