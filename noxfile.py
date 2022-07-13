@@ -109,14 +109,7 @@ def tests(session):
     Run tests.
     """
     env = {}
-    system_service = False
-    if session.python is False:
-        # This is running against the system
-        logger.warning(
-            "Adding SALT_FACTORIES_SYSTEM_SERVICE=1 to the environ so that tests run against the sytem python"
-        )
-        env["SALT_FACTORIES_SYSTEM_SERVICE"] = "1"
-        system_service = True
+    system_service = session.python is False
     if SKIP_REQUIREMENTS_INSTALL is False:
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
@@ -207,7 +200,13 @@ def tests(session):
         "-ra",
         "-s",
     ]
-    if pytest_version(session) > (6, 2):
+    if system_service:
+        logger.warning(
+            "Passing '--system-service' so that tests run against the sytem python "
+            "with Salt previously installed."
+        )
+        args.append("--system-service")
+    if pytest_version(session) > (6, 2) and shutil.which("lsof"):
         args.append("--lsof")
     if session._runner.global_config.forcecolor:
         args.append("--color=yes")
