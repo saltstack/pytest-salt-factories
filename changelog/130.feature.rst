@@ -1,0 +1,3 @@
+Allow passing ``--scripts-dir`` to tell salt-factories where to look for the Salt daemon and CLI scripts.
+The several scripts to the Salt daemons and CLI's **must** exist. Also, passing this option will additionally make
+salt-factories **NOT** generate said scripts and set ``python_executable`` to ``None``

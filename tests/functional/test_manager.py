@@ -38,7 +38,7 @@ def test_python_executable_cli(pytester, python_executable):
 @pytest.mark.parametrize(
     "python_executable", ["/where/bin/python", None], ids=_python_excutable_ids
 )
-def test_python_executable_fixture(pytester, python_executable):
+def test_python_executable_config_fixture(pytester, python_executable):
     pytester.makepyfile(
         """
         def test_factories(salt_factories):
@@ -66,3 +66,83 @@ def test_python_executable_fixture(pytester, python_executable):
     )
     res = pytester.runpytest_subprocess()
     res.assert_outcomes(passed=2)
+
+
+@pytest.fixture
+def scripts_dir(tmp_path):
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    for fname in ("salt-master", "salt-minion"):
+        bin_dir.joinpath(fname).touch()
+    return bin_dir
+
+
+def test_scripts_dir_cli(pytester, scripts_dir):
+    pytester.makeconftest(
+        """
+        import pytest
+
+        @pytest.fixture(scope="session")
+        def salt_factories_config():
+            return {{
+                "python_executable": {!r}
+            }}
+        """.format(
+            sys.executable
+        )
+    )
+    pytester.makepyfile(
+        """
+        def test_factories(salt_factories):
+            assert str(salt_factories.scripts_dir) == '{}'
+
+        def test_python_executable(salt_factories):
+            assert salt_factories.python_executable is None
+
+        def test_master(salt_factories):
+            factory = salt_factories.salt_master_daemon("foo-master")
+            assert str(factory.script_name) == '{}'
+        """.format(
+            scripts_dir,
+            scripts_dir / "salt-master",
+        )
+    )
+
+    res = pytester.runpytest_subprocess("--scripts-dir={}".format(scripts_dir))
+    res.assert_outcomes(passed=3)
+
+
+def test_scripts_dir_config_fixture(pytester, scripts_dir):
+    pytester.makeconftest(
+        """
+        import pytest
+
+        @pytest.fixture(scope="session")
+        def salt_factories_config():
+            return {{
+                "scripts_dir": '{}',
+                "python_executable": '{}',
+            }}
+        """.format(
+            scripts_dir, sys.executable
+        )
+    )
+    pytester.makepyfile(
+        """
+        def test_factories(salt_factories):
+            assert str(salt_factories.scripts_dir) == '{}'
+
+        def test_python_executable(salt_factories):
+            assert salt_factories.python_executable is None
+
+        def test_master(salt_factories):
+            factory = salt_factories.salt_master_daemon("foo-master")
+            assert str(factory.script_name) == '{}'
+        """.format(
+            scripts_dir,
+            scripts_dir / "salt-master",
+        )
+    )
+
+    res = pytester.runpytest_subprocess()
+    res.assert_outcomes(passed=3)
