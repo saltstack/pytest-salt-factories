@@ -201,6 +201,20 @@ class FactoriesManager:
         if "pytest" not in config["engines"]:
             config["engines"].append("pytest")
 
+        if self.generate_scripts is False or self.system_service is True:
+            # This means that the salt being imported and used by salt-factories
+            # might not be the same as the one being tested.
+            # So, in this case, make sure events and logging from started daemons
+            # still gets forwarded to salt-factories.
+            if "engines_dirs" not in config:
+                config["engines_dirs"] = []
+            config["engines_dirs"].insert(0, str(FactoriesManager.get_salt_engines_path()))
+            if "log_handlers_dirs" not in config:
+                config["log_handlers_dirs"] = []
+            config["log_handlers_dirs"].insert(
+                0, str(FactoriesManager.get_salt_log_handlers_path())
+            )
+
         config.setdefault("user", running_username())
         if not config["user"]:  # pragma: no cover
             # If this value is empty, None, False, just remove it
