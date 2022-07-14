@@ -2,7 +2,6 @@
 Test the ``salt-cp`` CLI functionality.
 """
 import shutil
-import sys
 
 import pytest
 
@@ -54,7 +53,6 @@ def test_default_timeout_config(minion_id, config_dir, config_file, cli_script_n
     args = ["test.ping"]
     proc = SaltCp(script_name=cli_script_name, config=config)
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--timeout=15",
@@ -75,7 +73,6 @@ def test_default_timeout_construct(minion_id, config_dir, config_file, cli_scrip
     args = ["test.ping"]
     proc = SaltCp(script_name=cli_script_name, config=config, timeout=15)
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--timeout=15",

@@ -1,7 +1,6 @@
 import json
 import os
 import shutil
-import sys
 from collections import OrderedDict
 from unittest import mock
 
@@ -52,7 +51,6 @@ def test_default_cli_flags(minion_id, config_dir, config_file, cli_script_name):
     args = ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--out=json",
@@ -80,7 +78,6 @@ def test_override_log_level(minion_id, config_dir, config_file, cli_script_name,
     kwargs = {"minion_tgt": minion_id}
     expected = (
         [
-            sys.executable,
             cli_script_name,
             "--config-dir={}".format(config_dir),
             "--out=json",
@@ -109,7 +106,6 @@ def test_override_output(minion_id, config_dir, config_file, cli_script_name, fl
     kwargs = {"minion_tgt": minion_id}
     expected = (
         [
-            sys.executable,
             cli_script_name,
             "--config-dir={}".format(config_dir),
             "--log-level=critical",
@@ -139,7 +135,6 @@ def test_override_output_indent(minion_id, config_dir, config_file, cli_script_n
     kwargs = {"minion_tgt": minion_id}
     expected = (
         [
-            sys.executable,
             cli_script_name,
             "--config-dir={}".format(config_dir),
             "--out=json",
@@ -164,7 +159,6 @@ def test_cli_timeout_lesser_than_timeout_kw(minion_id, config_dir, config_file, 
     args = ["--timeout", str(cli_timeout), "test.ping"]
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--out=json",
@@ -207,7 +201,6 @@ def test_cli_timeout_matches_timeout_kw(minion_id, config_dir, config_file, cli_
     args = ["--timeout", str(cli_timeout), "test.ping"]
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--out=json",
@@ -250,7 +243,6 @@ def test_cli_timeout_greater_than_timeout_kw(minion_id, config_dir, config_file,
     args = ["--timeout", str(cli_timeout), "test.ping"]
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--out=json",
@@ -293,7 +285,6 @@ def test_cli_timeout_updates_to_timeout_kw_plus_default_increase(
     args = ["test.ping"]
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--timeout={}".format(explicit_timeout),
@@ -334,7 +325,6 @@ def test_cli_timeout_updates_to_default_timeout_plus_default_increase(
     args = ["test.ping"]
     kwargs = {"minion_tgt": minion_id}
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--timeout={}".format(timeout),
@@ -380,7 +370,6 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
     kwargs = {"minion_tgt": minion_id}
     expected = (
         [
-            sys.executable,
             cli_script_name,
             "--config-dir={}".format(config_dir),
             "--out=json",
@@ -419,7 +408,6 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
     kwargs = {"minion_tgt": minion_id}
     expected = (
         [
-            sys.executable,
             cli_script_name,
             "--config-dir={}".format(config_dir),
             "--out=json",
@@ -459,7 +447,6 @@ def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name
     kwargs = {"minion_tgt": minion_id}
     expected = (
         [
-            sys.executable,
             cli_script_name,
             "--out=json",
             "--out-indent=0",
@@ -494,7 +481,6 @@ def test_non_string_cli_flags(minion_id, config_dir, config_file, cli_script_nam
     foo = ["the", "foo", "list"]
     kwargs = {"minion_tgt": minion_id, "foo": foo}
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--out=json",
@@ -517,7 +503,6 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     kwargs = OrderedDict((("minion_tgt", minion_id),))
     kwargs.update(extra_kwargs)
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--out=json",
@@ -539,7 +524,6 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     kwargs = OrderedDict((("minion_tgt", minion_id),))
     kwargs.update(extra_kwargs)
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--out=json",
@@ -562,7 +546,6 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     kwargs = OrderedDict((("minion_tgt", minion_id),))
     kwargs.update(extra_kwargs)
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--out=json",
@@ -584,7 +567,6 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     extra_kwargs = {"look": "Ma", "no": "Hands!"}
     kwargs = {"minion_tgt": minion_id, "extra": extra_kwargs}
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--out=json",

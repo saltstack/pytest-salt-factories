@@ -748,9 +748,9 @@ class SaltDaemon(Container, bases.SaltDaemon):
         Post attrs initialization routines.
         """
         self.daemon_started = self.daemon_starting = False
-        if self.python_executable is None:
-            # Default to whatever is the default python in the container
-            self.python_executable = "python"
+        # Default to whatever is the default python in the container
+        # and not the python_executable set by salt-factories
+        self.python_executable = "python"
         bases.SaltDaemon.__attrs_post_init__(self)
         Container.__attrs_post_init__(self)
         # There are some volumes which NEED to exist on the container so

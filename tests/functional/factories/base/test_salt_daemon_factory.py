@@ -1,4 +1,5 @@
 import shutil
+import sys
 
 import pytest
 from pytestshellutils.exceptions import FactoryNotStarted
@@ -65,6 +66,7 @@ def test_extra_cli_arguments_after_first_failure(
         max_start_attempts=2,
         check_ports=[12345],
         extra_cli_arguments_after_first_start_failure=["--log-level=debug"],
+        python_executable=sys.executable,
     )
     with pytest.raises(FactoryNotStarted) as exc:
         with daemon.started():
