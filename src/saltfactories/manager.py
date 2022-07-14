@@ -94,7 +94,7 @@ class FactoriesManager:
     inject_coverage = attr.ib(default=False)
     inject_sitecustomize = attr.ib(default=False)
     cwd = attr.ib(factory=pathlib.Path.cwd)
-    environ = attr.ib(factory=os.environ.copy)
+    environ = attr.ib(factory=os.environ.copy, repr=False)
     slow_stop = attr.ib(default=True)
     start_timeout = attr.ib(default=None)
     stats_processes = attr.ib(repr=False, default=None)

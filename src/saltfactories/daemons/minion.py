@@ -7,7 +7,6 @@ Salt Minion Factory.
 import copy
 import logging
 import pathlib
-import shutil
 
 import attr
 import salt.config
@@ -17,7 +16,6 @@ from pytestskipmarkers.utils import ports
 
 from saltfactories import cli
 from saltfactories.bases import SaltDaemon
-from saltfactories.utils import cli_scripts
 from saltfactories.utils.tempfiles import SaltPillarTree
 from saltfactories.utils.tempfiles import SaltStateTree
 
@@ -262,19 +260,11 @@ class SaltMinion(SaltDaemon):
         """
         Return a `salt-call` CLI process for this minion instance.
         """
-        if self.system_service is False:
-            script_path = cli_scripts.generate_script(
-                self.factories_manager.scripts_dir,
-                "salt-call",
-                code_dir=self.factories_manager.code_dir,
-                inject_coverage=self.factories_manager.inject_coverage,
-                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-            )
-        else:
-            script_path = shutil.which("salt-call")
+        script_path = self.factories_manager.get_salt_script_path("salt-call")
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
             system_service=self.factories_manager.system_service,
+            python_executable=self.python_executable,
             **factory_class_kwargs
         )

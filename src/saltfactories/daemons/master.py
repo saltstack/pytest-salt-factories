@@ -6,7 +6,6 @@ Salt Master Factory.
 """
 import copy
 import pathlib
-import shutil
 from functools import partial
 
 import attr
@@ -17,7 +16,6 @@ from pytestskipmarkers.utils import ports
 from saltfactories import cli
 from saltfactories import client
 from saltfactories.bases import SaltDaemon
-from saltfactories.utils import cli_scripts
 from saltfactories.utils import running_username
 from saltfactories.utils.tempfiles import SaltPillarTree
 from saltfactories.utils.tempfiles import SaltStateTree
@@ -368,126 +366,78 @@ class SaltMaster(SaltDaemon):
         self.factories_manager.final_cloud_config_tweaks(config)
         config = factory_class.write_config(config)
 
-        if self.system_service is False:
-            script_path = cli_scripts.generate_script(
-                self.factories_manager.scripts_dir,
-                "salt-cloud",
-                code_dir=self.factories_manager.code_dir,
-                inject_coverage=self.factories_manager.inject_coverage,
-                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-            )
-        else:
-            script_path = shutil.which("salt-cloud")
+        script_path = self.factories_manager.get_salt_script_path("salt-cloud")
         return factory_class(
             script_name=script_path,
             config=config,
             system_service=self.factories_manager.system_service,
-            **factory_class_kwargs
+            python_executable=self.python_executable,
+            **factory_class_kwargs,
         )
 
     def salt_cli(self, factory_class=cli.salt.Salt, **factory_class_kwargs):
         """
         Return a `salt` CLI process for this master instance.
         """
-        if self.system_service is False:
-            script_path = cli_scripts.generate_script(
-                self.factories_manager.scripts_dir,
-                "salt",
-                code_dir=self.factories_manager.code_dir,
-                inject_coverage=self.factories_manager.inject_coverage,
-                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-            )
-        else:
-            script_path = shutil.which("salt")
+        script_path = self.factories_manager.get_salt_script_path("salt")
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
             system_service=self.factories_manager.system_service,
-            **factory_class_kwargs
+            python_executable=self.python_executable,
+            **factory_class_kwargs,
         )
 
     def salt_cp_cli(self, factory_class=cli.cp.SaltCp, **factory_class_kwargs):
         """
         Return a `salt-cp` CLI process for this master instance.
         """
-        if self.system_service is False:
-            script_path = cli_scripts.generate_script(
-                self.factories_manager.scripts_dir,
-                "salt-cp",
-                code_dir=self.factories_manager.code_dir,
-                inject_coverage=self.factories_manager.inject_coverage,
-                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-            )
-        else:
-            script_path = shutil.which("salt-cp")
+        script_path = self.factories_manager.get_salt_script_path("salt-cp")
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
             system_service=self.factories_manager.system_service,
-            **factory_class_kwargs
+            python_executable=self.python_executable,
+            **factory_class_kwargs,
         )
 
     def salt_key_cli(self, factory_class=cli.key.SaltKey, **factory_class_kwargs):
         """
         Return a `salt-key` CLI process for this master instance.
         """
-        if self.system_service is False:
-            script_path = cli_scripts.generate_script(
-                self.factories_manager.scripts_dir,
-                "salt-key",
-                code_dir=self.factories_manager.code_dir,
-                inject_coverage=self.factories_manager.inject_coverage,
-                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-            )
-        else:
-            script_path = shutil.which("salt-key")
+        script_path = self.factories_manager.get_salt_script_path("salt-key")
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
             system_service=self.factories_manager.system_service,
-            **factory_class_kwargs
+            python_executable=self.python_executable,
+            **factory_class_kwargs,
         )
 
     def salt_run_cli(self, factory_class=cli.run.SaltRun, **factory_class_kwargs):
         """
         Return a `salt-run` CLI process for this master instance.
         """
-        if self.system_service is False:
-            script_path = cli_scripts.generate_script(
-                self.factories_manager.scripts_dir,
-                "salt-run",
-                code_dir=self.factories_manager.code_dir,
-                inject_coverage=self.factories_manager.inject_coverage,
-                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-            )
-        else:
-            script_path = shutil.which("salt-run")
+        script_path = self.factories_manager.get_salt_script_path("salt-run")
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
             system_service=self.factories_manager.system_service,
-            **factory_class_kwargs
+            python_executable=self.python_executable,
+            **factory_class_kwargs,
         )
 
     def salt_spm_cli(self, factory_class=cli.spm.Spm, **factory_class_kwargs):
         """
         Return a `spm` CLI process for this master instance.
         """
-        if self.system_service is False:
-            script_path = cli_scripts.generate_script(
-                self.factories_manager.scripts_dir,
-                "spm",
-                code_dir=self.factories_manager.code_dir,
-                inject_coverage=self.factories_manager.inject_coverage,
-                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-            )
-        else:
-            script_path = shutil.which("spm")
+        script_path = self.factories_manager.get_salt_script_path("spm")
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
             system_service=self.factories_manager.system_service,
-            **factory_class_kwargs
+            python_executable=self.python_executable,
+            **factory_class_kwargs,
         )
 
     def salt_ssh_cli(
@@ -512,16 +462,7 @@ class SaltMaster(SaltDaemon):
             ssh_user(str):
                 The remote username to connect as
         """  # noqa: D417
-        if self.system_service is False:
-            script_path = cli_scripts.generate_script(
-                self.factories_manager.scripts_dir,
-                "salt-ssh",
-                code_dir=self.factories_manager.code_dir,
-                inject_coverage=self.factories_manager.inject_coverage,
-                inject_sitecustomize=self.factories_manager.inject_sitecustomize,
-            )
-        else:
-            script_path = shutil.which("salt-ssh")
+        script_path = self.factories_manager.get_salt_script_path("salt-ssh")
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
@@ -530,7 +471,8 @@ class SaltMaster(SaltDaemon):
             client_key=client_key,
             ssh_user=ssh_user or running_username(),
             system_service=self.factories_manager.system_service,
-            **factory_class_kwargs
+            python_executable=self.python_executable,
+            **factory_class_kwargs,
         )
 
     def salt_client(

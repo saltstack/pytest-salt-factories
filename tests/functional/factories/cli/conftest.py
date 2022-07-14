@@ -17,7 +17,7 @@ def proxy_minion_id():
 
 
 @pytest.fixture
-def salt_master(request, salt_factories, master_id):
+def salt_master(salt_factories, master_id):
     """
     This fixture just configures a salt-master. It does not start one.
     """
@@ -25,7 +25,7 @@ def salt_master(request, salt_factories, master_id):
 
 
 @pytest.fixture
-def salt_minion(request, salt_factories, minion_id, salt_master):
+def salt_minion(salt_master, minion_id):
     """
     This fixture just configures a salt-minion. It does not start one.
     """
@@ -33,7 +33,7 @@ def salt_minion(request, salt_factories, minion_id, salt_master):
 
 
 @pytest.fixture
-def salt_proxy_minion(request, salt_factories, salt_master, proxy_minion_id):
+def salt_proxy_minion(salt_master, proxy_minion_id):
     """
     This fixture just configures a salt-minion. It does not start one.
     """

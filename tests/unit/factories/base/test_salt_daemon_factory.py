@@ -1,5 +1,4 @@
 import shutil
-import sys
 
 import pytest
 
@@ -44,7 +43,6 @@ def cli_script_name(pytester):
 def test_default_cli_flags(config_dir, config_file, cli_script_name):
     config = {"conf_file": config_file, "id": "the-id"}
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
         "--log-level=critical",
@@ -63,7 +61,6 @@ def test_override_log_level(config_dir, config_file, cli_script_name, flag):
         args = [flag, "info"]
 
     expected = [
-        sys.executable,
         cli_script_name,
         "--config-dir={}".format(config_dir),
     ] + args
@@ -83,7 +80,7 @@ def test_override_config_dir(config_dir, config_file, cli_script_name, flag):
         args = [flag, passed_config_dir]
 
     config = {"conf_file": config_file, "id": "the-id"}
-    expected = [sys.executable, cli_script_name, "--log-level=critical"] + args
+    expected = [cli_script_name, "--log-level=critical"] + args
     proc = SaltDaemon(start_timeout=1, script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args)
     assert cmdline == expected
