@@ -5,6 +5,10 @@ import sys
 
 import pytest
 
+pytestmark = [
+    pytest.mark.skip_on_windows(reason="Windows backslashed mess it all up. Skipping for now."),
+]
+
 
 def _python_excutable_ids(value):
     return "python_executable={}".format(value or "sys.executable")
