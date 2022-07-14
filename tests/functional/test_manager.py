@@ -94,14 +94,14 @@ def test_scripts_dir_cli(pytester, scripts_dir):
     pytester.makepyfile(
         """
         def test_factories(salt_factories):
-            assert str(salt_factories.scripts_dir) == '{}'
+            assert str(salt_factories.scripts_dir) == r'{}'
 
         def test_python_executable(salt_factories):
             assert salt_factories.python_executable is None
 
         def test_master(salt_factories):
             factory = salt_factories.salt_master_daemon("foo-master")
-            assert str(factory.script_name) == '{}'
+            assert str(factory.script_name) == r'{}'
         """.format(
             scripts_dir,
             scripts_dir / "salt-master",
@@ -120,7 +120,7 @@ def test_scripts_dir_config_fixture(pytester, scripts_dir):
         @pytest.fixture(scope="session")
         def salt_factories_config():
             return {{
-                "scripts_dir": '{}',
+                "scripts_dir": r'{}',
                 "python_executable": '{}',
             }}
         """.format(
@@ -130,7 +130,7 @@ def test_scripts_dir_config_fixture(pytester, scripts_dir):
     pytester.makepyfile(
         """
         def test_factories(salt_factories):
-            assert str(salt_factories.scripts_dir) == '{}'
+            assert str(salt_factories.scripts_dir) == r'{}'
 
         def test_python_executable(salt_factories):
             assert salt_factories.python_executable is None
@@ -195,7 +195,7 @@ def test_system_service_config_fixture(pytester, system_service, tmp_path):
         @pytest.fixture(scope="session")
         def salt_factories_config():
             return {{
-                "root_dir": '{}',
+                "root_dir": r'{}',
                 "system_service": {},
             }}
         """.format(
@@ -216,7 +216,7 @@ def test_system_service_config_fixture(pytester, system_service, tmp_path):
             if {system_service}:
                 assert str(salt_factories.root_dir) == '/'
             else:
-                assert str(salt_factories.root_dir) == '{root_dir}'
+                assert str(salt_factories.root_dir) == r'{root_dir}'
 
         def test_factories(salt_factories):
             assert salt_factories.system_service is {system_service}
@@ -224,7 +224,7 @@ def test_system_service_config_fixture(pytester, system_service, tmp_path):
         def test_master(salt_factories):
             if {system_service}:
                 # We set root_dir here to allow tests to run without being root
-                salt_factories.root_dir = pathlib.Path('{root_dir}')
+                salt_factories.root_dir = pathlib.Path(r'{root_dir}')
 
             factory = salt_factories.salt_master_daemon("foo-master")
             assert factory.system_service is {system_service}
