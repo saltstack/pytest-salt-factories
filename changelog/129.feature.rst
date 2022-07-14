@@ -1,1 +1,0 @@
-Allow passing ``--python-executable`` to teak which python get's used to prefix CLI commands, when needed.

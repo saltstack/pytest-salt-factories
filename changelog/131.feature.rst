@@ -1,1 +1,0 @@
-Added CLI support(``--system-service``) to change salt-factories to use Salt previously installed from the platform's package manager.

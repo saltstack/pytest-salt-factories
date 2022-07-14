@@ -20,6 +20,28 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc18 (2022-07-14)
+======================
+
+Breaking Changes
+----------------
+
+- Renamed the ``system_install`` configuration flag, markers and behaviours when set to ``system_service`` to better reflect what it's actually used for. (`#96 <https://github.com/saltstack/pytest-salt-factories/issues/96>`_)
+
+
+Features
+--------
+
+- Allow passing ``--python-executable`` to teak which python get's used to prefix CLI commands, when needed. (`#129 <https://github.com/saltstack/pytest-salt-factories/issues/129>`_)
+- Allow passing ``--scripts-dir`` to tell salt-factories where to look for the Salt daemon and CLI scripts.
+  The several scripts to the Salt daemons and CLI's **must** exist. Also, passing this option will additionally make
+  salt-factories **NOT** generate said scripts and set ``python_executable`` to ``None`` (`#130 <https://github.com/saltstack/pytest-salt-factories/issues/130>`_)
+- Added CLI support(``--system-service``) to change salt-factories to use Salt previously installed from the platform's package manager. (`#131 <https://github.com/saltstack/pytest-salt-factories/issues/131>`_)
+- Inject ``engines_dirs`` and ``log_handlers_dirs`` when ``system_service=True`` or ``scripts_path`` is not ``None``
+  These flags suggest that the salt being imported and used by salt-factories might not be the same as the one being tested.
+  So, in this case, make sure events and logging from started daemons still get forwarded to salt-factories. (`#133 <https://github.com/saltstack/pytest-salt-factories/issues/133>`_)
+
+
 1.0.0rc17 (2022-06-17)
 ======================
 
