@@ -25,7 +25,8 @@ def _salt_factories_config(request):
     log_server = request.config.pluginmanager.get_plugin("saltfactories-log-server")
     return {
         "code_dir": saltfactories.CODE_ROOT_DIR.parent,
-        "inject_coverage": True,
+        "coverage_rc_path": saltfactories.CODE_ROOT_DIR.parent / ".coveragerc",
+        "coverage_db_path": saltfactories.CODE_ROOT_DIR.parent / ".coverage",
         "inject_sitecustomize": True,
         "log_server_host": log_server.log_host,
         "log_server_port": log_server.log_port,

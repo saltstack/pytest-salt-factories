@@ -136,17 +136,38 @@ def test_generate_script_code_dir(tmpdir):
     assert contents == expected
 
 
-def test_generate_script_inject_coverage(tmpdir):
+def test_generate_script_coverage_support_usage_error_1(tmp_path):
     """
     Test coverage related code included in script generation
     """
-    # If code_dir is not passed, assert that we fail
+    # If only one of coverage_rc_path or coverage_db_path is passed, we fail
     with pytest.raises(pytest.UsageError):
-        cli_scripts.generate_script(tmpdir.strpath, "salt-foobar-fail", inject_coverage=True)
+        cli_scripts.generate_script(
+            tmp_path, "salt-foobar-fail", coverage_rc_path="foo", coverage_db_path=None
+        )
 
-    code_dir = tmpdir.mkdir("code-dir").strpath
+
+def test_generate_script_coverage_support_usage_error_2(tmp_path):
+    """
+    Test coverage related code included in script generation
+    """
+    with pytest.raises(pytest.UsageError):
+        cli_scripts.generate_script(
+            tmp_path, "salt-foobar-fail", coverage_db_path="foo", coverage_rc_path=None
+        )
+
+
+def test_generate_script_coverage_support(tmp_path):
+    """
+    Test coverage related code included in script generation
+    """
+    coverage_rc_path = tmp_path / ".coveragerc"
+    coverage_db_path = tmp_path / ".coverage"
     script_path = cli_scripts.generate_script(
-        tmpdir.strpath, "salt-foobar", code_dir=code_dir, inject_coverage=True
+        tmp_path,
+        "salt-foobar",
+        coverage_rc_path=coverage_rc_path,
+        coverage_db_path=coverage_db_path,
     )
     with open(script_path) as rfh:
         contents = rfh.read()
@@ -162,14 +183,9 @@ def test_generate_script_inject_coverage(tmpdir):
         # Don't write .pyc files or create them in __pycache__ directories
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
-        CODE_DIR = r'{}'
-        if CODE_DIR in sys.path:
-            sys.path.remove(CODE_DIR)
-        sys.path.insert(0, CODE_DIR)
-
         # Setup coverage environment variables
-        COVERAGE_FILE = os.path.join(CODE_DIR, '.coverage')
-        COVERAGE_PROCESS_START = os.path.join(CODE_DIR, '.coveragerc')
+        COVERAGE_FILE = r'{coverage_db_path}'
+        COVERAGE_PROCESS_START = r'{coverage_rc_path}'
         os.environ[str('COVERAGE_FILE')] = str(COVERAGE_FILE)
         os.environ[str('COVERAGE_PROCESS_START')] = str(COVERAGE_PROCESS_START)
 
@@ -209,24 +225,26 @@ def test_generate_script_inject_coverage(tmpdir):
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
-            code_dir
+            coverage_rc_path=str(coverage_rc_path),
+            coverage_db_path=str(coverage_db_path),
         )
     )
     assert contents == expected
 
 
-def test_generate_script_inject_sitecustomize(tmpdir):
+def test_generate_script_inject_sitecustomize(tmp_path):
     """
     Test sitecustomize injection related code included in script generation
     """
     sitecustomize_path = pathlib.Path(cli_scripts.__file__).resolve().parent / "coverage"
-    code_dir = tmpdir.mkdir("code-dir").strpath
+    coverage_rc_path = tmp_path / ".coveragerc"
+    coverage_db_path = tmp_path / ".coverage"
     script_path = cli_scripts.generate_script(
-        tmpdir.strpath,
+        tmp_path,
         "salt-foobar",
-        code_dir=code_dir,
-        inject_coverage=True,
         inject_sitecustomize=True,
+        coverage_rc_path=coverage_rc_path,
+        coverage_db_path=coverage_db_path,
     )
     with open(script_path) as rfh:
         contents = rfh.read()
@@ -242,14 +260,9 @@ def test_generate_script_inject_sitecustomize(tmpdir):
         # Don't write .pyc files or create them in __pycache__ directories
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
-        CODE_DIR = r'{}'
-        if CODE_DIR in sys.path:
-            sys.path.remove(CODE_DIR)
-        sys.path.insert(0, CODE_DIR)
-
         # Setup coverage environment variables
-        COVERAGE_FILE = os.path.join(CODE_DIR, '.coverage')
-        COVERAGE_PROCESS_START = os.path.join(CODE_DIR, '.coveragerc')
+        COVERAGE_FILE = r'{coverage_db_path}'
+        COVERAGE_PROCESS_START = r'{coverage_rc_path}'
         os.environ[str('COVERAGE_FILE')] = str(COVERAGE_FILE)
         os.environ[str('COVERAGE_PROCESS_START')] = str(COVERAGE_PROCESS_START)
 
@@ -305,14 +318,14 @@ def test_generate_script_inject_sitecustomize(tmpdir):
             atexit._run_exitfuncs()
             os._exit(exitcode)
         """.format(
-            code_dir, str(sitecustomize_path)
+            str(sitecustomize_path),
+            coverage_rc_path=str(coverage_rc_path),
+            coverage_db_path=str(coverage_db_path),
         )
     )
     assert contents == expected
 
-    script_path = cli_scripts.generate_script(
-        tmpdir.strpath, "salt-foobar-2", inject_sitecustomize=True
-    )
+    script_path = cli_scripts.generate_script(tmp_path, "salt-foobar-2", inject_sitecustomize=True)
     with open(script_path) as rfh:
         contents = rfh.read()
 
