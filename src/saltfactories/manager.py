@@ -59,8 +59,10 @@ class FactoriesManager:
         code_dir:
             The path to the code root directory of the project being tested. This is important for proper
             code-coverage paths.
-        inject_coverage:
-            Inject code-coverage related code in the generated CLI scripts
+        coverage_db_path:
+            The path to the `.coverage` DB file
+        coverage_rc_path:
+            The path to the `.coveragerc` file
         inject_sitecustomize:
             Inject code in the generated CLI scripts in order for our `sitecustomise.py` to be loaded by
             subprocesses.
@@ -91,7 +93,8 @@ class FactoriesManager:
     python_executable = attr.ib(default=None)
     scripts_dir = attr.ib(default=None, converter=cast_to_pathlib_path)
     code_dir = attr.ib(default=None)
-    inject_coverage = attr.ib(default=False)
+    coverage_db_path = attr.ib(default=None, converter=cast_to_pathlib_path)
+    coverage_rc_path = attr.ib(default=None, converter=cast_to_pathlib_path)
     inject_sitecustomize = attr.ib(default=False)
     cwd = attr.ib(factory=pathlib.Path.cwd)
     environ = attr.ib(factory=os.environ.copy, repr=False)
@@ -676,7 +679,8 @@ class FactoriesManager:
                 self.scripts_dir,
                 script_name,
                 code_dir=self.code_dir,
-                inject_coverage=self.inject_coverage,
+                coverage_db_path=self.coverage_db_path,
+                coverage_rc_path=self.coverage_rc_path,
                 inject_sitecustomize=self.inject_sitecustomize,
             )
         if self.system_service:

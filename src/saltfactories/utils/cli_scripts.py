@@ -120,8 +120,8 @@ SCRIPT_TEMPLATES = {
     "coverage": textwrap.dedent(
         """
         # Setup coverage environment variables
-        COVERAGE_FILE = os.path.join(CODE_DIR, '.coverage')
-        COVERAGE_PROCESS_START = os.path.join(CODE_DIR, '.coveragerc')
+        COVERAGE_FILE = r'{coverage_db_path}'
+        COVERAGE_PROCESS_START = r'{coverage_rc_path}'
         os.environ[str('COVERAGE_FILE')] = str(COVERAGE_FILE)
         os.environ[str('COVERAGE_PROCESS_START')] = str(COVERAGE_PROCESS_START)
         """
@@ -152,8 +152,9 @@ def generate_script(
     bin_dir,
     script_name,
     code_dir=None,
-    inject_coverage=False,
     inject_sitecustomize=False,
+    coverage_db_path=None,
+    coverage_rc_path=None,
 ):
     """
     Generate a CLI script.
@@ -161,8 +162,9 @@ def generate_script(
     :param ~pathlib.Path bin_dir: The path to the directory which will contain the CLI scripts
     :param str script_name: The CLI script name
     :param ~pathlib.Path code_dir: The project's being tested root directory path
-    :param bool inject_coverage: Inject code to track code coverage
     :param bool inject_sitecustomize: Inject code to support code coverage in subprocesses
+    :param ~pathlib.Path coverage_db_path: The path to the `.coverage` DB file
+    :param ~pathlib.Path coverage_rc_path: The path to the `.coveragerc` file
     """
     if isinstance(bin_dir, str):
         bin_dir = pathlib.Path(bin_dir)
@@ -208,14 +210,21 @@ def generate_script(
                     ).strip()
                     + "\n\n"
                 )
-
-            if inject_coverage and not code_dir:
-                raise pytest.UsageError(
-                    "The inject coverage code needs to know the code root to find the "
-                    "path to the '.coveragerc' file. Please pass 'code_dir'."
+            if coverage_db_path and coverage_rc_path:
+                script_contents += (
+                    SCRIPT_TEMPLATES["coverage"]
+                    .format(
+                        coverage_db_path=str(coverage_db_path),
+                        coverage_rc_path=str(coverage_rc_path),
+                    )
+                    .strip()
+                    + "\n\n"
                 )
-            if inject_coverage:
-                script_contents += SCRIPT_TEMPLATES["coverage"].strip() + "\n\n"
+            elif not all([coverage_rc_path is None, coverage_db_path is None]):
+                raise pytest.UsageError(
+                    "To track code coverage, both 'coverage_db_path' and "
+                    "'coverage_rc_path' must be passed."
+                )
 
             if inject_sitecustomize:
                 script_contents += (
