@@ -5,3 +5,4 @@ CI and internal changes:
 * Lock system tests to a version of nox that still works
 * Bump python version to 3.9 for lint workflow
 * Bumped pylint requirement to `2.14.5` and cleaned up issues
+* Don't build the salt minion container during test runs, pull an existing container.
