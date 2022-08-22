@@ -1,9 +1,7 @@
-import io
 import logging
 
 import _pytest._version
 import pytest
-import salt.version
 
 from saltfactories.daemons.container import SaltMinion
 from saltfactories.utils import random_string
@@ -24,20 +22,6 @@ pytestmark = [
     pytest.mark.skip_on_darwin,
     pytest.mark.skip_on_windows,
 ]
-
-
-DOCKERFILE = """
-FROM {from_container}
-ENV LANG=en_US.UTF8
-
-ENV VIRTUAL_ENV={virtualenv_path}
-
-RUN virtualenv --python=python3 $VIRTUAL_ENV
-ENV PATH="$VIRTUAL_ENV/bin:$PATH"
-RUN pip install {requirements}
-
-CMD . $VIRTUAL_ENV/bin/activate
-"""
 
 
 @pytest.fixture(scope="session")
@@ -88,41 +72,6 @@ def salt_factories_config(salt_factories_config, host_docker_network_ip_address)
     return config
 
 
-@pytest.fixture(scope="module")
-def container_virtualenv_path():
-    return "/tmp/venv"
-
-
-@pytest.fixture(scope="module")
-def minion_image_name(salt_version):
-    return "salt-{}".format(salt_version)
-
-
-@pytest.fixture(scope="module")
-def minion_image(docker_client, salt_version, container_virtualenv_path, minion_image_name):
-    salt_versions_information = salt.version.versions_information()
-    requirements = ""
-    for name in ("PyZMQ", "Jinja2", "PyYAML"):
-        version = salt_versions_information["Dependency Versions"].get(name)
-        if version:
-            requirements += " {}=={}".format(name.lower(), version)
-    requirements += " salt=={}".format(salt_version)
-    dockerfile_contents = DOCKERFILE.format(
-        from_container="saltstack/ci-centos-7",
-        requirements=requirements.strip(),
-        virtualenv_path=container_virtualenv_path,
-    )
-    log.debug("GENERATED Dockerfile:\n%s", dockerfile_contents)
-    dockerfile_fh = io.BytesIO(dockerfile_contents.encode("utf-8"))
-    _, logs = docker_client.images.build(
-        fileobj=dockerfile_fh,
-        tag=minion_image_name,
-        pull=True,
-    )
-    log.debug("Docker container build logs:\n%s", logs)
-    return minion_image_name
-
-
 @pytest.fixture(scope="function")
 def minion_id(salt_version):
     return random_string(
@@ -132,7 +81,7 @@ def minion_id(salt_version):
 
 
 @pytest.fixture(scope="module")
-def salt_master(salt_factories, minion_image, host_docker_network_ip_address):
+def salt_master(salt_factories, host_docker_network_ip_address):
     config_overrides = {
         "interface": host_docker_network_ip_address,
         "log_level_logfile": "quiet",
@@ -152,7 +101,6 @@ def salt_minion(
     minion_id,
     salt_master,
     docker_client,
-    minion_image,
     host_docker_network_ip_address,
 ):
     config_overrides = {
@@ -169,7 +117,7 @@ def salt_minion(
         extra_cli_arguments_after_first_start_failure=["--log-level=debug"],
         # SaltMinion kwargs
         name=minion_id,
-        image=minion_image,
+        image="ghcr.io/saltstack/salt-ci-containers/salt:3004",
         docker_client=docker_client,
         start_timeout=120,
         pull_before_start=False,
