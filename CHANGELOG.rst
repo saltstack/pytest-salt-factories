@@ -20,6 +20,32 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc19 (2022-08-22)
+======================
+
+Breaking Changes
+----------------
+
+- In `saltfactories.utils.cli_scipts.generate_script()`:
+
+  * For coverage tracking, both `coverate_db_path` and `coverage_rc_path` must be passed. They will not be infered by `root_dir`.
+  * `inject_coverage` was removed. (`#135 <https://github.com/saltstack/pytest-salt-factories/issues/135>`_)
+- The minimum Salt version in now `3004` (`#136 <https://github.com/saltstack/pytest-salt-factories/issues/136>`_)
+
+
+Trivial/Internal Changes
+------------------------
+
+- CI and internal changes:
+
+  * Start testing Salt 3005.x (rc2 for now)
+  * Skip testing 3005rc2 on windows and macOS for now.
+  * Lock system tests to a version of nox that still works
+  * Bump python version to 3.9 for lint workflow
+  * Bumped pylint requirement to `2.14.5` and cleaned up issues
+  * Don't build the salt minion container during test runs, pull an existing container. (`#136 <https://github.com/saltstack/pytest-salt-factories/issues/136>`_)
+
+
 1.0.0rc18 (2022-07-14)
 ======================
 

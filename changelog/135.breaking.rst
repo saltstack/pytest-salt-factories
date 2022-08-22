@@ -1,4 +1,0 @@
-In `saltfactories.utils.cli_scipts.generate_script()`:
-
-* For coverage tracking, both `coverate_db_path` and `coverage_rc_path` must be passed. They will not be infered by `root_dir`.
-* `inject_coverage` was removed.
