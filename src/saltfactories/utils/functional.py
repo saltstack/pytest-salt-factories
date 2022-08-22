@@ -9,24 +9,13 @@ import shutil
 from unittest import mock
 
 import attr
+import salt.features
 import salt.loader
 import salt.pillar
 from pytestshellutils.utils import format_callback_to_string
+from salt.loader.lazy import LOADED_BASE_NAME
 
-try:
-    import salt.features  # pylint: disable=ungrouped-imports
-
-    HAS_SALT_FEATURES = True
-except ImportError:  # pragma: no cover
-    HAS_SALT_FEATURES = False
-
-try:
-    from salt.loader.lazy import LOADED_BASE_NAME
-
-    PATCH_TARGET = "salt.loader.lazy.LOADED_BASE_NAME"
-except ImportError:
-    LOADED_BASE_NAME = salt.loader.LOADED_BASE_NAME
-    PATCH_TARGET = "salt.loader.LOADED_BASE_NAME"
+PATCH_TARGET = "salt.loader.lazy.LOADED_BASE_NAME"
 
 log = logging.getLogger(__name__)
 
@@ -80,8 +69,7 @@ class Loaders:
         self._serializers = None
         self._states = None
         self._utils = None
-        if HAS_SALT_FEATURES:
-            salt.features.setup_features(self.opts)
+        salt.features.setup_features(self.opts)
         self.reload_all()
         # Force the minion to populate it's cache if need be
         self.modules.saltutil.sync_all()
@@ -176,53 +164,31 @@ class Loaders:
                 loaded_base_name=self.loaded_base_name,
             )
 
-            if isinstance(_modules.loaded_modules, dict):
-                for func_name in ("single", "sls", "template", "template_str"):
-                    full_func_name = "state.{}".format(func_name)
+            class ModulesLoaderDict(_modules.mod_dict_class):
+                def __setitem__(self, key, value):
+                    """
+                    Intercept method.
 
-                    if func_name == "single":
-                        wrapper_cls = StateResult
-                    else:
-                        wrapper_cls = MultiStateResult
-                    replacement_function = StateModuleFuncWrapper(
-                        _modules[full_func_name], wrapper_cls
-                    )
+                    We hijack __setitem__ so that we can replace specific state functions with a
+                    wrapper which will return a more pythonic data structure to assert against.
+                    """
+                    if key in (
+                        "state.single",
+                        "state.sls",
+                        "state.template",
+                        "state.template_str",
+                    ):
+                        if key == "state.single":
+                            wrapper_cls = StateResult
+                        else:
+                            wrapper_cls = MultiStateResult
+                        value = StateModuleFuncWrapper(value, wrapper_cls)
+                    return super().__setitem__(key, value)
 
-                    _modules._dict[full_func_name] = replacement_function
-                    _modules.loaded_modules["state"][func_name] = replacement_function
-                    setattr(
-                        _modules.loaded_modules["state"],
-                        func_name,
-                        replacement_function,
-                    )
-            else:
-                # Newer version of Salt where only one dictionary with the loaded functions is maintained
-
-                class ModulesLoaderDict(_modules.mod_dict_class):
-                    def __setitem__(self, key, value):
-                        """
-                        Intercept method.
-
-                        We hijack __setitem__ so that we can replace specific state functions with a
-                        wrapper which will return a more pythonic data structure to assert against.
-                        """
-                        if key in (
-                            "state.single",
-                            "state.sls",
-                            "state.template",
-                            "state.template_str",
-                        ):
-                            if key == "state.single":
-                                wrapper_cls = StateResult
-                            else:
-                                wrapper_cls = MultiStateResult
-                            value = StateModuleFuncWrapper(value, wrapper_cls)
-                        return super().__setitem__(key, value)
-
-                loader_dict = _modules._dict.copy()
-                _modules._dict = ModulesLoaderDict()
-                for key, value in loader_dict.items():
-                    _modules._dict[key] = value
+            loader_dict = _modules._dict.copy()
+            _modules._dict = ModulesLoaderDict()
+            for key, value in loader_dict.items():
+                _modules._dict[key] = value
 
             self._modules = _modules
         return self._modules
@@ -275,48 +241,30 @@ class Loaders:
             # Let's load all modules now
 
             # Now, we proxy loaded modules through salt.modules.state.single
-            if isinstance(_states.loaded_modules, dict):
-                # Old Salt?
-                _states._load_all()
-                for module_name in list(_states.loaded_modules):
-                    for func_name in list(_states.loaded_modules[module_name]):
-                        full_func_name = "{}.{}".format(module_name, func_name)
-                        replacement_function = StateFunction(
-                            self.modules.state.single, full_func_name
-                        )
-                        _states._dict[full_func_name] = replacement_function
-                        _states.loaded_modules[module_name][func_name] = replacement_function
-                        setattr(
-                            _states.loaded_modules[module_name],
-                            func_name,
-                            replacement_function,
-                        )
-            else:
-                # Newer version of Salt where only one dictionary with the loaded functions is maintained
 
-                class StatesLoaderDict(_states.mod_dict_class):
-                    def __init__(self, proxy_func, *args, **kwargs):
-                        super().__init__(*args, **kwargs)
-                        self.__proxy_func__ = proxy_func
+            class StatesLoaderDict(_states.mod_dict_class):
+                def __init__(self, proxy_func, *args, **kwargs):
+                    super().__init__(*args, **kwargs)
+                    self.__proxy_func__ = proxy_func
 
-                    def __setitem__(self, name, func):
-                        """
-                        Intercept method.
+                def __setitem__(self, name, func):
+                    """
+                    Intercept method.
 
-                        We hijack __setitem__ so that we can replace the loaded functions
-                        with a wrapper
-                        For state execution modules, because we'd have to almost copy/paste what
-                        ``salt.modules.state.single`` does, we actually "proxy" the call through
-                        ``salt.modules.state.single`` instead of calling the state execution
-                        modules directly. This was also how the non pytest test suite worked
-                        """
-                        func = StateFunction(self.__proxy_func__, name)
-                        return super().__setitem__(name, func)
+                    We hijack __setitem__ so that we can replace the loaded functions
+                    with a wrapper
+                    For state execution modules, because we'd have to almost copy/paste what
+                    ``salt.modules.state.single`` does, we actually "proxy" the call through
+                    ``salt.modules.state.single`` instead of calling the state execution
+                    modules directly. This was also how the non pytest test suite worked
+                    """
+                    func = StateFunction(self.__proxy_func__, name)
+                    return super().__setitem__(name, func)
 
-                loader_dict = _states._dict.copy()
-                _states._dict = StatesLoaderDict(self.modules.state.single)
-                for key, value in loader_dict.items():
-                    _states._dict[key] = value
+            loader_dict = _states._dict.copy()
+            _states._dict = StatesLoaderDict(self.modules.state.single)
+            for key, value in loader_dict.items():
+                _states._dict[key] = value
 
             self._states = _states
         return self._states

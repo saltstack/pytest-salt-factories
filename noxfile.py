@@ -14,7 +14,7 @@ from nox.logger import logger
 
 
 COVERAGE_VERSION_REQUIREMENT = "coverage==5.5"
-SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3003"
+SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3004"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
 IS_WINDOWS = sys.platform.lower().startswith("win")
