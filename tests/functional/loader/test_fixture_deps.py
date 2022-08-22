@@ -26,13 +26,13 @@ def confirm_saltfactories_does_not_have_salt_dunders_after_setup_loader_mock_ter
 ):
     yield
     with pytest.raises(AttributeError):
-        assert isinstance(saltfactories.__salt__, dict)
+        assert isinstance(saltfactories.__salt__, dict)  # pylint: disable=no-member
 
 
 @pytest.fixture
 def pre_loader_modules_patched_fixture():
     with pytest.raises(AttributeError):
-        assert isinstance(saltfactories.__salt__, dict)
+        assert isinstance(saltfactories.__salt__, dict)  # pylint: disable=no-member
     yield False
 
 
@@ -47,13 +47,13 @@ def configure_loader_modules(pre_loader_modules_patched_fixture):
 
 @pytest.fixture
 def fixture_that_needs_loader_modules_patched():
-    assert saltfactories.__salt__["foo"] is False
-    with patch.dict(saltfactories.__salt__, {"foo": True}):
-        assert saltfactories.__salt__["foo"] is True
+    assert saltfactories.__salt__["foo"] is False  # pylint: disable=no-member
+    with patch.dict(saltfactories.__salt__, {"foo": True}):  # pylint: disable=no-member
+        assert saltfactories.__salt__["foo"] is True  # pylint: disable=no-member
         yield
-    assert saltfactories.__salt__["foo"] is False
+    assert saltfactories.__salt__["foo"] is False  # pylint: disable=no-member
 
 
 def test_fixture_deps(fixture_that_needs_loader_modules_patched):
-    assert saltfactories.__salt__["foo"] is True
-    assert saltfactories.__salt__["test.echo"]("foo") == "foo"
+    assert saltfactories.__salt__["foo"] is True  # pylint: disable=no-member
+    assert saltfactories.__salt__["test.echo"]("foo") == "foo"  # pylint: disable=no-member

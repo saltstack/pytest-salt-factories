@@ -54,12 +54,12 @@ class SaltProxyMinion(SaltDaemon):
         return super()._get_impl_class()
 
     @state_tree.default
-    def __setup_state_tree(self):
+    def __setup_state_tree(self):  # pylint: disable=unused-private-member
         if "file_roots" in self.config:
             return SaltStateTree(envs=copy.deepcopy(self.config.get("file_roots") or {}))
 
     @pillar_tree.default
-    def __setup_pillar_tree(self):
+    def __setup_pillar_tree(self):  # pylint: disable=unused-private-member
         if "pillar_roots" in self.config:
             return SaltPillarTree(envs=copy.deepcopy(self.config.get("pillar_roots") or {}))
 

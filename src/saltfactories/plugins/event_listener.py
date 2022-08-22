@@ -153,7 +153,7 @@ class EventListener:
 
     def _run(self):
         context = zmq.Context()
-        puller = context.socket(zmq.PULL)
+        puller = context.socket(zmq.PULL)  # pylint: disable=no-member
         log.debug("%s Binding PULL socket to %s", self, self.address)
         puller.bind(self.address)
         if msgpack.version >= (0, 5, 2):
@@ -221,7 +221,7 @@ class EventListener:
                 context.term()
                 # We need to keep these events stored, restart zmq socket
                 context = zmq.Context()
-                puller = context.socket(zmq.PULL)
+                puller = context.socket(zmq.PULL)  # pylint: disable=no-member
                 log.debug("%s Binding PULL socket to %s", self, self.address)
                 puller.bind(self.address)
         puller.close(1500)
@@ -273,7 +273,7 @@ class EventListener:
         self.store.clear()
         self.auth_event_handlers.clear()
         context = zmq.Context()
-        push = context.socket(zmq.PUSH)
+        push = context.socket(zmq.PUSH)  # pylint: disable=no-member
         push.connect(self.address)
         try:
             push.send(self.sentinel)
@@ -488,8 +488,8 @@ def pytest_configure(config):
     """
     Configure the plugins.
     """
-    event_listener = EventListener()
-    config.pluginmanager.register(event_listener, "saltfactories-event-listener")
+    _event_listener = EventListener()
+    config.pluginmanager.register(_event_listener, "saltfactories-event-listener")
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -497,8 +497,8 @@ def pytest_sessionstart(session):
     """
     Start the event listener plugin.
     """
-    event_listener = session.config.pluginmanager.get_plugin("saltfactories-event-listener")
-    event_listener.start()
+    _event_listener = session.config.pluginmanager.get_plugin("saltfactories-event-listener")
+    _event_listener.start()
 
 
 @pytest.hookimpl(trylast=True)
@@ -506,5 +506,5 @@ def pytest_sessionfinish(session):
     """
     Stop the event listener plugin.
     """
-    event_listener = session.config.pluginmanager.get_plugin("saltfactories-event-listener")
-    event_listener.stop()
+    _event_listener = session.config.pluginmanager.get_plugin("saltfactories-event-listener")
+    _event_listener.stop()

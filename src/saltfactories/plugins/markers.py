@@ -12,7 +12,7 @@ def pytest_runtest_setup(item):
     """
     Fixtures injection based on markers or test skips based on CLI arguments.
     """
-    __tracebackhide__ = True
+    __tracebackhide__ = True  # pylint: disable=unused-variable
     saltfactories.utils.markers.evaluate_markers(item)
 
 

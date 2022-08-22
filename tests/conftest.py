@@ -17,7 +17,7 @@ TESTS_PATH = pathlib.Path(__file__).resolve().parent
 try:  # pragma: no cover
     import importlib.metadata
 
-    pkg_version = importlib.metadata.version
+    pkg_version = importlib.metadata.version  # pylint: disable=no-member
 except ImportError:  # pragma: no cover
     try:
         import importlib_metadata
@@ -64,10 +64,10 @@ class Tempfiles:
         tfile.write(contents)
         tfile.close()
         if executable is True:
-            st = os.stat(tfile.name)
-            os.chmod(tfile.name, st.st_mode | stat.S_IEXEC)
+            _stat = os.stat(tfile.name)
+            os.chmod(tfile.name, _stat.st_mode | stat.S_IEXEC)
         self.request.addfinalizer(functools.partial(self._delete_temp_file, tfile.name))
-        with open(tfile.name) as rfh:
+        with open(tfile.name, encoding="utf-8") as rfh:
             log.debug(
                 "Created python file with contents:\n>>>>> %s >>>>>\n%s\n<<<<< %s <<<<<\n",
                 tfile.name,
@@ -83,11 +83,11 @@ class Tempfiles:
         if name is None:
             tfile = tempfile.NamedTemporaryFile("w", suffix=".sls", delete=False)
             name = tfile.name
-        with open(name, "w") as wfh:
+        with open(name, "w", encoding="utf-8") as wfh:
             contents = textwrap.dedent(contents.lstrip("\n")).strip()
             wfh.write(contents)
         self.request.addfinalizer(functools.partial(self._delete_temp_file, name))
-        with open(name) as rfh:
+        with open(name, encoding="utf-8") as rfh:
             log.debug(
                 "Created SLS file with contents:\n>>>>> %s >>>>>\n%s\n<<<<< %s <<<<<\n",
                 name,

@@ -52,7 +52,7 @@ class SaltMixin:
         salt system paths apply.
     """
 
-    id = attr.ib(default=None, init=False)
+    id = attr.ib(default=None, init=False)  # pylint: disable=invalid-name
     config = attr.ib(repr=False)
     config_dir = attr.ib(init=False, default=None)
     config_file = attr.ib(init=False, default=None)
@@ -290,8 +290,7 @@ class SaltCli(SaltMixin, ScriptSubprocess):
         cmdline.extend(args)
 
         # Keyword arguments get passed as KEY=VALUE pairs to the CLI
-        for key in kwargs:
-            value = kwargs[key]
+        for key, value in kwargs.items():
             if not isinstance(value, str):
                 value = json.dumps(value)
             cmdline.append("{}={}".format(key, value))

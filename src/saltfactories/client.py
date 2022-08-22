@@ -61,7 +61,7 @@ class LocalClient:
                 "WARNING(SHOULD NOT HAPPEN #1935): Failed to get a reply "
                 "from the minion '{}'. Command output: {}".format(minion_tgt, ret)
             )
-        elif ret[minion_tgt] is None and function not in self.__functions_known_to_return_none:
+        elif ret[minion_tgt] is None and function not in self.functions_known_to_return_none:
             pytest.fail(
                 "WARNING(SHOULD NOT HAPPEN #1935): Failed to get '{}' from "
                 "the minion '{}'. Command output: {}".format(function, minion_tgt, ret)

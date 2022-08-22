@@ -108,7 +108,7 @@ class PyTestEventForwardEngine:
 
     def __init__(self, opts):
         self.opts = opts
-        self.id = self.opts["id"]
+        self.id = self.opts["id"]  # pylint: disable=invalid-name
         self.role = self.opts["__role"]
         self.returner_address = self.opts["pytest-{}".format(self.role)]["returner_address"]
         self.running_event = threading.Event()
@@ -134,7 +134,7 @@ class PyTestEventForwardEngine:
         self.running_event.set()
         try:
             context = zmq.Context()
-            push = context.socket(zmq.PUSH)
+            push = context.socket(zmq.PUSH)  # pylint: disable=no-member
             log.debug("%s connecting PUSH socket to %s", self, self.returner_address)
             push.connect(self.returner_address)
             opts = self.opts.copy()

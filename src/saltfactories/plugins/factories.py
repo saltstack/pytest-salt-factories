@@ -50,7 +50,11 @@ def salt_factories_config():
 
 @pytest.fixture(scope="session")
 def salt_factories(
-    tempdir, event_listener, stats_processes, salt_factories_config, _salt_factories_config
+    tempdir,
+    event_listener,
+    stats_processes,
+    salt_factories_config,  # pylint: disable=redefined-outer-name
+    _salt_factories_config,
 ):
     """
     Instantiate the salt factories manager.

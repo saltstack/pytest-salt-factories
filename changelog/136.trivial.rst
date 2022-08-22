@@ -4,3 +4,4 @@ CI and internal changes:
 * Skip testing 3005rc2 on windows and macOS for now.
 * Lock system tests to a version of nox that still works
 * Bump python version to 3.9 for lint workflow
+* Bumped pylint requirement to `2.14.5` and cleaned up issues

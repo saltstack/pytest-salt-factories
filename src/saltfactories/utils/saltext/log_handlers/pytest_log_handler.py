@@ -6,6 +6,7 @@ import logging
 import os
 import pprint
 import socket
+import subprocess
 import sys
 import time
 import traceback
@@ -86,7 +87,6 @@ def setup_handlers():
         return
     host_addr = log_opts.get("host")
     if not host_addr:
-        import subprocess
 
         if log_opts["pytest_windows_guest"] is True:
             proc = subprocess.Popen("ipconfig", stdout=subprocess.PIPE)
@@ -234,7 +234,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler):
             return
 
         try:
-            pusher = context.socket(zmq.PUSH)
+            pusher = context.socket(zmq.PUSH)  # pylint: disable=no-member
             pusher.set_hwm(self.socket_hwm)
             pusher.connect("tcp://{}:{}".format(self.host, self.port))
             self.pusher = pusher
@@ -377,7 +377,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler):
             self.handleError(record)
 
     def _send_message(self, msg):
-        self.pusher.send(msg, flags=zmq.NOBLOCK)
+        self.pusher.send(msg, flags=zmq.NOBLOCK)  # pylint: disable=no-member
         if self.dropped_messages_count:
             logging.getLogger(__name__).debug(
                 "Dropped %s messages from getting forwarded. High water mark reached...",

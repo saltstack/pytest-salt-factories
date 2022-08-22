@@ -185,8 +185,8 @@ class Container(BaseFactory):
             self.check_ports = check_ports
 
         if self.container_run_kwargs and "ports" in self.container_run_kwargs:
-            ports = self.container_run_kwargs["ports"]
-            for container_binding, host_binding in ports.items():
+            _ports = self.container_run_kwargs["ports"]
+            for container_binding, host_binding in _ports.items():
                 port, proto = container_binding.split("/")
                 if proto != "tcp":
                     continue
@@ -315,8 +315,8 @@ class Container(BaseFactory):
         Returns a human readable name for the factory.
         """
         if self.display_name is None:
-            self.display_name = "{}(id={!r})".format(self.__class__.__name__, self.id)
-        return super().get_display_name()
+            self.display_name = "{}(id={!r})".format(self.__class__.__name__, self.name)
+        return self.display_name
 
     def start(self, *command, max_start_attempts=None, start_timeout=None):
         """
@@ -513,18 +513,18 @@ class Container(BaseFactory):
         """
         Return a list of TCP ports to check against to ensure the daemon is running.
         """
-        ports = self.check_ports.copy()
+        _ports = self.check_ports.copy()
         if self.container:
             self.container.reload()
-            for container_binding, host_binding in ports.items():
+            for container_binding, host_binding in _ports.items():
                 if isinstance(host_binding, int):
                     continue
                 host_binding = self.get_host_port_binding(
                     container_binding, protocol="tcp", ipv6=False
                 )
                 if host_binding:
-                    ports[container_binding] = host_binding
-        return ports
+                    _ports[container_binding] = host_binding
+        return _ports
 
     def get_host_port_binding(self, port, protocol="tcp", ipv6=False):
         """
@@ -541,14 +541,14 @@ class Container(BaseFactory):
         """
         if self.container is None:
             return None
-        ports = self.container.ports
-        log.debug("Container Ports for %s: %s", self, ports)
-        if not ports:
+        _ports = self.container.ports
+        log.debug("Container Ports for %s: %s", self, _ports)
+        if not _ports:
             return None
         container_binding = "{}/{}".format(port, protocol)
-        if container_binding not in ports:
+        if container_binding not in _ports:
             return None
-        host_port_bindings = ports[container_binding]
+        host_port_bindings = _ports[container_binding]
         if not host_port_bindings:
             # This means the host is using the same port as the container
             return int(port)
@@ -609,7 +609,11 @@ class Container(BaseFactory):
         except (APIError, RequestsConnectionError, PyWinTypesError) as exc:
             return "The docker client failed to ping the docker server: {}".format(exc)
 
-    def run_container_start_checks(self, started_at, timeout_at):
+    def run_container_start_checks(
+        self,
+        started_at,  # pylint: disable=unused-argument
+        timeout_at,
+    ):
         """
         Run startup checks.
         """
@@ -743,11 +747,13 @@ class SaltDaemon(Container, bases.SaltDaemon):
     Salt Daemon inside a container implementation.
     """
 
+    _daemon_started = attr.ib(init=False, repr=False, default=False)
+    _daemon_starting = attr.ib(init=False, repr=False, default=False)
+
     def __attrs_post_init__(self):
         """
         Post attrs initialization routines.
         """
-        self.daemon_started = self.daemon_starting = False
         # Default to whatever is the default python in the container
         # and not the python_executable set by salt-factories
         self.python_executable = "python"
@@ -772,6 +778,12 @@ class SaltDaemon(Container, bases.SaltDaemon):
         self.container_run_kwargs.setdefault("remove", True)
         self.container_run_kwargs.setdefault("auto_remove", True)
         log.debug("%s container_run_kwargs: %s", self, self.container_run_kwargs)
+
+    def get_display_name(self):
+        """
+        Returns a human readable name for the factory.
+        """
+        return bases.SaltDaemon.get_display_name(self)
 
     def run(self, *cmd, **kwargs):
         """
@@ -799,21 +811,21 @@ class SaltDaemon(Container, bases.SaltDaemon):
         )
         if not running:
             return running
-        self.daemon_starting = True
+        self._daemon_starting = True
         # Now that the container is up, let's start the daemon
-        self.daemon_started = bases.SaltDaemon.start(
+        self._daemon_started = bases.SaltDaemon.start(
             self,
             *extra_cli_arguments,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
         )
-        return self.daemon_started
+        return self._daemon_started
 
     def terminate(self):
         """
         Terminate the container.
         """
-        self.daemon_started = self.daemon_starting = False
+        self._daemon_started = self._daemon_starting = False
         ret = bases.SaltDaemon.terminate(self)
         Container.terminate(self)
         return ret
@@ -825,7 +837,7 @@ class SaltDaemon(Container, bases.SaltDaemon):
         running = Container.is_running(self)
         if running is False:
             return running
-        if self.daemon_starting or self.daemon_started:
+        if self._daemon_starting or self._daemon_started:
             return bases.SaltDaemon.is_running(self)
         return running
 
@@ -833,9 +845,9 @@ class SaltDaemon(Container, bases.SaltDaemon):
         """
         Return a list of ports to check against to ensure the daemon is running.
         """
-        ports = {port: port for port in bases.SaltDaemon.get_check_ports(self)}
-        ports.update(Container.get_check_ports(self))
-        return ports
+        _ports = {port: port for port in bases.SaltDaemon.get_check_ports(self)}
+        _ports.update(Container.get_check_ports(self))
+        return _ports
 
     def before_start(
         self, callback, *args, on_container=False, **kwargs
@@ -955,6 +967,12 @@ class SaltMinion(SaltDaemon, minion.SaltMinion):
     """
     Salt minion daemon implementation running in a docker container.
     """
+
+    def get_display_name(self):
+        """
+        Returns a human readable name for the factory.
+        """
+        return minion.SaltMinion.get_display_name(self)
 
     def get_check_events(self):
         """
