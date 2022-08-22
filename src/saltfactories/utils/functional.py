@@ -125,8 +125,10 @@ class Loaders:
         """
         if self._grains is None:
             try:
-                self._grains = salt.loader.grains(
-                    self.opts, context=self.context, loaded_base_name=self.loaded_base_name
+                self._grains = salt.loader.grains(  # pylint: disable=unexpected-keyword-arg
+                    self.opts,
+                    context=self.context,
+                    loaded_base_name=self.loaded_base_name,
                 )
             except TypeError:
                 # Salt < 3005
@@ -141,8 +143,10 @@ class Loaders:
         """
         if self._utils is None:
             try:
-                self._utils = salt.loader.utils(
-                    self.opts, context=self.context, loaded_base_name=self.loaded_base_name
+                self._utils = salt.loader.utils(  # pylint: disable=unexpected-keyword-arg
+                    self.opts,
+                    context=self.context,
+                    loaded_base_name=self.loaded_base_name,
                 )
             except TypeError:
                 # Salt < 3005
@@ -165,6 +169,10 @@ class Loaders:
             )
 
             class ModulesLoaderDict(_modules.mod_dict_class):
+                """
+                Custom class to implement wrappers.
+                """
+
                 def __setitem__(self, key, value):
                     """
                     Intercept method.
@@ -200,9 +208,11 @@ class Loaders:
         """
         if self._serializers is None:
             try:
-                self._serializers = salt.loader.serializers(
-                    self.opts,
-                    loaded_base_name=self.loaded_base_name,
+                self._serializers = (
+                    salt.loader.serializers(  # pylint: disable=unexpected-keyword-arg
+                        self.opts,
+                        loaded_base_name=self.loaded_base_name,
+                    )
                 )
             except TypeError:
                 # Salt < 3005
@@ -217,7 +227,7 @@ class Loaders:
         """
         if self._states is None:
             try:
-                _states = salt.loader.states(
+                _states = salt.loader.states(  # pylint: disable=unexpected-keyword-arg
                     self.opts,
                     functions=self.modules,
                     utils=self.utils,
@@ -243,6 +253,10 @@ class Loaders:
             # Now, we proxy loaded modules through salt.modules.state.single
 
             class StatesLoaderDict(_states.mod_dict_class):
+                """
+                Custom class to implement wrappers.
+                """
+
                 def __init__(self, proxy_func, *args, **kwargs):
                     super().__init__(*args, **kwargs)
                     self.__proxy_func__ = proxy_func
@@ -276,7 +290,7 @@ class Loaders:
         """
         if self._pillar is None:
             try:
-                self._pillar = salt.pillar.get_pillar(
+                self._pillar = salt.pillar.get_pillar(  # pylint: disable=unexpected-keyword-arg
                     self.opts,
                     self.grains,
                     self.opts["id"],

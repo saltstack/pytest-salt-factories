@@ -27,7 +27,7 @@ def master(salt_factories):
 @pytest.fixture(scope="module")
 def salt_ssh_cli(sshd, salt_factories, master):
     roster_file_path = salt_factories.tmp_root_dir / "salt_ssh_roster"
-    with open(str(roster_file_path), "w") as wfh:
+    with open(str(roster_file_path), "w", encoding="utf-8") as wfh:
         contents = textwrap.dedent(
             """\
         localhost:

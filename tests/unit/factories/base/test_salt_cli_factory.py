@@ -28,7 +28,7 @@ def minion_id():
 @pytest.fixture
 def config_file(config_dir, minion_id):
     config_file = str(config_dir / "config")
-    with open(config_file, "w") as wfh:
+    with open(config_file, "w", encoding="utf-8") as wfh:
         wfh.write("id: {}\n".format(minion_id))
     return config_file
 

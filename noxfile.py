@@ -8,10 +8,9 @@ import sys
 import tarfile
 import tempfile
 
-import nox
-from nox.command import CommandFailed
-from nox.logger import logger
-
+import nox  # pylint: disable=import-error
+from nox.command import CommandFailed  # pylint: disable=import-error
+from nox.logger import logger  # pylint: disable=import-error
 
 COVERAGE_VERSION_REQUIREMENT = "coverage==5.5"
 SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3004"
@@ -73,7 +72,8 @@ def pytest_version(session):
             session,
             "python",
             "-c",
-            'import sys, pkg_resources; sys.stdout.write("{}".format(pkg_resources.get_distribution("pytest").version))',
+            'import sys, pkg_resources; sys.stdout.write("{}".format('
+            'pkg_resources.get_distribution("pytest").version))',
             silent=True,
             log=False,
         )
@@ -261,18 +261,29 @@ def tests(session):
             shutil.copyfile(str(COVERAGE_REPORT_DB), str(ARTIFACTS_DIR / ".coverage"))
 
 
-def _lint(session, rcfile, flags, paths):
+def _lint(session, rcfile, extra_args, paths):
     if SKIP_REQUIREMENTS_INSTALL is False:
+        salt_requirements = []
+        if "3003" in SALT_REQUIREMENT:
+            salt_requirements.append("jinja2<3.1")
+        salt_requirements.append(SALT_REQUIREMENT)
         session.install(
             "--progress-bar=off",
             "-r",
             os.path.join("requirements", "lint.txt"),
+            *salt_requirements,
+            silent=PIP_INSTALL_SILENT,
+        )
+        session.install(
+            "--progress-bar=off",
+            "-e",
+            ".",
             silent=PIP_INSTALL_SILENT,
         )
         session.run("pylint", "--version")
     pylint_report_path = os.environ.get("PYLINT_REPORT")
 
-    cmd_args = ["pylint", "--rcfile={}".format(rcfile)] + list(flags) + list(paths)
+    cmd_args = ["pylint", "--rcfile={}".format(rcfile)] + extra_args + paths
 
     stdout = tempfile.TemporaryFile(mode="w+b")
     try:
@@ -286,7 +297,7 @@ def _lint(session, rcfile, flags, paths):
             sys.stdout.flush()
             if pylint_report_path:
                 # Write report
-                with open(pylint_report_path, "w") as wfh:
+                with open(pylint_report_path, "w", encoding="utf=8") as wfh:
                     wfh.write(contents)
                 session.log("Report file written to %r", pylint_report_path)
         stdout.close()
@@ -306,12 +317,12 @@ def lint_code(session):
     """
     Run PyLint against the code. Set PYLINT_REPORT to a path to capture output.
     """
-    flags = ["--disable=I"]
+    extra_args = ["--disable=I"]
     if session.posargs:
         paths = session.posargs
     else:
         paths = ["setup.py", "noxfile.py", "src/saltfactories/"]
-    _lint(session, ".pylintrc", flags, paths)
+    _lint(session, ".pylintrc", extra_args, paths)
 
 
 @nox.session(python="3", name="lint-tests")
@@ -319,12 +330,22 @@ def lint_tests(session):
     """
     Run PyLint against Salt and it's test suite. Set PYLINT_REPORT to a path to capture output.
     """
-    flags = ["--disable=I"]
+    flags = [
+        "I",
+        "redefined-outer-name",
+        "missing-function-docstring",
+        "missing-class-docstring",
+        "unused-argument",
+        "disallowed-name",
+    ]
+    extra_args = [
+        "--disable={}".format(",".join(flags)),
+    ]
     if session.posargs:
         paths = session.posargs
     else:
         paths = ["tests/"]
-    _lint(session, ".pylintrc", flags, paths)
+    _lint(session, ".pylintrc", extra_args, paths)
 
 
 @nox.session(python="3")
@@ -346,7 +367,7 @@ def docs(session):
     session.run("make", "coverage", "SPHINXOPTS=-W", external=True)
     docs_coverage_file = os.path.join("_build", "html", "python.txt")
     if os.path.exists(docs_coverage_file):
-        with open(docs_coverage_file) as rfh:
+        with open(docs_coverage_file, encoding="utf=8") as rfh:
             contents = rfh.readlines()[2:]
             if contents:
                 session.error("\n" + "".join(contents))
@@ -550,7 +571,7 @@ class Recompress:
         with open(d_tar, "rb") as rfh:
             with gzip.GzipFile(
                 fileobj=open(d_targz, "wb"), mode="wb", filename="", mtime=self.mtime
-            ) as gz:
+            ) as gz:  # pylint: disable=invalid-name
                 while True:
                     chunk = rfh.read(1024)
                     if not chunk:

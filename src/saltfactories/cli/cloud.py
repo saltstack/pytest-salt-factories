@@ -65,12 +65,12 @@ class SaltCloud(SaltCli):
     @classmethod
     def configure(
         cls,
-        factories_manager,
-        daemon_id,
+        factories_manager,  # pylint: disable=unused-argument
+        daemon_id,  # pylint: disable=unused-argument
         root_dir=None,
         defaults=None,
         overrides=None,
-        **configure_kwargs
+        **configure_kwargs  # pylint: disable=unused-argument
     ):
         """
         Configure the CLI.

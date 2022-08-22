@@ -128,7 +128,7 @@ def test_saltenvs_temp_file(tmp_path):
             saltenv = tempfiles.SaltEnvs(envs={"base": [base_env_path_1, base_env_path_2]})
 
             # Let's make sure we can access the saltenv by attribute
-            assert saltenv.base == saltenv.envs["base"]
+            assert saltenv.base == saltenv.envs["base"]  # pylint: disable=no-member
 
             # Let's create a temporary file using the `temp_file` helper method
             top_file_contents = """
@@ -136,7 +136,9 @@ def test_saltenvs_temp_file(tmp_path):
               '*':
                 - bar
             """
-            with saltenv.base.temp_file("top.sls", contents=top_file_contents) as top_file_path:
+            with saltenv.base.temp_file(  # pylint: disable=no-member
+                "top.sls", contents=top_file_contents
+            ) as top_file_path:
                 with pytest.raises(ValueError):
                     # the top file shall not be created within the base_env_path_2
                     # We have to cast to a string because on Py3.5, the path might be an instance of pathlib2.Path

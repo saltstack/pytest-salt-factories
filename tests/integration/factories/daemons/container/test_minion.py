@@ -119,6 +119,7 @@ def minion_image(docker_client, salt_version, container_virtualenv_path, minion_
         tag=minion_image_name,
         pull=True,
     )
+    log.debug("Docker container build logs:\n%s", logs)
     return minion_image_name
 
 

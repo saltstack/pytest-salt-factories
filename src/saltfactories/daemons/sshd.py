@@ -59,18 +59,18 @@ class Sshd(Daemon):
 
         # Let's generate the client key
         self.client_key = self._generate_client_ecdsa_key()
-        with open("{}.pub".format(self.client_key)) as rfh:
+        with open("{}.pub".format(self.client_key), encoding="utf=8") as rfh:
             pubkey = rfh.read().strip()
             log.debug("SSH client pub key: %r", pubkey)
             self.authorized_keys.append(pubkey)
 
         # Write the authorized pub keys to file
-        with open(str(authorized_keys_file), "w") as wfh:
+        with open(str(authorized_keys_file), "w", encoding="utf=8") as wfh:
             wfh.write("\n".join(self.authorized_keys))
 
         authorized_keys_file.chmod(0o0600)
 
-        with open(str(authorized_keys_file)) as rfh:
+        with open(str(authorized_keys_file), encoding="utf=8") as rfh:
             log.debug("AuthorizedKeysFile contents:\n%s", rfh.read())
 
         _default_config = {
@@ -94,7 +94,9 @@ class Sshd(Daemon):
         Returns a human readable name for the factory.
         """
         if self.display_name is None:
-            self.display_name = "{}(id={!r})".format(self.__class__.__name__, self.id)
+            self.display_name = "{}(listen_address={}, listen_port={})".format(
+                self.__class__.__name__, self.listen_address, self.listen_port
+            )
         return super().get_display_name()
 
     def get_base_script_args(self):
@@ -123,10 +125,10 @@ class Sshd(Daemon):
             for host_key in pathlib.Path(self.config_dir).glob("ssh_host_*_key"):
                 config_lines.append("HostKey {}\n".format(host_key))
 
-            with open(str(sshd_config_file), "w") as wfh:
+            with open(str(sshd_config_file), "w", encoding="utf=8") as wfh:
                 wfh.write("".join(sorted(config_lines)))
             sshd_config_file.chmod(0o0600)
-            with open(str(sshd_config_file)) as wfh:
+            with open(str(sshd_config_file), encoding="utf=8") as wfh:
                 log.debug(
                     "Wrote to configuration file %s. Configuration:\n%s",
                     sshd_config_file,

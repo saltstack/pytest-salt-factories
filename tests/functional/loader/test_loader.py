@@ -20,8 +20,8 @@ def test_loader_mocking():
     ), "Weirdly, the saltfactories module has a __salt__ dunder defined. That's a bug!"
     # The saltfactories.__init__ module DOES NOT have a __salt__ dunder defined
     # So, if the assert bellow works, it means that the loader mocking works.
-    assert "test.echo" in saltfactories.__salt__
-    assert saltfactories.__salt__["test.echo"]("foo") == "foo"
+    assert "test.echo" in saltfactories.__salt__  # pylint: disable=no-member
+    assert saltfactories.__salt__["test.echo"]("foo") == "foo"  # pylint: disable=no-member
 
 
 def test_loader_mocking_through_runpytest(pytester):

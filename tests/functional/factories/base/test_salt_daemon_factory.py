@@ -24,7 +24,7 @@ def master_id():
 @pytest.fixture
 def config_file(config_dir, master_id):
     config_file = str(config_dir / "config")
-    with open(config_file, "w") as wfh:
+    with open(config_file, "w", encoding="utf-8") as wfh:
         wfh.write("id: {}\n".format(master_id))
     return config_file
 
@@ -46,7 +46,7 @@ def test_extra_cli_arguments_after_first_failure(
         import multiprocessing
 
         def main():
-            with open(r"{}", "a") as wfh:
+            with open(r"{}", "a", encoding="utf-8") as wfh:
                 wfh.write(" ".join(sys.argv))
                 wfh.write("\n")
             sys.exit(1)

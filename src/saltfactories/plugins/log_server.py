@@ -89,7 +89,7 @@ class LogServer:
         log.info("%s stopping...", self)
         address = "tcp://{}:{}".format(self.log_host, self.log_port)
         context = zmq.Context()
-        sender = context.socket(zmq.PUSH)
+        sender = context.socket(zmq.PUSH)  # pylint: disable=no-member
         sender.connect(address)
         try:
             sender.send(msgpack.dumps(None))
@@ -125,7 +125,7 @@ class LogServer:
         """
         address = "tcp://{}:{}".format(self.log_host, self.log_port)
         context = zmq.Context()
-        puller = context.socket(zmq.PULL)
+        puller = context.socket(zmq.PULL)  # pylint: disable=no-member
         puller.set_hwm(self.socket_hwm)
         exit_timeout_seconds = 5
         exit_timeout = None

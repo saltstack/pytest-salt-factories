@@ -7,8 +7,8 @@ if sys.version_info >= (3, 7):
 
     def __getattr__(name):
         if name in ("FactoryTimeout", "FactoryNotStarted"):
-            import pytestshellutils.exceptions
-            from saltfactories.utils import warn_until
+            import pytestshellutils.exceptions  # pylint: disable=import-outside-toplevel
+            from saltfactories.utils import warn_until  # pylint: disable=import-outside-toplevel
 
             warn_until(
                 "3.0.0",

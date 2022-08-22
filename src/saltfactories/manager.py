@@ -293,7 +293,6 @@ class FactoriesManager:
             "salt-master",
             loaded_config,
             factory_class,
-            master_id,
             max_start_attempts,
             start_timeout,
             **factory_class_kwargs
@@ -352,7 +351,6 @@ class FactoriesManager:
             "salt-minion",
             loaded_config,
             factory_class,
-            minion_id,
             max_start_attempts,
             start_timeout,
             **factory_class_kwargs
@@ -426,7 +424,6 @@ class FactoriesManager:
             "salt-master",
             master_loaded_config,
             master_factory_class,
-            syndic_id,
             max_start_attempts,
             start_timeout,
         )
@@ -445,7 +442,6 @@ class FactoriesManager:
             "salt-minion",
             minion_loaded_config,
             minion_factory_class,
-            syndic_id,
             max_start_attempts,
             start_timeout,
         )
@@ -464,7 +460,6 @@ class FactoriesManager:
             "salt-syndic",
             syndic_loaded_config,
             factory_class,
-            syndic_id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
             master=master_factory,
@@ -531,7 +526,6 @@ class FactoriesManager:
             "salt-proxy",
             loaded_config,
             factory_class,
-            proxy_minion_id,
             max_start_attempts,
             start_timeout,
             **factory_class_kwargs
@@ -559,7 +553,6 @@ class FactoriesManager:
             "salt-api",
             master.config,
             factory_class,
-            master.id,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
             **factory_class_kwargs
@@ -700,7 +693,6 @@ class FactoriesManager:
         script_name,
         daemon_config,
         factory_class,
-        daemon_id,
         max_start_attempts,
         start_timeout,
         **factory_class_kwargs

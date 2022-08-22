@@ -51,12 +51,12 @@ class SaltMaster(SaltDaemon):
             self.after_terminate(self.event_listener.unregister_auth_event_handler, self.id)
 
     @state_tree.default
-    def __setup_state_tree(self):
+    def __setup_state_tree(self):  # pylint: disable=unused-private-member
         if "file_roots" in self.config:
             return SaltStateTree(envs=copy.deepcopy(self.config.get("file_roots") or {}))
 
     @pillar_tree.default
-    def __setup_pillar_tree(self):
+    def __setup_pillar_tree(self):  # pylint: disable=unused-private-member
         if "pillar_roots" in self.config:
             return SaltPillarTree(envs=copy.deepcopy(self.config.get("pillar_roots") or {}))
 
@@ -229,10 +229,10 @@ class SaltMaster(SaltDaemon):
         cls,
         factories_manager,
         daemon_id,
-        master_of_masters=None,
         root_dir=None,
         defaults=None,
         overrides=None,
+        master_of_masters=None,
         order_masters=False,
     ):
         return cls.default_config(

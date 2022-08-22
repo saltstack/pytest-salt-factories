@@ -25,7 +25,7 @@ def minion_id():
 @pytest.fixture
 def config_file(config_dir, minion_id):
     config_file = str(config_dir / "config")
-    with open(config_file, "w") as wfh:
+    with open(config_file, "w", encoding="utf-8") as wfh:
         wfh.write("id: {}\n".format(minion_id))
     return config_file
 
@@ -47,7 +47,7 @@ def test_default_timeout_config(minion_id, config_dir, config_file, cli_script_n
     """
     Assert against the default timeout provided in the config.
     """
-    with open(config_file, "a") as wfh:
+    with open(config_file, "a", encoding="utf-8") as wfh:
         wfh.write("timeout: 15\n")
     config = {"conf_file": config_file, "id": minion_id, "timeout": 15}
     args = ["test.ping"]

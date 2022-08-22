@@ -15,7 +15,7 @@ def test_generate_script_defaults(tmpdir):
     Test defaults script generation
     """
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar")
-    with open(script_path) as rfh:
+    with open(script_path, encoding="utf-8") as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
@@ -75,7 +75,7 @@ def test_generate_script_code_dir(tmpdir):
     """
     code_dir = tmpdir.mkdir("code-dir").strpath
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar", code_dir=code_dir)
-    with open(script_path) as rfh:
+    with open(script_path, encoding="utf-8") as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
@@ -169,7 +169,7 @@ def test_generate_script_coverage_support(tmp_path):
         coverage_rc_path=coverage_rc_path,
         coverage_db_path=coverage_db_path,
     )
-    with open(script_path) as rfh:
+    with open(script_path, encoding="utf-8") as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
@@ -246,7 +246,7 @@ def test_generate_script_inject_sitecustomize(tmp_path):
         coverage_rc_path=coverage_rc_path,
         coverage_db_path=coverage_db_path,
     )
-    with open(script_path) as rfh:
+    with open(script_path, encoding="utf-8") as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
@@ -326,7 +326,7 @@ def test_generate_script_inject_sitecustomize(tmp_path):
     assert contents == expected
 
     script_path = cli_scripts.generate_script(tmp_path, "salt-foobar-2", inject_sitecustomize=True)
-    with open(script_path) as rfh:
+    with open(script_path, encoding="utf-8") as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
@@ -403,7 +403,7 @@ def test_generate_script_salt(tmpdir):
     Test script generation for the salt CLI script
     """
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt")
-    with open(script_path) as rfh:
+    with open(script_path, encoding="utf-8") as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
@@ -453,7 +453,7 @@ def test_generate_script_salt_api(tmpdir):
     Test script generation for the salt-api CLI script
     """
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-api")
-    with open(script_path) as rfh:
+    with open(script_path, encoding="utf-8") as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
@@ -510,7 +510,7 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
     Test defaults script generation
     """
     script_path = cli_scripts.generate_script(tmpdir.join("blah").strpath, "salt-foobar")
-    with open(script_path) as rfh:
+    with open(script_path, encoding="utf-8") as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
@@ -570,7 +570,7 @@ def test_generate_script_only_generates_once(tmpdir):
     Test defaults script generation
     """
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar")
-    with open(script_path) as rfh:
+    with open(script_path, encoding="utf-8") as rfh:
         contents = rfh.read()
 
     expected = textwrap.dedent(
@@ -625,7 +625,7 @@ def test_generate_script_only_generates_once(tmpdir):
     statinfo_1 = os.stat(script_path)
 
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar")
-    with open(script_path) as rfh:
+    with open(script_path, encoding="utf-8") as rfh:
         contents = rfh.read()
     assert contents == expected
     statinfo_2 = os.stat(script_path)
