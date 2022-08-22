@@ -1,3 +1,4 @@
 CI and internal changes:
 
 * Start testing Salt 3005.x (rc2 for now)
+* Skip testing 3005rc2 on windows and macOS for now.

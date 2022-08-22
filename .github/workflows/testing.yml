@@ -279,6 +279,9 @@ jobs:
           - {"python-version": "3.7", "pytest-version": "~=6.2.0", "salt-version": "salt==3005rc2"}
           - {"python-version": "3.7", "pytest-version": "~=7.0.0", "salt-version": "salt==3005rc2"}
           - {"python-version": "3.7", "pytest-version": "~=7.1.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.8", "pytest-version": "~=6.2.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.8", "pytest-version": "~=7.0.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.8", "pytest-version": "~=7.1.0", "salt-version": "salt==3005rc2"}
 
     steps:
     - uses: actions/checkout@v2
@@ -457,6 +460,9 @@ jobs:
           - {"python-version": "3.7", "pytest-version": "~=6.2.0", "salt-version": "salt==3005rc2"}
           - {"python-version": "3.7", "pytest-version": "~=7.0.0", "salt-version": "salt==3005rc2"}
           - {"python-version": "3.7", "pytest-version": "~=7.1.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.9", "pytest-version": "~=6.2.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.9", "pytest-version": "~=7.0.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.9", "pytest-version": "~=7.1.0", "salt-version": "salt==3005rc2"}
 
     steps:
     - uses: actions/checkout@v2
