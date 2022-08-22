@@ -1,0 +1,3 @@
+CI and internal changes:
+
+* Start testing Salt 3005.x (rc2 for now)

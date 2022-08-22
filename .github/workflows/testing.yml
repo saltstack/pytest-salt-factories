@@ -263,14 +263,22 @@ jobs:
       max-parallel: 9
       matrix:
         python-version:
-          - 3.7
+          - "3.7"
+          - "3.8"
         salt-version:
-          - salt~=3003.0,!=3003.4
           - salt~=3004.0,!=3004.1
+          - salt==3005rc2
         pytest-version:
           - "~=6.2.0"
           - "~=7.0.0"
           - "~=7.1.0"
+        exclude:
+          - {"python-version": "3.8", "pytest-version": "~=6.2.0", "salt-version": "salt~=3004.0,!=3004.1"}
+          - {"python-version": "3.8", "pytest-version": "~=7.0.0", "salt-version": "salt~=3004.0,!=3004.1"}
+          - {"python-version": "3.8", "pytest-version": "~=7.1.0", "salt-version": "salt~=3004.0,!=3004.1"}
+          - {"python-version": "3.7", "pytest-version": "~=6.2.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.7", "pytest-version": "~=7.0.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.7", "pytest-version": "~=7.1.0", "salt-version": "salt==3005rc2"}
 
     steps:
     - uses: actions/checkout@v2
@@ -433,14 +441,22 @@ jobs:
       max-parallel: 9
       matrix:
         python-version:
-          - 3.7
+          - "3.7"
+          - "3.9"
         salt-version:
-          - salt~=3003.0
           - salt~=3004.0
+          - salt==3005rc2
         pytest-version:
           - "~=6.2.0"
           - "~=7.0.0"
           - "~=7.1.0"
+        exclude:
+          - {"python-version": "3.9", "pytest-version": "~=6.2.0", "salt-version": "salt~=3004.0"}
+          - {"python-version": "3.9", "pytest-version": "~=7.0.0", "salt-version": "salt~=3004.0"}
+          - {"python-version": "3.9", "pytest-version": "~=7.1.0", "salt-version": "salt~=3004.0"}
+          - {"python-version": "3.7", "pytest-version": "~=6.2.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.7", "pytest-version": "~=7.0.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.7", "pytest-version": "~=7.1.0", "salt-version": "salt==3005rc2"}
 
     steps:
     - uses: actions/checkout@v2
@@ -595,30 +611,30 @@ jobs:
       max-parallel: 16
       matrix:
         python-version:
-          - 3.5
-          - 3.6
-          - 3.7
-          - 3.8
-          - 3.9
+          - "3.5"
+          - "3.6"
+          - "3.7"
+          - "3.8"
+          - "3.9"
         salt-version:
-          - salt~=3003.0
           - salt~=3004.0
+          - salt==3005rc2
         pytest-version:
           - "~=6.1.0"
           - "~=6.2.0"
           - "~=7.0.0"
           - "~=7.1.0"
         exclude:
-          - {"python-version": "3.5", "pytest-version": "~=6.2.0", "salt-version": "salt~=3003.0"}
-          - {"python-version": "3.5", "pytest-version": "~=7.0.0", "salt-version": "salt~=3003.0"}
-          - {"python-version": "3.5", "pytest-version": "~=7.1.0", "salt-version": "salt~=3003.0"}
-          - {"python-version": "3.6", "pytest-version": "~=7.1.0", "salt-version": "salt~=3003.0"}
-          - {"python-version": "3.10", "pytest-version": "~=6.1.0", "salt-version": "salt~=3003.0"}
           - {"python-version": "3.5", "pytest-version": "~=6.2.0", "salt-version": "salt~=3004.0"}
           - {"python-version": "3.5", "pytest-version": "~=7.0.0", "salt-version": "salt~=3004.0"}
           - {"python-version": "3.5", "pytest-version": "~=7.1.0", "salt-version": "salt~=3004.0"}
           - {"python-version": "3.6", "pytest-version": "~=7.1.0", "salt-version": "salt~=3004.0"}
           - {"python-version": "3.10", "pytest-version": "~=6.1.0", "salt-version": "salt~=3004.0"}
+          - {"python-version": "3.5", "pytest-version": "~=6.2.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.5", "pytest-version": "~=7.0.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.5", "pytest-version": "~=7.1.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.6", "pytest-version": "~=7.1.0", "salt-version": "salt==3005rc2"}
+          - {"python-version": "3.10", "pytest-version": "~=6.1.0", "salt-version": "salt==3005rc2"}
 
     steps:
     - uses: actions/checkout@v2
