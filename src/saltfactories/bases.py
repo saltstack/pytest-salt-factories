@@ -52,10 +52,10 @@ class SaltMixin:
         salt system paths apply.
     """
 
-    id = attr.ib(default=None, init=False)  # pylint: disable=invalid-name
     config = attr.ib(repr=False)
-    config_dir = attr.ib(init=False, default=None)
-    config_file = attr.ib(init=False, default=None)
+    id = attr.ib(init=False)  # pylint: disable=invalid-name
+    config_file = attr.ib(init=False)
+    config_dir = attr.ib()
     python_executable = attr.ib(default=None)
     system_service = attr.ib(repr=False, default=False)
     display_name = attr.ib(init=False, default=None)
@@ -68,10 +68,19 @@ class SaltMixin:
         self.environ.setdefault("PYTHONUNBUFFERED", "1")
         # Don't write .pyc files or create them in __pycache__ directories
         self.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")
-        self.config_file = self.config["conf_file"]
-        self.config_dir = os.path.dirname(self.config_file)
-        self.id = self.config["id"]
         self.config = freeze(self.config)
+
+    @config_file.default
+    def _default_config_file(self):
+        return self.config["conf_file"]
+
+    @config_dir.default
+    def _default_config_dir(self):
+        return os.path.dirname(self.config_file)
+
+    @id.default
+    def _default_id(self):
+        return self.config["id"]
 
     def get_display_name(self):
         """

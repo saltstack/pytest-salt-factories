@@ -196,6 +196,12 @@ class FactoriesManager:
         """
         self.final_common_config_tweaks(config, "cloud")
 
+    def final_spm_config_tweaks(self, config):
+        """
+        Final tweaks to the spm configuration.
+        """
+        self.final_common_config_tweaks(config, "spm")
+
     def final_common_config_tweaks(self, config, role):
         """
         Final common tweaks to the configuration.
