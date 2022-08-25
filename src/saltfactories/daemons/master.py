@@ -427,14 +427,26 @@ class SaltMaster(SaltDaemon):
             **factory_class_kwargs,
         )
 
-    def salt_spm_cli(self, factory_class=cli.spm.Spm, **factory_class_kwargs):
+    def salt_spm_cli(
+        self, defaults=None, overrides=None, factory_class=cli.spm.Spm, **factory_class_kwargs
+    ):
         """
         Return a `spm` CLI process for this master instance.
         """
+        root_dir = pathlib.Path(self.config["root_dir"])
+        config = factory_class.configure(
+            self,
+            root_dir=root_dir,
+            defaults=defaults,
+            overrides=overrides,
+        )
+        self.factories_manager.final_spm_config_tweaks(config)
+        config = factory_class.write_config(config)
         script_path = self.factories_manager.get_salt_script_path("spm")
         return factory_class(
             script_name=script_path,
-            config=self.config.copy(),
+            config=config,
+            config_dir=self.config_dir,
             system_service=self.factories_manager.system_service,
             python_executable=self.python_executable,
             **factory_class_kwargs,

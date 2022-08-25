@@ -30,12 +30,16 @@ except ImportError:  # pragma: no cover
             return pkg_resources.get_distribution(package).version
 
 
+# Define the pytest plugins we rely on
+pytest_plugins = ["helpers_namespace"]
+
+
 def pkg_version_info(package):
     return tuple(int(part) for part in pkg_version(package).split(".") if part.isdigit())
 
 
 if pkg_version_info("pytest") >= (6, 2):
-    pytest_plugins = ["pytester"]
+    pytest_plugins.append("pytester")
 else:
 
     @pytest.fixture
