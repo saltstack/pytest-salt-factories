@@ -1,1 +1,0 @@
-The `spm` CLI now properly lays down the configuration files required

@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc20 (2022-08-25)
+======================
+
+Bug Fixes
+---------
+
+- The `spm` CLI now properly lays down the configuration files required (`#137 <https://github.com/saltstack/pytest-salt-factories/issues/137>`_)
+
+
 1.0.0rc19 (2022-08-22)
 ======================
 
