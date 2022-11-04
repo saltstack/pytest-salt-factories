@@ -181,12 +181,19 @@ class Loaders:
                     wrapper which will return a more pythonic data structure to assert against.
                     """
                     if key in (
+                        "state.apply",
+                        "state.high",
+                        "state.highstate",
+                        "state.low",
                         "state.single",
                         "state.sls",
+                        "state.sls_id",
                         "state.template",
                         "state.template_str",
+                        "state.test",
+                        "state.top",
                     ):
-                        if key == "state.single":
+                        if key in ("state.low", "state.single", "state.sls_id"):
                             wrapper_cls = StateResult
                         else:
                             wrapper_cls = MultiStateResult
