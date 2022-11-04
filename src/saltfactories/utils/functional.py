@@ -365,11 +365,18 @@ class StateResult:
         return self.full_return["__run_num__"] or 0
 
     @property
+    def id(self):  # pylint: disable=invalid-name
+        """
+        The ``__id__`` key on the full state return dictionary.
+        """
+        return self.full_return.get("__id__")
+
+    @property
     def name(self):
         """
         The ``name`` key on the full state return dictionary.
         """
-        return self.full_return["name"]
+        return self.full_return.get("name")
 
     @property
     def result(self):
@@ -520,7 +527,7 @@ class MultiStateResult:
         Check the presence of ``key`` in the state return.
         """
         for state_result in self:
-            if state_result.state_id == key:
+            if key in (state_result.id, state_result.state_id, state_result.name):
                 return True
         return False
 
@@ -532,7 +539,7 @@ class MultiStateResult:
             # We're trying to get the state run by index
             return self._structured[state_id_or_index]
         for state_result in self:
-            if state_result.state_id == state_id_or_index:
+            if state_id_or_index in (state_result.id, state_result.state_id, state_result.name):
                 return state_result
         raise KeyError("No state by the ID of '{}' was found".format(state_id_or_index))
 
