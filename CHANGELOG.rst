@@ -20,6 +20,27 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc21 (2022-11-04)
+======================
+
+Improvements
+------------
+
+- Several improvements to the state module wrappers:
+
+  * Allow getting the state chunk by `__id__` on MultiStateResult
+  * Wrap a few more functions from `salt.modules.state` (`#140 <https://github.com/saltstack/pytest-salt-factories/issues/140>`_)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Pipeline and requirements fixes:
+
+  * Test against 3005.* and not 3005rc2 since it's now released.
+  * Install `importlib-metadata<5.0.0` since only Salt>=3006 will be able to handle it (`#140 <https://github.com/saltstack/pytest-salt-factories/issues/140>`_)
+
+
 1.0.0rc20 (2022-08-25)
 ======================
 

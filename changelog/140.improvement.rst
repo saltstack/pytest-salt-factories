@@ -1,4 +1,0 @@
-Several improvements to the state module wrappers:
-
-* Allow getting the state chunk by `__id__` on MultiStateResult
-* Wrap a few more functions from `salt.modules.state`
