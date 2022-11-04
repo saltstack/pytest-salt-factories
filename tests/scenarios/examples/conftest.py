@@ -31,7 +31,8 @@ class ExtensionVirtualEnv(VirtualEnv):
         self.venv.install(str(CODE_ROOT_DIR.parent.parent))
         # Salt(3003) doesn't yet support pyzmq 21.0.x
         self.venv.install("pyzmq<21.0.0")
-        self.venv.install(".[tests]")
+        # Only Salt >= 3006 supports importlib-metadata>=5.0.0
+        self.venv.install("importlib-metadata<5.0.0", ".[tests]")
         return self.venv
 
     def __exit__(self, *_):  # noqa: D105

@@ -1,3 +1,4 @@
 Pipeline and requirements fixes:
 
 * Test against 3005.* and not 3005rc2 since it's now released.
+* Install `importlib-metadata<5.0.0` since only Salt>=3006 will be able to handle it
