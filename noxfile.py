@@ -115,8 +115,6 @@ def tests(session):
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
         salt_requirements = []
-        if "3003" in SALT_REQUIREMENT:
-            salt_requirements.append("jinja2<3.1")
         salt_requirements.append(SALT_REQUIREMENT)
         if session.python is not False and system_service is False:
             session.install(
