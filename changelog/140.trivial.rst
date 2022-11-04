@@ -1,0 +1,3 @@
+Pipeline and requirements fixes:
+
+* Test against 3005.* and not 3005rc2 since it's now released.
