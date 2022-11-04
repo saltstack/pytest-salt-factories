@@ -1,0 +1,1 @@
+Allow getting the state chunk by `__id__` on MultiStateResult
