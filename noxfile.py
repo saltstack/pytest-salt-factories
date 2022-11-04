@@ -114,7 +114,7 @@ def tests(session):
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
-        salt_requirements = []
+        salt_requirements = ["importlib-metadata<5.0.0"]
         salt_requirements.append(SALT_REQUIREMENT)
         if session.python is not False and system_service is False:
             session.install(
@@ -128,7 +128,7 @@ def tests(session):
             # Account that, under CI, when we test previous version of pytest
             # we need to pin pytest-subtests to a lower version so that pytest
             # itself does not get upgraded
-            pytest_requirements = []
+            pytest_requirements = ["importlib-metadata<5.0.0"]
             if not pytest_version_requirement.startswith("pytest"):
                 pytest_version_requirement = "pytest{}".format(pytest_version_requirement)
             pytest_requirements.append(pytest_version_requirement)
@@ -136,9 +136,9 @@ def tests(session):
                 pytest_requirements.append("pytest-subtests<0.7.0")
             session.install(*pytest_requirements, silent=PIP_INSTALL_SILENT)
         if system_service:
-            session.install(".", silent=PIP_INSTALL_SILENT)
+            session.install("importlib-metadata<5.0.0", ".", silent=PIP_INSTALL_SILENT)
         else:
-            session.install("-e", ".", silent=PIP_INSTALL_SILENT)
+            session.install("importlib-metadata<5.0.0", "-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
             session, "pip", "list", "--format=json", silent=True, log=False, stderr=None
         )
