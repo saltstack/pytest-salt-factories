@@ -550,6 +550,38 @@ class MultiStateResult:
     def __getitem__(self, state_id_or_index):
         """
         Get an item from the state return.
+
+        .. admonition:: ATTENTION
+
+            Consider the following state:
+
+                ```yaml
+                sbclient_2_0:
+                  mysql_user.present:
+                    - host: localhost
+                    - password: sbclient
+                    - connection_user: {mysql_user}
+                    - connection_pass: {mysql_pass}
+                    - connection_db: mysql
+                    - connection_port: {mysql_port}
+                  mysql_database.present:
+                    - connection_user: {mysql_user}
+                    - connection_pass: {mysql_pass}
+                    - connection_db: mysql
+                    - connection_port: {mysql_port}
+                  mysql_grants.present:
+                    - grant: ALL PRIVILEGES
+                    - user: sbclient_2_0
+                    - database: sbclient_2_0.*
+                    - host: localhost
+                    - connection_user: {mysql_user}
+                    - connection_pass: {mysql_pass}
+                    - connection_db: mysql
+                    - connection_port: {mysql_port}
+                ```
+
+                Accessing `MultiStateResult["sbclient_2_0"] will only return **one**
+                of the state entries. There's three.
         """
         if isinstance(state_id_or_index, int):
             # We're trying to get the state run by index
