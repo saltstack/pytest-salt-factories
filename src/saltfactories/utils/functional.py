@@ -419,6 +419,15 @@ class StateResult:
         """
         return key in self.full_return
 
+    def __getitem__(self, key):
+        """
+        Get the value of the provided key from the state return.
+        """
+        try:
+            return self.full_return[key]
+        except KeyError:
+            raise KeyError("The '{}' key was not found in the state return".format(key)) from None
+
     def __eq__(self, _):
         """
         Override method.
