@@ -13,6 +13,7 @@ import salt.features
 import salt.loader
 import salt.pillar
 from pytestshellutils.utils import format_callback_to_string
+from pytestshellutils.utils.processes import MatchString
 from salt.loader.lazy import LOADED_BASE_NAME
 
 PATCH_TARGET = "salt.loader.lazy.LOADED_BASE_NAME"
@@ -400,11 +401,11 @@ class StateResult:
         return self.full_return["changes"]
 
     @property
-    def comment(self):
+    def comment(self) -> MatchString:
         """
         The ``comment`` key on the full state return dictionary.
         """
-        return self.full_return["comment"]
+        return MatchString(self.full_return["comment"])
 
     @property
     def warnings(self):
