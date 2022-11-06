@@ -99,6 +99,7 @@ mtime
 multistateresult
 mworker
 mypy
+mysql
 namespace
 netbsd
 ng
@@ -154,6 +155,7 @@ saltpillartree
 saltproxyminion
 saltstatetree
 saltsyndic
+sbclient
 scriptsubprocess
 sdist
 serializers
