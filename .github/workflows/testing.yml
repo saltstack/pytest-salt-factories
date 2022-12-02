@@ -617,8 +617,6 @@ jobs:
       max-parallel: 16
       matrix:
         python-version:
-          - "3.5"
-          - "3.6"
           - "3.7"
           - "3.8"
           - "3.9"
@@ -631,15 +629,7 @@ jobs:
           - "~=7.0.0"
           - "~=7.1.0"
         exclude:
-          - {"python-version": "3.5", "pytest-version": "~=6.2.0", "salt-version": "salt~=3004.0"}
-          - {"python-version": "3.5", "pytest-version": "~=7.0.0", "salt-version": "salt~=3004.0"}
-          - {"python-version": "3.5", "pytest-version": "~=7.1.0", "salt-version": "salt~=3004.0"}
-          - {"python-version": "3.6", "pytest-version": "~=7.1.0", "salt-version": "salt~=3004.0"}
           - {"python-version": "3.10", "pytest-version": "~=6.1.0", "salt-version": "salt~=3004.0"}
-          - {"python-version": "3.5", "pytest-version": "~=6.2.0", "salt-version": "salt~=3005.0"}
-          - {"python-version": "3.5", "pytest-version": "~=7.0.0", "salt-version": "salt~=3005.0"}
-          - {"python-version": "3.5", "pytest-version": "~=7.1.0", "salt-version": "salt~=3005.0"}
-          - {"python-version": "3.6", "pytest-version": "~=7.1.0", "salt-version": "salt~=3005.0"}
           - {"python-version": "3.10", "pytest-version": "~=6.1.0", "salt-version": "salt~=3005.0"}
 
     steps:
