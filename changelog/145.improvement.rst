@@ -1,5 +1,0 @@
-A few improvements to functional testing support:
-
-* Allow `StateReturn` to be accessed by key instead of just attribute
-* Add warning for when more than a state function is used under the same state key
-* Return an instance of `MatchString` for `StateResult.comment`

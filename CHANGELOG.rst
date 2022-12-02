@@ -20,6 +20,32 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc22 (2022-12-02)
+======================
+
+Breaking Changes
+----------------
+
+- Drop support for Python 3.5 and 3.6 (`#123 <https://github.com/saltstack/pytest-salt-factories/issues/123>`_)
+
+
+Improvements
+------------
+
+- Defer all `salt` imports so that we can use pytest-salt-factories to test onedir builds (`#144 <https://github.com/saltstack/pytest-salt-factories/issues/144>`_)
+- A few improvements to functional testing support:
+
+  * Allow `StateReturn` to be accessed by key instead of just attribute
+  * Add warning for when more than a state function is used under the same state key
+  * Return an instance of `MatchString` for `StateResult.comment` (`#145 <https://github.com/saltstack/pytest-salt-factories/issues/145>`_)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Update the github actions versions to avoid deprecation errors (`#145 <https://github.com/saltstack/pytest-salt-factories/issues/145>`_)
+
+
 1.0.0rc21 (2022-11-04)
 ======================
 
