@@ -1,16 +1,11 @@
 """
 Salt Master Factory.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import copy
 import pathlib
 from functools import partial
 
 import attr
-import salt.config
-import salt.utils.dictupdate
 from pytestskipmarkers.utils import ports
 
 from saltfactories import cli
@@ -74,6 +69,9 @@ class SaltMaster(SaltDaemon):
         """
         Return the default configuration.
         """
+        import salt.config
+        import salt.utils.dictupdate
+
         if defaults is None:
             defaults = {}
 
@@ -276,6 +274,8 @@ class SaltMaster(SaltDaemon):
         """
         Return the loaded configuration.
         """
+        import salt.config
+
         return salt.config.master_config(config_file)
 
     def _on_auth_event(self, payload):

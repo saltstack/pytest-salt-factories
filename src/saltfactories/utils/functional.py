@@ -9,12 +9,9 @@ import shutil
 from unittest import mock
 
 import attr
-import salt.features
-import salt.loader
-import salt.pillar
 from pytestshellutils.utils import format_callback_to_string
 from pytestshellutils.utils.processes import MatchString
-from salt.loader.lazy import LOADED_BASE_NAME
+
 
 PATCH_TARGET = "salt.loader.lazy.LOADED_BASE_NAME"
 
@@ -56,7 +53,11 @@ class Loaders:
                 loaders.reset_state()
     """
 
-    def __init__(self, opts, loaded_base_name=LOADED_BASE_NAME):
+    def __init__(self, opts, loaded_base_name=None):
+        if loaded_base_name is None:
+            from salt.loader.lazy import LOADED_BASE_NAME
+
+            loaded_base_name = LOADED_BASE_NAME
         self.opts = opts
         self.loaded_base_name = loaded_base_name
         self.context = {}
@@ -70,6 +71,9 @@ class Loaders:
         self._serializers = None
         self._states = None
         self._utils = None
+
+        import salt.features
+
         salt.features.setup_features(self.opts)
         self.reload_all()
         # Force the minion to populate it's cache if need be
@@ -124,6 +128,8 @@ class Loaders:
         """
         The grains loaded by the salt loader.
         """
+        import salt.loader
+
         if self._grains is None:
             try:
                 self._grains = salt.loader.grains(  # pylint: disable=unexpected-keyword-arg
@@ -142,6 +148,8 @@ class Loaders:
         """
         The utils loaded by the salt loader.
         """
+        import salt.loader
+
         if self._utils is None:
             try:
                 self._utils = salt.loader.utils(  # pylint: disable=unexpected-keyword-arg
@@ -160,6 +168,8 @@ class Loaders:
         """
         The execution modules loaded by the salt loader.
         """
+        import salt.loader
+
         if self._modules is None:
             _modules = salt.loader.minion_mods(
                 self.opts,
@@ -214,6 +224,8 @@ class Loaders:
         """
         The serializers loaded by the salt loader.
         """
+        import salt.loader
+
         if self._serializers is None:
             try:
                 self._serializers = (
@@ -233,6 +245,8 @@ class Loaders:
         """
         The state modules loaded by the salt loader.
         """
+        import salt.loader
+
         if self._states is None:
             try:
                 _states = salt.loader.states(  # pylint: disable=unexpected-keyword-arg
@@ -296,6 +310,8 @@ class Loaders:
         """
         The pillar loaded by the salt loader.
         """
+        import salt.pillar
+
         if self._pillar is None:
             try:
                 self._pillar = salt.pillar.get_pillar(  # pylint: disable=unexpected-keyword-arg

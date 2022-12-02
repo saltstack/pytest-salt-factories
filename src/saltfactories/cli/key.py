@@ -1,26 +1,11 @@
 """
 ``salt-key`` CLI factory.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import re
 
 import attr
-from salt.utils.parsers import SaltKeyOptionParser
 
 from saltfactories.bases import SaltCli
-
-try:
-    SALT_KEY_LOG_LEVEL_SUPPORTED = SaltKeyOptionParser._skip_console_logging_config_ is False
-except AttributeError:  # pragma: no cover
-    # New logging is in place
-    try:
-        SALT_KEY_LOG_LEVEL_SUPPORTED = (
-            "--log-level" in SaltKeyOptionParser._console_log_level_cli_flags
-        )
-    except AttributeError:
-        SALT_KEY_LOG_LEVEL_SUPPORTED = True
 
 
 @attr.s(kw_only=True, slots=True)
@@ -36,9 +21,20 @@ class SaltKey(SaltCli):
     )
     # As of Neon, salt-key still does not support --log-level
     # Only when we get the new logging merged in will we get that, so remove that CLI flag
-    __cli_log_level_supported__ = attr.ib(
-        repr=False, init=False, default=SALT_KEY_LOG_LEVEL_SUPPORTED
-    )
+    __cli_log_level_supported__ = attr.ib(repr=False, init=False)
+
+    @__cli_log_level_supported__.default
+    def _default___cli_log_level_supported__(self):
+        from salt.utils.parsers import SaltKeyOptionParser
+
+        try:
+            return SaltKeyOptionParser._skip_console_logging_config_ is False
+        except AttributeError:  # pragma: no cover
+            # New logging is in place
+            try:
+                return "--log-level" in SaltKeyOptionParser._console_log_level_cli_flags
+            except AttributeError:
+                return True
 
     def get_minion_tgt(self, minion_tgt=None):
         """

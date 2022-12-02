@@ -1,8 +1,5 @@
 """
 Salt API Factory.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import attr
 import pytest

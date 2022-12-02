@@ -1,8 +1,5 @@
 """
 Container based factories.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import atexit
 import contextlib

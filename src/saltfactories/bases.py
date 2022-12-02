@@ -1,8 +1,5 @@
 """
 Factories base classes.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import atexit
 import contextlib
@@ -15,9 +12,6 @@ from typing import TYPE_CHECKING
 import attr
 import psutil
 import pytest
-import salt.utils.files
-import salt.utils.verify
-import salt.utils.yaml
 from pytestshellutils.exceptions import FactoryNotStarted
 from pytestshellutils.shell import Daemon
 from pytestshellutils.shell import DaemonImpl
@@ -27,7 +21,6 @@ from pytestshellutils.shell import SubprocessImpl
 from pytestshellutils.utils import time
 from pytestshellutils.utils.processes import ProcessResult
 from pytestshellutils.utils.processes import terminate_process
-from salt.utils.immutabletypes import freeze
 
 from saltfactories.utils import running_username
 
@@ -68,6 +61,8 @@ class SaltMixin:
         self.environ.setdefault("PYTHONUNBUFFERED", "1")
         # Don't write .pyc files or create them in __pycache__ directories
         self.environ.setdefault("PYTHONDONTWRITEBYTECODE", "1")
+        from salt.utils.immutabletypes import freeze
+
         self.config = freeze(self.config)
 
     @config_file.default
@@ -597,6 +592,8 @@ class SaltDaemon(SaltMixin, Daemon):
         """
         Verify the configuration dictionary.
         """
+        import salt.utils.verify
+
         salt.utils.verify.verify_env(
             cls._get_verify_config_entries(config),
             running_username(),
@@ -621,6 +618,9 @@ class SaltDaemon(SaltMixin, Daemon):
         )
 
         # Write down the computed configuration into the config file
+        import salt.utils.files
+        import salt.utils.yaml
+
         with salt.utils.files.fopen(config_file, "w") as wfh:
             salt.utils.yaml.safe_dump(config, wfh, default_flow_style=False)
         loaded_config = cls.load_config(config_file, config)

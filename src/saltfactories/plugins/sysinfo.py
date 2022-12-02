@@ -79,9 +79,6 @@ Here's an example of the output(partial, for brevity):
      zfs_support: false
      zmqversion: 4.3.4
    <<<<<<<<<<<<<<<<<<<<<<<<<<< System Information <<<<<<<<<<<<<<<<<<<<<<<<<<<
-
-..
-    PYTEST_DONT_REWRITE
 """
 # pylint: enable=wrong-spelling-in-docstring
 import io
@@ -89,10 +86,6 @@ import pathlib
 import tempfile
 
 import pytest
-import salt.config
-import salt.loader
-import salt.utils.yaml
-import salt.version
 
 
 def pytest_addoption(parser):
@@ -119,6 +112,11 @@ def pytest_sessionstart(session):
 
     :param _pytest.main.Session session: the pytest session object
     """
+    import salt.config
+    import salt.loader
+    import salt.version
+    import salt.utils.yaml
+
     # Let PyTest do its own thing
     yield
     if session.config.getoption("--sys-info") is True:

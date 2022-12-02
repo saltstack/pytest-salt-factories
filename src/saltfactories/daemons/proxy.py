@@ -1,16 +1,11 @@
 """
 Salt Proxy Minion Factory.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import copy
 import logging
 import pathlib
 
 import attr
-import salt.config
-import salt.utils.dictupdate
 from pytestskipmarkers.utils import platform
 from pytestskipmarkers.utils import ports
 
@@ -76,6 +71,9 @@ class SaltProxyMinion(SaltDaemon):
         """
         Return the default configuration.
         """
+        import salt.config
+        import salt.utils.dictupdate
+
         if defaults is None:
             defaults = {}
 
@@ -242,6 +240,8 @@ class SaltProxyMinion(SaltDaemon):
         """
         Return the loaded configuration.
         """
+        import salt.config
+
         return salt.config.proxy_config(config_file, minion_id=config["id"], cache_minion_id=True)
 
     def get_base_script_args(self):

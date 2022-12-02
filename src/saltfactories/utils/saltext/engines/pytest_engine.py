@@ -25,18 +25,6 @@ except ImportError:  # pragma: no cover
     HAS_ZMQ = False
 
 
-import salt.utils.event
-
-try:
-    import salt.utils.immutabletypes as immutabletypes
-except ImportError:
-    immutabletypes = None
-try:
-    from salt.utils.data import CaseInsensitiveDict
-except ImportError:
-    CaseInsensitiveDict = None
-
-
 log = logging.getLogger(__name__)
 
 __virtualname__ = "pytest"
@@ -77,6 +65,16 @@ def ext_type_encoder(obj):
     """
     Convert any types that msgpack cannot handle on it's own.
     """
+    try:
+        import salt.utils.immutabletypes as immutabletypes
+    except ImportError:
+        immutabletypes = None
+
+    try:
+        from salt.utils.data import CaseInsensitiveDict
+    except ImportError:
+        CaseInsensitiveDict = None
+
     if isinstance(obj, (datetime.datetime, datetime.date)):
         # msgpack doesn't support datetime.datetime and datetime.date datatypes.
         return obj.strftime("%Y%m%dT%H:%M:%S.%f")
@@ -126,6 +124,8 @@ class PyTestEventForwardEngine:
         """
         Start the engine.
         """
+        import salt.utils.event
+
         if self.running_event.is_set():
             return
         log.info("%s is starting", self)

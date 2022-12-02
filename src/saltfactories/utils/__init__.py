@@ -1,11 +1,7 @@
 """
 Utility functions.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import inspect
-import os
 import pathlib
 import random
 import string
@@ -16,7 +12,6 @@ from typing import Optional
 from typing import Type
 
 import packaging.version
-import salt.utils.user
 
 import saltfactories
 
@@ -50,6 +45,8 @@ def running_username():
     """
     Return the username that is running the code.
     """
+    import salt.utils.user
+
     return salt.utils.user.get_user()
 
 
