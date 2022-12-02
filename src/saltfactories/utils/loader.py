@@ -13,6 +13,12 @@ from pytestshellutils.utils import format_callback_to_string
 
 log = logging.getLogger(__name__)
 
+try:
+    LOGGING_TRACE_LEVEL = logging.TRACE
+except AttributeError:
+    # Salt's logging hasn't been setup yet
+    LOGGING_TRACE_LEVEL = 5
+
 
 @attr.s(init=True, slots=True, frozen=True)
 class LoaderModuleMock:
@@ -76,7 +82,12 @@ class LoaderModuleMock:
         """
         module_globals = {dunder: {} for dunder in self.salt_module_dunders}
         for module, globals_to_mock in self.setup_loader_modules.items():
-            log.trace("Setting up loader globals for %s; globals: %s", module, globals_to_mock)
+            log.log(
+                LOGGING_TRACE_LEVEL,
+                "Setting up loader globals for %s; globals: %s",
+                module,
+                globals_to_mock,
+            )
             if not isinstance(module, types.ModuleType):
                 raise pytest.UsageError(
                     "The dictionary keys returned by setup_loader_modules() "
@@ -113,7 +124,7 @@ class LoaderModuleMock:
             func, args, kwargs = self._finalizers.popleft()
             func_repr = format_callback_to_string(func, args, kwargs)
             try:
-                log.trace("Calling finalizer %s", func_repr)
+                log.log(LOGGING_TRACE_LEVEL, "Calling finalizer %s", func_repr)
                 func(*args, **kwargs)
             except Exception as exc:  # pragma: no cover pylint: disable=broad-except
                 log.error(
@@ -178,7 +189,7 @@ class LoaderModuleMock:
             module_globals[key] = mocks[key]
 
         # Patch the module!
-        log.trace("Patching globals for %s; globals: %s", module, module_globals)
+        log.log(LOGGING_TRACE_LEVEL, "Patching globals for %s; globals: %s", module, module_globals)
         patcher = patch.multiple(module, **module_globals)
         patcher.start()
         self.addfinalizer(patcher.stop)

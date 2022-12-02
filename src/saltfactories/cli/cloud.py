@@ -1,8 +1,5 @@
 """
 ``salt-cloud`` CLI factory.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import logging
 import pathlib
@@ -10,10 +7,6 @@ import pprint
 import urllib.parse
 
 import attr
-import salt.config
-import salt.utils.dictupdate
-import salt.utils.files
-import salt.utils.yaml
 
 from saltfactories.bases import SaltCli
 from saltfactories.utils import running_username
@@ -32,6 +25,8 @@ class SaltCloud(SaltCli):
         """
         Return the default configuration for the daemon.
         """
+        import salt.utils.dictupdate
+
         if defaults is None:
             defaults = {}
 
@@ -82,6 +77,9 @@ class SaltCloud(SaltCli):
         """
         Verify the configuration dictionary.
         """
+        import salt.config
+        import salt.utils.verify
+
         prepend_root_dirs = []
         for config_key in ("log_file",):
             if urllib.parse.urlparse(config.get(config_key, "")).scheme == "":
@@ -100,6 +98,10 @@ class SaltCloud(SaltCli):
         """
         Verify the loaded configuration.
         """
+        import salt.config
+        import salt.utils.files
+        import salt.utils.yaml
+
         cls.verify_config(config)
         config_file = config.pop("conf_file")
         log.debug(

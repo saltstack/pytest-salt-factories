@@ -1,15 +1,10 @@
 """
 Salt Syndic Factory.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import logging
 import pathlib
 
 import attr
-import salt.config
-import salt.utils.dictupdate
 from pytestshellutils.utils import ports
 
 from saltfactories.bases import SaltDaemon
@@ -39,6 +34,9 @@ class SaltSyndic(SaltDaemon):
         """
         Return the default configuration.
         """
+        import salt.config
+        import salt.utils.dictupdate
+
         if defaults is None:
             defaults = {}
 
@@ -145,6 +143,8 @@ class SaltSyndic(SaltDaemon):
         """
         Return the loaded configuration.
         """
+        import salt.config
+
         conf_dir = pathlib.Path(config_file).parent.parent
         master_config_file = str(conf_dir / "master")
         minion_config_file = str(conf_dir / "minion")

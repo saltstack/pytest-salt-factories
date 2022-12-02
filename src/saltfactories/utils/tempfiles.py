@@ -1,8 +1,5 @@
 """
 Temporary files helpers.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import logging
 import os

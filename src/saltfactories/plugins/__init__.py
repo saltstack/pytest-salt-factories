@@ -7,7 +7,6 @@ import tempfile
 
 import pytest
 import pytestskipmarkers.utils.platform
-import salt.version
 
 import saltfactories.utils.tempfiles
 
@@ -81,6 +80,8 @@ def pytest_load_initial_conftests(*_):
     """
     Register our pytest helpers.
     """
+    import salt.version
+
     if salt.version.__saltstack_version__ < "3004":
         raise pytest.UsageError("Only salt>=3004 is supported")
     if "temp_directory" not in pytest.helpers:

@@ -1,8 +1,5 @@
 """
 Salt Factories Manager.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import logging
 import os

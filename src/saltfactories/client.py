@@ -1,15 +1,11 @@
 """
 Salt Client in-process implementation.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import logging
 import re
 
 import attr
 import pytest
-import salt.client
 
 
 log = logging.getLogger(__name__)
@@ -43,6 +39,8 @@ class LocalClient:
 
     @__client.default
     def _set_client(self):
+        import salt.client
+
         return salt.client.get_local_client(mopts=self.master_config)
 
     def run(self, function, *args, minion_tgt="minion", timeout=300, **kwargs):

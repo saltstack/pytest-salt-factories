@@ -1,8 +1,5 @@
 """
 Salt Daemon Factories PyTest Plugin.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import logging
 import os

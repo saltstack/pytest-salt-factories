@@ -1,8 +1,5 @@
 """
 Markers related utilities.
-
-..
-    PYTEST_DONT_REWRITE
 """
 import fnmatch
 import logging

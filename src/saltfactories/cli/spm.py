@@ -7,10 +7,6 @@ import pprint
 import urllib.parse
 
 import attr
-import salt.config
-import salt.utils.dictupdate
-import salt.utils.files
-import salt.utils.yaml
 
 from saltfactories.bases import SaltCli
 from saltfactories.utils import running_username
@@ -37,6 +33,8 @@ class Spm(SaltCli):
         """
         Return the default configuration for the daemon.
         """
+        import salt.utils.dictupdate
+
         if defaults is None:
             defaults = {}
 
@@ -90,6 +88,9 @@ class Spm(SaltCli):
         """
         Verify the configuration dictionary.
         """
+        import salt.config
+        import salt.utils.verify
+
         prepend_root_dirs = [
             "formula_path",
             "pillar_path",
@@ -125,6 +126,9 @@ class Spm(SaltCli):
         """
         Verify the loaded configuration.
         """
+        import salt.config
+        import salt.utils.verify
+
         cls.verify_config(config)
         config_file = config.pop("spm_conf_file")
         log.debug(
