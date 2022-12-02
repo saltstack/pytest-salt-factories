@@ -1,0 +1,1 @@
+Update the github actions versions to avoid deprecation errors

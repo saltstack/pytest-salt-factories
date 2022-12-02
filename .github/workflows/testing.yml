@@ -6,9 +6,9 @@ jobs:
   Pre-Commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.9
     - name: Set Cache Key
@@ -32,12 +32,12 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
     - name: Set up Python 3.7 For Nox
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.7
 
@@ -47,7 +47,7 @@ jobs:
         pip install nox
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -69,10 +69,10 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     - name: Set up Python 3.9 For Nox
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.9
 
@@ -105,7 +105,7 @@ jobs:
           - "~=6.2.0"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
@@ -246,7 +246,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@main
+      uses: actions/upload-artifact@v3
       with:
         name: runtests-${{ steps.codecov.outputs.report-name }}-system.log
         path: artifacts/runtests-*.log
@@ -284,12 +284,12 @@ jobs:
           - {"python-version": "3.8", "pytest-version": "~=7.1.0", "salt-version": "salt~=3005.0"}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -427,7 +427,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@main
+      uses: actions/upload-artifact@v3
       with:
         name: runtests-${{ steps.codecov.outputs.report-name }}.log
         path: artifacts/runtests-*.log
@@ -465,12 +465,12 @@ jobs:
           - {"python-version": "3.9", "pytest-version": "~=7.1.0", "salt-version": "salt~=3005.0"}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -600,7 +600,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@main
+      uses: actions/upload-artifact@v3
       with:
         name: runtests-${{ steps.codecov.outputs.report-name }}.log
         path: artifacts/runtests-*.log
@@ -643,12 +643,12 @@ jobs:
           - {"python-version": "3.10", "pytest-version": "~=6.1.0", "salt-version": "salt~=3005.0"}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -779,7 +779,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@main
+      uses: actions/upload-artifact@v3
       with:
         name: runtests-${{ steps.codecov.outputs.report-name }}.log
         path: artifacts/runtests-*.log
@@ -795,11 +795,11 @@ jobs:
       - macOS
       - Linux-System-Service
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.9
     - name: Install Nox
