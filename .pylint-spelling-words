@@ -107,6 +107,7 @@ nocover
 nodeid
 noqa
 nox
+onedir
 openbsd
 ordereddict
 os

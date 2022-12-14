@@ -593,7 +593,9 @@ class SaltDaemon(SaltMixin, Daemon):
         """
         Verify the configuration dictionary.
         """
-        import salt.utils.verify
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.utils.verify  # pylint: disable=import-outside-toplevel
 
         salt.utils.verify.verify_env(
             cls._get_verify_config_entries(config),

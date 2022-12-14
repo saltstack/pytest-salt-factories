@@ -129,6 +129,10 @@ class LogServer:
         puller.set_hwm(self.socket_hwm)
         exit_timeout_seconds = 5
         exit_timeout = None
+        if msgpack.version >= (0, 5, 2):
+            msgpack_kwargs = dict(raw=False)
+        else:  # pragma: no cover
+            msgpack_kwargs = dict(encoding="utf-8")
         try:
             puller.bind(address)
         except zmq.ZMQError:  # pragma: no cover
@@ -159,10 +163,7 @@ class LogServer:
                     if not poller.poll(1000):
                         continue
                     msg = puller.recv()
-                    if msgpack.version >= (0, 5, 2):
-                        record_dict = msgpack.loads(msg, raw=False)
-                    else:  # pragma: no cover
-                        record_dict = msgpack.loads(msg, encoding="utf-8")
+                    record_dict = msgpack.loads(msg, **msgpack_kwargs)
                     if record_dict is None:
                         # A sentinel to stop processing the queue
                         log.info("%s Received the sentinel to shutdown", self)

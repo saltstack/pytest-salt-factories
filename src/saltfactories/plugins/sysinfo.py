@@ -113,10 +113,15 @@ def pytest_sessionstart(session):
 
     :param _pytest.main.Session session: the pytest session object
     """
+    # Do not move these deferred imports. It allows running against a Salt
+    # onedir build in salt's repo checkout.
+    # pylint: disable=import-outside-toplevel
     import salt.config
     import salt.loader
-    import salt.version
     import salt.utils.yaml
+    import salt.version
+
+    # pylint: enable=import-outside-toplevel
 
     # Let PyTest do its own thing
     yield

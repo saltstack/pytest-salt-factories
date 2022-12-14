@@ -9,7 +9,6 @@ import pprint
 import pytest
 
 import saltfactories
-from saltfactories.manager import FactoriesManager
 
 log = logging.getLogger(__name__)
 
@@ -56,6 +55,10 @@ def salt_factories(
     """
     Instantiate the salt factories manager.
     """
+    # Do not move this deferred import. It allows running against a Salt onedir build
+    # in salt's repo checkout.
+    from saltfactories.manager import FactoriesManager  # pylint: disable=import-outside-toplevel
+
     if not isinstance(salt_factories_config, dict):
         raise pytest.UsageError("The 'salt_factories_config' fixture MUST return a dictionary")
     if salt_factories_config:
