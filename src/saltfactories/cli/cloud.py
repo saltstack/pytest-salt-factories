@@ -7,6 +7,7 @@ import pprint
 import urllib.parse
 
 import attr
+import yaml
 
 from saltfactories.bases import SaltCli
 from saltfactories.utils import running_username
@@ -98,9 +99,9 @@ class SaltCloud(SaltCli):
         """
         Verify the loaded configuration.
         """
-        import salt.config
-        import salt.utils.files
-        import salt.utils.yaml
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.config  # pylint: disable=import-outside-toplevel
 
         cls.verify_config(config)
         config_file = config.pop("conf_file")
@@ -111,6 +112,6 @@ class SaltCloud(SaltCli):
         )
 
         # Write down the computed configuration into the config file
-        with salt.utils.files.fopen(config_file, "w") as wfh:
-            salt.utils.yaml.safe_dump(config, wfh, default_flow_style=False)
+        with open(config_file, "w", encoding="utf-8") as wfh:
+            yaml.safe_dump(config, wfh, default_flow_style=False)
         return salt.config.cloud_config(config_file)

@@ -7,6 +7,7 @@ import pprint
 import urllib.parse
 
 import attr
+import yaml
 
 from saltfactories.bases import SaltCli
 from saltfactories.utils import running_username
@@ -138,8 +139,8 @@ class Spm(SaltCli):
         )
 
         # Write down the computed configuration into the config file
-        with salt.utils.files.fopen(config_file, "w") as wfh:
-            salt.utils.yaml.safe_dump(config, wfh, default_flow_style=False)
+        with open(config_file, "w", encoding="utf-8") as wfh:
+            yaml.safe_dump(config, wfh, default_flow_style=False)
         # We load the master config, which will include the spm config
         return salt.config.spm_config(
             str(pathlib.Path(config_file).parent.parent / "master"),

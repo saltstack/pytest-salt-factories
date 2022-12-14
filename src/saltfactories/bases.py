@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING
 import attr
 import psutil
 import pytest
+import yaml
 from pytestshellutils.exceptions import FactoryNotStarted
 from pytestshellutils.shell import Daemon
 from pytestshellutils.shell import DaemonImpl
@@ -618,11 +619,8 @@ class SaltDaemon(SaltMixin, Daemon):
         )
 
         # Write down the computed configuration into the config file
-        import salt.utils.files
-        import salt.utils.yaml
-
-        with salt.utils.files.fopen(config_file, "w") as wfh:
-            salt.utils.yaml.safe_dump(config, wfh, default_flow_style=False)
+        with open(config_file, "w", encoding="utf-8") as wfh:
+            yaml.safe_dump(config, wfh, default_flow_style=False)
         loaded_config = cls.load_config(config_file, config)
         cls.verify_config(loaded_config)
         return loaded_config

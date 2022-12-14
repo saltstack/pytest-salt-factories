@@ -117,3 +117,6 @@ artifacts/
 
 # Ignore the setuptools_scm generated version file
 src/saltfactories/version.py
+
+# backup files
+*~
