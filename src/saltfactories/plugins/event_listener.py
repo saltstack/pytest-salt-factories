@@ -3,6 +3,7 @@ Salt Factories Event Listener.
 
 A salt events store for all daemons started by salt-factories
 """
+import asyncio
 import copy
 import fnmatch
 import logging
@@ -13,9 +14,8 @@ from datetime import datetime
 from datetime import timedelta
 
 import attr
-import msgpack
+import msgpack.exceptions
 import pytest
-import zmq
 from pytestshellutils.utils import ports
 from pytestshellutils.utils import time
 
@@ -116,7 +116,46 @@ class MatchedEvents:
         return iter(self.matches)
 
 
-@attr.s(kw_only=True, slots=True, hash=True)
+class EventListenerServer(asyncio.Protocol):
+    """
+    TCP Server to receive events forwarded.
+    """
+
+    def __init__(self, _event_listener, *args, **kwargs):
+        self._event_listener = _event_listener
+        super().__init__(*args, **kwargs)
+
+    def connection_made(self, transport):
+        """
+        Connection established.
+        """
+        peername = transport.get_extra_info("peername")
+        log.debug("Connection from %s", peername)
+        # pylint: disable=attribute-defined-outside-init
+        self.transport = transport
+        self.unpacker = msgpack.Unpacker(raw=False)
+        # pylint: enable=attribute-defined-outside-init
+
+    def data_received(self, data):
+        """
+        Received data.
+        """
+        try:
+            self.unpacker.feed(data)
+        except msgpack.exceptions.BufferFull:
+            # Start over loosing some data?!
+            self.unpacker = msgpack.Unpacker(  # pylint: disable=attribute-defined-outside-init
+                raw=False
+            )
+            self.unpacker.feed(data)
+        for payload in self.unpacker:
+            if payload is None:
+                self.transport.close()
+                break
+            self._event_listener._process_event_payload(payload)
+
+
+@attr.s(kw_only=True, slots=True, hash=False)
 class EventListener:
     """
     EventListener implementation.
@@ -129,109 +168,108 @@ class EventListener:
     """
 
     timeout = attr.ib(default=120)
+    host = attr.ib(init=False, repr=False)
+    port = attr.ib(init=False, repr=False)
     address = attr.ib(init=False)
     store = attr.ib(init=False, repr=False, hash=False)
-    sentinel = attr.ib(init=False, repr=False, hash=False)
-    sentinel_event = attr.ib(init=False, repr=False, hash=False)
     running_event = attr.ib(init=False, repr=False, hash=False)
     running_thread = attr.ib(init=False, repr=False, hash=False)
     cleanup_thread = attr.ib(init=False, repr=False, hash=False)
     auth_event_handlers = attr.ib(init=False, repr=False, hash=False)
+    loop = attr.ib(init=False, repr=False, hash=False)
+    server = attr.ib(init=False, repr=False, hash=False)
+    server_running_event = attr.ib(init=False, repr=False, hash=False)
 
     def __attrs_post_init__(self):
         """
         Post attrs initialization routines.
         """
         self.store = deque(maxlen=10000)
-        self.address = "tcp://127.0.0.1:{}".format(ports.get_unused_localhost_port())
+        self.host = "127.0.0.1"
+        self.port = ports.get_unused_localhost_port()
+        self.address = f"tcp://{self.host}:{self.port}"
         self.running_event = threading.Event()
-        self.running_thread = threading.Thread(target=self._run)
         self.cleanup_thread = threading.Thread(target=self._cleanup)
-        self.sentinel = msgpack.dumps(None)
-        self.sentinel_event = threading.Event()
         self.auth_event_handlers = weakref.WeakValueDictionary()
+        self.loop = asyncio.new_event_loop()
+        self.server = None
+        self.server_running_event = threading.Event()
+        self.running_thread = threading.Thread(target=self._run_loop_in_thread, args=(self.loop,))
 
-    def _run(self):
-        context = zmq.Context()
-        puller = context.socket(zmq.PULL)  # pylint: disable=no-member
+    def _run_loop_in_thread(self, loop):
+        asyncio.set_event_loop(loop)
         try:
-            log.debug("%s Binding PULL socket to %s", self, self.address)
-            puller.bind(self.address)
-            if msgpack.version >= (0, 5, 2):
-                msgpack_kwargs = {"raw": False}
-            else:  # pragma: no cover
-                msgpack_kwargs = {"encoding": "utf-8"}
-            log.debug("%s started", self)
-            self.running_event.set()
-            while self.running_event.is_set():
-                payload = puller.recv()
-                if payload == self.sentinel:
-                    log.info("%s Received stop sentinel...", self)
-                    self.sentinel_event.set()
-                    break
-                try:
-                    decoded = msgpack.loads(payload, **msgpack_kwargs)
-                except ValueError:  # pragma: no cover
-                    log.error(
-                        "%s Failed to msgpack.load message with payload: %s",
-                        self,
-                        payload,
-                        exc_info=True,
-                    )
-                    continue
-                if decoded is None:
-                    log.info("%s Received stop sentinel...", self)
-                    self.sentinel_event.set()
-                    break
-                try:
-                    daemon_id, tag, data = decoded
-                    # Salt's event data has some "private" keys, for example, "_stamp" which
-                    # get in the way of direct assertions.
-                    # We'll just store a full_data attribute and clean up the regular data of these keys
-                    full_data = copy.deepcopy(data)
-                    for key in list(data):
-                        if key.startswith("_"):
-                            data.pop(key)
-                    event = Event(
-                        daemon_id=daemon_id,
-                        tag=tag,
-                        stamp=full_data["_stamp"],
-                        data=data,
-                        full_data=full_data,
-                        expire_seconds=self.timeout,
-                    )
-                    log.info("%s received event: %s", self, event)
-                    self.store.append(event)
-                    if tag == "salt/auth":
-                        auth_event_callback = self.auth_event_handlers.get(daemon_id)
-                        if auth_event_callback:
-                            try:
-                                auth_event_callback(data)
-                            except Exception as exc:  # pragma: no cover pylint: disable=broad-except
-                                log.error(
-                                    "%s Error calling %r: %s",
-                                    self,
-                                    auth_event_callback,
-                                    exc,
-                                    exc_info=True,
-                                )
-                    log.debug("%s store size after event received: %d", self, len(self.store))
-                except Exception:  # pragma: no cover pylint: disable=broad-except
-                    log.error("%s Something funky happened", self, exc_info=True)
-                    puller.close(0)
-                    context.term()
-                    # We need to keep these events stored, restart zmq socket
-                    context = zmq.Context()
-                    puller = context.socket(zmq.PULL)  # pylint: disable=no-member
-                    log.debug("%s Binding PULL socket to %s", self, self.address)
-                    puller.bind(self.address)
-        except Exception as exc:
-            log.error("%s Something funky happened", self, exc_info=True)
-            raise exc from None
+            loop.run_until_complete(self._run_server())
         finally:
-            puller.close(1500)
-            context.term()
-            log.debug("%s is no longer running", self)
+            log.debug("shutdown asyncgens")
+            loop.run_until_complete(loop.shutdown_asyncgens())
+            log.debug("loop close")
+            loop.close()
+
+    async def _run_server(self):
+        loop = asyncio.get_running_loop()
+        self.server = await self.loop.create_server(
+            lambda: EventListenerServer(self),
+            self.host,
+            self.port,
+            start_serving=False,
+        )
+
+        async with self.server:
+            loop.call_soon(self.server_running_event.set)
+            log.debug("%s server is starting", self)
+            await self.server.start_serving()
+            while self.server_running_event.is_set():
+                await asyncio.sleep(1)
+        self.server.close()
+        log.debug("%s server await server close", self)
+        await self.server.wait_closed()
+        # await self.server.serve_forever()
+        log.debug("%s server stoppped", self)
+
+    def _process_event_payload(self, decoded):
+        try:
+            daemon_id = decoded["id"]
+            tag = decoded["tag"]
+            data = decoded["data"]
+            # Salt's event data has some "private" keys, for example, "_stamp" which
+            # get in the way of direct assertions.
+            # We'll just store a full_data attribute and clean up the regular data of these keys
+            full_data = copy.deepcopy(data)
+            for key in list(data):
+                if key.startswith("_"):
+                    data.pop(key)
+            event = Event(
+                daemon_id=daemon_id,
+                tag=tag,
+                stamp=full_data["_stamp"],
+                data=data,
+                full_data=full_data,
+                expire_seconds=self.timeout,
+            )
+            log.info("%s received event: %s", self, event)
+            self.store.append(event)
+            if tag == "salt/auth":
+                auth_event_callback = self.auth_event_handlers.get(daemon_id)
+                if auth_event_callback:
+                    try:
+                        auth_event_callback(data)
+                    except Exception as exc:  # pragma: no cover pylint: disable=broad-except
+                        log.error(
+                            "%s Error calling %r: %s",
+                            self,
+                            auth_event_callback,
+                            exc,
+                            exc_info=True,
+                        )
+            log.debug(
+                "%s store(id: %s) size after event received: %d",
+                self,
+                id(self.store),
+                len(self.store),
+            )
+        except Exception:  # pragma: no cover pylint: disable=broad-except
+            log.error("%s Something funky happened", self, exc_info=True)
 
     def _cleanup(self):
         cleanup_at = time.time() + 30
@@ -274,11 +312,13 @@ class EventListener:
         if self.running_event.is_set():  # pragma: no cover
             return
         log.debug("%s is starting", self)
+        self.running_event.set()
         self.running_thread.start()
         # Wait for the thread to start
-        if self.running_event.wait(5) is not True:
-            self.running_event.clear()
+        if self.server_running_event.wait(5) is not True:
+            self.server_running_event.clear()
             raise RuntimeError("Failed to start the event listener")
+        log.debug("%s is started", self)
         self.cleanup_thread.start()
 
     def stop(self):
@@ -290,21 +330,8 @@ class EventListener:
         log.debug("%s is stopping", self)
         self.store.clear()
         self.auth_event_handlers.clear()
-        context = zmq.Context()
-        push = context.socket(zmq.PUSH)  # pylint: disable=no-member
-        push.connect(self.address)
-        try:
-            push.send(self.sentinel)
-            log.debug("%s Sent sentinel to trigger log server shutdown", self)
-            if self.sentinel_event.wait(5) is not True:  # pragma: no cover
-                log.warning(
-                    "%s Failed to wait for the reception of the stop sentinel message. Stopping anyway.",
-                    self,
-                )
-        finally:
-            push.close(1500)
-            context.term()
         self.running_event.clear()
+        self.server_running_event.clear()
         log.debug("%s Joining running thread...", self)
         self.running_thread.join(7)
         if self.running_thread.is_alive():  # pragma: no cover
@@ -458,7 +485,7 @@ class EventListener:
 
 
 @pytest.fixture(scope="session")
-def event_listener(request):
+def event_listener():
     """
     Event listener session scoped fixture.
 
@@ -499,5 +526,5 @@ def event_listener(request):
                 assert event.data["cmd"] == "_minion_event"
                 assert "event.fire" in event.data["data"]
     """
-    with EventListener() as event_listener:
-        yield event_listener
+    with EventListener() as _event_listener:
+        yield _event_listener

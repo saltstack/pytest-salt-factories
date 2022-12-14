@@ -39,7 +39,9 @@ class LocalClient:
 
     @__client.default
     def _set_client(self):
-        import salt.client
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.client  # pylint: disable=import-outside-toplevel
 
         return salt.client.get_local_client(mopts=self.master_config)
 

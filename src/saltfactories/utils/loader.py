@@ -11,13 +11,13 @@ import attr
 import pytest
 from pytestshellutils.utils import format_callback_to_string
 
-log = logging.getLogger(__name__)
-
 try:
     LOGGING_TRACE_LEVEL = logging.TRACE
 except AttributeError:
     # Salt's logging hasn't been setup yet
     LOGGING_TRACE_LEVEL = 5
+
+log = logging.getLogger(__name__)
 
 
 @attr.s(init=True, slots=True, frozen=True)

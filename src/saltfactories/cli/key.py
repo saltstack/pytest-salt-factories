@@ -30,9 +30,12 @@ class SaltKey(SaltCli):
         try:
             # Salt >= 3005
             return "--log-level" in SaltKeyOptionParser._console_log_level_cli_flags
-        except AttributeError:
+        except AttributeError:  # pragma: no cover
             # Salt <= 3004
-            return SaltKeyOptionParser._skip_console_logging_config_ is False
+            return (
+                SaltKeyOptionParser._skip_console_logging_config_  # pylint: disable=no-member
+                is False
+            )
 
     def get_minion_tgt(self, minion_tgt=None):
         """

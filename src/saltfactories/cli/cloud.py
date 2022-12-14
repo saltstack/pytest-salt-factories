@@ -26,6 +26,8 @@ class SaltCloud(SaltCli):
         """
         Return the default configuration for the daemon.
         """
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
         import salt.utils.dictupdate
 
         if defaults is None:
@@ -78,6 +80,8 @@ class SaltCloud(SaltCli):
         """
         Verify the configuration dictionary.
         """
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
         import salt.config
         import salt.utils.verify
 

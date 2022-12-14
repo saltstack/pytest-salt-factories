@@ -80,7 +80,9 @@ def pytest_load_initial_conftests(*_):
     """
     Register our pytest helpers.
     """
-    import salt.version
+    # Do not move these deferred imports. It allows running against a Salt
+    # onedir build in salt's repo checkout.
+    import salt.version  # pylint: disable=import-outside-toplevel
 
     if salt.version.__saltstack_version__ < "3004":
         raise pytest.UsageError("Only salt>=3004 is supported")

@@ -34,8 +34,10 @@ class SaltSyndic(SaltDaemon):
         """
         Return the default configuration.
         """
-        import salt.config
-        import salt.utils.dictupdate
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.config  # pylint: disable=import-outside-toplevel
+        import salt.utils.dictupdate  # pylint: disable=import-outside-toplevel
 
         if defaults is None:
             defaults = {}
@@ -143,7 +145,9 @@ class SaltSyndic(SaltDaemon):
         """
         Return the loaded configuration.
         """
-        import salt.config
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.config  # pylint: disable=import-outside-toplevel
 
         conf_dir = pathlib.Path(config_file).parent.parent
         master_config_file = str(conf_dir / "master")

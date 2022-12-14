@@ -45,7 +45,9 @@ def running_username():
     """
     Return the username that is running the code.
     """
-    import salt.utils.user
+    # Do not move these deferred imports. It allows running against a Salt
+    # onedir build in salt's repo checkout.
+    import salt.utils.user  # pylint: disable=import-outside-toplevel
 
     return salt.utils.user.get_user()
 

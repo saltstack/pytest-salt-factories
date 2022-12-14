@@ -162,7 +162,10 @@ class FactoriesManager:
         pytest_key = "pytest-minion"
         if pytest_key not in config:  # pragma: no cover
             config[pytest_key] = {}
-        config[pytest_key]["returner_address"] = self.event_listener.address
+        config[pytest_key]["returner_address"] = {
+            "host": self.event_listener.host,
+            "port": self.event_listener.port,
+        }
         self.final_common_config_tweaks(config, "minion")
 
     def final_master_config_tweaks(self, config):
@@ -172,7 +175,10 @@ class FactoriesManager:
         pytest_key = "pytest-master"
         if pytest_key not in config:  # pragma: no cover
             config[pytest_key] = {}
-        config[pytest_key]["returner_address"] = self.event_listener.address
+        config[pytest_key]["returner_address"] = {
+            "host": self.event_listener.host,
+            "port": self.event_listener.port,
+        }
         self.final_common_config_tweaks(config, "master")
 
     def final_syndic_config_tweaks(self, config):

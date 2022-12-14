@@ -34,7 +34,9 @@ class Spm(SaltCli):
         """
         Return the default configuration for the daemon.
         """
-        import salt.utils.dictupdate
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.utils.dictupdate  # pylint: disable=import-outside-toplevel
 
         if defaults is None:
             defaults = {}
@@ -89,8 +91,10 @@ class Spm(SaltCli):
         """
         Verify the configuration dictionary.
         """
-        import salt.config
-        import salt.utils.verify
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.config  # pylint: disable=import-outside-toplevel
+        import salt.utils.verify  # pylint: disable=import-outside-toplevel
 
         prepend_root_dirs = [
             "formula_path",
@@ -127,8 +131,10 @@ class Spm(SaltCli):
         """
         Verify the loaded configuration.
         """
-        import salt.config
-        import salt.utils.verify
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.config  # pylint: disable=import-outside-toplevel
+        import salt.utils.verify  # pylint: disable=import-outside-toplevel
 
         cls.verify_config(config)
         config_file = config.pop("spm_conf_file")

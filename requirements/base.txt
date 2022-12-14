@@ -8,5 +8,5 @@ pytest-shell-utilities>=1.4.0
 psutil
 pyyaml
 pyzmq
-msgpack
+msgpack>=0.5.2
 virtualenv

@@ -12,7 +12,6 @@ import attr
 from pytestshellutils.utils import format_callback_to_string
 from pytestshellutils.utils.processes import MatchString
 
-
 PATCH_TARGET = "salt.loader.lazy.LOADED_BASE_NAME"
 
 log = logging.getLogger(__name__)
@@ -54,11 +53,13 @@ class Loaders:
     """
 
     def __init__(self, opts, loaded_base_name=None):
+        self.opts = opts
         if loaded_base_name is None:
-            from salt.loader.lazy import LOADED_BASE_NAME
+            # Do not move this deferred import. It allows running against a Salt onedir build
+            # in salt's repo checkout.
+            from salt.loader.lazy import LOADED_BASE_NAME  # pylint: disable=import-outside-toplevel
 
             loaded_base_name = LOADED_BASE_NAME
-        self.opts = opts
         self.loaded_base_name = loaded_base_name
         self.context = {}
         self._cachedir = pathlib.Path(opts["cachedir"])
@@ -72,7 +73,9 @@ class Loaders:
         self._states = None
         self._utils = None
 
-        import salt.features
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.features  # pylint: disable=import-outside-toplevel
 
         salt.features.setup_features(self.opts)
         self.reload_all()
@@ -128,7 +131,9 @@ class Loaders:
         """
         The grains loaded by the salt loader.
         """
-        import salt.loader
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.loader  # pylint: disable=import-outside-toplevel
 
         if self._grains is None:
             try:
@@ -148,7 +153,9 @@ class Loaders:
         """
         The utils loaded by the salt loader.
         """
-        import salt.loader
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.loader  # pylint: disable=import-outside-toplevel
 
         if self._utils is None:
             try:
@@ -168,7 +175,9 @@ class Loaders:
         """
         The execution modules loaded by the salt loader.
         """
-        import salt.loader
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.loader  # pylint: disable=import-outside-toplevel
 
         if self._modules is None:
             _modules = salt.loader.minion_mods(
@@ -224,7 +233,9 @@ class Loaders:
         """
         The serializers loaded by the salt loader.
         """
-        import salt.loader
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.loader  # pylint: disable=import-outside-toplevel
 
         if self._serializers is None:
             try:
@@ -245,7 +256,9 @@ class Loaders:
         """
         The state modules loaded by the salt loader.
         """
-        import salt.loader
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.loader  # pylint: disable=import-outside-toplevel
 
         if self._states is None:
             try:
@@ -310,7 +323,9 @@ class Loaders:
         """
         The pillar loaded by the salt loader.
         """
-        import salt.pillar
+        # Do not move these deferred imports. It allows running against a Salt
+        # onedir build in salt's repo checkout.
+        import salt.pillar  # pylint: disable=import-outside-toplevel
 
         if self._pillar is None:
             try:
