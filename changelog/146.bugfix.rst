@@ -3,3 +3,4 @@ Fixed Salt's deferred imports to allow onedir builds while not breaking non-oned
 * Additionally, stopped relying on `salt.utils.files` and `salt.utils.yaml`
 * Stopped using `zmq` to forward events(this was where the breakage was showing) for a plain TCP implementation.
 * The `event_listener` fixture is now started/stopped like a regular pytest fixture
+* The `event_listener` server now restarts in case something goes wrong to the point where it crashes.
