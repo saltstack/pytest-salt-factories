@@ -20,6 +20,20 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc23 (2022-12-15)
+======================
+
+Bug Fixes
+---------
+
+- Fixed Salt's deferred imports to allow onedir builds while not breaking non-onedir builds:
+
+  * Additionally, stopped relying on `salt.utils.files` and `salt.utils.yaml`
+  * Stopped using `zmq` to forward events(this was where the breakage was showing) for a plain TCP implementation.
+  * The `event_listener` fixture is now started/stopped like a regular pytest fixture
+  * The `event_listener` server now restarts in case something goes wrong to the point where it crashes. (`#146 <https://github.com/saltstack/pytest-salt-factories/issues/146>`_)
+
+
 1.0.0rc22 (2022-12-02)
 ======================
 
