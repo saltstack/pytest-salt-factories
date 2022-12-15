@@ -176,7 +176,6 @@ class EventListener:
     running_thread = attr.ib(init=False, repr=False, hash=False)
     cleanup_thread = attr.ib(init=False, repr=False, hash=False)
     auth_event_handlers = attr.ib(init=False, repr=False, hash=False)
-    loop = attr.ib(init=False, repr=False, hash=False)
     server = attr.ib(init=False, repr=False, hash=False)
     server_running_event = attr.ib(init=False, repr=False, hash=False)
 
@@ -191,15 +190,33 @@ class EventListener:
         self.running_event = threading.Event()
         self.cleanup_thread = threading.Thread(target=self._cleanup)
         self.auth_event_handlers = weakref.WeakValueDictionary()
-        self.loop = asyncio.new_event_loop()
-        self.server = None
         self.server_running_event = threading.Event()
-        self.running_thread = threading.Thread(target=self._run_loop_in_thread, args=(self.loop,))
+        self.server = None
+        self.running_thread = None
 
-    def _run_loop_in_thread(self, loop):
+    def start_server(self):
+        """
+        Start the TCP server.
+        """
+        if self.server_running_event.is_set():
+            return
+        if self.running_thread:
+            # If this attribute is set it means something happened to make
+            # the server crash. Let's join the thread to restart it all.
+            self.running_thread.join()
+            self.running_thread = None
+        log.info("%s server is re-starting", self)
+        self.running_thread = threading.Thread(target=self._run_loop_in_thread)
+        self.running_thread.start()
+
+    def _run_loop_in_thread(self):
+        loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
             loop.run_until_complete(self._run_server())
+        except Exception as exc:
+            self.server_running_event.clear()
+            raise exc from None
         finally:
             log.debug("shutdown asyncgens")
             loop.run_until_complete(loop.shutdown_asyncgens())
@@ -208,24 +225,30 @@ class EventListener:
 
     async def _run_server(self):
         loop = asyncio.get_running_loop()
-        self.server = await self.loop.create_server(
+        if self.server:
+            self.server.close()
+            await self.server.wait_closed()
+            self.server = None
+        self.server = await loop.create_server(
             lambda: EventListenerServer(self),
             self.host,
             self.port,
             start_serving=False,
         )
-
-        async with self.server:
-            loop.call_soon(self.server_running_event.set)
-            log.debug("%s server is starting", self)
-            await self.server.start_serving()
-            while self.server_running_event.is_set():
-                await asyncio.sleep(1)
-        self.server.close()
-        log.debug("%s server await server close", self)
-        await self.server.wait_closed()
-        # await self.server.serve_forever()
-        log.debug("%s server stoppped", self)
+        try:
+            async with self.server:
+                loop.call_soon(self.server_running_event.set)
+                log.debug("%s server is starting", self)
+                await self.server.start_serving()
+                while self.server_running_event.is_set():
+                    await asyncio.sleep(1)
+        finally:
+            if self.server:
+                self.server.close()
+                log.debug("%s server await server close", self)
+                await self.server.wait_closed()
+                log.debug("%s server stoppped", self)
+                self.server = None
 
     def _process_event_payload(self, decoded):
         try:
@@ -313,7 +336,7 @@ class EventListener:
             return
         log.debug("%s is starting", self)
         self.running_event.set()
-        self.running_thread.start()
+        self.start_server()
         # Wait for the thread to start
         if self.server_running_event.wait(5) is not True:
             self.server_running_event.clear()
@@ -528,3 +551,15 @@ def event_listener():
     """
     with EventListener() as _event_listener:
         yield _event_listener
+
+
+@pytest.fixture(autouse=True)
+def restart_event_listener(event_listener):  # pylint: disable=redefined-outer-name
+    """
+    Restart the `event_listener` TCP server is case it crashed.
+    """
+    try:
+        yield
+    finally:
+        # No-op is the server hasn't stopped running
+        event_listener.start_server()
