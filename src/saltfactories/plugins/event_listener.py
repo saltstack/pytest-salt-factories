@@ -216,9 +216,9 @@ class EventListener:
         asyncio.set_event_loop(loop)
         try:
             loop.run_until_complete(self._run_server())
-        except Exception as exc:
+        except Exception as exc:  # pylint: disable=broad-except
             self.server_running_event.clear()
-            log.exception(f"%s: Exception raised while the running the server: {exc}")
+            log.exception("%s: Exception raised while the running the server: %s", self, exc)
         finally:
             log.debug("shutdown asyncgens")
             loop.run_until_complete(loop.shutdown_asyncgens())
