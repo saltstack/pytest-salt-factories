@@ -1,3 +1,4 @@
 Several improvements to reduce failure points:
 
 * Log the exception instead of raising it.
+* Always populate the `*_dirs` config settings, regardless of how salt-factories is being used
