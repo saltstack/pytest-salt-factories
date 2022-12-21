@@ -205,7 +205,9 @@ class EventListener:
             # the server crash. Let's join the thread to restart it all.
             self.running_thread.join()
             self.running_thread = None
-        log.info("%s server is re-starting", self)
+            log.info("%s server is re-starting", self)
+        else:
+            log.info("%s server is starting", self)
         self.running_thread = threading.Thread(target=self._run_loop_in_thread)
         self.running_thread.start()
 
@@ -216,7 +218,7 @@ class EventListener:
             loop.run_until_complete(self._run_server())
         except Exception as exc:
             self.server_running_event.clear()
-            raise exc from None
+            log.exception(f"%s: Exception raised while the running the server: {exc}")
         finally:
             log.debug("shutdown asyncgens")
             loop.run_until_complete(loop.shutdown_asyncgens())

@@ -1,0 +1,3 @@
+Several improvements to reduce failure points:
+
+* Log the exception instead of raising it.
