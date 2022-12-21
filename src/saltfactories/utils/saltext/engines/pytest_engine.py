@@ -94,11 +94,18 @@ class PyTestEventForwardClient(asyncio.Protocol):
     TCP Client to forward events.
     """
 
-    def __init__(self, connection_lost_future, queue, client_running_event):
-        self.connection_lost_future = connection_lost_future
+    def __init__(self, queue, client_running_event):
         self.queue = queue
-        self.task = None
         self.running = client_running_event
+        self.task = None
+        self.transport = None
+        try:
+            loop = asyncio.get_running_loop()
+        except AttributeError:
+            # Python < 3.7
+            loop = asyncio.get_event_loop()
+        self._connected = loop.create_future()
+        self._disconnected = loop.create_future()
 
     def connection_made(self, transport):
         """
@@ -106,6 +113,7 @@ class PyTestEventForwardClient(asyncio.Protocol):
         """
         peername = transport.get_extra_info("peername")
         log.debug("%s: Connected to %s", self.__class__.__name__, peername)
+        self._connected.set_result(True)
         # pylint: disable=attribute-defined-outside-init
         self.transport = transport
         loop = asyncio.get_running_loop()
@@ -117,9 +125,23 @@ class PyTestEventForwardClient(asyncio.Protocol):
         Connection lost.
         """
         log.debug("%s: The server closed the connection", self.__class__.__name__)
-        self.connection_lost_future.set_result(True)
+        self._disconnected.set_result(True)
         if self.task is not None:
             self.task.cancel()
+
+    async def wait_connected(self):
+        """
+        Wait until a connection to the server is successful.
+        """
+        connected = await self._connected
+        return connected
+
+    async def wait_disconnected(self):
+        """
+        Wait until disconnected from the server.
+        """
+        disconnected = await self._disconnected
+        return disconnected
 
     async def _process_queue(self):
         self.running.set()
@@ -127,9 +149,10 @@ class PyTestEventForwardClient(asyncio.Protocol):
         restarts = 0
         while True:
             if restarts > 10:
+                self._disconnected.set_result(True)
                 break
             if not self.running.is_set():
-                self.connection_lost_future.set_result(True)
+                self._disconnected.set_result(True)
                 break
             try:
                 try:
@@ -196,14 +219,13 @@ class PyTestEventForwardEngine:
             loop.close()
 
     async def _run_client(self, loop):
-        on_con_lost = loop.create_future()
         log.debug(
             "%s client connecting to %s:%s",
             self.__class__.__name__,
             self.returner_address_host,
             self.returner_address_port,
         )
-        self.client = PyTestEventForwardClient(on_con_lost, self.queue, self.client_running_event)
+        self.client = PyTestEventForwardClient(self.queue, self.client_running_event)
         transport, _ = await loop.create_connection(
             lambda: self.client,
             self.returner_address_host,
@@ -212,10 +234,16 @@ class PyTestEventForwardEngine:
         # Wait until the protocol signals that the connection
         # is lost and close the transport.
         try:
-            log.info("%s client started", self.__class__.__name__)
-            await on_con_lost
-        finally:
+            await asyncio.wait_for(self.client.wait_connected(), timeout=15)
+        except asyncio.TimeoutError:
+            log.error("The client failed to connect to the server after 15 seconds")
             transport.close()
+        else:
+            try:
+                log.info("%s client started", self.__class__.__name__)
+                await self.client.wait_disconnected()
+            finally:
+                transport.close()
 
     def __repr__(self):  # noqa: D105
         return "<{} role={!r} id={!r}, returner_address='{}:{}' running={!r}>".format(
