@@ -272,7 +272,7 @@ class Container(BaseFactory):
         :keyword kwargs:
             The keyword arguments to pass to the callback
         """
-        self._after_terminate_callbacks.append((callback, args, kwargs))
+        self._after_terminate_callbacks.append(Callback(func=callback, args=args, kwargs=kwargs))
 
     def container_start_check(self, callback, *args, **kwargs):
         """
