@@ -2,7 +2,7 @@
 minimum_pre_commit_version: 1.15.2
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.2.0
+    rev: v4.4.0
     hooks:
       - id: check-merge-conflict  # Check for files that contain merge conflict strings.
       - id: trailing-whitespace   # Trims trailing whitespace.
@@ -30,7 +30,7 @@ repos:
 
   # ----- Formatting ------------------------------------------------------------------------------------------------>
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.32.0
+    rev: v3.4.0
     hooks:
       - id: pyupgrade
         name: Rewrite Code to be Py3.5+
@@ -38,7 +38,7 @@ repos:
         exclude: (^src/saltfactories/utils/saltext/.*\.py)
 
   - repo: https://github.com/asottile/reorder_python_imports
-    rev: v3.0.1
+    rev: v3.9.0
     hooks:
       - id: reorder-python-imports
         args: [
@@ -48,25 +48,25 @@ repos:
         exclude: src/saltfactories/version.py
 
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 23.3.0
     hooks:
       - id: black
         args: [-l 100]
         exclude: src/saltfactories/version.py
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: v1.12.1
+    rev: 1.13.0
     hooks:
       - id: blacken-docs
         args: [--skip-errors]
         files: ^(.*\.rst|docs/.*\.rst|src/saltfactories/.*\.py)$
         additional_dependencies:
-          - black==22.3.0
+          - black==23.3.0
   # <---- Formatting -------------------------------------------------------------------------------------------------
 
   # ----- Security -------------------------------------------------------------------------------------------------->
   - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.4"
+    rev: "1.7.5"
     hooks:
       - id: bandit
         alias: bandit-salt
@@ -77,7 +77,7 @@ repos:
                 tests/.*
             )$
   - repo: https://github.com/PyCQA/bandit
-    rev: "1.7.4"
+    rev: "1.7.5"
     hooks:
       - id: bandit
         alias: bandit-tests
@@ -88,7 +88,7 @@ repos:
 
   # ----- Code Analysis --------------------------------------------------------------------------------------------->
   - repo: https://github.com/pycqa/flake8
-    rev: '4.0.1'
+    rev: '6.0.0'
     hooks:
       - id: flake8
         exclude: ^(src/saltfactories/version\.py|\.pre-commit-hooks/.*\.py)$
