@@ -133,7 +133,7 @@ class EventListenerServer(asyncio.Protocol):
         log.debug("Connection from %s", peername)
         # pylint: disable=attribute-defined-outside-init
         self.transport = transport
-        self.unpacker = msgpack.Unpacker(raw=False)
+        self.unpacker = msgpack.Unpacker(raw=False, strict_map_key=False)
         # pylint: enable=attribute-defined-outside-init
 
     def data_received(self, data):
@@ -145,7 +145,8 @@ class EventListenerServer(asyncio.Protocol):
         except msgpack.exceptions.BufferFull:
             # Start over loosing some data?!
             self.unpacker = msgpack.Unpacker(  # pylint: disable=attribute-defined-outside-init
-                raw=False
+                raw=False,
+                strict_map_key=False,
             )
             self.unpacker.feed(data)
         for payload in self.unpacker:
