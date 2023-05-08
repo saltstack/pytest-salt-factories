@@ -6,3 +6,14 @@ from . import run
 from . import salt
 from . import spm
 from . import ssh
+
+__all__ = [
+    "call",
+    "cloud",
+    "cp",
+    "key",
+    "run",
+    "salt",
+    "spm",
+    "ssh",
+]
