@@ -47,3 +47,33 @@ issue_format = "`#{issue} <https://github.com/saltstack/pytest-salt-factories/is
   directory = "trivial"
   name = "Trivial/Internal Changes"
   showcontent = true
+
+[tool.ruff]
+line-length = 120
+target-version = "py37"
+src = [
+  "src",
+  "test"
+]
+extend-exclude = [
+  ".nox",
+]
+ignore-init-module-imports = true
+builtins = [
+  "__opts__",
+  "__salt__",
+  "__context__",
+  "__grains__",
+  "__pillar__",
+  "__salt_system_encoding__",
+]
+
+[tool.ruff.per-file-ignores]
+"src/saltfactories/utils/ports.py" = ["F403"]
+"src/saltfactories/utils/ports.pyi" = ["F403"]
+"src/saltfactories/utils/processes.py" = ["F403"]
+"src/saltfactories/utils/processes.pyi" = ["F403"]
+
+[tool.ruff.pydocstyle]
+# Use Google-style docstrings.
+convention = "google"
