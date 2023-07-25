@@ -20,7 +20,7 @@ def _python_excutable_ids(value):
 def test_python_executable_cli(pytester, python_executable):
     args = []
     if python_executable:
-        args.append("--python-executable={}".format(python_executable))
+        args.append(f"--python-executable={python_executable}")
 
     pytester.makepyfile(
         """
@@ -56,17 +56,15 @@ def test_python_executable_config_fixture(pytester, python_executable):
         )
     )
     pytester.makeconftest(
-        """
+        f"""
         import pytest
 
         @pytest.fixture(scope="session")
         def salt_factories_config():
             return {{
-                "python_executable": {!r}
+                "python_executable": {python_executable!r}
             }}
-        """.format(
-            python_executable
-        )
+        """
     )
     res = pytester.runpytest_subprocess()
     res.assert_outcomes(passed=2)
@@ -83,17 +81,15 @@ def scripts_dir(tmp_path):
 
 def test_scripts_dir_cli(pytester, scripts_dir):
     pytester.makeconftest(
-        """
+        f"""
         import pytest
 
         @pytest.fixture(scope="session")
         def salt_factories_config():
             return {{
-                "python_executable": {!r}
+                "python_executable": {sys.executable!r}
             }}
-        """.format(
-            sys.executable
-        )
+        """
     )
     pytester.makepyfile(
         """
@@ -112,24 +108,22 @@ def test_scripts_dir_cli(pytester, scripts_dir):
         )
     )
 
-    res = pytester.runpytest_subprocess("--scripts-dir={}".format(scripts_dir))
+    res = pytester.runpytest_subprocess(f"--scripts-dir={scripts_dir}")
     res.assert_outcomes(passed=3)
 
 
 def test_scripts_dir_config_fixture(pytester, scripts_dir):
     pytester.makeconftest(
-        """
+        f"""
         import pytest
 
         @pytest.fixture(scope="session")
         def salt_factories_config():
             return {{
-                "scripts_dir": r'{}',
-                "python_executable": '{}',
+                "scripts_dir": r'{scripts_dir}',
+                "python_executable": '{sys.executable}',
             }}
-        """.format(
-            scripts_dir, sys.executable
-        )
+        """
     )
     pytester.makepyfile(
         """
@@ -153,7 +147,7 @@ def test_scripts_dir_config_fixture(pytester, scripts_dir):
 
 
 def _system_service_ids(value):
-    return "system-service({})".format(value)
+    return f"system-service({value})"
 
 
 @pytest.mark.parametrize("system_service", [True, False], ids=_system_service_ids)
@@ -193,19 +187,16 @@ def test_system_service_cli(pytester, system_service, tmp_path):
 @pytest.mark.parametrize("system_service", [True, False], ids=_system_service_ids)
 def test_system_service_config_fixture(pytester, system_service, tmp_path):
     pytester.makeconftest(
-        """
+        f"""
         import pytest
 
         @pytest.fixture(scope="session")
         def salt_factories_config():
             return {{
-                "root_dir": r'{}',
-                "system_service": {},
+                "root_dir": r'{tmp_path}',
+                "system_service": {system_service},
             }}
-        """.format(
-            tmp_path,
-            system_service,
-        )
+        """
     )
     args = []
     if system_service:

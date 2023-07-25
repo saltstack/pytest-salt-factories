@@ -1,3 +1,4 @@
+import shutil
 import subprocess
 
 import pytest
@@ -22,9 +23,11 @@ def test_sshd(sshd):
 @pytest.mark.skip_on_windows
 @pytest.mark.skip_if_binaries_missing("ssh")
 def test_connect(sshd):
+    ssh = shutil.which("ssh")
+    assert ssh is not None
     cmd = subprocess.run(
         [
-            "ssh",
+            ssh,
             "-i",
             str(sshd.client_key),
             "-p",
@@ -36,9 +39,8 @@ def test_connect(sshd):
             sshd.listen_address,
             "echo Foo",
         ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
+        capture_output=True,
+        text=True,
         check=False,
     )
     assert cmd.returncode == 0, cmd

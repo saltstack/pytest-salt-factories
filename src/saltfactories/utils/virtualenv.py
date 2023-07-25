@@ -82,7 +82,8 @@ class VirtualEnv:
         try:
             self._create_virtualenv()
         except subprocess.CalledProcessError as exc:
-            raise AssertionError("Failed to create virtualenv") from exc
+            msg = "Failed to create virtualenv"
+            raise AssertionError(msg) from exc
         return self
 
     def __exit__(self, *_):
@@ -109,7 +110,7 @@ class VirtualEnv:
         kwargs.setdefault("stderr", subprocess.PIPE)
         kwargs.setdefault("universal_newlines", True)
         kwargs.setdefault("env", self.environ)
-        proc = subprocess.run(args, check=False, **kwargs)
+        proc = subprocess.run(args, check=False, **kwargs)  # noqa: S603
         ret = ProcessResult(
             returncode=proc.returncode,
             stdout=proc.stdout,
@@ -121,7 +122,8 @@ class VirtualEnv:
             try:
                 proc.check_returncode()
             except subprocess.CalledProcessError as exc:  # pragma: no cover
-                raise ProcessFailed("Command failed return code check", process_result=ret) from exc
+                msg = "Command failed return code check"
+                raise ProcessFailed(msg, process_result=ret) from exc
         return ret
 
     @staticmethod
@@ -140,23 +142,21 @@ class VirtualEnv:
         try:
             if platform.is_windows():
                 return os.path.join(sys.real_prefix, os.path.basename(sys.executable))
+            python_binary_names = [
+                "python{}.{}".format(*sys.version_info),
+                "python{}".format(*sys.version_info),
+                "python",
+            ]
+            for binary_name in python_binary_names:
+                python = os.path.join(sys.real_prefix, "bin", binary_name)
+                if os.path.exists(python):
+                    break
             else:
-                python_binary_names = [
-                    "python{}.{}".format(*sys.version_info),
-                    "python{}".format(*sys.version_info),
-                    "python",
-                ]
-                for binary_name in python_binary_names:
-                    python = os.path.join(sys.real_prefix, "bin", binary_name)
-                    if os.path.exists(python):
-                        break
-                else:
-                    raise AssertionError(
-                        "Couldn't find a python binary name under '{}' matching: {}".format(
-                            os.path.join(sys.real_prefix, "bin"), python_binary_names
-                        )
-                    )
-                return python
+                msg = "Couldn't find a python binary name under '{}' matching: {}".format(
+                    os.path.join(sys.real_prefix, "bin"), python_binary_names
+                )
+                raise AssertionError(msg)
+            return python  # noqa: TRY300
         except AttributeError:
             return sys.executable
 
@@ -199,7 +199,7 @@ class VirtualEnv:
                 passed_python = True
             args.append(arg)
         if passed_python is False:
-            args.append("--python={}".format(self.get_real_python()))
+            args.append(f"--python={self.get_real_python()}")
         args.append(str(self.venv_dir))
         # We pass CWD because run defaults to the venv_dir, which, at this stage
         # is not yet created

@@ -14,11 +14,11 @@ class SaltCall(SaltCli):
 
     __cli_timeout_supported__ = attr.ib(repr=False, init=False, default=True)
 
-    def get_minion_tgt(self, minion_tgt=None):
+    def get_minion_tgt(self, minion_tgt=None):  # noqa: ARG002
         """
         Overridden method because salt-run does not target minions, it runs locally.
         """
-        return None
+        return
 
     def process_output(self, stdout, stderr, cmdline=None):
         """

@@ -53,7 +53,7 @@ def test_provide_root_dir(pytester, salt_factories):
 
 
 def configure_kwargs_ids(value):
-    return "configure_kwargs={!r}".format(value)
+    return f"configure_kwargs={value!r}"
 
 
 @pytest.mark.parametrize(

@@ -28,7 +28,7 @@ class SystemdSaltProxyImpl(SystemdSaltDaemonImpl):
         Return the systemd service name.
         """
         if self._service_name is None:
-            self._service_name = "{}@{}".format(super().get_service_name(), self.factory.id)
+            self._service_name = f"{super().get_service_name()}@{self.factory.id}"
         return self._service_name
 
 
@@ -52,11 +52,13 @@ class SaltProxyMinion(SaltDaemon):
     def __setup_state_tree(self):  # pylint: disable=unused-private-member
         if "file_roots" in self.config:
             return SaltStateTree(envs=copy.deepcopy(self.config.get("file_roots") or {}))
+        return None
 
     @pillar_tree.default
     def __setup_pillar_tree(self):  # pylint: disable=unused-private-member
         if "pillar_roots" in self.config:
             return SaltPillarTree(envs=copy.deepcopy(self.config.get("pillar_roots") or {}))
+        return None
 
     @classmethod
     def default_config(
@@ -130,7 +132,7 @@ class SaltProxyMinion(SaltDaemon):
                 "proxy": {"proxytype": "dummy"},
                 "pytest-minion": {
                     "master-id": master_id,
-                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, proxy_minion_id)},
+                    "log": {"prefix": f"{cls.__name__}(id={proxy_minion_id!r})"},
                 },
             }
         else:
@@ -189,7 +191,7 @@ class SaltProxyMinion(SaltDaemon):
                 "acceptance_wait_time_max": 5,
                 "pytest-minion": {
                     "master-id": master_id,
-                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, proxy_minion_id)},
+                    "log": {"prefix": f"{cls.__name__}(id={proxy_minion_id!r})"},
                 },
             }
         # Merge in the initial default options with the internal _defaults
@@ -272,7 +274,7 @@ class SaltProxyMinion(SaltDaemon):
             if arg.startswith("--proxyid"):
                 break
         else:
-            _args.append("--proxyid={}".format(self.id))
+            _args.append(f"--proxyid={self.id}")
         return super().cmdline(*(_args + list(args)))
 
     def get_check_events(self):
@@ -302,8 +304,8 @@ class SaltProxyMinion(SaltDaemon):
         return factory_class(
             script_name=script_path,
             config=self.config.copy(),
-            base_script_args=["--proxyid={}".format(self.id)],
+            base_script_args=[f"--proxyid={self.id}"],
             system_service=self.factories_manager.system_service,
             python_executable=self.python_executable,
-            **factory_class_kwargs
+            **factory_class_kwargs,
         )

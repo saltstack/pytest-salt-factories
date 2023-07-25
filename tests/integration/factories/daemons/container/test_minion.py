@@ -30,9 +30,8 @@ def docker_client(salt_factories, docker_client):
         exc_kwargs = {}
         if PYTEST_GE_7:
             exc_kwargs["_use_item_location"] = True
-        raise pytest.skip.Exception(
-            "Test should not run against system install of Salt", **exc_kwargs
-        )
+        msg = "Test should not run against system install of Salt"
+        raise pytest.skip.Exception(msg, **exc_kwargs)
     return docker_client
 
 
@@ -65,17 +64,17 @@ def host_docker_network_ip_address(docker_client):
 @pytest.fixture(scope="session")
 def salt_factories_config(salt_factories_config, host_docker_network_ip_address):
     """
-    Return a dictionary with the keyword arguments for FactoriesManager
+    Return a dictionary with the keyword arguments for FactoriesManager.
     """
     config = salt_factories_config.copy()
     config["log_server_host"] = host_docker_network_ip_address
     return config
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def minion_id(salt_version):
     return random_string(
-        "salt-{}-".format(salt_version),
+        f"salt-{salt_version}-",
         uppercase=False,
     )
 

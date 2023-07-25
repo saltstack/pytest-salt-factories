@@ -7,7 +7,6 @@ import re
 import attr
 import pytest
 
-
 log = logging.getLogger(__name__)
 
 
@@ -100,5 +99,5 @@ class LocalClient:
                     "A running state.single was found causing a state lock. "
                     "Job details: '{}'  Killing Job Returned: '{}'".format(job_data, job_kill)
                 )
-                ret.append("[TEST SUITE ENFORCED]{}[/TEST SUITE ENFORCED]".format(msg))
+                ret.append(f"[TEST SUITE ENFORCED]{msg}[/TEST SUITE ENFORCED]")
         return ret

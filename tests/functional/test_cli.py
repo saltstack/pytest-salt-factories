@@ -23,11 +23,11 @@ def cmdline_ids(value):
 )
 def test_salt_factories_cli(cmdline):
     if not shutil.which(cmdline[0]):
-        pytest.skip("binary {} not found".format(cmdline[0]))
+        pytest.skip(f"binary {cmdline[0]} not found")
     ret = subprocess.run(
         cmdline,
         stdout=subprocess.PIPE,
-        universal_newlines=True,
+        text=True,
         check=False,
     )
     assert ret.returncode == 0
@@ -45,12 +45,11 @@ def test_salt_factories_cli(cmdline):
 )
 def test_salt_factories_cli_show_help(cmdline):
     if not shutil.which(cmdline[0]):
-        pytest.skip("binary {} not found".format(cmdline[0]))
+        pytest.skip(f"binary {cmdline[0]} not found")
     ret = subprocess.run(
         cmdline,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        universal_newlines=True,
+        capture_output=True,
+        text=True,
         check=False,
     )
     assert ret.returncode == 1

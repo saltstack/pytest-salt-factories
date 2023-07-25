@@ -109,23 +109,21 @@ def test_runtime_error_raised_when_sys_modules_is_not_list(pytester):
 @pytest.mark.parametrize("dunder", ["__virtual__", "__init__"])
 def test_runtime_error_raised_when_not_needed_dunders_are_passed(pytester, dunder):
     pytester.makepyfile(
-        """
+        f"""
         import pytest
         import string
 
         @pytest.fixture
         def configure_loader_modules():
-            return {{string: {{"{}": False}}}}
+            return {{string: {{"{dunder}": False}}}}
 
         def test_one():
             assert True
-        """.format(
-            dunder
-        )
+        """
     )
     res = pytester.runpytest()
     res.assert_outcomes(errors=1)
-    res.stdout.fnmatch_lines(["*UsageError: No need to patch '{}'*".format(dunder)])
+    res.stdout.fnmatch_lines([f"*UsageError: No need to patch '{dunder}'*"])
 
 
 def test_runtime_error_raised_on_unknown_salt_dunders(pytester):

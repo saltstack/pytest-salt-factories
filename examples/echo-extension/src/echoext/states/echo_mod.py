@@ -12,7 +12,7 @@ def echoed(name):
     value = __salt__["echo.text"](name)
     if value == name:
         ret["result"] = True
-        ret["comment"] = "The 'echo.echoed' returned: '{}'".format(value)
+        ret["comment"] = f"The 'echo.echoed' returned: '{value}'"
     return ret
 
 
@@ -24,5 +24,5 @@ def reversed(name):
     value = __salt__["echo.reverse"](name)
     if value == name[::-1]:
         ret["result"] = True
-        ret["comment"] = "The 'echo.reversed' returned: '{}'".format(value)
+        ret["comment"] = f"The 'echo.reversed' returned: '{value}'"
     return ret

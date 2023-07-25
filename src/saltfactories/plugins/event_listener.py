@@ -12,6 +12,7 @@ import weakref
 from collections import deque
 from datetime import datetime
 from datetime import timedelta
+from datetime import timezone
 
 import attr
 import msgpack.exceptions
@@ -19,16 +20,15 @@ import pytest
 from pytestshellutils.utils import ports
 from pytestshellutils.utils import time
 
-
 log = logging.getLogger(__name__)
 
 
 def _convert_stamp(stamp):
     try:
-        return datetime.fromisoformat(stamp)
+        return datetime.fromisoformat(stamp).replace(tzinfo=timezone.utc)
     except AttributeError:  # pragma: no cover
         # Python < 3.7
-        return datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%S.%f")
+        return datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%S.%f").replace(tzinfo=timezone.utc)
 
 
 @attr.s(kw_only=True, slots=True, hash=True, frozen=True)
@@ -71,7 +71,7 @@ class Event:
         """
         Property to identify if the event has expired, at which time it should be removed from the store.
         """
-        if datetime.utcnow() < self._expire_at:
+        if datetime.now(tz=timezone.utc) < self._expire_at:
             return False
         return True
 
@@ -121,7 +121,7 @@ class EventListenerServer(asyncio.Protocol):
     TCP Server to receive events forwarded.
     """
 
-    def __init__(self, _event_listener, *args, **kwargs):
+    def __init__(self, _event_listener, *args, **kwargs) -> None:
         self._event_listener = _event_listener
         super().__init__(*args, **kwargs)
 
@@ -153,7 +153,7 @@ class EventListenerServer(asyncio.Protocol):
             if payload is None:
                 self.transport.close()
                 break
-            self._event_listener._process_event_payload(payload)
+            self._event_listener._process_event_payload(payload)  # noqa: SLF001
 
 
 @attr.s(kw_only=True, slots=True, hash=False)
@@ -217,9 +217,9 @@ class EventListener:
         asyncio.set_event_loop(loop)
         try:
             loop.run_until_complete(self._run_server())
-        except Exception as exc:  # pylint: disable=broad-except
+        except Exception:  # pylint: disable=broad-except
             self.server_running_event.clear()
-            log.exception("%s: Exception raised while the running the server: %s", self, exc)
+            log.exception("%s: Exception raised while the running the server", self)
         finally:
             log.debug("shutdown asyncgens")
             loop.run_until_complete(loop.shutdown_asyncgens())
@@ -280,13 +280,11 @@ class EventListener:
                 if auth_event_callback:
                     try:
                         auth_event_callback(data)
-                    except Exception as exc:  # pragma: no cover pylint: disable=broad-except
-                        log.error(
-                            "%s Error calling %r: %s",
+                    except Exception:  # pragma: no cover pylint: disable=broad-except
+                        log.exception(
+                            "%s Error calling %r",
                             self,
                             auth_event_callback,
-                            exc,
-                            exc_info=True,
                         )
             log.debug(
                 "%s store(id: %s) size after event received: %d",
@@ -295,7 +293,7 @@ class EventListener:
                 len(self.store),
             )
         except Exception:  # pragma: no cover pylint: disable=broad-except
-            log.error("%s Something funky happened", self, exc_info=True)
+            log.exception("%s Something funky happened", self)
 
     def _cleanup(self):
         cleanup_at = time.time() + 30
@@ -343,7 +341,8 @@ class EventListener:
         # Wait for the thread to start
         if self.server_running_event.wait(5) is not True:
             self.server_running_event.clear()
-            raise RuntimeError("Failed to start the event listener")
+            msg = "Failed to start the event listener"
+            raise RuntimeError(msg)
         log.debug("%s is started", self)
         self.cleanup_thread.start()
 
@@ -393,9 +392,9 @@ class EventListener:
         :return set: A set of matched events
         """
         if after_time is None:
-            after_time = datetime.utcnow()
+            after_time = datetime.now(tz=timezone.utc)
         elif isinstance(after_time, float):
-            after_time = datetime.utcfromtimestamp(after_time)
+            after_time = datetime.fromtimestamp(after_time, tz=timezone.utc)
         after_time_iso = after_time.isoformat()
         log.debug(
             "%s is checking for event patterns happening after %s: %s",
@@ -451,9 +450,9 @@ class EventListener:
         :rtype ~saltfactories.plugins.event_listener.MatchedEvents:
         """
         if after_time is None:
-            after_time = datetime.utcnow()
+            after_time = datetime.now(tz=timezone.utc)
         elif isinstance(after_time, float):
-            after_time = datetime.utcfromtimestamp(after_time)
+            after_time = datetime.fromtimestamp(after_time, tz=timezone.utc)
         after_time_iso = after_time.isoformat()
         log.debug(
             "%s is waiting for event patterns happening after %s: %s",
@@ -557,7 +556,7 @@ def event_listener():
 
 
 @pytest.fixture(autouse=True)
-def restart_event_listener(event_listener):  # pylint: disable=redefined-outer-name
+def _restart_event_listener(event_listener):  # pylint: disable=redefined-outer-name
     """
     Restart the `event_listener` TCP server is case it crashed.
     """

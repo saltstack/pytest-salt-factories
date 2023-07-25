@@ -199,7 +199,7 @@ class IncludeExample(LiteralInclude):
 
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
         self.example_file = self.arguments[0]
         # Get the current doc path relative to the docs directory

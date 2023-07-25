@@ -26,7 +26,7 @@ def minion_id():
 def config_file(config_dir, minion_id):
     config_file = str(config_dir / "config")
     with open(config_file, "w", encoding="utf-8") as wfh:
-        wfh.write("id: {}\n".format(minion_id))
+        wfh.write(f"id: {minion_id}\n")
     return config_file
 
 
@@ -54,13 +54,14 @@ def test_default_timeout_config(minion_id, config_dir, config_file, cli_script_n
     proc = SaltCp(script_name=cli_script_name, config=config)
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--timeout=15",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
         minion_id,
-    ] + ["test.ping"]
+        "test.ping",
+    ]
     cmdline = proc.cmdline(*args, minion_tgt=minion_id)
     assert cmdline == expected
 
@@ -74,12 +75,13 @@ def test_default_timeout_construct(minion_id, config_dir, config_file, cli_scrip
     proc = SaltCp(script_name=cli_script_name, config=config, timeout=15)
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--timeout=15",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
         minion_id,
-    ] + ["test.ping"]
+        "test.ping",
+    ]
     cmdline = proc.cmdline(*args, minion_tgt=minion_id)
     assert cmdline == expected

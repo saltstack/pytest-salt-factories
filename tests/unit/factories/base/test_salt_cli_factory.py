@@ -29,7 +29,7 @@ def minion_id():
 def config_file(config_dir, minion_id):
     config_file = str(config_dir / "config")
     with open(config_file, "w", encoding="utf-8") as wfh:
-        wfh.write("id: {}\n".format(minion_id))
+        wfh.write(f"id: {minion_id}\n")
     return config_file
 
 
@@ -52,7 +52,7 @@ def test_default_cli_flags(minion_id, config_dir, config_file, cli_script_name):
     kwargs = {"minion_tgt": minion_id}
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -76,17 +76,15 @@ def test_override_log_level(minion_id, config_dir, config_file, cli_script_name,
     args.extend(flag_overrides_args)
     args.append("test.ping")
     kwargs = {"minion_tgt": minion_id}
-    expected = (
-        [
-            cli_script_name,
-            "--config-dir={}".format(config_dir),
-            "--out=json",
-            "--out-indent=0",
-            minion_id,
-        ]
-        + flag_overrides_args
-        + ["test.ping"]
-    )
+    expected = [
+        cli_script_name,
+        f"--config-dir={config_dir}",
+        "--out=json",
+        "--out-indent=0",
+        minion_id,
+        *flag_overrides_args,
+        "test.ping",
+    ]
     proc = SaltCli(script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
@@ -104,16 +102,14 @@ def test_override_output(minion_id, config_dir, config_file, cli_script_name, fl
     args.extend(flag_overrides_args)
     args.append("test.ping")
     kwargs = {"minion_tgt": minion_id}
-    expected = (
-        [
-            cli_script_name,
-            "--config-dir={}".format(config_dir),
-            "--log-level=critical",
-            minion_id,
-        ]
-        + flag_overrides_args
-        + ["test.ping"]
-    )
+    expected = [
+        cli_script_name,
+        f"--config-dir={config_dir}",
+        "--log-level=critical",
+        minion_id,
+        *flag_overrides_args,
+        "test.ping",
+    ]
     proc = SaltCli(script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
@@ -133,17 +129,15 @@ def test_override_output_indent(minion_id, config_dir, config_file, cli_script_n
     args.extend(flag_overrides_args)
     args.append("test.ping")
     kwargs = {"minion_tgt": minion_id}
-    expected = (
-        [
-            cli_script_name,
-            "--config-dir={}".format(config_dir),
-            "--out=json",
-            "--log-level=critical",
-            minion_id,
-        ]
-        + flag_overrides_args
-        + ["test.ping"]
-    )
+    expected = [
+        cli_script_name,
+        f"--config-dir={config_dir}",
+        "--out=json",
+        "--log-level=critical",
+        minion_id,
+        *flag_overrides_args,
+        "test.ping",
+    ]
     proc = SaltCli(script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
@@ -160,7 +154,7 @@ def test_cli_timeout_lesser_than_timeout_kw(minion_id, config_dir, config_file, 
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -202,7 +196,7 @@ def test_cli_timeout_matches_timeout_kw(minion_id, config_dir, config_file, cli_
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -244,7 +238,7 @@ def test_cli_timeout_greater_than_timeout_kw(minion_id, config_dir, config_file,
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -286,8 +280,8 @@ def test_cli_timeout_updates_to_timeout_kw_plus_default_increase(
     kwargs = {"minion_tgt": minion_id, "_timeout": explicit_timeout}
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
-        "--timeout={}".format(explicit_timeout),
+        f"--config-dir={config_dir}",
+        f"--timeout={explicit_timeout}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -326,8 +320,8 @@ def test_cli_timeout_updates_to_default_timeout_plus_default_increase(
     kwargs = {"minion_tgt": minion_id}
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
-        "--timeout={}".format(timeout),
+        f"--config-dir={config_dir}",
+        f"--timeout={timeout}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -366,20 +360,18 @@ def test_override_timeout(minion_id, config_dir, config_file, cli_script_name, f
 
     timeout = 10
     config = {"conf_file": config_file, "id": "the-id"}
-    args = flag_overrides_args + ["test.ping"]
+    args = [*flag_overrides_args, "test.ping"]
     kwargs = {"minion_tgt": minion_id}
-    expected = (
-        [
-            cli_script_name,
-            "--config-dir={}".format(config_dir),
-            "--out=json",
-            "--out-indent=0",
-            "--log-level=critical",
-            minion_id,
-        ]
-        + flag_overrides_args
-        + ["test.ping"]
-    )
+    expected = [
+        cli_script_name,
+        f"--config-dir={config_dir}",
+        "--out=json",
+        "--out-indent=0",
+        "--log-level=critical",
+        minion_id,
+        *flag_overrides_args,
+        "test.ping",
+    ]
     proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
     # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
@@ -404,20 +396,18 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
 
     timeout = 10
     config = {"conf_file": config_file, "id": "the-id"}
-    args = flag_overrides_args + ["test.ping"]
+    args = [*flag_overrides_args, "test.ping"]
     kwargs = {"minion_tgt": minion_id}
-    expected = (
-        [
-            cli_script_name,
-            "--config-dir={}".format(config_dir),
-            "--out=json",
-            "--out-indent=0",
-            "--log-level=critical",
-            minion_id,
-        ]
-        + flag_overrides_args
-        + ["test.ping"]
-    )
+    expected = [
+        cli_script_name,
+        f"--config-dir={config_dir}",
+        "--out=json",
+        "--out-indent=0",
+        "--log-level=critical",
+        minion_id,
+        *flag_overrides_args,
+        "test.ping",
+    ]
     proc = SaltCli(script_name=cli_script_name, config=config, timeout=timeout)
     # We set __cli_timeout_supported__ to True just to test. This would be an attribute set
     # at the class level for Salt CLI's that support the timeout flag, like for example, salt-run
@@ -434,28 +424,26 @@ def test_override_timeout_bad_value(minion_id, config_dir, config_file, cli_scri
 
 @pytest.mark.parametrize("flag", ["-c", "--config-dir", "--config-dir=", None])
 def test_override_config_dir(minion_id, config_dir, config_file, cli_script_name, flag):
-    passed_config_dir = "{}.new".format(config_dir)
+    passed_config_dir = f"{config_dir}.new"
     if flag is None:
-        flag_overrides_args = ["--config-dir={}".format(config_dir)]
+        flag_overrides_args = [f"--config-dir={config_dir}"]
     elif flag.endswith("="):
         flag_overrides_args = [flag + passed_config_dir]
     else:
         flag_overrides_args = [flag, passed_config_dir]
 
     config = {"conf_file": config_file, "id": "the-id"}
-    args = flag_overrides_args + ["test.ping"]
+    args = [*flag_overrides_args, "test.ping"]
     kwargs = {"minion_tgt": minion_id}
-    expected = (
-        [
-            cli_script_name,
-            "--out=json",
-            "--out-indent=0",
-            "--log-level=critical",
-            minion_id,
-        ]
-        + flag_overrides_args
-        + ["test.ping"]
-    )
+    expected = [
+        cli_script_name,
+        "--out=json",
+        "--out-indent=0",
+        "--log-level=critical",
+        minion_id,
+        *flag_overrides_args,
+        "test.ping",
+    ]
     proc = SaltCli(script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args, **kwargs)
     assert cmdline == expected
@@ -482,13 +470,13 @@ def test_non_string_cli_flags(minion_id, config_dir, config_file, cli_script_nam
     kwargs = {"minion_tgt": minion_id, "foo": foo}
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
         minion_id,
         "test.ping",
-        "foo={}".format(json.dumps(foo)),
+        f"foo={json.dumps(foo)}",
     ]
     proc = SaltCli(script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args, **kwargs)
@@ -504,7 +492,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     kwargs.update(extra_kwargs)
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
@@ -512,7 +500,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
         "test.ping",
     ]
     for key, value in extra_kwargs.items():
-        expected.append("{}={}".format(key, value))
+        expected.append(f"{key}={value}")
     proc = SaltCli(script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args, **kwargs)
     # Function **kwargs are not ordered dictionaries on some python versions
@@ -525,16 +513,16 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     kwargs.update(extra_kwargs)
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
         minion_id,
         "test.ping",
     ]
-    for key, value in extra_kwargs.items():
-        value = json.dumps(value)
-        expected.append("{}={}".format(key, value))
+    for key, _value in extra_kwargs.items():
+        value = json.dumps(_value)
+        expected.append(f"{key}={value}")
     proc = SaltCli(script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args, **kwargs)
     # Function **kwargs are not ordered dictionaries on some python versions
@@ -547,16 +535,16 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     kwargs.update(extra_kwargs)
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
         minion_id,
         "test.ping",
     ]
-    for key, value in extra_kwargs.items():
-        value = json.dumps(value)
-        expected.append("{}={}".format(key, value))
+    for key, _value in extra_kwargs.items():
+        value = json.dumps(_value)
+        expected.append(f"{key}={value}")
     proc = SaltCli(script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args, **kwargs)
     # Function **kwargs are not ordered dictionaries on some python versions
@@ -568,13 +556,13 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
     kwargs = {"minion_tgt": minion_id, "extra": extra_kwargs}
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--out=json",
         "--out-indent=0",
         "--log-level=critical",
         minion_id,
         "test.ping",
-        "extra={}".format(json.dumps(extra_kwargs)),
+        f"extra={json.dumps(extra_kwargs)}",
     ]
     proc = SaltCli(script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args, **kwargs)
@@ -585,7 +573,7 @@ def test_jsonify_kwargs(minion_id, config_dir, config_file, cli_script_name):
 
 def test_salt_cli_factory_id_attr_comes_first_in_repr(config_file):
     proc = SaltCli(script_name="foo-bar", config={"id": "TheID", "conf_file": config_file})
-    regex = r"{}(id='TheID'".format(proc.__class__.__name__)
+    regex = rf"{proc.__class__.__name__}(id='TheID'"
     assert repr(proc).startswith(regex)
     assert str(proc).startswith(regex)
 
@@ -593,4 +581,4 @@ def test_salt_cli_factory_id_attr_comes_first_in_repr(config_file):
 def test_salt_cli_display_name(config_file):
     factory_id = "TheID"
     proc = SaltCli(script_name="foo-bar", config={"id": factory_id, "conf_file": config_file})
-    assert proc.get_display_name() == "{}(id={!r})".format(SaltCli.__name__, factory_id)
+    assert proc.get_display_name() == f"{SaltCli.__name__}(id={factory_id!r})"

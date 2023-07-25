@@ -1,0 +1,5 @@
+extend = "../pyproject.toml"
+[mccabe]
+max-complexity = 20
+[pylint]
+max-statements = 100

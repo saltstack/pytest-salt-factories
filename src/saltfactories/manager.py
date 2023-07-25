@@ -225,7 +225,7 @@ class FactoriesManager:
             # If this value is empty, None, False, just remove it
             config.pop("user")
 
-        pytest_key = "pytest-{}".format(role)
+        pytest_key = f"pytest-{role}"
         if pytest_key not in config:
             config[pytest_key] = {}
 
@@ -248,7 +248,7 @@ class FactoriesManager:
         max_start_attempts=3,
         start_timeout=None,
         factory_class=daemons.master.SaltMaster,
-        **factory_class_kwargs
+        **factory_class_kwargs,
     ):
         """
         Return a salt-master instance.
@@ -297,7 +297,7 @@ class FactoriesManager:
             factory_class,
             max_start_attempts,
             start_timeout,
-            **factory_class_kwargs
+            **factory_class_kwargs,
         )
 
     def salt_minion_daemon(
@@ -309,7 +309,7 @@ class FactoriesManager:
         max_start_attempts=3,
         start_timeout=None,
         factory_class=daemons.minion.SaltMinion,
-        **factory_class_kwargs
+        **factory_class_kwargs,
     ):
         """
         Return a salt-minion instance.
@@ -355,7 +355,7 @@ class FactoriesManager:
             factory_class,
             max_start_attempts,
             start_timeout,
-            **factory_class_kwargs
+            **factory_class_kwargs,
         )
 
     def salt_syndic_daemon(
@@ -373,7 +373,7 @@ class FactoriesManager:
         minion_defaults=None,
         minion_overrides=None,
         minion_factory_class=daemons.minion.SaltMinion,
-        **factory_class_kwargs
+        **factory_class_kwargs,
     ):
         """
         Return a salt-syndic instance.
@@ -466,7 +466,7 @@ class FactoriesManager:
             start_timeout=start_timeout,
             master=master_factory,
             minion=minion_factory,
-            **factory_class_kwargs
+            **factory_class_kwargs,
         )
 
         # We need the syndic master and minion running
@@ -483,7 +483,7 @@ class FactoriesManager:
         max_start_attempts=3,
         start_timeout=None,
         factory_class=daemons.proxy.SaltProxyMinion,
-        **factory_class_kwargs
+        **factory_class_kwargs,
     ):
         """
         Return a salt proxy-minion instance.
@@ -530,7 +530,7 @@ class FactoriesManager:
             factory_class,
             max_start_attempts,
             start_timeout,
-            **factory_class_kwargs
+            **factory_class_kwargs,
         )
 
     def salt_api_daemon(
@@ -539,7 +539,7 @@ class FactoriesManager:
         max_start_attempts=3,
         start_timeout=None,
         factory_class=daemons.api.SaltApi,
-        **factory_class_kwargs
+        **factory_class_kwargs,
     ):
         """
         Return a salt-api instance.
@@ -557,7 +557,7 @@ class FactoriesManager:
             factory_class,
             max_start_attempts=max_start_attempts,
             start_timeout=start_timeout,
-            **factory_class_kwargs
+            **factory_class_kwargs,
         )
 
     def get_sshd_daemon(
@@ -571,7 +571,7 @@ class FactoriesManager:
         max_start_attempts=3,
         start_timeout=None,
         factory_class=daemons.sshd.Sshd,
-        **factory_class_kwargs
+        **factory_class_kwargs,
     ):
         """
         Return an SSHD daemon instance.
@@ -617,7 +617,7 @@ class FactoriesManager:
             listen_address=listen_address,
             listen_port=listen_port,
             sshd_config_dict=sshd_config_dict,
-            **factory_class_kwargs
+            **factory_class_kwargs,
         )
 
     def get_container(
@@ -628,7 +628,7 @@ class FactoriesManager:
         factory_class=daemons.container.Container,
         max_start_attempts=3,
         start_timeout=None,
-        **factory_class_kwargs
+        **factory_class_kwargs,
     ):
         """
         Return a container instance.
@@ -662,7 +662,7 @@ class FactoriesManager:
             cwd=self.cwd,
             start_timeout=start_timeout or self.start_timeout,
             max_start_attempts=max_start_attempts,
-            **factory_class_kwargs
+            **factory_class_kwargs,
         )
 
     def get_salt_script_path(self, script_name):
@@ -681,13 +681,13 @@ class FactoriesManager:
         if self.system_service:
             script_path = shutil.which(script_name)
             if not script_path:
-                raise FileNotFoundError(
-                    "Salt CLI script '{}' was not found in $PATH".format(script_name)
-                )
+                msg = f"Salt CLI script '{script_name}' was not found in $PATH"
+                raise FileNotFoundError(msg)
             return script_path
         script_path = self.scripts_dir / script_name
         if not script_path.exists():
-            raise FileNotFoundError("Salt CLI script '{}' not found".format(script_path))
+            msg = f"Salt CLI script '{script_path}' not found"
+            raise FileNotFoundError(msg)
         return str(script_path)
 
     def _get_factory_class_instance(
@@ -697,13 +697,13 @@ class FactoriesManager:
         factory_class,
         max_start_attempts,
         start_timeout,
-        **factory_class_kwargs
+        **factory_class_kwargs,
     ):
         """
         Helper method to instantiate daemon factories.
         """
         script_path = self.get_salt_script_path(script_name)
-        factory = factory_class(
+        return factory_class(
             config=daemon_config,
             start_timeout=start_timeout or self.start_timeout,
             slow_stop=self.slow_stop,
@@ -715,9 +715,8 @@ class FactoriesManager:
             script_name=script_path,
             system_service=self.system_service,
             python_executable=self.python_executable,
-            **factory_class_kwargs
+            **factory_class_kwargs,
         )
-        return factory
 
     def get_root_dir_for_daemon(self, daemon_id, defaults=None, factory_class=None):
         """
@@ -732,7 +731,7 @@ class FactoriesManager:
             return root_dir
         if self.system_service is True and issubclass(factory_class, SaltMixin):
             return self.root_dir
-        elif self.system_service is True:
+        if self.system_service is True:
             root_dir = self.tmp_root_dir
         else:
             root_dir = self.root_dir
@@ -741,7 +740,7 @@ class FactoriesManager:
         while True:
             if not root_dir.is_dir():
                 break
-            root_dir = self.root_dir / "{}_{}".format(daemon_id, counter)
+            root_dir = self.root_dir / f"{daemon_id}_{counter}"
             counter += 1
         root_dir.mkdir(parents=True, exist_ok=True)
         return root_dir

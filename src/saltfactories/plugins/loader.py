@@ -32,10 +32,11 @@ def pytest_collection_modifyitems(items):
                 fixture = getattr(item.module, typo)
                 try:
                     fixture._pytestfixturefunction  # pylint: disable=pointless-statement
-                    raise RuntimeError(
-                        "The module {} defines a '{}' fixture but the correct fixture name "
-                        "is 'configure_loader_modules'".format(item.module, typo)
+                    msg = (
+                        f"The module {item.module} defines a '{typo}' fixture but the correct fixture "
+                        "name is 'configure_loader_modules'"
                     )
+                    raise RuntimeError(msg)
                 except AttributeError:
                     # It's a regular function?!
                     # Carry on
@@ -55,10 +56,11 @@ def pytest_collection_modifyitems(items):
                 fixture._pytestfixturefunction
             except AttributeError:
                 # It's not a fixture, raise an error
-                raise RuntimeError(
-                    "The module {} defines a 'configure_loader_modules' function but "
-                    "that function is not a fixture".format(item.module)
-                ) from None
+                msg = (
+                    f"The module {item.module} defines a 'configure_loader_modules' function but "
+                    "that function is not a fixture"
+                )
+                raise RuntimeError(msg) from None
 
 
 @pytest.fixture(autouse=True)

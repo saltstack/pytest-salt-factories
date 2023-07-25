@@ -139,7 +139,7 @@ def test_saltenvs_temp_file(tmp_path):
             with saltenv.base.temp_file(  # pylint: disable=no-member
                 "top.sls", contents=top_file_contents
             ) as top_file_path:
-                with pytest.raises(ValueError):
+                with pytest.raises(ValueError):  # noqa: PT011
                     # the top file shall not be created within the base_env_path_2
                     # We have to cast to a string because on Py3.5, the path might be an instance of pathlib2.Path
                     top_file_path.relative_to(str(base_env_path_2))

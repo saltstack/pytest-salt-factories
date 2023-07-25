@@ -47,7 +47,7 @@ class SaltMixin:
     """
 
     config = attr.ib(repr=False)
-    id = attr.ib(init=False)  # pylint: disable=invalid-name
+    id = attr.ib(init=False)  # noqa: A003  pylint: disable=invalid-name
     config_file = attr.ib(init=False)
     config_dir = attr.ib()
     python_executable = attr.ib(default=None)
@@ -83,7 +83,7 @@ class SaltMixin:
         Returns a human readable name for the factory.
         """
         if self.display_name is None:
-            self.display_name = "{}(id={!r})".format(self.__class__.__name__, self.id)
+            self.display_name = f"{self.__class__.__name__}(id={self.id!r})"
         if self.display_name is not None:
             return self.display_name
         return super().get_display_name()
@@ -161,7 +161,7 @@ class SaltCli(SaltMixin, ScriptSubprocess):
         """
         return minion_tgt
 
-    def cmdline(
+    def cmdline(  # noqa: C901,PLR0912,PLR0915
         self, *args, minion_tgt=None, merge_json_output=None, **kwargs
     ):  # pylint: disable=arguments-differ
         """
@@ -201,7 +201,7 @@ class SaltCli(SaltMixin, ScriptSubprocess):
             if arg in ("-c", "--config-dir"):
                 break
         else:
-            cmdline.append("--config-dir={}".format(self.config_dir))
+            cmdline.append(f"--config-dir={self.config_dir}")
 
         # Handle the timeout CLI flag, if supported
         if self.__cli_timeout_supported__:
@@ -215,11 +215,10 @@ class SaltCli(SaltMixin, ScriptSubprocess):
                     except ValueError:
                         # Not a number? Let salt do it's error handling
                         break
-                    if self.impl._terminal_timeout is None:
-                        self.impl._terminal_timeout = (
-                            int(salt_cli_timeout) + SALT_TIMEOUT_FLAG_INCREASE
-                        )
-                    elif salt_cli_timeout >= self.impl._terminal_timeout:
+                    if (
+                        self.impl._terminal_timeout is None
+                        or salt_cli_timeout >= self.impl._terminal_timeout
+                    ):
                         self.impl._terminal_timeout = (
                             int(salt_cli_timeout) + SALT_TIMEOUT_FLAG_INCREASE
                         )
@@ -230,11 +229,10 @@ class SaltCli(SaltMixin, ScriptSubprocess):
                     except ValueError:
                         # Not a number? Let salt do it's error handling
                         break
-                    if self.impl._terminal_timeout is None:
-                        self.impl._terminal_timeout = (
-                            int(salt_cli_timeout) + SALT_TIMEOUT_FLAG_INCREASE
-                        )
-                    if salt_cli_timeout >= self.impl._terminal_timeout:
+                    if (
+                        self.impl._terminal_timeout is None
+                        or salt_cli_timeout >= self.impl._terminal_timeout
+                    ):
                         self.impl._terminal_timeout = (
                             int(salt_cli_timeout) + SALT_TIMEOUT_FLAG_INCREASE
                         )
@@ -244,15 +242,18 @@ class SaltCli(SaltMixin, ScriptSubprocess):
                     continue
             else:
                 salt_cli_timeout = self.timeout
-                if salt_cli_timeout and self.impl._terminal_timeout:
-                    if self.impl._terminal_timeout > salt_cli_timeout:
-                        salt_cli_timeout = self.impl._terminal_timeout
+                if (
+                    salt_cli_timeout
+                    and self.impl._terminal_timeout
+                    and self.impl._terminal_timeout > salt_cli_timeout
+                ):
+                    salt_cli_timeout = self.impl._terminal_timeout
                 if not salt_cli_timeout and self.impl._terminal_timeout:
                     salt_cli_timeout = self.impl._terminal_timeout
                 if salt_cli_timeout:
                     self.impl._terminal_timeout = salt_cli_timeout + SALT_TIMEOUT_FLAG_INCREASE
                     # Add it to the salt command CLI flags
-                    cmdline.append("--timeout={}".format(salt_cli_timeout))
+                    cmdline.append(f"--timeout={salt_cli_timeout}")
 
         # Handle the output flag
         if self.__cli_output_supported__:
@@ -297,16 +298,15 @@ class SaltCli(SaltMixin, ScriptSubprocess):
         # Keyword arguments get passed as KEY=VALUE pairs to the CLI
         for key, value in kwargs.items():
             if not isinstance(value, str):
-                value = json.dumps(value)
-            cmdline.append("{}={}".format(key, value))
+                value = json.dumps(value)  # noqa: PLW2901
+            cmdline.append(f"{key}={value}")
         cmdline = super().cmdline(*cmdline)
-        if self.python_executable:
-            if cmdline[0] != self.python_executable:
-                cmdline.insert(0, self.python_executable)
+        if self.python_executable and cmdline[0] != self.python_executable:
+            cmdline.insert(0, self.python_executable)
         log.debug("Built cmdline: %s", cmdline)
         return cmdline
 
-    def process_output(self, stdout, stderr, cmdline=None):
+    def process_output(self, stdout, stderr, cmdline=None):  # noqa: ARG002
         """
         Process the output. When possible JSON is loaded from the output.
 
@@ -320,10 +320,9 @@ class SaltCli(SaltMixin, ScriptSubprocess):
                 json_out = json.loads(stdout)
             except ValueError:
                 if self.__merge_json_output__:
-                    try:
+                    with contextlib.suppress(ValueError):
                         json_out = json.loads(stdout.replace("}\n{", ", "))
-                    except ValueError:
-                        pass
+
             if json_out is None:
                 log.debug("%s failed to load JSON from the following output:\n%r", self, stdout)
         if (
@@ -345,10 +344,8 @@ class SaltCli(SaltMixin, ScriptSubprocess):
             and self._minion_tgt
             and self._minion_tgt != "*"
         ):
-            try:
+            with contextlib.suppress(KeyError):
                 json_out = json_out[self._minion_tgt]
-            except KeyError:  # pragma: no cover
-                pass
         return stdout, stderr, json_out
 
 
@@ -420,6 +417,7 @@ class SystemdSaltDaemonImpl(DaemonImpl):
         """
         if self.is_running():
             return self._process.pid
+        return None
 
     def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
         """
@@ -470,10 +468,8 @@ class SystemdSaltDaemonImpl(DaemonImpl):
                 self._process.wait()
             except psutil.TimeoutExpired:
                 self._process.terminate()
-                try:
+                with contextlib.suppress(psutil.TimeoutExpired):
                     self._process.wait()
-                except psutil.TimeoutExpired:
-                    pass
 
         exitcode = self._process.wait() or 0
 
@@ -532,11 +528,9 @@ class SaltDaemon(SaltMixin, Daemon):
         SaltMixin.__attrs_post_init__(self)
 
         if self.system_service is True and self.extra_cli_arguments_after_first_start_failure:
-            raise pytest.UsageError(
-                "You cannot pass `extra_cli_arguments_after_first_start_failure` to a salt "
-                "system installation setup."
-            )
-        elif self.system_service is False:
+            msg = "You cannot pass `extra_cli_arguments_after_first_start_failure` to a salt system installation setup."
+            raise pytest.UsageError(msg)
+        if self.system_service is False:
             for arg in self.extra_cli_arguments_after_first_start_failure:
                 if arg in ("-l", "--log-level"):
                     break
@@ -563,7 +557,7 @@ class SaltDaemon(SaltMixin, Daemon):
         root_dir=None,
         defaults=None,
         overrides=None,
-        **configure_kwargs
+        **configure_kwargs,
     ):
         """
         Configure the salt daemon.
@@ -574,7 +568,7 @@ class SaltDaemon(SaltMixin, Daemon):
             root_dir=root_dir,
             defaults=defaults,
             overrides=overrides,
-            **configure_kwargs
+            **configure_kwargs,
         )
 
     @classmethod
@@ -664,7 +658,7 @@ class SaltDaemon(SaltMixin, Daemon):
             if arg in ("-c", "--config-dir"):
                 break
         else:
-            _args.append("--config-dir={}".format(self.config_dir))
+            _args.append(f"--config-dir={self.config_dir}")
         # Handle the logging flag
         for arg in args:
             if not isinstance(arg, str):
@@ -677,9 +671,8 @@ class SaltDaemon(SaltMixin, Daemon):
             # Default to being almost quiet on console output
             _args.append("--log-level=critical")
         cmdline = super().cmdline(*(_args + list(args)))
-        if self.python_executable:
-            if cmdline[0] != self.python_executable:
-                cmdline.insert(0, self.python_executable)
+        if self.python_executable and cmdline[0] != self.python_executable:
+            cmdline.insert(0, self.python_executable)
         return cmdline
 
     def _set_started_at(self):
@@ -705,7 +698,8 @@ class SaltDaemon(SaltMixin, Daemon):
         checks_start_time = time.time()
         while time.time() <= timeout_at:
             if not self.is_running():
-                raise FactoryNotStarted("{} is no longer running".format(self))
+                msg = f"{self} is no longer running"
+                raise FactoryNotStarted(msg)
             if not check_events:
                 break
             check_events -= {

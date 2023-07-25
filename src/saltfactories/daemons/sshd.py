@@ -6,6 +6,7 @@ import pathlib
 import shutil
 import subprocess
 from datetime import datetime
+from datetime import timezone
 
 import attr
 from pytestshellutils.exceptions import FactoryFailure
@@ -59,7 +60,7 @@ class Sshd(Daemon):
 
         # Let's generate the client key
         self.client_key = self._generate_client_ecdsa_key()
-        with open("{}.pub".format(self.client_key), encoding="utf=8") as rfh:
+        with open(f"{self.client_key}.pub", encoding="utf=8") as rfh:
             pubkey = rfh.read().strip()
             log.debug("SSH client pub key: %r", pubkey)
             self.authorized_keys.append(pubkey)
@@ -113,9 +114,9 @@ class Sshd(Daemon):
             for key, value in self.sshd_config.items():
                 if isinstance(value, list):
                     for item in value:
-                        config_lines.append("{} {}\n".format(key, item))
+                        config_lines.append(f"{key} {item}\n")
                     continue
-                config_lines.append("{} {}\n".format(key, value))
+                config_lines.append(f"{key} {value}\n")
 
             # Let's generate the host keys
             if platform.is_fips_enabled() is False:
@@ -123,7 +124,7 @@ class Sshd(Daemon):
             self._generate_server_ecdsa_key()
             self._generate_server_ed25519_key()
             for host_key in pathlib.Path(self.config_dir).glob("ssh_host_*_key"):
-                config_lines.append("HostKey {}\n".format(host_key))
+                config_lines.append(f"HostKey {host_key}\n")
 
             with open(str(sshd_config_file), "w", encoding="utf=8") as wfh:
                 wfh.write("".join(sorted(config_lines)))
@@ -138,7 +139,7 @@ class Sshd(Daemon):
     def _generate_client_ecdsa_key(self):
         key_filename = "client_key"
         key_path_prv = self.config_dir / key_filename
-        key_path_pub = self.config_dir / "{}.pub".format(key_filename)
+        key_path_pub = self.config_dir / f"{key_filename}.pub"
         if key_path_prv.exists() and key_path_pub.exists():
             return key_path_prv
         self._ssh_keygen(key_filename, "ecdsa", "521")
@@ -149,7 +150,7 @@ class Sshd(Daemon):
     def _generate_server_dsa_key(self):
         key_filename = "ssh_host_dsa_key"
         key_path_prv = self.config_dir / key_filename
-        key_path_pub = self.config_dir / "{}.pub".format(key_filename)
+        key_path_pub = self.config_dir / f"{key_filename}.pub"
         if key_path_prv.exists() and key_path_pub.exists():
             return key_path_prv
         self._ssh_keygen(key_filename, "dsa", "1024")
@@ -160,7 +161,7 @@ class Sshd(Daemon):
     def _generate_server_ecdsa_key(self):
         key_filename = "ssh_host_ecdsa_key"
         key_path_prv = self.config_dir / key_filename
-        key_path_pub = self.config_dir / "{}.pub".format(key_filename)
+        key_path_pub = self.config_dir / f"{key_filename}.pub"
         if key_path_prv.exists() and key_path_pub.exists():
             return key_path_prv
         self._ssh_keygen(key_filename, "ecdsa", "521")
@@ -171,7 +172,7 @@ class Sshd(Daemon):
     def _generate_server_ed25519_key(self):
         key_filename = "ssh_host_ed25519_key"
         key_path_prv = self.config_dir / key_filename
-        key_path_pub = self.config_dir / "{}.pub".format(key_filename)
+        key_path_pub = self.config_dir / f"{key_filename}.pub"
         if key_path_prv.exists() and key_path_pub.exists():
             return key_path_prv
         self._ssh_keygen(key_filename, "ed25519", "521")
@@ -180,12 +181,11 @@ class Sshd(Daemon):
         return key_path_prv
 
     def _ssh_keygen(self, key_filename, key_type, bits, comment=None):
-
         if comment is None:
             comment = "{user}@{host}-{date}".format(
                 user=running_username(),
                 host=socket.gethostname(),
-                date=datetime.utcnow().strftime("%Y-%m-%d"),
+                date=datetime.now(tz=timezone.utc).strftime("%Y-%m-%d"),
             )
 
         cmdline = [
@@ -203,12 +203,11 @@ class Sshd(Daemon):
         ]
         try:
             subprocess.run(
-                cmdline,
+                cmdline,  # noqa: S603
                 cwd=str(self.config_dir),
                 check=True,
-                universal_newlines=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                text=True,
+                capture_output=True,
             )
         except subprocess.CalledProcessError as exc:
             process_result = ProcessResult(
@@ -217,6 +216,5 @@ class Sshd(Daemon):
                 stderr=exc.stderr,
                 returncode=exc.returncode,
             )
-            raise FactoryFailure(
-                "Failed to generate ssh key.", process_result=process_result
-            ) from exc
+            msg = "Failed to generate ssh key."
+            raise FactoryFailure(msg, process_result=process_result) from exc

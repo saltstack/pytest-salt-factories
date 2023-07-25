@@ -28,7 +28,8 @@ def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
     :return str: The random string
     """
     if not any([uppercase, lowercase, digits]):
-        raise RuntimeError("At least one of 'uppercase', 'lowercase' or 'digits' needs to be true")
+        msg = "At least one of 'uppercase', 'lowercase' or 'digits' needs to be true"
+        raise RuntimeError(msg)
     choices = []
     if uppercase:
         choices.extend(string.ascii_uppercase)
@@ -37,7 +38,7 @@ def random_string(prefix, size=6, uppercase=True, lowercase=True, digits=True):
     if digits:
         choices.extend(string.digits)
 
-    return prefix + "".join(random.choice(choices) for _ in range(size))
+    return prefix + "".join(random.choice(choices) for _ in range(size))  # noqa: S311
 
 
 @lru_cache(maxsize=1)
@@ -69,10 +70,10 @@ def cast_to_pathlib_path(value):
 def warn_until(
     version: str,
     message: str,
-    category: Type[Warning] = DeprecationWarning,
-    stacklevel: Optional[int] = None,
+    category: Type[Warning] = DeprecationWarning,  # noqa: FA100
+    stacklevel: Optional[int] = None,  # noqa: FA100
     _dont_call_warnings: bool = False,
-    _pkg_version_: Optional[str] = None,
+    _pkg_version_: Optional[str] = None,  # noqa: FA100
 ) -> None:
     """
     Show a deprecation warning.
@@ -106,7 +107,7 @@ def warn_until(
         stacklevel = 3
 
     _pytest_is_rewriting = False
-    caller = inspect.getframeinfo(sys._getframe(stacklevel - 1))
+    caller = inspect.getframeinfo(sys._getframe(stacklevel - 1))  # noqa: SLF001
     caller_filename = pathlib.Path(caller.filename)
 
     if str(caller_filename.as_posix()).endswith("/_pytest/assertion/rewrite.py"):
@@ -118,18 +119,13 @@ def warn_until(
     if _pkg_version >= _version:
         if _pytest_is_rewriting:
             # We need to grab the caller with the new stack level
-            caller = inspect.getframeinfo(sys._getframe(stacklevel - 1))
-        raise RuntimeError(
-            "The warning triggered on filename '{filename}', line number "
-            "{lineno}, is supposed to be shown until version "
-            "{until_version} is released. Current version is now "
-            "{version}. Please remove the warning.".format(
-                filename=caller.filename,
-                lineno=caller.lineno,
-                until_version=_pkg_version_,
-                version=version,
-            ),
+            caller = inspect.getframeinfo(sys._getframe(stacklevel - 1))  # noqa: SLF001
+        msg = (
+            f"The warning triggered on filename '{caller.filename}', line number {caller.lineno}, "
+            f"is supposed to be shown until version {_pkg_version_} is released. Current version "
+            f"is now {version}. Please remove the warning."
         )
+        raise RuntimeError(msg)
 
     if _dont_call_warnings is False:
         warnings.warn(
