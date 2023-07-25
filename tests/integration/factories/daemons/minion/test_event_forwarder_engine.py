@@ -31,7 +31,8 @@ def salt_call_cli(minion):
 def test_event_listener_engine(minion, salt_call_cli, event_listener):
     """
     There are some events which the minion fires internally that never reach the master.
-    We test if we're receiving those
+
+    We test if we're receiving those.
     """
     assert minion.is_running()
     start_time = time.time()

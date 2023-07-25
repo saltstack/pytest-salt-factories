@@ -61,7 +61,11 @@ def test_minion_salt_call(minion, salt_call_cli):
 
 def test_salt_call_exception_handling_doesnt_timeout(minion, salt_call_cli):
     ret = salt_call_cli.run(
-        "test.raise_exception", "OSError", "2", "No such file or directory", "/tmp/foo.txt"
+        "test.raise_exception",
+        "OSError",
+        "2",
+        "No such file or directory",
+        "/tmp/foo.txt",  # noqa: S108
     )
     assert ret.returncode == 1, ret
 

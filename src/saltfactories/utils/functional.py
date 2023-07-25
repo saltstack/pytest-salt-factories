@@ -52,7 +52,7 @@ class Loaders:
                 loaders.reset_state()
     """
 
-    def __init__(self, opts, loaded_base_name=None):
+    def __init__(self, opts, loaded_base_name=None) -> None:
         self.opts = opts
         if loaded_base_name is None:
             # Do not move this deferred import. It allows running against a Salt onedir build
@@ -193,7 +193,7 @@ class Loaders:
                 Custom class to implement wrappers.
                 """
 
-                def __setitem__(self, key, value):
+                def __setitem__(self, key, value) -> None:
                     """
                     Intercept method.
 
@@ -220,10 +220,10 @@ class Loaders:
                         value = StateModuleFuncWrapper(value, wrapper_cls)
                     return super().__setitem__(key, value)
 
-            loader_dict = _modules._dict.copy()
-            _modules._dict = ModulesLoaderDict()
+            loader_dict = _modules._dict.copy()  # noqa: SLF001
+            _modules._dict = ModulesLoaderDict()  # noqa: SLF001
             for key, value in loader_dict.items():
-                _modules._dict[key] = value
+                _modules._dict[key] = value  # noqa: SLF001
 
             self._modules = _modules
         return self._modules
@@ -292,11 +292,11 @@ class Loaders:
                 Custom class to implement wrappers.
                 """
 
-                def __init__(self, proxy_func, *args, **kwargs):
+                def __init__(self, proxy_func, *args, **kwargs) -> None:
                     super().__init__(*args, **kwargs)
                     self.__proxy_func__ = proxy_func
 
-                def __setitem__(self, name, func):
+                def __setitem__(self, name, func) -> None:
                     """
                     Intercept method.
 
@@ -310,10 +310,10 @@ class Loaders:
                     func = StateFunction(self.__proxy_func__, name)
                     return super().__setitem__(name, func)
 
-            loader_dict = _states._dict.copy()
-            _states._dict = StatesLoaderDict(self.modules.state.single)
+            loader_dict = _states._dict.copy()  # noqa: SLF001
+            _states._dict = StatesLoaderDict(self.modules.state.single)  # noqa: SLF001
             for key, value in loader_dict.items():
-                _states._dict[key] = value
+                _states._dict[key] = value  # noqa: SLF001
 
             self._states = _states
         return self._states
@@ -380,7 +380,8 @@ class StateResult:
     @state_id.default
     def _state_id(self):
         if not isinstance(self.raw, dict):
-            raise ValueError("The state result errored: {}".format(self.raw))
+            msg = f"The state result errored: {self.raw}"
+            raise TypeError(msg)
         return next(iter(self.raw.keys()))
 
     @full_return.default
@@ -445,7 +446,7 @@ class StateResult:
         """
         return self.full_return.get("warnings") or []
 
-    def __contains__(self, key):
+    def __contains__(self, key) -> bool:
         """
         Checks for the existence of ``key`` in the full state return dictionary.
         """
@@ -458,23 +459,22 @@ class StateResult:
         try:
             return self.full_return[key]
         except KeyError:
-            raise KeyError("The '{}' key was not found in the state return".format(key)) from None
+            msg = f"The '{key}' key was not found in the state return"
+            raise KeyError(msg) from None
 
     def __eq__(self, _):
         """
         Override method.
         """
-        raise TypeError(
-            "Please assert comparisons with {}.filtered instead".format(self.__class__.__name__)
-        )
+        msg = f"Please assert comparisons with {self.__class__.__name__}.filtered instead"
+        raise TypeError(msg)
 
-    def __bool__(self):
+    def __bool__(self) -> bool:  # pylint: disable=invalid-bool-returned
         """
         Override method.
         """
-        raise TypeError(
-            "Please assert comparisons with {}.filtered instead".format(self.__class__.__name__)
-        )
+        msg = f"Please assert comparisons with {self.__class__.__name__}.filtered instead"
+        raise TypeError(msg)
 
 
 @attr.s
@@ -495,7 +495,7 @@ class StateFunction:
         """
         log.info(
             "Calling %s",
-            format_callback_to_string("state.single", (self.state_func,) + args, kwargs),
+            format_callback_to_string("state.single", (self.state_func, *args), kwargs),
         )
         return self.proxy_func(self.state_func, *args, **kwargs)
 
@@ -570,14 +570,14 @@ class MultiStateResult:
         """
         return iter(self._structured)
 
-    def __contains__(self, key):
+    def __contains__(self, key) -> bool:
         """
         Check the presence of ``key`` in the state return.
         """
-        for state_result in self:
-            if key in (state_result.id, state_result.state_id, state_result.name):
-                return True
-        return False
+        return any(
+            key in (state_result.id, state_result.state_id, state_result.name)
+            for state_result in self
+        )
 
     def __getitem__(self, state_id_or_index):
         """
@@ -621,7 +621,8 @@ class MultiStateResult:
         for state_result in self:
             if state_id_or_index in (state_result.id, state_result.state_id, state_result.name):
                 return state_result
-        raise KeyError("No state by the ID of '{}' was found".format(state_id_or_index))
+        msg = f"No state by the ID of '{state_id_or_index}' was found"
+        raise KeyError(msg)
 
     @property
     def failed(self):

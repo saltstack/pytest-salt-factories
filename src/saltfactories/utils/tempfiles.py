@@ -36,7 +36,6 @@ def temp_directory(name=None, basepath=None):
 
 
         def test_func():
-
             with temp_directory() as temp_path:
                 assert temp_path.is_dir()
 
@@ -108,7 +107,6 @@ def temp_file(name=None, contents=None, directory=None, strip_first_newline=True
 
 
         def test_func():
-
             with temp_file(name="blah.txt") as temp_path:
                 assert temp_path.is_file()
 
@@ -192,7 +190,7 @@ def temp_file(name=None, contents=None, directory=None, strip_first_newline=True
     create_directories = file_path.parent.relative_to(directory)
 
     if create_directories:
-        with temp_directory(create_directories, basepath=directory):
+        with temp_directory(create_directories, basepath=directory):  # noqa: SIM117
             with _write_or_touch(file_path, contents, strip_first_newline=strip_first_newline):
                 yield file_path
     else:
@@ -255,7 +253,7 @@ class SaltEnv:
         for idx, path in enumerate(self.paths[:]):
             if not isinstance(path, pathlib.Path):
                 # We have to cast path to a string because on Py3.5, path might be an instance of pathlib2.Path
-                path = pathlib.Path(str(path))
+                path = pathlib.Path(str(path))  # noqa: PLW2901
                 self.paths[idx] = path
             path.mkdir(parents=True, exist_ok=True)
 
@@ -329,7 +327,7 @@ class SaltEnvs:
         for envname, envtree in self.envs.items():
             if not isinstance(envtree, SaltEnv):
                 if isinstance(envtree, str):
-                    envtree = [envtree]
+                    envtree = [envtree]  # noqa: PLW2901
                 self.envs[envname] = SaltEnv(name=envname, paths=envtree)
             setattr(self, envname, self.envs[envname])
 

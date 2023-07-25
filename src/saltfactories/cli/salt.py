@@ -24,9 +24,8 @@ class Salt(SaltCli):
         """
         skip_raise_exception_args = {"-V", "--version", "--versions-report", "--help"}
         if minion_tgt is None and not set(args).intersection(skip_raise_exception_args):
-            raise pytest.UsageError(
-                "The `minion_tgt` keyword argument is mandatory for the salt CLI factory"
-            )
+            msg = "The `minion_tgt` keyword argument is mandatory for the salt CLI factory"
+            raise pytest.UsageError(msg)
         return super().cmdline(*args, minion_tgt=minion_tgt, **kwargs)
 
     def process_output(self, stdout, stderr, cmdline=None):

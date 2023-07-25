@@ -16,20 +16,22 @@ from pytestshellutils.utils import ports
 from pytestshellutils.utils import time
 from pytestshellutils.utils.processes import ProcessResult
 
-from saltfactories import bases
 from saltfactories import CODE_ROOT_DIR
+from saltfactories import bases
 from saltfactories.daemons import minion
 from saltfactories.utils import random_string
 
 try:
     import docker
-    from docker.errors import DockerException, APIError, NotFound
+    from docker.errors import APIError
+    from docker.errors import DockerException
+    from docker.errors import NotFound
 
     HAS_DOCKER = True
 except ImportError:  # pragma: no cover
     HAS_DOCKER = False
 
-    class DockerException(Exception):
+    class DockerException(Exception):  # noqa: N818
         """
         Define DockerException to avoid NameError.
         """
@@ -39,7 +41,7 @@ except ImportError:  # pragma: no cover
         Define APIError to avoid NameError.
         """
 
-    class NotFound(Exception):
+    class NotFound(Exception):  # noqa: N818
         """
         Define NotFound to avoid NameError.
         """
@@ -72,7 +74,7 @@ except ImportError:
 
 log = logging.getLogger(__name__)
 
-PYTEST_GE_7 = getattr(_pytest._version, "version_tuple", (-1, -1)) >= (7, 0)
+PYTEST_GE_7 = getattr(_pytest._version, "version_tuple", (-1, -1)) >= (7, 0)  # noqa: SLF001
 
 
 @attr.s(kw_only=True)
@@ -203,22 +205,19 @@ class Container(BaseFactory):
             message = "The docker python library was not found installed"
             if self.skip_if_docker_client_not_connectable:
                 raise pytest.skip.Exception(message, **exc_kwargs)
-            else:
-                pytest.fail(message)
+            pytest.fail(message)
         if not HAS_REQUESTS:
             message = "The requests python library was not found installed"
             if self.skip_if_docker_client_not_connectable:
                 raise pytest.skip.Exception(message, **exc_kwargs)
-            else:
-                pytest.fail(message)
+            pytest.fail(message)
         try:
             docker_client = docker.from_env()
         except DockerException as exc:
-            message = "Failed to instantiate the docker client: {}".format(exc)
+            message = f"Failed to instantiate the docker client: {exc}"
             if self.skip_if_docker_client_not_connectable:
                 raise pytest.skip.Exception(message, **exc_kwargs) from exc
-            else:
-                pytest.fail(message)
+            pytest.fail(message)
         else:
             return docker_client
 
@@ -312,10 +311,10 @@ class Container(BaseFactory):
         Returns a human readable name for the factory.
         """
         if self.display_name is None:
-            self.display_name = "{}(id={!r})".format(self.__class__.__name__, self.name)
+            self.display_name = f"{self.__class__.__name__}(id={self.name!r})"
         return self.display_name
 
-    def start(self, *command, max_start_attempts=None, start_timeout=None):
+    def start(self, *command, max_start_attempts=None, start_timeout=None):  # noqa: PLR0915
         """
         Start the container.
         """
@@ -420,21 +419,20 @@ class Container(BaseFactory):
                         exc,
                         exc_info=True,
                     )
-            # TODO: Add containers to the processes stats?!
+            # TODO(s0undt3dch): Add containers to the processes stats?!
             # if self.factories_manager and self.factories_manager.stats_processes is not None:
             #    self.factories_manager.stats_processes[self.get_display_name()] = psutil.Process(
             #        self.pid
             #    )
             return factory_started
         result = self.terminate()
+        msg = (
+            f"The {self} factory has failed to confirm running status after {current_attempt-1} attempts, "
+            f"which took {time.time() - start_time:.2f} seconds({start_timeout or self.start_timeout:.2f} "
+            "seconds each)"
+        )
         raise FactoryNotStarted(
-            "The {} factory has failed to confirm running status after {} attempts, which "
-            "took {:.2f} seconds({:.2f} seconds each)".format(
-                self,
-                current_attempt - 1,
-                time.time() - start_time,
-                start_timeout or self.start_timeout,
-            ),
+            msg,
             process_result=result,
         )
 
@@ -516,7 +514,7 @@ class Container(BaseFactory):
             for container_binding, host_binding in _ports.items():
                 if isinstance(host_binding, int):
                     continue
-                host_binding = self.get_host_port_binding(
+                host_binding = self.get_host_port_binding(  # noqa: PLW2901
                     container_binding, protocol="tcp", ipv6=False
                 )
                 if host_binding:
@@ -527,12 +525,14 @@ class Container(BaseFactory):
         """
         Return the host binding for a port on the container.
 
-        Args:
-            :keyword str protocol: The port protocol. Defaults to ``tcp``.
-            :keyword bool ipv6:
-                If true, return the ipv6 port binding.
+        :param int port:
+            The port.
+        :param str protocol:
+            The port protocol. Defaults to ``tcp``.
+        :param bool ipv6:
+            If true, return the ipv6 port binding.
 
-        Returns:
+        :return:
             int: The matched port binding on the host.
             None: When not port binding was matched.
         """
@@ -542,7 +542,7 @@ class Container(BaseFactory):
         log.debug("Container Ports for %s: %s", self, _ports)
         if not _ports:
             return None
-        container_binding = "{}/{}".format(port, protocol)
+        container_binding = f"{port}/{protocol}"
         if container_binding not in _ports:
             return None
         host_port_bindings = _ports[container_binding]
@@ -557,6 +557,7 @@ class Container(BaseFactory):
                     return int(host_port)
                 continue
             return int(host_port)
+        return None
 
     def get_container_start_check_callbacks(self):
         """
@@ -602,9 +603,9 @@ class Container(BaseFactory):
         try:
             if not docker_client.ping():
                 return "The docker client failed to get a ping response from the docker daemon"
-            return True
+            return True  #  noqa: TRY300
         except (APIError, RequestsConnectionError, PyWinTypesError) as exc:
-            return "The docker client failed to ping the docker server: {}".format(exc)
+            return f"The docker client failed to ping the docker server: {exc}"
 
     def run_container_start_checks(
         self,
@@ -623,7 +624,8 @@ class Container(BaseFactory):
         log.debug("%s is running container start checks", self)
         while time.time() <= timeout_at:
             if not self.is_running():
-                raise FactoryNotStarted("{} is no longer running".format(self))
+                msg = f"{self} is no longer running"
+                raise FactoryNotStarted(msg)
             if not start_check_callbacks:
                 break
             start_check = start_check_callbacks[0]
@@ -667,7 +669,8 @@ class Container(BaseFactory):
         check_ports = set(check_ports_mapping.values())
         while time.time() <= timeout_at:
             if not self.is_running():
-                raise FactoryNotStarted("{} is no longer running".format(self))
+                msg = f"{self} is no longer running"
+                raise FactoryNotStarted(msg)
             if not check_ports:
                 break
             check_ports -= ports.get_connectable_ports(check_ports)
@@ -695,8 +698,7 @@ class Container(BaseFactory):
                 if PYTEST_GE_7:
                     exc_kwargs["_use_item_location"] = True
                 raise pytest.skip.Exception(connectable, **exc_kwargs)
-            else:
-                pytest.fail(connectable)
+            pytest.fail(connectable)
 
     def _pull_container(self):
         connectable = Container.client_connectable(self.docker_client)
@@ -710,13 +712,8 @@ class Container(BaseFactory):
                 exc_kwargs = {}
                 if PYTEST_GE_7:
                     exc_kwargs["_use_item_location"] = True
-                raise pytest.skip.Exception(
-                    "Failed to pull docker image '{}': {}".format(
-                        self.image,
-                        exc,
-                    ),
-                    **exc_kwargs,
-                ) from exc
+                msg = f"Failed to pull docker image '{self.image}': {exc}"
+                raise pytest.skip.Exception(msg, **exc_kwargs) from exc
             raise
 
     def __enter__(self):
@@ -724,11 +721,12 @@ class Container(BaseFactory):
         Use as a context manager.
         """
         if not self.is_running():
-            raise RuntimeError(
-                "Factory not yet started. Perhaps you're after something like:\n\n"
-                "with {}.started() as factory:\n"
-                "    yield factory".format(self.__class__.__name__)
+            msg = (
+                f"Factory not yet started. Perhaps you're after something like:\n\n"
+                f"with {self.__class__.__name__}.started() as factory:\n"
+                "    yield factory"
             )
+            raise RuntimeError(msg)
         return self
 
     def __exit__(self, *_):
@@ -796,7 +794,7 @@ class SaltDaemon(Container, bases.SaltDaemon):
             Additional arguments to use when starting the container
 
         """
-        return ["docker", "exec", "-i", self.name] + super().cmdline(*args)
+        return ["docker", "exec", "-i", self.name, *super().cmdline(*args)]
 
     def start(self, *extra_cli_arguments, max_start_attempts=None, start_timeout=None):
         """
@@ -933,7 +931,7 @@ class SaltDaemon(Container, bases.SaltDaemon):
         """
         try:
             # Start the container
-            with Container.started(
+            with Container.started(  # noqa: SIM117
                 self,
                 *extra_cli_arguments,
                 max_start_attempts=max_start_attempts,

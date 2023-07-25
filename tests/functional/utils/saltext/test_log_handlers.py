@@ -13,7 +13,7 @@ def test_handler_does_not_block_when_not_connected(tempfiles):
     log_forwarding_socket_hwm = 5
     shell = ScriptSubprocess(script_name=sys.executable, timeout=10)
     script = tempfiles.makepyfile(
-        """
+        f"""
         # coding=utf-8
         import sys
         import time
@@ -32,7 +32,7 @@ def test_handler_does_not_block_when_not_connected(tempfiles):
         )
 
         # Add our ZMQ handler, it should not block even though it does not connect anywhere
-        handler = ZMQHandler(port=123456, socket_hwm={})
+        handler = ZMQHandler(port=123456, socket_hwm={log_forwarding_socket_hwm})
         logging.root.addHandler(handler)
 
         def main():
@@ -47,14 +47,12 @@ def test_handler_does_not_block_when_not_connected(tempfiles):
         if __name__ == '__main__':
             multiprocessing.freeze_support()
             main()
-        """.format(
-            log_forwarding_socket_hwm
-        )
+        """
     )
     try:
         result = shell.run(script)
     except FactoryTimeout as exc:  # pragma: no cover
-        pytest.fail("The ZMQHandler blocked. Process result:\n{}".format(exc))
+        pytest.fail(f"The ZMQHandler blocked. Process result:\n{exc}")
     # If the exitcode is not 0, that means the script was forcefully terminated, which,
     # in turn means the ZMQHandler blocked the process when not connected to the log
     # listener.
@@ -63,7 +61,7 @@ def test_handler_does_not_block_when_not_connected(tempfiles):
     # Since we set a HWM of log_forwarding_socket_hwm, we should at least see
     # Foo {log_forwarding_socket_hwm + 1} logged to the console.
     # If we don't, the handler blocked the process
-    assert "Foo {}".format(log_forwarding_socket_hwm + 1) in result.stderr
+    assert f"Foo {log_forwarding_socket_hwm + 1}" in result.stderr
     assert result.returncode == 0
 
 
@@ -72,7 +70,7 @@ def test_all_messages_received(tempfiles, salt_factories, caplog):
     log_forwarding_calls = log_forwarding_socket_hwm * 2
     shell = ScriptSubprocess(script_name=sys.executable, timeout=10)
     script = tempfiles.makepyfile(
-        """
+        f"""
         # coding=utf-8
         import sys
         import time
@@ -91,13 +89,13 @@ def test_all_messages_received(tempfiles, salt_factories, caplog):
         )
 
         # Add our ZMQ handler
-        handler = ZMQHandler(port={}, socket_hwm={})
+        handler = ZMQHandler(port={salt_factories.log_server_port}, socket_hwm={log_forwarding_socket_hwm})
         logging.root.addHandler(handler)
 
         def main():
             log = logging.getLogger("foo")
             print("Logging started", flush=True)
-            for idx in range(1, {} + 1):
+            for idx in range(1, {log_forwarding_calls} + 1):
                 log.debug("Foo:%s", idx)
             print("Logging finished", flush=True)
             exit(0)
@@ -105,21 +103,19 @@ def test_all_messages_received(tempfiles, salt_factories, caplog):
         if __name__ == '__main__':
             multiprocessing.freeze_support()
             main()
-        """.format(
-            salt_factories.log_server_port, log_forwarding_socket_hwm, log_forwarding_calls
-        )
+        """
     )
     with caplog.at_level(logging.DEBUG, logger="foo"):
         try:
             result = shell.run(script)
         except FactoryTimeout as exc:  # pragma: no cover
-            pytest.fail("The ZMQHandler blocked. Process result:\n{}".format(exc))
+            pytest.fail(f"The ZMQHandler blocked. Process result:\n{exc}")
         # If the exitcode is not 0, that means the script was forcefully terminated, which,
         # in turn means the ZMQHandler blocked the process when not connected to the log
         # listener.
         assert "Logging started" in result.stdout
         assert "Logging finished" in result.stdout
-        expected_log_message = "Foo:{}".format(log_forwarding_calls)
+        expected_log_message = f"Foo:{log_forwarding_calls}"
         assert expected_log_message in result.stderr
         assert result.returncode == 0
 
@@ -140,9 +136,7 @@ def test_all_messages_received(tempfiles, salt_factories, caplog):
             try:
                 assert (
                     len(found_log_messages) == log_forwarding_calls
-                ), "len(found_log_messages={}) != {} // Missed: {}".format(
-                    len(found_log_messages), log_forwarding_calls, missed
-                )
+                ), f"len(found_log_messages={len(found_log_messages)}) != {log_forwarding_calls} // Missed: {missed}"
                 break
             except AssertionError:  # pragma: no cover
                 if datetime.utcnow() > timeout:
@@ -155,11 +149,9 @@ def test_all_messages_received_multiprocessing(tempfiles, salt_factories, caplog
     # ZMQHandler and continue logging
     if fork_method == "fork":
         if pytestskipmarkers.utils.platform.is_windows():
-            pytest.skip("Start method '{}' is not supported on Windows".format(fork_method))
+            pytest.skip(f"Start method '{fork_method}' is not supported on Windows")
         if sys.version_info >= (3, 8) and pytestskipmarkers.utils.platform.is_darwin():
-            pytest.skip(
-                "Start method '{}' is not supported on Darwin on Py3.8+".format(fork_method)
-            )
+            pytest.skip(f"Start method '{fork_method}' is not supported on Darwin on Py3.8+")
     num_processes = 2
     log_forwarding_calls = 10
     shell = ScriptSubprocess(script_name=sys.executable, timeout=30)
@@ -259,7 +251,7 @@ def test_all_messages_received_multiprocessing(tempfiles, salt_factories, caplog
         try:
             result = shell.run(script)
         except FactoryTimeout as exc:  # pragma: no cover
-            pytest.fail("The ZMQHandler blocked. Process result:\n{}".format(exc))
+            pytest.fail(f"The ZMQHandler blocked. Process result:\n{exc}")
         # If the exitcode is not 0, that means the script was forcefully terminated, which,
         # in turn means the ZMQHandler blocked the process when not connected to the log
         # listener.

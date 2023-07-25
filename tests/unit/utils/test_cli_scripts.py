@@ -7,12 +7,12 @@ import textwrap
 
 import pytest
 
-import saltfactories.utils.cli_scripts as cli_scripts
+from saltfactories.utils import cli_scripts
 
 
 def test_generate_script_defaults(tmpdir):
     """
-    Test defaults script generation
+    Test defaults script generation.
     """
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar")
     with open(script_path, encoding="utf-8") as rfh:
@@ -71,7 +71,7 @@ def test_generate_script_defaults(tmpdir):
 
 def test_generate_script_code_dir(tmpdir):
     """
-    Test code_dir inclusion in script generation
+    Test code_dir inclusion in script generation.
     """
     code_dir = tmpdir.mkdir("code-dir").strpath
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar", code_dir=code_dir)
@@ -79,7 +79,7 @@ def test_generate_script_code_dir(tmpdir):
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        """\
+        f"""\
         from __future__ import absolute_import
         import os
         import sys
@@ -89,7 +89,7 @@ def test_generate_script_code_dir(tmpdir):
         # Don't write .pyc files or create them in __pycache__ directories
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
-        CODE_DIR = r'{}'
+        CODE_DIR = r'{code_dir}'
         if CODE_DIR in sys.path:
             sys.path.remove(CODE_DIR)
         sys.path.insert(0, CODE_DIR)
@@ -129,16 +129,14 @@ def test_generate_script_code_dir(tmpdir):
             sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
-        """.format(
-            code_dir
-        )
+        """
     )
     assert contents == expected
 
 
 def test_generate_script_coverage_support_usage_error_1(tmp_path):
     """
-    Test coverage related code included in script generation
+    Test coverage related code included in script generation.
     """
     # If only one of coverage_rc_path or coverage_db_path is passed, we fail
     with pytest.raises(pytest.UsageError):
@@ -149,7 +147,7 @@ def test_generate_script_coverage_support_usage_error_1(tmp_path):
 
 def test_generate_script_coverage_support_usage_error_2(tmp_path):
     """
-    Test coverage related code included in script generation
+    Test coverage related code included in script generation.
     """
     with pytest.raises(pytest.UsageError):
         cli_scripts.generate_script(
@@ -159,7 +157,7 @@ def test_generate_script_coverage_support_usage_error_2(tmp_path):
 
 def test_generate_script_coverage_support(tmp_path):
     """
-    Test coverage related code included in script generation
+    Test coverage related code included in script generation.
     """
     coverage_rc_path = tmp_path / ".coveragerc"
     coverage_db_path = tmp_path / ".coverage"
@@ -173,7 +171,7 @@ def test_generate_script_coverage_support(tmp_path):
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        """\
+        f"""\
         from __future__ import absolute_import
         import os
         import sys
@@ -184,8 +182,8 @@ def test_generate_script_coverage_support(tmp_path):
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         # Setup coverage environment variables
-        COVERAGE_FILE = r'{coverage_db_path}'
-        COVERAGE_PROCESS_START = r'{coverage_rc_path}'
+        COVERAGE_FILE = r'{coverage_db_path!s}'
+        COVERAGE_PROCESS_START = r'{coverage_rc_path!s}'
         os.environ[str('COVERAGE_FILE')] = str(COVERAGE_FILE)
         os.environ[str('COVERAGE_PROCESS_START')] = str(COVERAGE_PROCESS_START)
 
@@ -224,17 +222,14 @@ def test_generate_script_coverage_support(tmp_path):
             sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
-        """.format(
-            coverage_rc_path=str(coverage_rc_path),
-            coverage_db_path=str(coverage_db_path),
-        )
+        """
     )
     assert contents == expected
 
 
 def test_generate_script_inject_sitecustomize(tmp_path):
     """
-    Test sitecustomize injection related code included in script generation
+    Test sitecustomize injection related code included in script generation.
     """
     sitecustomize_path = pathlib.Path(cli_scripts.__file__).resolve().parent / "coverage"
     coverage_rc_path = tmp_path / ".coveragerc"
@@ -250,7 +245,7 @@ def test_generate_script_inject_sitecustomize(tmp_path):
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        """\
+        f"""\
         from __future__ import absolute_import
         import os
         import sys
@@ -261,13 +256,13 @@ def test_generate_script_inject_sitecustomize(tmp_path):
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         # Setup coverage environment variables
-        COVERAGE_FILE = r'{coverage_db_path}'
-        COVERAGE_PROCESS_START = r'{coverage_rc_path}'
+        COVERAGE_FILE = r'{coverage_db_path!s}'
+        COVERAGE_PROCESS_START = r'{coverage_rc_path!s}'
         os.environ[str('COVERAGE_FILE')] = str(COVERAGE_FILE)
         os.environ[str('COVERAGE_PROCESS_START')] = str(COVERAGE_PROCESS_START)
 
         # Allow sitecustomize.py to be importable for test coverage purposes
-        SITECUSTOMIZE_DIR = r'{}'
+        SITECUSTOMIZE_DIR = r'{sitecustomize_path!s}'
         PYTHONPATH = os.environ.get('PYTHONPATH') or None
         if PYTHONPATH is None:
             PYTHONPATH_ENV_VAR = SITECUSTOMIZE_DIR
@@ -317,11 +312,7 @@ def test_generate_script_inject_sitecustomize(tmp_path):
             sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
-        """.format(
-            str(sitecustomize_path),
-            coverage_rc_path=str(coverage_rc_path),
-            coverage_db_path=str(coverage_db_path),
-        )
+        """
     )
     assert contents == expected
 
@@ -330,7 +321,7 @@ def test_generate_script_inject_sitecustomize(tmp_path):
         contents = rfh.read()
 
     expected = textwrap.dedent(
-        """\
+        f"""\
         from __future__ import absolute_import
         import os
         import sys
@@ -341,7 +332,7 @@ def test_generate_script_inject_sitecustomize(tmp_path):
         os.environ[str("PYTHONDONTWRITEBYTECODE")] = str("1")
 
         # Allow sitecustomize.py to be importable for test coverage purposes
-        SITECUSTOMIZE_DIR = r'{}'
+        SITECUSTOMIZE_DIR = r'{sitecustomize_path!s}'
         PYTHONPATH = os.environ.get('PYTHONPATH') or None
         if PYTHONPATH is None:
             PYTHONPATH_ENV_VAR = SITECUSTOMIZE_DIR
@@ -391,16 +382,14 @@ def test_generate_script_inject_sitecustomize(tmp_path):
             sys.stderr.flush()
             atexit._run_exitfuncs()
             os._exit(exitcode)
-        """.format(
-            str(sitecustomize_path)
-        )
+        """
     )
     assert contents == expected
 
 
 def test_generate_script_salt(tmpdir):
     """
-    Test script generation for the salt CLI script
+    Test script generation for the salt CLI script.
     """
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt")
     with open(script_path, encoding="utf-8") as rfh:
@@ -450,7 +439,7 @@ def test_generate_script_salt(tmpdir):
 
 def test_generate_script_salt_api(tmpdir):
     """
-    Test script generation for the salt-api CLI script
+    Test script generation for the salt-api CLI script.
     """
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-api")
     with open(script_path, encoding="utf-8") as rfh:
@@ -507,7 +496,7 @@ def test_generate_script_salt_api(tmpdir):
 
 def test_generate_script_creates_missing_bin_dir(tmpdir):
     """
-    Test defaults script generation
+    Test defaults script generation.
     """
     script_path = cli_scripts.generate_script(tmpdir.join("blah").strpath, "salt-foobar")
     with open(script_path, encoding="utf-8") as rfh:
@@ -567,7 +556,7 @@ def test_generate_script_creates_missing_bin_dir(tmpdir):
 
 def test_generate_script_only_generates_once(tmpdir):
     """
-    Test defaults script generation
+    Test defaults script generation.
     """
     script_path = cli_scripts.generate_script(tmpdir.strpath, "salt-foobar")
     with open(script_path, encoding="utf-8") as rfh:

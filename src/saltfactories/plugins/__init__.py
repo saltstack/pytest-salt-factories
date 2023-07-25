@@ -24,7 +24,7 @@ def pytest_tempdir_temproot():
     if pytestskipmarkers.utils.platform.is_windows():
         tempdir = "C:/Windows/Temp"
     elif pytestskipmarkers.utils.platform.is_darwin():
-        tempdir = "/tmp"
+        tempdir = "/tmp"  # noqa: S108
     else:
         tempdir = os.environ.get("TMPDIR") or tempfile.gettempdir()
     return os.path.abspath(os.path.realpath(tempdir))
@@ -85,7 +85,8 @@ def pytest_load_initial_conftests(*_):
     import salt.version  # pylint: disable=import-outside-toplevel
 
     if salt.version.__saltstack_version__ < "3004":
-        raise pytest.UsageError("Only salt>=3004 is supported")
+        msg = "Only salt>=3004 is supported"
+        raise pytest.UsageError(msg)
     if "temp_directory" not in pytest.helpers:
         pytest.helpers.register(saltfactories.utils.tempfiles.temp_directory, name="temp_directory")
     if "temp_file" not in pytest.helpers:

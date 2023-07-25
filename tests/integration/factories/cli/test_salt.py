@@ -28,5 +28,5 @@ def test_merged_json_out_disabled(salt_cli, salt_minion, salt_minion_2):
     ret = salt_cli.run("test.ping", minion_tgt="*", merge_json_output=False)
     assert ret.returncode == 0, ret
     assert not ret.data
-    assert '"{}": true'.format(salt_minion.id) in ret.stdout
-    assert '"{}": true'.format(salt_minion_2.id) in ret.stdout
+    assert f'"{salt_minion.id}": true' in ret.stdout
+    assert f'"{salt_minion_2.id}": true' in ret.stdout

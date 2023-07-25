@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Salt Factories Engine For Salt.
 
@@ -15,7 +14,7 @@ from collections import deque
 from collections.abc import MutableMapping
 
 import salt.utils.event
-import salt.utils.immutabletypes as immutabletypes
+from salt.utils import immutabletypes
 
 try:
     from salt.utils.data import CaseInsensitiveDict
@@ -59,7 +58,7 @@ def start():
         pytest_engine = PyTestEventForwardEngine(opts=opts)
         pytest_engine.start()
     except Exception:  # pragma: no cover pylint: disable=broad-except
-        log.error("Failed to start PyTestEventForwardEngine", exc_info=True)
+        log.exception("Failed to start PyTestEventForwardEngine")
         raise
 
 
@@ -71,19 +70,20 @@ def ext_type_encoder(obj):
         # msgpack doesn't support datetime.datetime and datetime.date datatypes.
         return obj.strftime("%Y%m%dT%H:%M:%S.%f")
     # The same for immutable types
-    elif immutabletypes is not None and isinstance(obj, immutabletypes.ImmutableDict):
-        return dict(obj)
-    elif immutabletypes is not None and isinstance(obj, immutabletypes.ImmutableList):
-        return list(obj)
-    elif immutabletypes is not None and isinstance(obj, immutabletypes.ImmutableSet):
+    if immutabletypes is not None:
+        if isinstance(obj, immutabletypes.ImmutableDict):
+            return dict(obj)
+        if isinstance(obj, immutabletypes.ImmutableList):
+            return list(obj)
+        if isinstance(obj, immutabletypes.ImmutableSet):
+            # msgpack can't handle set so translate it to tuple
+            return tuple(obj)
+    if isinstance(obj, set):
         # msgpack can't handle set so translate it to tuple
         return tuple(obj)
-    elif isinstance(obj, set):
-        # msgpack can't handle set so translate it to tuple
-        return tuple(obj)
-    elif CaseInsensitiveDict is not None and isinstance(obj, CaseInsensitiveDict):
+    if CaseInsensitiveDict is not None and isinstance(obj, CaseInsensitiveDict):
         return dict(obj)
-    elif isinstance(obj, MutableMapping):
+    if isinstance(obj, MutableMapping):
         return dict(obj)
     # Nothing known exceptions found. Let msgpack raise its own.
     return obj
@@ -120,7 +120,7 @@ class PyTestEventForwardClient(asyncio.Protocol):
         self.task = loop.create_task(self._process_queue())
         # pylint: enable=attribute-defined-outside-init
 
-    def connection_lost(self, exc):
+    def connection_lost(self, exc):  # noqa: ARG002
         """
         Connection lost.
         """
@@ -133,22 +133,21 @@ class PyTestEventForwardClient(asyncio.Protocol):
         """
         Wait until a connection to the server is successful.
         """
-        connected = await self._connected
-        return connected
+        return await self._connected
 
     async def wait_disconnected(self):
         """
         Wait until disconnected from the server.
         """
-        disconnected = await self._disconnected
-        return disconnected
+        return await self._disconnected
 
     async def _process_queue(self):
         self.running.set()
         log.info("%s: Now processing the queue", self.__class__.__name__)
         restarts = 0
+        max_restarts = 10
         while True:
-            if restarts > 10:
+            if restarts > max_restarts:
                 self._disconnected.set_result(True)
                 break
             if not self.running.is_set():
@@ -167,11 +166,10 @@ class PyTestEventForwardClient(asyncio.Protocol):
                 log.debug("%s: forwarded event: %r", self.__class__.__name__, payload)
             except asyncio.CancelledError:
                 break
-            except Exception as exc:  # pylint: disable=broad-except
+            except Exception:  # pylint: disable=broad-except
                 log.exception(
-                    "%s: Caught exception while pulling data from queue: %s",
+                    "%s: Caught exception while pulling data from queue",
                     self.__class__.__name__,
-                    exc,
                 )
                 restarts += 1
 
@@ -236,7 +234,7 @@ class PyTestEventForwardEngine:
         try:
             await asyncio.wait_for(self.client.wait_connected(), timeout=15)
         except asyncio.TimeoutError:
-            log.error("The client failed to connect to the server after 15 seconds")
+            log.error("The client failed to connect to the server after 15 seconds")  # noqa: TRY400
             transport.close()
         else:
             try:
@@ -270,7 +268,8 @@ class PyTestEventForwardEngine:
         while True:
             log.info("Waiting for %s.client to start...", self.__class__.__name__)
             if time.time() > timeout_at:
-                raise Exception("Failed to start client")
+                msg = "Failed to start client"
+                raise RuntimeError(msg)
             if self.client is None:
                 time.sleep(1)
                 continue

@@ -22,7 +22,6 @@ CHANGELOG_ENTRY_RE = re.compile(CHANGELOG_ENTRY_REREX)
 
 
 def check_changelog_entries(files):
-
     exitcode = 0
     for entry in files:
         path = pathlib.Path(entry).resolve()

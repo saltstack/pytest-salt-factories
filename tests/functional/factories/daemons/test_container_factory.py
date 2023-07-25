@@ -15,7 +15,7 @@ def _connectable_docker_client():
         if not connectable:
             pytest.skip(connectable)
     except docker.errors.DockerException as exc:
-        pytest.skip("Failed to instantiate a docker client: {}".format(exc))
+        pytest.skip(f"Failed to instantiate a docker client: {exc}")
 
 
 @pytest.mark.parametrize("skip_on_pull_failure", [True, False])

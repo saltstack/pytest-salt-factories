@@ -61,7 +61,7 @@ def test_salt_run(master, salt_run):
 
 def test_salt_cp_minion_id_as_first_argument(master, minion, salt_cp, tempfiles, tmp_path):
     """
-    Test copying a file from the master any minions connected
+    Test copying a file from the master any minions connected.
     """
     dest = tmp_path / "copied-file.txt"
     contents = "id: foo"
@@ -77,7 +77,7 @@ def test_salt_cp_minion_id_as_first_argument(master, minion, salt_cp, tempfiles,
 
 def test_salt_cp_explicit_minion_tgt(master, minion, salt_cp, tempfiles, tmp_path):
     """
-    Test copying a file from the master to the minion
+    Test copying a file from the master to the minion.
     """
     dest = tmp_path / "copied-file.txt"
     contents = "id: foo"

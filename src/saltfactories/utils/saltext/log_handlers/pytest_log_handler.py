@@ -21,8 +21,8 @@ try:
     from salt._logging.mixins import ExcInfoOnLogLevelFormatMixin
 except ImportError:  # pragma: no cover
     # This likely due to running backwards compatibility tests against older minions
-    from salt.log.setup import LOG_LEVELS
     from salt.log.mixins import ExcInfoOnLogLevelFormatMixIn as ExcInfoOnLogLevelFormatMixin
+    from salt.log.setup import LOG_LEVELS
 
 
 try:
@@ -84,12 +84,11 @@ def setup_handlers():
     pytest_config = __opts__[pytest_key]
     log_opts = pytest_config["log"]
     if log_opts.get("disabled"):
-        return
+        return None
     host_addr = log_opts.get("host")
     if not host_addr:
-
         if log_opts["pytest_windows_guest"] is True:
-            proc = subprocess.Popen("ipconfig", stdout=subprocess.PIPE)
+            proc = subprocess.Popen("ipconfig", stdout=subprocess.PIPE)  # noqa: S603,S607
             for line in proc.stdout.read().strip().encode(__salt_system_encoding__).splitlines():
                 if "Default Gateway" in line:
                     parts = line.split()
@@ -97,8 +96,8 @@ def setup_handlers():
                     break
         else:
             proc = subprocess.Popen(
-                "netstat -rn | grep -E '^0.0.0.0|default' | awk '{ print $2 }'",
-                shell=True,
+                "netstat -rn | grep -E '^0.0.0.0|default' | awk '{ print $2 }'",  # noqa: S607
+                shell=True,  # noqa: S602
                 stdout=subprocess.PIPE,
             )
             host_addr = proc.stdout.read().strip().encode(__salt_system_encoding__)
@@ -109,7 +108,7 @@ def setup_handlers():
     except OSError as exc:
         # Don't even bother if we can't connect
         log.warning("Cannot connect back to log server at %s:%d: %s", host_addr, host_port, exc)
-        return
+        return None
     finally:
         sock.close()
 
@@ -141,7 +140,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler):
     def __init__(
         self, host="127.0.0.1", port=3330, log_prefix=None, level=logging.NOTSET, socket_hwm=100000
     ):
-        super(ZMQHandler, self).__init__(level=level)
+        super().__init__(level=level)
         self.host = host
         self.port = port
         self._log_prefix = log_prefix
@@ -163,16 +162,18 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler):
             self.setFormatter(fmt)
 
     def _del_formatter(self):
-        raise RuntimeError("Cannot delete the 'formatter' attribute")
+        msg = "Cannot delete the 'formatter' attribute"
+        raise RuntimeError(msg)
 
     # We set formatter as a property to make it immutable
     formatter = property(_get_formatter, _set_formatter, _del_formatter)
 
-    def setFormatter(self, _):
+    def setFormatter(self, _):  # noqa: N802
         """
         Overridden method to show an error.
         """
-        raise RuntimeError("Do not set a formatter on {}".format(self.__class__.__name__))
+        msg = "Do not set a formatter on {}".format(self.__class__.__name__)
+        raise RuntimeError(msg)
 
     def __getstate__(self):  # noqa: D105
         return {
@@ -195,7 +196,7 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler):
 
     def _get_log_prefix(self, log_prefix):
         if log_prefix is None:
-            return
+            return None
         if sys.argv[0] == sys.executable:
             cli_arg_idx = 1
         else:
@@ -301,11 +302,11 @@ class ZMQHandler(ExcInfoOnLogLevelFormatMixin, logging.Handler):
                 self.context = None
             self.pid = None
 
-    def format(self, record):
+    def format(self, record):  # noqa: A003
         """
         Format the log record.
         """
-        msg = super(ZMQHandler, self).format(record)
+        msg = super().format(record)
         if self.log_prefix:
             msg = "[{}] {}".format(to_unicode(self.log_prefix), to_unicode(msg))
         return msg

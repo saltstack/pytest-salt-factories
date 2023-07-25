@@ -43,17 +43,17 @@ if pkg_version_info("pytest") >= (6, 2):
 else:
 
     @pytest.fixture
-    def pytester():
+    def pytester():  # noqa: PT004
         pytest.skip("The pytester fixture is not available in Pytest < 6.2.0")
 
 
 def pytest_report_header():
-    return "salt-version: {}".format(salt.version.__version__)
+    return f"salt-version: {salt.version.__version__}"
 
 
 class Tempfiles:
     """
-    Class which generates temporary files and cleans them when done
+    Class which generates temporary files and cleans them when done.
     """
 
     def __init__(self, request):
@@ -61,7 +61,7 @@ class Tempfiles:
 
     def makepyfile(self, contents, prefix=None, executable=False):
         """
-        Creates a python file and returns it's path
+        Creates a python file and returns it's path.
         """
         tfile = tempfile.NamedTemporaryFile("w", prefix=prefix or "tmp", suffix=".py", delete=False)
         contents = textwrap.dedent(contents.lstrip("\n")).strip()
@@ -82,7 +82,7 @@ class Tempfiles:
 
     def makeslsfile(self, contents, name=None):
         """
-        Creates an sls file and returns it's path
+        Creates an sls file and returns it's path.
         """
         if name is None:
             tfile = tempfile.NamedTemporaryFile("w", suffix=".sls", delete=False)
@@ -102,7 +102,7 @@ class Tempfiles:
 
     def _delete_temp_file(self, fpath):
         """
-        Cleanup the temporary path
+        Cleanup the temporary path.
         """
         if os.path.exists(fpath):
             os.unlink(fpath)
@@ -111,7 +111,7 @@ class Tempfiles:
 @pytest.fixture
 def tempfiles(request):
     """
-    Temporary files fixture
+    Temporary files fixture.
     """
     return Tempfiles(request)
 

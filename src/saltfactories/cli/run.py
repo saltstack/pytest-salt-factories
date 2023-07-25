@@ -17,11 +17,11 @@ class SaltRun(SaltCli):
     def _get_default_timeout(self):
         return self.config.get("timeout")
 
-    def get_minion_tgt(self, minion_tgt=None):
+    def get_minion_tgt(self, minion_tgt=None):  # noqa: ARG002
         """
         Overridden method because salt-run does not target minions.
         """
-        return None
+        return
 
     def process_output(self, stdout, stderr, cmdline=None):
         """

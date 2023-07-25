@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 
 @pytest.fixture(scope="session")
-def _salt_factories_config(request):
+def _salt_factories_config(request):  # noqa: PT005
     """
     Return a dictionary with the keyword arguments for FactoriesManager.
     """
@@ -60,7 +60,8 @@ def salt_factories(
     from saltfactories.manager import FactoriesManager  # pylint: disable=import-outside-toplevel
 
     if not isinstance(salt_factories_config, dict):
-        raise pytest.UsageError("The 'salt_factories_config' fixture MUST return a dictionary")
+        msg = "The 'salt_factories_config' fixture MUST return a dictionary"
+        raise pytest.UsageError(msg)
     if salt_factories_config:
         log.debug(
             "Salt Factories Manager Default Config:\n%s", pprint.pformat(_salt_factories_config)

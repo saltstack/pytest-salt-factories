@@ -56,7 +56,7 @@ class LogServer:
         if platform.is_windows():
             # Windows cannot bind to 0.0.0.0
             return "127.0.0.1"
-        return "0.0.0.0"
+        return "0.0.0.0"  # noqa: S104
 
     @log_port.default
     def _default_log_port(self):
@@ -79,7 +79,8 @@ class LogServer:
         # Wait for the thread to start
         if self.running_event.wait(5) is not True:  # pragma: no cover
             self.running_event.clear()
-            raise RuntimeError("Failed to start the log server")
+            msg = "Failed to start the log server"
+            raise RuntimeError(msg)
         log.info("%s started", self)
 
     def stop(self):
@@ -87,7 +88,7 @@ class LogServer:
         Stop the log server.
         """
         log.info("%s stopping...", self)
-        address = "tcp://{}:{}".format(self.log_host, self.log_port)
+        address = f"tcp://{self.log_host}:{self.log_port}"
         context = zmq.Context()
         sender = context.socket(zmq.PUSH)  # pylint: disable=no-member
         sender.connect(address)
@@ -119,20 +120,20 @@ class LogServer:
             else:
                 log.warning("%s The logging server thread is still running...", self)
 
-    def process_logs(self):
+    def process_logs(self):  # noqa: PLR0915
         """
         Process the logs returned.
         """
-        address = "tcp://{}:{}".format(self.log_host, self.log_port)
+        address = f"tcp://{self.log_host}:{self.log_port}"
         context = zmq.Context()
         puller = context.socket(zmq.PULL)  # pylint: disable=no-member
         puller.set_hwm(self.socket_hwm)
         exit_timeout_seconds = 5
         exit_timeout = None
         if msgpack.version >= (0, 5, 2):
-            msgpack_kwargs = dict(raw=False)
+            msgpack_kwargs = {"raw": False}
         else:  # pragma: no cover
-            msgpack_kwargs = dict(encoding="utf-8")
+            msgpack_kwargs = {"encoding": "utf-8"}
         try:
             puller.bind(address)
         except zmq.ZMQError:  # pragma: no cover
@@ -176,10 +177,10 @@ class LogServer:
                         for key, value in record_dict.copy().items():
                             skip_update = True
                             if isinstance(value, bytes):
-                                value = value.decode("utf-8")
+                                value = value.decode("utf-8")  # noqa: PLW2901
                                 skip_update = False
                             if isinstance(key, bytes):
-                                key = key.decode("utf-8")
+                                key = key.decode("utf-8")  # noqa: PLW2901
                                 skip_update = False
                             if skip_update is False:
                                 record_dict[key] = value

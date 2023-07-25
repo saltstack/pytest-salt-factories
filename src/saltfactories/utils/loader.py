@@ -89,15 +89,17 @@ class LoaderModuleMock:
                 globals_to_mock,
             )
             if not isinstance(module, types.ModuleType):
-                raise pytest.UsageError(
-                    "The dictionary keys returned by setup_loader_modules() "
-                    "must be an imported module, not {}".format(type(module))
+                msg = (
+                    "The dictionary keys returned by setup_loader_modules() must be an imported module, "
+                    f"not {type(module)}"
                 )
+                raise pytest.UsageError(msg)
             if not isinstance(globals_to_mock, dict):
-                raise pytest.UsageError(
-                    "The dictionary values returned by setup_loader_modules() "
-                    "must be a dictionary, not {}".format(type(globals_to_mock))
+                msg = (
+                    "The dictionary values returned by setup_loader_modules() must be a dictionary, "
+                    f"not {type(globals_to_mock)}"
                 )
+                raise pytest.UsageError(msg)
             for key in self.salt_module_dunders:
                 if not hasattr(module, key):
                     # Set the dunder name as an attribute on the module if not present
@@ -126,13 +128,8 @@ class LoaderModuleMock:
             try:
                 log.log(LOGGING_TRACE_LEVEL, "Calling finalizer %s", func_repr)
                 func(*args, **kwargs)
-            except Exception as exc:  # pragma: no cover pylint: disable=broad-except
-                log.error(
-                    "Failed to run finalizer %s: %s",
-                    func_repr,
-                    exc,
-                    exc_info=True,
-                )
+            except Exception:  # pragma: no cover pylint: disable=broad-except
+                log.exception("Failed to run finalizer %s", func_repr)
 
     def addfinalizer(self, func, *args, **kwargs):
         """
@@ -145,9 +142,8 @@ class LoaderModuleMock:
             return
         sys_modules = mocks["sys.modules"]
         if not isinstance(sys_modules, dict):
-            raise pytest.UsageError(
-                "'sys.modules' must be a dictionary not: {}".format(type(sys_modules))
-            )
+            msg = f"'sys.modules' must be a dictionary not: {type(sys_modules)}"
+            raise pytest.UsageError(msg)
         patcher = patch.dict(sys.modules, values=sys_modules)
         patcher.start()
         self.addfinalizer(patcher.stop)
@@ -162,20 +158,12 @@ class LoaderModuleMock:
 
             if key.startswith("__"):
                 if key in ("__init__", "__virtual__"):
-                    raise pytest.UsageError(
-                        "No need to patch {!r}. Passed loader module dict: {}".format(
-                            key,
-                            self.setup_loader_modules,
-                        )
-                    )
-                elif key not in allowed_salt_dunders:
-                    raise pytest.UsageError(
-                        "Don't know how to handle {!r}. Passed loader module dict: {}".format(
-                            key,
-                            self.setup_loader_modules,
-                        )
-                    )
-                elif key in salt_dunder_dicts and not hasattr(module, key):
+                    msg = f"No need to patch {key!r}. Passed loader module dict: {self.setup_loader_modules}"
+                    raise pytest.UsageError(msg)
+                if key not in allowed_salt_dunders:
+                    msg = f"Don't know how to handle {key!r}. Passed loader module dict: {self.setup_loader_modules}"
+                    raise pytest.UsageError(msg)
+                if key in salt_dunder_dicts and not hasattr(module, key):
                     # Add the key as a dictionary attribute to the module so it can be patched by `patch.dict`'
                     setattr(module, key, {})
                     # Remove the added attribute after the test finishes

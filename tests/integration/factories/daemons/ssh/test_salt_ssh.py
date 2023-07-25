@@ -29,15 +29,13 @@ def salt_ssh_cli(sshd, salt_factories, master):
     roster_file_path = salt_factories.tmp_root_dir / "salt_ssh_roster"
     with open(str(roster_file_path), "w", encoding="utf-8") as wfh:
         contents = textwrap.dedent(
-            """\
+            f"""\
         localhost:
           host: 127.0.0.1
-          port: {}
+          port: {sshd.listen_port}
           mine_functions:
             test.arg: ['itworked']
-        """.format(
-                sshd.listen_port
-            )
+        """
         )
         wfh.write(contents)
         log.debug("Wrote '%s' with contents:\n%s", roster_file_path, contents)

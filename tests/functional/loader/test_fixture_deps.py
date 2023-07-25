@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True)
-def confirm_saltfactories_does_not_have_salt_dunders():
+def _confirm_saltfactories_does_not_have_salt_dunders():
     assert (
         HAS_SALT_DUNDER is False
     ), "Weirdly, the saltfactories module has a __salt__ dunder defined. That's a bug!"
@@ -33,7 +33,7 @@ def confirm_saltfactories_does_not_have_salt_dunders_after_setup_loader_mock_ter
 def pre_loader_modules_patched_fixture():
     with pytest.raises(AttributeError):
         assert isinstance(saltfactories.__salt__, dict)  # pylint: disable=no-member
-    yield False
+    return False
 
 
 @pytest.fixture
@@ -46,7 +46,7 @@ def configure_loader_modules(pre_loader_modules_patched_fixture):
 
 
 @pytest.fixture
-def fixture_that_needs_loader_modules_patched():
+def _fixture_that_needs_loader_modules_patched():
     assert saltfactories.__salt__["foo"] is False  # pylint: disable=no-member
     with patch.dict(saltfactories.__salt__, {"foo": True}):  # pylint: disable=no-member
         assert saltfactories.__salt__["foo"] is True  # pylint: disable=no-member
@@ -54,6 +54,7 @@ def fixture_that_needs_loader_modules_patched():
     assert saltfactories.__salt__["foo"] is False  # pylint: disable=no-member
 
 
-def test_fixture_deps(fixture_that_needs_loader_modules_patched):
+@pytest.mark.usefixtures("_fixture_that_needs_loader_modules_patched")
+def test_fixture_deps():
     assert saltfactories.__salt__["foo"] is True  # pylint: disable=no-member
     assert saltfactories.__salt__["test.echo"]("foo") == "foo"  # pylint: disable=no-member

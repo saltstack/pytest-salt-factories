@@ -30,11 +30,13 @@ class SaltMinion(SaltDaemon):
     def __setup_state_tree(self):  # pylint: disable=unused-private-member
         if "file_roots" in self.config:
             return SaltStateTree(envs=copy.deepcopy(self.config.get("file_roots") or {}))
+        return None
 
     @pillar_tree.default
     def __setup_pillar_tree(self):  # pylint: disable=unused-private-member
         if "pillar_roots" in self.config:
             return SaltPillarTree(envs=copy.deepcopy(self.config.get("pillar_roots") or {}))
+        return None
 
     @classmethod
     def default_config(
@@ -65,7 +67,6 @@ class SaltMinion(SaltDaemon):
             defaults.setdefault("transport", master.config["transport"])
 
         if system_service is True:
-
             conf_dir = root_dir / "etc" / "salt"
             conf_dir.mkdir(parents=True, exist_ok=True)
             conf_file = str(conf_dir / "minion")
@@ -107,7 +108,7 @@ class SaltMinion(SaltDaemon):
                 },
                 "pytest-minion": {
                     "master-id": master_id,
-                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, minion_id)},
+                    "log": {"prefix": f"{cls.__name__}(id={minion_id!r})"},
                 },
             }
         else:
@@ -165,7 +166,7 @@ class SaltMinion(SaltDaemon):
                 "acceptance_wait_time_max": 5,
                 "pytest-minion": {
                     "master-id": master_id,
-                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, minion_id)},
+                    "log": {"prefix": f"{cls.__name__}(id={minion_id!r})"},
                 },
             }
         # Merge in the initial default options with the internal _defaults
@@ -270,5 +271,5 @@ class SaltMinion(SaltDaemon):
             config=self.config.copy(),
             system_service=self.factories_manager.system_service,
             python_executable=self.python_executable,
-            **factory_class_kwargs
+            **factory_class_kwargs,
         )

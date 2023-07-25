@@ -24,7 +24,7 @@ def docker_container(salt_factories, docker_client, echo_server_port):
         docker_client=docker_client,
         check_ports=[echo_server_port],
         container_run_kwargs={
-            "ports": {"{}/tcp".format(echo_server_port): echo_server_port},
+            "ports": {f"{echo_server_port}/tcp": echo_server_port},
             "environment": {"TCP_PORT": str(echo_server_port), "NODE_NAME": "echo-server-test"},
         },
     )

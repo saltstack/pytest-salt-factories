@@ -23,7 +23,7 @@ def master_id():
 def config_file(config_dir, master_id):
     config_file = str(config_dir / "config")
     with open(config_file, "w", encoding="utf-8") as wfh:
-        wfh.write("id: {}\n".format(master_id))
+        wfh.write(f"id: {master_id}\n")
     return config_file
 
 
@@ -44,7 +44,7 @@ def test_default_cli_flags(config_dir, config_file, cli_script_name):
     config = {"conf_file": config_file, "id": "the-id"}
     expected = [
         cli_script_name,
-        "--config-dir={}".format(config_dir),
+        f"--config-dir={config_dir}",
         "--log-level=critical",
     ]
     proc = SaltDaemon(start_timeout=1, script_name=cli_script_name, config=config)
@@ -60,10 +60,7 @@ def test_override_log_level(config_dir, config_file, cli_script_name, flag):
     else:
         args = [flag, "info"]
 
-    expected = [
-        cli_script_name,
-        "--config-dir={}".format(config_dir),
-    ] + args
+    expected = [cli_script_name, f"--config-dir={config_dir}", *args]
     proc = SaltDaemon(start_timeout=1, script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args)
     assert cmdline == expected
@@ -71,16 +68,16 @@ def test_override_log_level(config_dir, config_file, cli_script_name, flag):
 
 @pytest.mark.parametrize("flag", ["-c", "--config-dir", "--config-dir=", None])
 def test_override_config_dir(config_dir, config_file, cli_script_name, flag):
-    passed_config_dir = "{}.new".format(config_dir)
+    passed_config_dir = f"{config_dir}.new"
     if flag is None:
-        args = ["--config-dir={}".format(config_dir)]
+        args = [f"--config-dir={config_dir}"]
     elif flag.endswith("="):
         args = [flag + passed_config_dir]
     else:
         args = [flag, passed_config_dir]
 
     config = {"conf_file": config_file, "id": "the-id"}
-    expected = [cli_script_name, "--log-level=critical"] + args
+    expected = [cli_script_name, "--log-level=critical", *args]
     proc = SaltDaemon(start_timeout=1, script_name=cli_script_name, config=config)
     cmdline = proc.cmdline(*args)
     assert cmdline == expected
@@ -90,7 +87,7 @@ def test_salt_daemon_factory_id_attr_comes_first_in_repr(config_file):
     proc = SaltDaemon(
         start_timeout=1, script_name="foo-bar", config={"id": "TheID", "conf_file": config_file}
     )
-    regex = r"{}(id='TheID'".format(proc.__class__.__name__)
+    regex = rf"{proc.__class__.__name__}(id='TheID'"
     assert repr(proc).startswith(regex)
     assert str(proc).startswith(regex)
 
@@ -102,4 +99,4 @@ def test_salt_cli_display_name(config_file):
         script_name="foo-bar",
         config={"id": factory_id, "conf_file": config_file},
     )
-    assert proc.get_display_name() == "{}(id={!r})".format(SaltDaemon.__name__, factory_id)
+    assert proc.get_display_name() == f"{SaltDaemon.__name__}(id={factory_id!r})"

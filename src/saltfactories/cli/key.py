@@ -29,19 +29,19 @@ class SaltKey(SaltCli):
 
         try:
             # Salt >= 3005
-            return "--log-level" in SaltKeyOptionParser._console_log_level_cli_flags
+            return "--log-level" in SaltKeyOptionParser._console_log_level_cli_flags  # noqa: SLF001
         except AttributeError:  # pragma: no cover
             # Salt <= 3004
             return (
-                SaltKeyOptionParser._skip_console_logging_config_  # pylint: disable=no-member
+                SaltKeyOptionParser._skip_console_logging_config_  # noqa: SLF001  pylint: disable=no-member
                 is False
             )
 
-    def get_minion_tgt(self, minion_tgt=None):
+    def get_minion_tgt(self, minion_tgt=None):  # noqa: ARG002
         """
         Overridden method because salt-key does not target minions.
         """
-        return None
+        return
 
     def process_output(self, stdout, stderr, cmdline=None):
         """

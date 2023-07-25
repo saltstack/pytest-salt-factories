@@ -28,7 +28,7 @@ def test_echoed():
         "name": echo_str,
         "changes": {},
         "result": True,
-        "comment": "The 'echo.echoed' returned: '{}'".format(echo_str),
+        "comment": f"The 'echo.echoed' returned: '{echo_str}'",
     }
     assert echo_state.echoed(echo_str) == expected
 
@@ -40,6 +40,6 @@ def test_reversed():
         "name": echo_str,
         "changes": {},
         "result": True,
-        "comment": "The 'echo.reversed' returned: '{}'".format(expected_str),
+        "comment": f"The 'echo.reversed' returned: '{expected_str}'",
     }
     assert echo_state.reversed(echo_str) == expected

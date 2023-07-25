@@ -68,7 +68,7 @@ def test_proxy_minion_salt_call(proxy_minion, salt_call_cli):
     assert ret.returncode == 0, ret
     assert ret.data is True
     # Now with --local
-    ret = salt_call_cli.run("--proxyid={}".format(proxy_minion.id), "test.ping")
+    ret = salt_call_cli.run(f"--proxyid={proxy_minion.id}", "test.ping")
     assert ret.returncode == 0, ret
     assert ret.data is True
 

@@ -200,13 +200,11 @@ def generate_script(
             if code_dir:
                 script_contents += (
                     textwrap.dedent(
-                        """
+                        f"""
                     CODE_DIR = r'{code_dir}'
                     if CODE_DIR in sys.path:
                         sys.path.remove(CODE_DIR)
-                    sys.path.insert(0, CODE_DIR)""".format(
-                            code_dir=code_dir
-                        )
+                    sys.path.insert(0, CODE_DIR)"""
                     ).strip()
                     + "\n\n"
                 )
@@ -221,10 +219,8 @@ def generate_script(
                     + "\n\n"
                 )
             elif not all([coverage_rc_path is None, coverage_db_path is None]):
-                raise pytest.UsageError(
-                    "To track code coverage, both 'coverage_db_path' and "
-                    "'coverage_rc_path' must be passed."
-                )
+                msg = "To track code coverage, both 'coverage_db_path' and 'coverage_rc_path' must be passed."
+                raise pytest.UsageError(msg)
 
             if inject_sitecustomize:
                 script_contents += (

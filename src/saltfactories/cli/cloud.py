@@ -48,7 +48,7 @@ class SaltCloud(SaltCli):
             "log_level_logfile": "debug",
             "pytest-cloud": {
                 "master-id": master_id,
-                "log": {"prefix": "{{cli_name}}({})".format(master_id)},
+                "log": {"prefix": f"{{cli_name}}({master_id})"},
             },
         }
         # Merge in the initial default options with the internal _defaults
@@ -68,7 +68,7 @@ class SaltCloud(SaltCli):
         root_dir=None,
         defaults=None,
         overrides=None,
-        **configure_kwargs  # pylint: disable=unused-argument
+        **configure_kwargs,  # pylint: disable=unused-argument
     ):
         """
         Configure the CLI.

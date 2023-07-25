@@ -6,6 +6,7 @@ PyTest Salt Factories related exceptions.
 def __getattr__(name):
     if name in ("FactoryTimeout", "FactoryNotStarted"):
         import pytestshellutils.exceptions  # pylint: disable=import-outside-toplevel
+
         from saltfactories.utils import warn_until  # pylint: disable=import-outside-toplevel
 
         warn_until(
@@ -15,5 +16,6 @@ def __getattr__(name):
             "pytest-salt-factories {{version}}.".format(name),
         )
         return getattr(pytestshellutils.exceptions, name)
-    else:
-        raise AttributeError("module '{}' has no '{}' attribute".format(__name__, name))
+
+    msg = f"module '{__name__}' has no '{name}' attribute"
+    raise AttributeError(msg)

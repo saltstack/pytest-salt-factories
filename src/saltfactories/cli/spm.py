@@ -23,11 +23,11 @@ class Spm(SaltCli):
 
     __cli_output_supported__ = attr.ib(repr=False, init=False, default=False)
 
-    def get_minion_tgt(self, minion_tgt=None):
+    def get_minion_tgt(self, minion_tgt=None):  # noqa: ARG002
         """
         Overridden method because spm does not target minions.
         """
-        return None
+        return
 
     @staticmethod
     def default_config(root_dir, master_factory, defaults=None, overrides=None):
@@ -61,7 +61,7 @@ class Spm(SaltCli):
             "spm_log_level_logfile": "debug",
             "pytest-spm": {
                 "master-id": master_factory.id,
-                "log": {"prefix": "{{cli_name}}({})".format(master_factory.id)},
+                "log": {"prefix": f"{{cli_name}}({master_factory.id})"},
             },
         }
         # Merge in the initial default options with the internal _defaults

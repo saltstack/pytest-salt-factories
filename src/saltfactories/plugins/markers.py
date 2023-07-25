@@ -56,7 +56,7 @@ def session_markers_loader(salt_factories):
     )
     loader_instance = saltfactories.utils.functional.Loaders(
         factory.config.copy(),
-        loaded_base_name="{}.loaded".format(__name__),
+        loaded_base_name=f"{__name__}.loaded",
     )
     # Sync Everything
     loader_instance.modules.saltutil.sync_all()

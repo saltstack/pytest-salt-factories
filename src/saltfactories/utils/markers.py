@@ -31,7 +31,7 @@ def check_required_loader_attributes(loader_instance, loader_attr, required_item
     available_items = list(getattr(loader_instance, loader_attr))
     not_available_items = set()
 
-    name = "__not_available_{items}s__".format(items=loader_attr)
+    name = f"__not_available_{loader_attr}s__"
     if not hasattr(loader_instance, name):
         cached_not_available_items = set()
         setattr(loader_instance, name, cached_not_available_items)
@@ -55,7 +55,7 @@ def check_required_loader_attributes(loader_instance, loader_attr, required_item
     return not_available_items
 
 
-def evaluate_markers(item):
+def evaluate_markers(item):  # noqa: C901,PLR0915
     """
     Fixtures injection based on markers or test skips based on CLI arguments.
     """
@@ -68,19 +68,16 @@ def evaluate_markers(item):
     requires_salt_modules_marker = item.get_closest_marker("requires_salt_modules")
     if requires_salt_modules_marker is not None:
         if requires_salt_modules_marker.kwargs:
-            raise pytest.UsageError(
-                "The 'required_salt_modules' marker does not accept keyword arguments"
-            )
+            msg = "The 'required_salt_modules' marker does not accept keyword arguments"
+            raise pytest.UsageError(msg)
         required_salt_modules = requires_salt_modules_marker.args
         if not required_salt_modules:
-            raise pytest.UsageError(
-                "The 'required_salt_modules' marker needs at least one module name to be passed"
-            )
+            msg = "The 'required_salt_modules' marker needs at least one module name to be passed"
+            raise pytest.UsageError(msg)
         for arg in required_salt_modules:
             if not isinstance(arg, str):
-                raise pytest.UsageError(
-                    "The 'required_salt_modules' marker only accepts strings as arguments"
-                )
+                msg = "The 'required_salt_modules' marker only accepts strings as arguments"
+                raise pytest.UsageError(msg)
         session_markers_loader = item._request.getfixturevalue("session_markers_loader")
         required_salt_modules = set(required_salt_modules)
         not_available_modules = check_required_loader_attributes(
@@ -90,30 +87,27 @@ def evaluate_markers(item):
         if not_available_modules:
             item._skipped_by_mark = True
             if len(not_available_modules) == 1:
-                raise pytest.skip.Exception(
-                    "Salt module '{}' is not available".format(*not_available_modules), **exc_kwargs
-                )
+                msg = "Salt module '{}' is not available".format(*not_available_modules)
+                raise pytest.skip.Exception(msg, **exc_kwargs)
+            msg = "Salt modules not available: {}".format(", ".join(not_available_modules))
             raise pytest.skip.Exception(
-                "Salt modules not available: {}".format(", ".join(not_available_modules)),
-                **exc_kwargs
+                msg,
+                **exc_kwargs,
             )
 
     requires_salt_states_marker = item.get_closest_marker("requires_salt_states")
     if requires_salt_states_marker is not None:
         if requires_salt_states_marker.kwargs:
-            raise pytest.UsageError(
-                "The 'required_salt_states' marker does not accept keyword arguments"
-            )
+            msg = "The 'required_salt_states' marker does not accept keyword arguments"
+            raise pytest.UsageError(msg)
         required_salt_states = requires_salt_states_marker.args
         if not required_salt_states:
-            raise pytest.UsageError(
-                "The 'required_salt_states' marker needs at least one state module name to be passed"
-            )
+            msg = "The 'required_salt_states' marker needs at least one state module name to be passed"
+            raise pytest.UsageError(msg)
         for arg in required_salt_states:
             if not isinstance(arg, str):
-                raise pytest.UsageError(
-                    "The 'required_salt_states' marker only accepts strings as arguments"
-                )
+                msg = "The 'required_salt_states' marker only accepts strings as arguments"
+                raise pytest.UsageError(msg)
         session_markers_loader = item._request.getfixturevalue("session_markers_loader")
         required_salt_states = set(required_salt_states)
         not_available_states = check_required_loader_attributes(
@@ -123,29 +117,27 @@ def evaluate_markers(item):
         if not_available_states:
             item._skipped_by_mark = True
             if len(not_available_states) == 1:
+                msg = "Salt state module '{}' is not available".format(*not_available_states)
                 raise pytest.skip.Exception(
-                    "Salt state module '{}' is not available".format(*not_available_states),
-                    **exc_kwargs
+                    msg,
+                    **exc_kwargs,
                 )
-            raise pytest.skip.Exception(
-                "Salt state modules not available: {}".format(
-                    ", ".join(not_available_states), **exc_kwargs
-                )
+            msg = "Salt state modules not available: {}".format(
+                ", ".join(not_available_states), **exc_kwargs
             )
+            raise pytest.skip.Exception(msg)
 
     skip_on_salt_system_service_marker = item.get_closest_marker("skip_on_salt_system_service")
     if skip_on_salt_system_service_marker is not None:
         if skip_on_salt_system_service_marker.args:
-            raise pytest.UsageError(
-                "The 'skip_on_salt_system_service' marker does not accept any arguments"
-            )
+            msg = "The 'skip_on_salt_system_service' marker does not accept any arguments"
+            raise pytest.UsageError(msg)
         reason = skip_on_salt_system_service_marker.kwargs.pop("reason", None)
         if reason is None:
             reason = "Test should not run against system install of Salt"
         if skip_on_salt_system_service_marker.kwargs:
-            raise pytest.UsageError(
-                "The 'skip_on_salt_system_service' marker only accepts 'reason' as a keyword argument"
-            )
+            msg = "The 'skip_on_salt_system_service' marker only accepts 'reason' as a keyword argument"
+            raise pytest.UsageError(msg)
         salt_factories = item._request.getfixturevalue("salt_factories")
         if salt_factories.system_service is True:
             raise pytest.skip.Exception(reason, **exc_kwargs)

@@ -49,11 +49,13 @@ class SaltMaster(SaltDaemon):
     def __setup_state_tree(self):  # pylint: disable=unused-private-member
         if "file_roots" in self.config:
             return SaltStateTree(envs=copy.deepcopy(self.config.get("file_roots") or {}))
+        return None
 
     @pillar_tree.default
     def __setup_pillar_tree(self):  # pylint: disable=unused-private-member
         if "pillar_roots" in self.config:
             return SaltPillarTree(envs=copy.deepcopy(self.config.get("pillar_roots") or {}))
+        return None
 
     @classmethod
     def default_config(
@@ -90,7 +92,6 @@ class SaltMaster(SaltDaemon):
             defaults.setdefault("transport", master_of_masters.config["transport"])
 
         if system_service is True:
-
             conf_dir = root_dir / "etc" / "salt"
             conf_dir.mkdir(parents=True, exist_ok=True)
             conf_file = str(conf_dir / "master")
@@ -144,7 +145,7 @@ class SaltMaster(SaltDaemon):
                 "max_open_files": 10240,
                 "pytest-master": {
                     "master-id": master_of_masters_id,
-                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, master_id)},
+                    "log": {"prefix": f"{cls.__name__}(id={master_id!r})"},
                 },
             }
         else:
@@ -212,7 +213,7 @@ class SaltMaster(SaltDaemon):
                 "enable_legacy_startup_events": False,
                 "pytest-master": {
                     "master-id": master_of_masters_id,
-                    "log": {"prefix": "{}(id={!r})".format(cls.__name__, master_id)},
+                    "log": {"prefix": f"{cls.__name__}(id={master_id!r})"},
                 },
             }
         # Merge in the initial default options with the internal _defaults
@@ -272,7 +273,7 @@ class SaltMaster(SaltDaemon):
         return verify_env_entries
 
     @classmethod
-    def load_config(cls, config_file, config):
+    def load_config(cls, config_file, config):  # noqa: ARG003
         """
         Return the loaded configuration.
         """
@@ -290,7 +291,7 @@ class SaltMaster(SaltDaemon):
         salt_key_cli = self.salt_key_cli()
         if keystate == "pend":
             ret = salt_key_cli.run("--yes", "--accept", minion_id)
-            assert ret.returncode == 0
+            assert ret.returncode == 0  # noqa: S101
 
     def get_check_events(self):
         """
@@ -343,7 +344,7 @@ class SaltMaster(SaltDaemon):
         defaults=None,
         overrides=None,
         factory_class=cli.cloud.SaltCloud,
-        **factory_class_kwargs
+        **factory_class_kwargs,
     ):
         """
         Return a salt-cloud CLI instance.
@@ -463,7 +464,7 @@ class SaltMaster(SaltDaemon):
         target_host=None,
         client_key=None,
         ssh_user=None,
-        **factory_class_kwargs
+        **factory_class_kwargs,
     ):
         """
         Return a `salt-ssh` CLI process for this master instance.
@@ -477,7 +478,7 @@ class SaltMaster(SaltDaemon):
                 The path to the private ssh key to use to connect
             ssh_user(str):
                 The remote username to connect as
-        """  # noqa: D417
+        """
         script_path = self.factories_manager.get_salt_script_path("salt-ssh")
         return factory_class(
             script_name=script_path,

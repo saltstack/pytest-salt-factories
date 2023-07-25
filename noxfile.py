@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 import gzip
 import json
@@ -130,7 +131,7 @@ def tests(session):
             # itself does not get upgraded
             pytest_requirements = ["importlib-metadata<5.0.0"]
             if not pytest_version_requirement.startswith("pytest"):
-                pytest_version_requirement = "pytest{}".format(pytest_version_requirement)
+                pytest_version_requirement = f"pytest{pytest_version_requirement}"
             pytest_requirements.append(pytest_version_requirement)
             if pytest_version_requirement.startswith("pytest~=6"):
                 pytest_requirements.append("pytest-subtests<0.7.0")
@@ -189,10 +190,10 @@ def tests(session):
     args = [
         "--rootdir",
         str(REPO_ROOT),
-        "--log-file={}".format(RUNTESTS_LOGFILE),
+        f"--log-file={RUNTESTS_LOGFILE}",
         "--log-file-level=debug",
         "--show-capture=no",
-        "--junitxml={}".format(JUNIT_REPORT),
+        f"--junitxml={JUNIT_REPORT}",
         "--showlocals",
         "--strict-markers",
         "-ra",
@@ -221,12 +222,11 @@ def tests(session):
     try:
         if system_service is False:
             # Always combine and generate the XML coverage report
-            try:
-                session.run("coverage", "combine")
-            except CommandFailed:
+            with contextlib.suppress(CommandFailed):
                 # Sometimes some of the coverage files are corrupt which would
                 # trigger a CommandFailed exception
-                pass
+                session.run("coverage", "combine")
+
             # Generate report for saltfactories code coverage
             session.run(
                 "coverage",
@@ -252,7 +252,7 @@ def tests(session):
                 "--include=src/saltfactories/*,tests/*",
             ]
             if system_service is False and pytest_version(session) >= (6, 2):
-                cmdline.append("--fail-under={}".format(COVERAGE_FAIL_UNDER_PERCENT))
+                cmdline.append(f"--fail-under={COVERAGE_FAIL_UNDER_PERCENT}")
             session.run(*cmdline)
     finally:
         if COVERAGE_REPORT_DB.exists():
@@ -281,7 +281,7 @@ def _lint(session, rcfile, extra_args, paths):
         session.run("pylint", "--version")
     pylint_report_path = os.environ.get("PYLINT_REPORT")
 
-    cmd_args = ["pylint", "--rcfile={}".format(rcfile)] + extra_args + paths
+    cmd_args = ["pylint", f"--rcfile={rcfile}", *extra_args, *paths]
 
     stdout = tempfile.TemporaryFile(mode="w+b")
     try:
@@ -306,8 +306,8 @@ def lint(session):
     """
     Run PyLint against Salt and it's test suite. Set PYLINT_REPORT to a path to capture output.
     """
-    session.notify("lint-code-{}".format(session.python))
-    session.notify("lint-tests-{}".format(session.python))
+    session.notify(f"lint-code-{session.python}")
+    session.notify(f"lint-tests-{session.python}")
 
 
 @nox.session(python="3", name="lint-code")
@@ -472,7 +472,7 @@ def changelog(session, draft):
         stderr=None,
     ).strip()
 
-    town_cmd = ["towncrier", "build", "--version={}".format(version)]
+    town_cmd = ["towncrier", "build", f"--version={version}"]
     if draft:
         town_cmd.append("--draft")
     session.run(*town_cmd)
@@ -495,7 +495,7 @@ def release(session):
     version = session.posargs[0]
     try:
         session.log("Generating temporary %s tag", version)
-        session.run("git", "tag", "-as", version, "-m", "Release {}".format(version), external=True)
+        session.run("git", "tag", "-as", version, "-m", f"Release {version}", external=True)
         changelog(session, draft=False)
     except CommandFailed:
         session.error("Failed to generate the temporary tag")
@@ -507,16 +507,14 @@ def release(session):
             "commit",
             "-a",
             "-m",
-            "Generate Changelog for version {}".format(version),
+            f"Generate Changelog for version {version}",
             external=True,
         )
     except CommandFailed:
         session.error("Failed to generate the release changelog")
     try:
         session.log("Overwriting temporary %s tag", version)
-        session.run(
-            "git", "tag", "-fas", version, "-m", "Release {}".format(version), external=True
-        )
+        session.run("git", "tag", "-fas", version, "-m", f"Release {version}", external=True)
     except CommandFailed:
         session.error("Failed to overwrite the temporary tag")
     session.warn("Don't forget to push the newly created tag")
@@ -527,7 +525,7 @@ class Recompress:
     Helper class to re-compress a ``.tag.gz`` file to make it reproducible.
     """
 
-    def __init__(self, mtime):
+    def __init__(self, mtime) -> None:
         self.mtime = int(mtime)
 
     def tar_reset(self, tarinfo):
@@ -554,27 +552,25 @@ class Recompress:
         d_src.mkdir()
         d_tar = tempd.joinpath(targz.stem)
         d_targz = tempd.joinpath(targz.name)
-        with tarfile.open(d_tar, "w|") as wfile:
-            with tarfile.open(targz, "r:gz") as rfile:
-                rfile.extractall(d_src)
-                extracted_dir = next(pathlib.Path(d_src).iterdir())
-                for name in sorted(extracted_dir.rglob("*")):
-                    wfile.add(
-                        str(name),
-                        filter=self.tar_reset,
-                        recursive=False,
-                        arcname=str(name.relative_to(d_src)),
-                    )
+        with tarfile.open(d_tar, "w|") as wfile, tarfile.open(targz, "r:gz") as rfile:
+            rfile.extractall(d_src)  # nosec
+            extracted_dir = next(pathlib.Path(d_src).iterdir())
+            for name in sorted(extracted_dir.rglob("*")):
+                wfile.add(
+                    str(name),
+                    filter=self.tar_reset,
+                    recursive=False,
+                    arcname=str(name.relative_to(d_src)),
+                )
 
-        with open(d_tar, "rb") as rfh:
-            with gzip.GzipFile(
-                fileobj=open(d_targz, "wb"), mode="wb", filename="", mtime=self.mtime
-            ) as gz:  # pylint: disable=invalid-name
-                while True:
-                    chunk = rfh.read(1024)
-                    if not chunk:
-                        break
-                    gz.write(chunk)
+        with open(d_tar, "rb") as rfh, gzip.GzipFile(
+            fileobj=open(d_targz, "wb"), mode="wb", filename="", mtime=self.mtime
+        ) as gz:  # pylint: disable=invalid-name
+            while True:
+                chunk = rfh.read(1024)
+                if not chunk:
+                    break
+                gz.write(chunk)
         targz.unlink()
         shutil.move(str(d_targz), str(targz))
 

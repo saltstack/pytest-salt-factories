@@ -22,39 +22,39 @@ class SaltApi(SaltDaemon):
         elif "rest_tornado" in self.config:
             self.check_ports = [self.config["rest_tornado"]["port"]]
         else:
-            raise pytest.UsageError(
-                "The salt-master configuration for this salt-api instance does not seem to have "
-                "any api properly configured."
+            msg = (
+                "The salt-master configuration for this salt-api instance does not seem to have any "
+                "api properly configured."
             )
+            raise pytest.UsageError(msg)
         super().__attrs_post_init__()
 
     @classmethod
     def _configure(
         cls,
-        factories_manager,
-        daemon_id,
-        root_dir=None,
-        defaults=None,
-        overrides=None,
+        factories_manager,  # noqa: ARG003
+        daemon_id,  # noqa: ARG003
+        root_dir=None,  # noqa: ARG003
+        defaults=None,  # noqa: ARG003
+        overrides=None,  # noqa: ARG003
     ):
-        raise pytest.UsageError(
-            "The salt-api daemon is not configurable. It uses the salt-master config that "
-            "it's attached to."
-        )
+        msg = "The salt-api daemon is not configurable. It uses the salt-master config that it's attached to."
+        raise pytest.UsageError(msg)
 
     @classmethod
-    def _get_verify_config_entries(cls, config):
+    def _get_verify_config_entries(cls, config):  # noqa: ARG003
         return []
 
     @classmethod
-    def load_config(cls, config_file, config):
+    def load_config(cls, config_file, config):  # noqa: ARG003
         """
         Return the loaded configuration.
         """
-        raise pytest.UsageError(
+        msg = (
             "The salt-api daemon does not have it's own config file. It uses the salt-master config that "
             "it's attached to."
         )
+        raise pytest.UsageError(msg)
 
     def get_check_events(self):
         """
