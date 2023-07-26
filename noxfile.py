@@ -84,6 +84,22 @@ def pytest_version(session):
     return session._runner._pytest_version_info
 
 
+def _get_session_python_version_info(session):
+    try:
+        version_info = session._runner._real_python_version_info
+    except AttributeError:
+        session_py_version = session.run_always(
+            "python",
+            "-c",
+            'import sys; sys.stdout.write("{}.{}.{}".format(*sys.version_info))',
+            silent=True,
+            log=False,
+        )
+        version_info = tuple(int(part) for part in session_py_version.split(".") if part.isdigit())
+        session._runner._real_python_version_info = version_info
+    return version_info
+
+
 def session_run_always(session, *command, **kwargs):
     """
     Patch nox to allow running some commands which would be skipped if --install-only is passed.
@@ -112,10 +128,13 @@ def tests(session):
     env = {}
     system_service = session.python is False
     if SKIP_REQUIREMENTS_INSTALL is False:
+        python_version_info = _get_session_python_version_info(session)
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
-        salt_requirements = ["importlib-metadata<5.0.0"]
+        salt_requirements = []
+        if python_version_info <= (3, 7) and "3005" in SALT_REQUIREMENT:
+            salt_requirements.append("importlib-metadata<5.0.0")
         salt_requirements.append(SALT_REQUIREMENT)
         if session.python is not False and system_service is False:
             session.install(
@@ -126,15 +145,15 @@ def tests(session):
             )
         pytest_version_requirement = os.environ.get("PYTEST_VERSION_REQUIREMENT") or None
         if pytest_version_requirement:
-            pytest_requirements = ["importlib-metadata<5.0.0"]
+            pytest_requirements = []
             if not pytest_version_requirement.startswith("pytest"):
                 pytest_version_requirement = f"pytest{pytest_version_requirement}"
             pytest_requirements.append(pytest_version_requirement)
             session.install(*pytest_requirements, silent=PIP_INSTALL_SILENT)
         if system_service:
-            session.install("importlib-metadata<5.0.0", ".", silent=PIP_INSTALL_SILENT)
+            session.install(".", silent=PIP_INSTALL_SILENT)
         else:
-            session.install("importlib-metadata<5.0.0", "-e", ".", silent=PIP_INSTALL_SILENT)
+            session.install("-e", ".", silent=PIP_INSTALL_SILENT)
         pip_list = session_run_always(
             session, "pip", "list", "--format=json", silent=True, log=False, stderr=None
         )
@@ -256,9 +275,10 @@ def tests(session):
 
 def _lint(session, rcfile, extra_args, paths):
     if SKIP_REQUIREMENTS_INSTALL is False:
+        python_version_info = _get_session_python_version_info(session)
         salt_requirements = []
-        if "3003" in SALT_REQUIREMENT:
-            salt_requirements.append("jinja2<3.1")
+        if python_version_info <= (3, 7) and "3005" in SALT_REQUIREMENT:
+            salt_requirements.append("importlib-metadata<5.0.0")
         salt_requirements.append(SALT_REQUIREMENT)
         session.install(
             "--progress-bar=off",
