@@ -3,3 +3,4 @@ Several improvements to reduce failure points:
 * Log the exception instead of raising it.
 * Always populate the `*_dirs` config settings, regardless of how salt-factories is being used
 * Improved the connect/disconnect behavior of the event listener client
+* The minimum supported Salt version is now 3005.0

@@ -14,7 +14,7 @@ from nox.command import CommandFailed  # pylint: disable=import-error
 from nox.logger import logger  # pylint: disable=import-error
 
 COVERAGE_VERSION_REQUIREMENT = "coverage==5.5"
-SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3004"
+SALT_REQUIREMENT = os.environ.get("SALT_REQUIREMENT") or "salt>=3005"
 if SALT_REQUIREMENT == "salt==master":
     SALT_REQUIREMENT = "git+https://github.com/saltstack/salt.git@master"
 IS_WINDOWS = sys.platform.lower().startswith("win")
@@ -104,7 +104,7 @@ def session_run_always(session, *command, **kwargs):
             session._runner.global_config.install_only = old_install_only_value
 
 
-@nox.session(python=("3", "3.5", "3.6", "3.7", "3.8", "3.9"))
+@nox.session(python=("3", "3.6", "3.7", "3.8", "3.9"))
 def tests(session):
     """
     Run tests.

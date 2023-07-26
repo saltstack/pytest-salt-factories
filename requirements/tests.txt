@@ -1,5 +1,4 @@
 -r base.txt
 docker>=4.0.0
 pytest-subtests
-pyfakefs==4.4.0; python_version == '3.5'
-pyfakefs; python_version > '3.5'
+pyfakefs
