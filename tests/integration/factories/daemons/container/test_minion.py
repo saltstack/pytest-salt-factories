@@ -100,7 +100,10 @@ def salt_minion(
     config_overrides = {
         "master": salt_master.config["interface"],
         "user": False,
-        "pytest-minion": {"log": {"host": host_docker_network_ip_address}},
+        "pytest-minion": {
+            "log": {"host": host_docker_network_ip_address},
+            "returner_address": {"host": host_docker_network_ip_address},
+        },
         # We also want to scrutinize the key acceptance
         "open_mode": False,
     }

@@ -19,6 +19,7 @@ import msgpack.exceptions
 import pytest
 from pytestshellutils.utils import ports
 from pytestshellutils.utils import time
+from pytestskipmarkers.utils import platform
 
 log = logging.getLogger(__name__)
 
@@ -180,14 +181,26 @@ class EventListener:
     server = attr.ib(init=False, repr=False, hash=False)
     server_running_event = attr.ib(init=False, repr=False, hash=False)
 
+    @host.default
+    def _default_host(self):
+        if platform.is_windows():
+            # Windows cannot bind to 0.0.0.0
+            return "127.0.0.1"
+        return "0.0.0.0"  # noqa: S104
+
+    @port.default
+    def _default_port(self):
+        return ports.get_unused_localhost_port()
+
+    @address.default
+    def _default_address(self):
+        return f"tcp://{self.host}:{self.port}"
+
     def __attrs_post_init__(self):
         """
         Post attrs initialization routines.
         """
         self.store = deque(maxlen=10000)
-        self.host = "127.0.0.1"
-        self.port = ports.get_unused_localhost_port()
-        self.address = f"tcp://{self.host}:{self.port}"
         self.running_event = threading.Event()
         self.cleanup_thread = threading.Thread(target=self._cleanup)
         self.auth_event_handlers = weakref.WeakValueDictionary()
