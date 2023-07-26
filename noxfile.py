@@ -120,7 +120,7 @@ def session_run_always(session, *command, **kwargs):
             session._runner.global_config.install_only = old_install_only_value
 
 
-@nox.session(python=("3", "3.6", "3.7", "3.8", "3.9"))
+@nox.session(python=("3", "3.6", "3.7", "3.8", "3.9", "3.10"))
 def tests(session):
     """
     Run tests.
@@ -132,6 +132,15 @@ def tests(session):
         # Always have the wheel package installed
         session.install("wheel", silent=PIP_INSTALL_SILENT)
         session.install(COVERAGE_VERSION_REQUIREMENT, silent=PIP_INSTALL_SILENT)
+        if python_version_info >= (3, 10) and "3006" in SALT_REQUIREMENT:
+            # Workaround pyyaml issue https://github.com/yaml/pyyaml/issues/601
+            session.install(
+                "--progress-bar=off",
+                "Cython<3.0",
+                "--no-build-isolation",
+                "pyyaml==5.4.1",
+                silent=PIP_INSTALL_SILENT,
+            )
         salt_requirements = []
         if python_version_info <= (3, 7) and "3005" in SALT_REQUIREMENT:
             salt_requirements.append("importlib-metadata<5.0.0")

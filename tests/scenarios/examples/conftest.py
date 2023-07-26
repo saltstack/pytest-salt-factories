@@ -29,8 +29,13 @@ class ExtensionVirtualEnv(VirtualEnv):
         self.venv.run("git", "init", ".")
         self.venv.run("git", "add", ".")
         self.venv.install(str(CODE_ROOT_DIR.parent.parent))
-        # Only Salt >= 3006 supports importlib-metadata>=5.0.0
-        self.venv.install("importlib-metadata<5.0.0", ".[tests]")
+
+        import salt.version  # pylint: disable=import-outside-toplevel
+
+        if salt.version.__saltstack_version__ < "3006":
+            # Only Salt >= 3006 supports importlib-metadata>=5.0.0
+            self.venv.install("importlib-metadata<5.0.0")
+        self.venv.install(".[tests]")
         return self.venv
 
     def __exit__(self, *_):  # noqa: D105
