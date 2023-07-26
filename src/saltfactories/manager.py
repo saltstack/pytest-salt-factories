@@ -162,10 +162,14 @@ class FactoriesManager:
         pytest_key = "pytest-minion"
         if pytest_key not in config:  # pragma: no cover
             config[pytest_key] = {}
-        config[pytest_key]["returner_address"] = {
-            "host": self.event_listener.host,
-            "port": self.event_listener.port,
-        }
+        if "returner_address" not in config[pytest_key]:
+            config[pytest_key]["returner_address"] = {}
+        returner_address_config = config[pytest_key]["returner_address"]
+        event_listener_host = self.event_listener.host
+        if event_listener_host == "0.0.0.0":  # noqa: S104
+            event_listener_host = "127.0.0.1"
+        returner_address_config.setdefault("host", event_listener_host)
+        returner_address_config.setdefault("port", self.event_listener.port)
         self.final_common_config_tweaks(config, "minion")
 
     def final_master_config_tweaks(self, config):
@@ -175,10 +179,14 @@ class FactoriesManager:
         pytest_key = "pytest-master"
         if pytest_key not in config:  # pragma: no cover
             config[pytest_key] = {}
-        config[pytest_key]["returner_address"] = {
-            "host": self.event_listener.host,
-            "port": self.event_listener.port,
-        }
+        if "returner_address" not in config[pytest_key]:
+            config[pytest_key]["returner_address"] = {}
+        returner_address_config = config[pytest_key]["returner_address"]
+        event_listener_host = self.event_listener.host
+        if event_listener_host == "0.0.0.0":  # noqa: S104
+            event_listener_host = "127.0.0.1"
+        returner_address_config.setdefault("host", event_listener_host)
+        returner_address_config.setdefault("port", self.event_listener.port)
         self.final_common_config_tweaks(config, "master")
 
     def final_syndic_config_tweaks(self, config):
