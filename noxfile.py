@@ -51,7 +51,7 @@ RUNTESTS_LOGFILE = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "runtests-{}.log".form
     datetime.datetime.now().strftime("%Y%m%d%H%M%S.%f")
 )
 COVERAGE_REPORT_DB = REPO_ROOT / ".coverage"
-COVERAGE_REPORT_SALTFACTORIES = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-saltfactories.xml"
+COVERAGE_REPORT_SALTFACTORIES = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-project.xml"
 COVERAGE_REPORT_TESTS = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "coverage-tests.xml"
 JUNIT_REPORT = ARTIFACTS_DIR.relative_to(REPO_ROOT) / "junit-report.xml"
 
