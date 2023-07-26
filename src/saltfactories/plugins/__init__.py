@@ -84,8 +84,8 @@ def pytest_load_initial_conftests(*_):
     # onedir build in salt's repo checkout.
     import salt.version  # pylint: disable=import-outside-toplevel
 
-    if salt.version.__saltstack_version__ < "3004":
-        msg = "Only salt>=3004 is supported"
+    if salt.version.__saltstack_version__ < "3005":
+        msg = f"Only salt>=3005 is supported(Installed version {salt.version.__saltstack_version__}"
         raise pytest.UsageError(msg)
     if "temp_directory" not in pytest.helpers:
         pytest.helpers.register(saltfactories.utils.tempfiles.temp_directory, name="temp_directory")
