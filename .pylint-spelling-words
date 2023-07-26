@@ -135,6 +135,7 @@ pytestshellutils
 pytestsysstats
 pythonic
 pythonpath
+pyyaml
 pyzmq
 qux
 rc
