@@ -120,10 +120,8 @@ jobs:
 
     - name: Install Salt
       run: |
-        curl -L https://bootstrap.saltstack.com | sudo sh -s -- -M -X -x python3 stable
+        curl -L https://bootstrap.saltstack.com | sudo sh -s -- -M -X -x python3 old-stable 3005
         sudo apt-get install -y salt-api salt-ssh salt-syndic salt-cloud python3-pip
-        # We need to upgrade pyzmq or we'll get coredumps
-        sudo python3 -m pip install --ignore-installed -U pyzmq==19.0.0
         for service in $(sudo systemctl list-unit-files | grep salt | grep -v @ | awk '{ print $1 }'); do sudo systemctl stop $service; done
 
     - name: Gather CodeCov Info
