@@ -1,6 +1,5 @@
 import logging
 
-import _pytest._version
 import pytest
 
 from saltfactories.daemons.container import SaltMinion
@@ -12,7 +11,6 @@ from docker.errors import DockerException  # noqa: E402
 
 log = logging.getLogger(__name__)
 
-PYTEST_GE_7 = getattr(_pytest._version, "version_tuple", (-1, -1)) >= (7, 0)
 
 pytestmark = [
     # We can't pass ``extra_cli_arguments_after_first_start_failure``, but this is solvable,
@@ -27,11 +25,8 @@ pytestmark = [
 @pytest.fixture(scope="session")
 def docker_client(salt_factories, docker_client):
     if salt_factories.system_service:
-        exc_kwargs = {}
-        if PYTEST_GE_7:
-            exc_kwargs["_use_item_location"] = True
         msg = "Test should not run against system install of Salt"
-        raise pytest.skip.Exception(msg, **exc_kwargs)
+        raise pytest.skip.Exception(msg, _use_item_location=True)
     return docker_client
 
 

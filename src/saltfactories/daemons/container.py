@@ -6,7 +6,6 @@ import contextlib
 import logging
 import os
 
-import _pytest._version
 import attr
 import pytest
 from pytestshellutils.customtypes import Callback
@@ -73,8 +72,6 @@ except ImportError:
 
 
 log = logging.getLogger(__name__)
-
-PYTEST_GE_7 = getattr(_pytest._version, "version_tuple", (-1, -1)) >= (7, 0)  # noqa: SLF001
 
 
 @attr.s(kw_only=True)
@@ -198,25 +195,22 @@ class Container(BaseFactory):
 
     @docker_client.default
     def _default_docker_client(self):
-        exc_kwargs = {}
-        if PYTEST_GE_7:
-            exc_kwargs["_use_item_location"] = True
         if not HAS_DOCKER:
             message = "The docker python library was not found installed"
             if self.skip_if_docker_client_not_connectable:
-                raise pytest.skip.Exception(message, **exc_kwargs)
+                raise pytest.skip.Exception(message, _use_item_location=True)
             pytest.fail(message)
         if not HAS_REQUESTS:
             message = "The requests python library was not found installed"
             if self.skip_if_docker_client_not_connectable:
-                raise pytest.skip.Exception(message, **exc_kwargs)
+                raise pytest.skip.Exception(message, _use_item_location=True)
             pytest.fail(message)
         try:
             docker_client = docker.from_env()
         except DockerException as exc:
             message = f"Failed to instantiate the docker client: {exc}"
             if self.skip_if_docker_client_not_connectable:
-                raise pytest.skip.Exception(message, **exc_kwargs) from exc
+                raise pytest.skip.Exception(message, _use_item_location=True) from exc
             pytest.fail(message)
         else:
             return docker_client
@@ -694,10 +688,7 @@ class Container(BaseFactory):
         connectable = Container.client_connectable(self.docker_client)
         if connectable is not True:
             if self.skip_if_docker_client_not_connectable:
-                exc_kwargs = {}
-                if PYTEST_GE_7:
-                    exc_kwargs["_use_item_location"] = True
-                raise pytest.skip.Exception(connectable, **exc_kwargs)
+                raise pytest.skip.Exception(connectable, _use_item_location=True)
             pytest.fail(connectable)
 
     def _pull_container(self):
@@ -709,11 +700,8 @@ class Container(BaseFactory):
             self.docker_client.images.pull(self.image)
         except APIError as exc:
             if self.skip_on_pull_failure:
-                exc_kwargs = {}
-                if PYTEST_GE_7:
-                    exc_kwargs["_use_item_location"] = True
                 msg = f"Failed to pull docker image '{self.image}': {exc}"
-                raise pytest.skip.Exception(msg, **exc_kwargs) from exc
+                raise pytest.skip.Exception(msg, _use_item_location=True) from exc
             raise
 
     def __enter__(self):
