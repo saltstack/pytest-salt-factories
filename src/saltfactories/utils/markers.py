@@ -4,10 +4,7 @@ Markers related utilities.
 import fnmatch
 import logging
 
-import _pytest._version
 import pytest
-
-PYTEST_GE_7 = getattr(_pytest._version, "version_tuple", (-1, -1)) >= (7, 0)
 
 log = logging.getLogger(__name__)
 
@@ -55,16 +52,13 @@ def check_required_loader_attributes(loader_instance, loader_attr, required_item
     return not_available_items
 
 
-def evaluate_markers(item):  # noqa: C901,PLR0915
+def evaluate_markers(item):  # noqa: PLR0915
     """
     Fixtures injection based on markers or test skips based on CLI arguments.
     """
     # Two special markers, requires_salt_modules and requires_salt_states. These need access to a
     # saltfactories.utils.functional.Loader instance
     # They will use a session_markers_loader fixture to gain access to that
-    exc_kwargs = {}
-    if PYTEST_GE_7:
-        exc_kwargs["_use_item_location"] = True
     requires_salt_modules_marker = item.get_closest_marker("requires_salt_modules")
     if requires_salt_modules_marker is not None:
         if requires_salt_modules_marker.kwargs:
@@ -88,12 +82,9 @@ def evaluate_markers(item):  # noqa: C901,PLR0915
             item._skipped_by_mark = True
             if len(not_available_modules) == 1:
                 msg = "Salt module '{}' is not available".format(*not_available_modules)
-                raise pytest.skip.Exception(msg, **exc_kwargs)
+                raise pytest.skip.Exception(msg, _use_item_location=True)
             msg = "Salt modules not available: {}".format(", ".join(not_available_modules))
-            raise pytest.skip.Exception(
-                msg,
-                **exc_kwargs,
-            )
+            raise pytest.skip.Exception(msg, _use_item_location=True)
 
     requires_salt_states_marker = item.get_closest_marker("requires_salt_states")
     if requires_salt_states_marker is not None:
@@ -118,14 +109,11 @@ def evaluate_markers(item):  # noqa: C901,PLR0915
             item._skipped_by_mark = True
             if len(not_available_states) == 1:
                 msg = "Salt state module '{}' is not available".format(*not_available_states)
-                raise pytest.skip.Exception(
-                    msg,
-                    **exc_kwargs,
-                )
+                raise pytest.skip.Exception(msg, _use_item_location=True)
             msg = "Salt state modules not available: {}".format(
-                ", ".join(not_available_states), **exc_kwargs
+                ", ".join(not_available_states),
             )
-            raise pytest.skip.Exception(msg)
+            raise pytest.skip.Exception(msg, _use_item_location=True)
 
     skip_on_salt_system_service_marker = item.get_closest_marker("skip_on_salt_system_service")
     if skip_on_salt_system_service_marker is not None:
@@ -140,4 +128,4 @@ def evaluate_markers(item):  # noqa: C901,PLR0915
             raise pytest.UsageError(msg)
         salt_factories = item._request.getfixturevalue("salt_factories")
         if salt_factories.system_service is True:
-            raise pytest.skip.Exception(reason, **exc_kwargs)
+            raise pytest.skip.Exception(reason, _use_item_location=True)
