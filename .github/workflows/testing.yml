@@ -1,6 +1,20 @@
 name: CI
+run-name: "CI (${{ github.event_name == 'pull_request' && format('pr: #{0}', github.event.number) || format('{0}: {1}', startsWith(github.event.ref, 'refs/tags') && 'tag' || 'branch', github.ref_name) }})"
 
-on: [push, pull_request]
+on:
+  - push
+  - pull_request
+
+env:
+  COLUMNS: 190
+
+concurrency:
+  # Concurrency is defined in a way that concurrent builds against branches do
+  # not cancel previous builds.
+  # However, for every new build against the same pull request source branch,
+  # all older builds against that same branch get canceled.
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.repository }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
 
 jobs:
   Pre-Commit:
@@ -44,7 +58,7 @@ jobs:
     - name: Install Nox
       run: |
         python -m pip install --upgrade pip
-        pip install nox
+        python -m pip install nox
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
@@ -79,7 +93,7 @@ jobs:
     - name: Install Nox
       run: |
         python -m pip install --upgrade pip
-        pip install nox
+        python -m pip install nox
 
     - name: Install Lint Requirements
       run: |
@@ -102,7 +116,7 @@ jobs:
       fail-fast: false
       matrix:
         pytest-version:
-          - "~=7.0.0"
+          - "7.0.0"
 
     steps:
     - uses: actions/checkout@v3
@@ -114,7 +128,7 @@ jobs:
         sudo -E apt-get update
         sudo -E apt-get install -y python3-setuptools python-is-python3
         sudo -E python3 -m pip install --upgrade pip
-        sudo -E python3 -m pip install 'nox<2022.8.7' 'pytest${{ matrix.pytest-version }}'
+        sudo -E python3 -m pip install 'nox<2022.8.7'
         sudo mv /usr/bin/pip /usr/bin/pip2
         sudo ln -sf /usr/bin/pip3 /usr/bin/pip
 
@@ -123,23 +137,6 @@ jobs:
         curl -L https://bootstrap.saltstack.com | sudo sh -s -- -M -X -x python3 old-stable 3005
         sudo apt-get install -y salt-api salt-ssh salt-syndic salt-cloud python3-pip
         for service in $(sudo systemctl list-unit-files | grep salt | grep -v @ | awk '{ print $1 }'); do sudo systemctl stop $service; done
-
-    - name: Gather CodeCov Info
-      if: always()
-      id: codecov-info
-      run: |
-        echo ::set-output name=flag-python-version::$(python3 -c "import sys; print('Py{}{}'.format(*sys.version_info))")
-        echo ::set-output name=flag-pytest-version::$(python3 -c "import pytest; print('PyTest{}{}'.format(*pytest.__version__.split('.')))")
-        echo ::set-output name=flag-salt-version::Salt$(salt --version | awk '{ print $2 }')
-        echo ::set-output name=flag-runner-os::$(python3 -c "print('${{ runner.os }}'.replace('-latest', ''))")
-        echo ::set-output name=uploader-url::$(python3 -c "print('https://uploader.codecov.io/latest/codecov-linux')")
-
-    - name: Create CodeCov Flags
-      if: always()
-      id: codecov
-      run: |
-        echo ::set-output name=flags::$(python -c "print(','.join(['${{ steps.codecov-info.outputs.flag-runner-os }}', '${{ steps.codecov-info.outputs.flag-python-version }}', '${{ steps.codecov-info.outputs.flag-salt-version }}', '${{ steps.codecov-info.outputs.flag-pytest-version }}']))")
-        echo ::set-output name=report-name::$(python -c "print('-'.join(['${{ steps.codecov-info.outputs.flag-runner-os }}', '${{ steps.codecov-info.outputs.flag-python-version }}', '${{ steps.codecov-info.outputs.flag-salt-version }}', '${{ steps.codecov-info.outputs.flag-pytest-version }}']))")
 
     - name: Install Test Requirements
       run: |
@@ -152,95 +149,28 @@ jobs:
       run: |
         sudo -E nox --force-color -e tests --no-venv -- -vv tests/
 
-    - name: Upload Salt Factories Code Coverage
-      if: always()
-      continue-on-error: true
-      shell: bash
-      env:
-        REPORT_FLAGS: ${{ steps.codecov.outputs.flags }},system,src
-        REPORT_NAME: ${{ steps.codecov.outputs.report-name }}-system-src
-        REPORT_PATH: artifacts/coverage-saltfactories.xml
-      run: |
-        if [ ! -f codecov-uploader ]; then
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to download uploader"
-            exit 1
-        fi
-        if [ -f codecov-uploader ]; then
-            chmod +x codecov-uploader
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to upload codecov stats"
-            exit 1
-        fi
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: artifacts/
+        fail_ci_if_error: false
+        files: coverage-project.xml
+        flags: src,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
+        name: project-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
+        verbose: true
 
-    - name: Upload Salt Factories Tests Code Coverage
-      if: always()
-      continue-on-error: true
-      shell: bash
-      env:
-        REPORT_FLAGS: ${{ steps.codecov.outputs.flags }},system,tests
-        REPORT_NAME: ${{ steps.codecov.outputs.report-name }}-system-tests
-        REPORT_PATH: artifacts/coverage-tests.xml
-      run: |
-        if [ ! -f codecov-uploader ]; then
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to download uploader"
-            exit 1
-        fi
-        if [ -f codecov-uploader ]; then
-            chmod +x codecov-uploader
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to upload codecov stats"
-            exit 1
-        fi
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: artifacts/
+        env_vars: PYTHON,SALT,TESTSUITE,SOURCE
+        fail_ci_if_error: false
+        files: coverage-tests.xml
+        flags: tests,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
+        name: tests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
+        verbose: true
 
     - name: Upload Logs
       if: always()
@@ -264,15 +194,12 @@ jobs:
           - "3.7"
           - "3.8"
         salt-version:
-          - salt~=3005.0
+          - "3005.0"
         pytest-version:
-          - "~=7.0.0"
-          - "~=7.1.0"
+          - "7.0.0"
+          - "7.1.0"
         exclude:
-          - {"python-version": "3.7", "pytest-version": "~=7.0.0", "salt-version": "salt~=3005.0"}
-          - {"python-version": "3.7", "pytest-version": "~=7.1.0", "salt-version": "salt~=3005.0"}
-          - {"python-version": "3.8", "pytest-version": "~=7.0.0", "salt-version": "salt~=3005.0"}
-          - {"python-version": "3.8", "pytest-version": "~=7.1.0", "salt-version": "salt~=3005.0"}
+          - {"python-version": "3.7", "salt-version": "3005.0"}
 
     steps:
     - uses: actions/checkout@v3
@@ -287,32 +214,13 @@ jobs:
     - name: Install Nox
       run: |
         python -m pip install --upgrade pip
-        pip install nox 'pytest${{ matrix.pytest-version }}'
-
-    - name: Gather CodeCov Info
-      if: always()
-      id: codecov-info
-      shell: bash
-      run: |
-        echo ::set-output name=flag-python-version::$(python -c "import sys; print('Py{}{}'.format(*sys.version_info))")
-        echo ::set-output name=flag-pytest-version::$(python -c "import pytest; print('PyTest{}{}'.format(*pytest.__version__.split('.')))")
-        echo ::set-output name=flag-salt-version::$(python -c "print('Salt{}'.format('_'.join(str(v) for v in '${{ matrix.salt-version }}'.split('==')[-1].split('.'))))")
-        echo ::set-output name=flag-runner-os::$(python -c "print('${{ runner.os }}'.replace('-latest', ''))")
-        echo ::set-output name=uploader-url::$(python -c "print('https://uploader.codecov.io/latest/codecov.exe')")
-
-    - name: Create CodeCov Flags
-      if: always()
-      id: codecov
-      shell: bash
-      run: |
-        echo ::set-output name=flags::$(python -c "print(','.join(['${{ steps.codecov-info.outputs.flag-runner-os }}', '${{ steps.codecov-info.outputs.flag-python-version }}', '${{ steps.codecov-info.outputs.flag-salt-version }}', '${{ steps.codecov-info.outputs.flag-pytest-version }}']))")
-        echo ::set-output name=report-name::$(python -c "print('-'.join(['${{ steps.codecov-info.outputs.flag-runner-os }}', '${{ steps.codecov-info.outputs.flag-python-version }}', '${{ steps.codecov-info.outputs.flag-salt-version }}', '${{ steps.codecov-info.outputs.flag-pytest-version }}']))")
+        python -m pip install nox
 
     - name: Install Test Requirements
       shell: bash
       env:
-        SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        PYTEST_VERSION_REQUIREMENT: pytest${{ matrix.pytest-version }}
+        SALT_REQUIREMENT: salt~=${{ matrix.salt-version }}
+        PYTEST_VERSION_REQUIREMENT: pytest~=${{ matrix.pytest-version }}
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
@@ -321,100 +229,35 @@ jobs:
       id: run-tests
       shell: bash
       env:
-        SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        PYTEST_VERSION_REQUIREMENT: pytest${{ matrix.pytest-version }}
+        SALT_REQUIREMENT: salt~=${{ matrix.salt-version }}
+        PYTEST_VERSION_REQUIREMENT: pytest~=${{ matrix.pytest-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
-    - name: Upload Salt Factories Code Coverage
-      if: always()
-      shell: bash
-      env:
-        REPORT_FLAGS: ${{ steps.codecov.outputs.flags }},src
-        REPORT_NAME: ${{ steps.codecov.outputs.report-name }}-src
-        REPORT_PATH: artifacts/coverage-saltfactories.xml
-      run: |
-        if [ ! -f codecov-uploader ]; then
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to download uploader"
-            exit 1
-        fi
-        if [ -f codecov-uploader ]; then
-            chmod +x codecov-uploader
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to upload codecov stats"
-            exit 1
-        fi
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: artifacts/
+        fail_ci_if_error: false
+        files: coverage-project.xml
+        flags: src,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
+        name: project-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
+        verbose: true
 
-    - name: Upload Salt Factories Tests Code Coverage
-      if: always()
-      shell: bash
-      env:
-        REPORT_FLAGS: ${{ steps.codecov.outputs.flags }},tests
-        REPORT_NAME: ${{ steps.codecov.outputs.report-name }}-tests
-        REPORT_PATH: artifacts/coverage-tests.xml
-      run: |
-        if [ ! -f codecov-uploader ]; then
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to download uploader"
-            exit 1
-        fi
-        if [ -f codecov-uploader ]; then
-            chmod +x codecov-uploader
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to upload codecov stats"
-            exit 1
-        fi
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: artifacts/
+        env_vars: PYTHON,SALT,TESTSUITE,SOURCE
+        fail_ci_if_error: false
+        files: coverage-tests.xml
+        flags: tests,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
+        name: tests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
+        verbose: true
 
     - name: Upload Logs
       if: always()
@@ -424,7 +267,7 @@ jobs:
         path: artifacts/runtests-*.log
 
 
-  macOS:
+  MacOS:
     runs-on: macOS-latest
     needs: Pre-Commit
 
@@ -438,15 +281,12 @@ jobs:
           - "3.7"
           - "3.9"
         salt-version:
-          - salt~=3005.0
+          - "3005.0"
         pytest-version:
-          - "~=7.0.0"
-          - "~=7.1.0"
+          - "7.0.0"
+          - "7.1.0"
         exclude:
-          - {"python-version": "3.7", "pytest-version": "~=7.0.0", "salt-version": "salt~=3005.0"}
-          - {"python-version": "3.7", "pytest-version": "~=7.1.0", "salt-version": "salt~=3005.0"}
-          - {"python-version": "3.9", "pytest-version": "~=7.0.0", "salt-version": "salt~=3005.0"}
-          - {"python-version": "3.9", "pytest-version": "~=7.1.0", "salt-version": "salt~=3005.0"}
+          - {"python-version": "3.7", "salt-version": "3005.0"}
 
     steps:
     - uses: actions/checkout@v3
@@ -461,126 +301,46 @@ jobs:
     - name: Install Nox
       run: |
         python -m pip install --upgrade pip
-        pip install nox 'pytest${{ matrix.pytest-version }}'
-
-    - name: Gather CodeCov Info
-      if: always()
-      id: codecov-info
-      run: |
-        echo ::set-output name=flag-python-version::$(python -c "import sys; print('Py{}{}'.format(*sys.version_info))")
-        echo ::set-output name=flag-pytest-version::$(python -c "import pytest; print('PyTest{}{}'.format(*pytest.__version__.split('.')))")
-        echo ::set-output name=flag-salt-version::$(python -c "print('Salt{}'.format('_'.join(str(v) for v in '${{ matrix.salt-version }}'.split('==')[-1].split('.'))))")
-        echo ::set-output name=flag-runner-os::$(python -c "print('${{ runner.os }}'.replace('-latest', ''))")
-        echo ::set-output name=uploader-url::$(python -c "print('https://uploader.codecov.io/latest/codecov-macos')")
-
-    - name: Create CodeCov Flags
-      if: always()
-      id: codecov
-      run: |
-        echo ::set-output name=flags::$(python -c "print(','.join(['${{ steps.codecov-info.outputs.flag-runner-os }}', '${{ steps.codecov-info.outputs.flag-python-version }}', '${{ steps.codecov-info.outputs.flag-salt-version }}', '${{ steps.codecov-info.outputs.flag-pytest-version }}']))")
-        echo ::set-output name=report-name::$(python -c "print('-'.join(['${{ steps.codecov-info.outputs.flag-runner-os }}', '${{ steps.codecov-info.outputs.flag-python-version }}', '${{ steps.codecov-info.outputs.flag-salt-version }}', '${{ steps.codecov-info.outputs.flag-pytest-version }}']))")
+        python -m pip install nox
 
     - name: Install Test Requirements
       env:
-        SALT_REQUIREMENT: ${{ matrix.salt-version }}
+        SALT_REQUIREMENT: salt~=${{ matrix.salt-version }}
+        PYTEST_VERSION_REQUIREMENT: pytest~=${{ matrix.pytest-version }}
       run: |
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
     - name: Test
       id: run-tests
       env:
-        SALT_REQUIREMENT: ${{ matrix.salt-version }}
+        SALT_REQUIREMENT: salt~=${{ matrix.salt-version }}
+        PYTEST_VERSION_REQUIREMENT: pytest~=${{ matrix.pytest-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
-    - name: Upload Salt Factories Code Coverage
-      if: always()
-      shell: bash
-      env:
-        REPORT_FLAGS: ${{ steps.codecov.outputs.flags }},src
-        REPORT_NAME: ${{ steps.codecov.outputs.report-name }}-src
-        REPORT_PATH: artifacts/coverage-saltfactories.xml
-      run: |
-        if [ ! -f codecov-uploader ]; then
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to download uploader"
-            exit 1
-        fi
-        if [ -f codecov-uploader ]; then
-            chmod +x codecov-uploader
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to upload codecov stats"
-            exit 1
-        fi
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: artifacts/
+        fail_ci_if_error: false
+        files: coverage-project.xml
+        flags: src,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
+        name: project-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
+        verbose: true
 
-    - name: Upload Salt Factories Tests Code Coverage
-      if: always()
-      shell: bash
-      env:
-        REPORT_FLAGS: ${{ steps.codecov.outputs.flags }},tests
-        REPORT_NAME: ${{ steps.codecov.outputs.report-name }}-tests
-        REPORT_PATH: artifacts/coverage-tests.xml
-      run: |
-        if [ ! -f codecov-uploader ]; then
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to download uploader"
-            exit 1
-        fi
-        if [ -f codecov-uploader ]; then
-            chmod +x codecov-uploader
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to upload codecov stats"
-            exit 1
-        fi
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: artifacts/
+        env_vars: PYTHON,SALT,TESTSUITE,SOURCE
+        fail_ci_if_error: false
+        files: coverage-tests.xml
+        flags: tests,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
+        name: tests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
+        verbose: true
 
     - name: Upload Logs
       if: always()
@@ -605,10 +365,10 @@ jobs:
           - "3.8"
           - "3.9"
         salt-version:
-          - salt~=3005.0
+          - "3005.0"
         pytest-version:
-          - "~=7.0.0"
-          - "~=7.1.0"
+          - "7.0.0"
+          - "7.1.0"
 
     steps:
     - uses: actions/checkout@v3
@@ -623,127 +383,46 @@ jobs:
     - name: Install Nox
       run: |
         python -m pip install --upgrade pip
-        pip install nox 'pytest${{ matrix.pytest-version }}'
-
-    - name: Gather CodeCov Info
-      if: always()
-      id: codecov-info
-      run: |
-        echo ::set-output name=flag-python-version::$(python -c "import sys; print('Py{}{}'.format(*sys.version_info))")
-        echo ::set-output name=flag-pytest-version::$(python -c "import pytest; print('PyTest{}{}'.format(*pytest.__version__.split('.')))")
-        echo ::set-output name=flag-salt-version::$(python -c "print('Salt{}'.format('_'.join(str(v) for v in '${{ matrix.salt-version }}'.split('==')[-1].split('.'))))")
-        echo ::set-output name=flag-runner-os::$(python -c "print('${{ runner.os }}'.replace('-latest', ''))")
-        echo ::set-output name=uploader-url::$(python -c "print('https://uploader.codecov.io/latest/codecov-linux')")
-
-    - name: Create CodeCov Flags
-      if: always()
-      id: codecov
-      run: |
-        echo ::set-output name=flags::$(python -c "print(','.join(['${{ steps.codecov-info.outputs.flag-runner-os }}', '${{ steps.codecov-info.outputs.flag-python-version }}', '${{ steps.codecov-info.outputs.flag-salt-version }}', '${{ steps.codecov-info.outputs.flag-pytest-version }}']))")
-        echo ::set-output name=report-name::$(python -c "print('-'.join(['${{ steps.codecov-info.outputs.flag-runner-os }}', '${{ steps.codecov-info.outputs.flag-python-version }}', '${{ steps.codecov-info.outputs.flag-salt-version }}', '${{ steps.codecov-info.outputs.flag-pytest-version }}']))")
+        python -m pip install nox
 
     - name: Install Test Requirements
       env:
-        SALT_REQUIREMENT: ${{ matrix.salt-version }}
-        PYTEST_VERSION_REQUIREMENT: pytest${{ matrix.pytest-version }}
+        SALT_REQUIREMENT: salt~=${{ matrix.salt-version }}
+        PYTEST_VERSION_REQUIREMENT: pytest~=${{ matrix.pytest-version }}
       run: |
         nox --force-color -e tests-${{ matrix.python-version }} --install-only
 
     - name: Test
       id: run-tests
       env:
-        SALT_REQUIREMENT: ${{ matrix.salt-version }}
+        SALT_REQUIREMENT: salt~=${{ matrix.salt-version }}
+        PYTEST_VERSION_REQUIREMENT: pytest~=${{ matrix.pytest-version }}
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
         nox --force-color -e tests-${{ matrix.python-version }} -- -vv --sys-stats tests/
 
-    - name: Upload Salt Factories Code Coverage
-      if: always()
-      shell: bash
-      env:
-        REPORT_FLAGS: ${{ steps.codecov.outputs.flags }},src
-        REPORT_NAME: ${{ steps.codecov.outputs.report-name }}-src
-        REPORT_PATH: artifacts/coverage-saltfactories.xml
-      run: |
-        if [ ! -f codecov-uploader ]; then
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to download uploader"
-            exit 1
-        fi
-        if [ -f codecov-uploader ]; then
-            chmod +x codecov-uploader
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to upload codecov stats"
-            exit 1
-        fi
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: artifacts/
+        fail_ci_if_error: false
+        files: coverage-project.xml
+        flags: src,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
+        name: project-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
+        verbose: true
 
-    - name: Upload Salt Factories Tests Code Coverage
-      if: always()
-      shell: bash
-      env:
-        REPORT_FLAGS: ${{ steps.codecov.outputs.flags }},tests
-        REPORT_NAME: ${{ steps.codecov.outputs.report-name }}-tests
-        REPORT_PATH: artifacts/coverage-tests.xml
-      run: |
-        if [ ! -f codecov-uploader ]; then
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if curl --max-time 30 -L ${{ steps.codecov-info.outputs.uploader-url }} --output codecov-uploader; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to download uploader"
-            exit 1
-        fi
-        if [ -f codecov-uploader ]; then
-            chmod +x codecov-uploader
-            n=0
-            until [ "$n" -ge 5 ]
-            do
-            if ./codecov-uploader -R $(pwd) -n "${REPORT_NAME}" -f "${REPORT_PATH}" -F "${REPORT_FLAGS}"; then
-                rc=$?
-                break
-            fi
-            rc=$?
-            n=$((n+1))
-            sleep 15
-            done
-        fi
-        if [ $rc -ne 0 ]; then
-            echo "Failed to upload codecov stats"
-            exit 1
-        fi
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        directory: artifacts/
+        env_vars: PYTHON,SALT,TESTSUITE,SOURCE
+        fail_ci_if_error: false
+        files: coverage-tests.xml
+        flags: tests,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
+        name: tests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
+        verbose: true
 
     - name: Upload Logs
       if: always()
@@ -770,9 +449,11 @@ jobs:
       uses: actions/setup-python@v4
       with:
         python-version: 3.9
+
     - name: Install Nox
       run: |
         python -m pip install nox
+
     - name: Build a binary wheel and a source tarball
       run: |
         nox -e build
