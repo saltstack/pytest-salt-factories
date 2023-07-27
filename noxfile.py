@@ -35,7 +35,7 @@ PIP_INSTALL_SILENT = (
     or os.environ.get("GITHUB_ACTIONS")
 ) is None
 CI_RUN = PIP_INSTALL_SILENT is False
-SKIP_REQUIREMENTS_INSTALL = "SKIP_REQUIREMENTS_INSTALL" in os.environ
+SKIP_REQUIREMENTS_INSTALL = os.environ.get("SKIP_REQUIREMENTS_INSTALL", "0") == "1"
 EXTRA_REQUIREMENTS_INSTALL = os.environ.get("EXTRA_REQUIREMENTS_INSTALL")
 
 # Paths
@@ -73,8 +73,8 @@ def pytest_version(session):
             session,
             "python",
             "-c",
-            'import sys, pkg_resources; sys.stdout.write("{}".format('
-            'pkg_resources.get_distribution("pytest").version))',
+            'import sys, importlib_metadata; sys.stdout.write("{}".format('
+            'importlib_metadata.version("pytest")))',
             silent=True,
             log=False,
         )
@@ -142,49 +142,61 @@ def tests(session):
                 silent=PIP_INSTALL_SILENT,
             )
         salt_requirements = []
+        pytest_requirements = []
         if python_version_info <= (3, 7) and "3005" in SALT_REQUIREMENT:
             salt_requirements.append("importlib-metadata<5.0.0")
         salt_requirements.append(SALT_REQUIREMENT)
         if session.python is not False and system_service is False:
-            session.install(
-                *salt_requirements,
-                silent=PIP_INSTALL_SILENT,
-                # Use salt's pinned requirements
-                env={"USE_STATIC_REQUIREMENTS": "1"},
-            )
+            env["USE_STATIC_REQUIREMENTS"] = "1"
+
         pytest_version_requirement = os.environ.get("PYTEST_VERSION_REQUIREMENT") or None
         if pytest_version_requirement:
-            pytest_requirements = []
             if not pytest_version_requirement.startswith("pytest"):
                 pytest_version_requirement = f"pytest{pytest_version_requirement}"
             pytest_requirements.append(pytest_version_requirement)
-            session.install(*pytest_requirements, silent=PIP_INSTALL_SILENT)
-        if system_service:
-            session.install(".", silent=PIP_INSTALL_SILENT)
-        else:
-            session.install("-e", ".", silent=PIP_INSTALL_SILENT)
-        pip_list = session_run_always(
-            session, "pip", "list", "--format=json", silent=True, log=False, stderr=None
-        )
-        if pip_list:
-            for requirement in json.loads(pip_list.splitlines()[0]):
-                if requirement["name"] == "msgpack-python":
-                    logger.warning(
-                        "Found msgpack-python installed. Installing msgpack to override it"
-                    )
-                    session.install("msgpack=={}".format(requirement["version"]))
-                    break
-        session.install("-r", os.path.join("requirements", "tests.txt"), silent=PIP_INSTALL_SILENT)
 
-        if EXTRA_REQUIREMENTS_INSTALL:
-            session.log(
-                "Installing the following extra requirements because the EXTRA_REQUIREMENTS_INSTALL "
-                "environment variable was set: EXTRA_REQUIREMENTS_INSTALL='%s'",
-                EXTRA_REQUIREMENTS_INSTALL,
+        constraints = [*salt_requirements, *pytest_requirements]
+        with tempfile.NamedTemporaryFile(
+            "w", prefix="reqs-constraints-", suffix=".txt", delete=False
+        ) as tfile:
+            with open(tfile.name, "w", encoding="utf-8") as wfh:
+                for req in constraints:
+                    wfh.write(f"{req}\n")
+            if system_service:
+                if pytest_requirements:
+                    session.install(
+                        "-c", tfile.name, *pytest_requirements, silent=PIP_INSTALL_SILENT, env=env
+                    )
+                session.install("-c", tfile.name, ".", silent=PIP_INSTALL_SILENT, env=env)
+            else:
+                if constraints:
+                    session.install(
+                        "-c",
+                        tfile.name,
+                        *constraints,
+                        silent=PIP_INSTALL_SILENT,
+                        env=env,
+                    )
+                session.install("-c", tfile.name, "-e", ".", silent=PIP_INSTALL_SILENT)
+            session.install(
+                "-c",
+                tfile.name,
+                "-r",
+                os.path.join("requirements", "tests.txt"),
+                *constraints,
+                silent=PIP_INSTALL_SILENT,
+                env=env,
             )
-            install_command = ["--progress-bar=off"]
-            install_command += [req.strip() for req in EXTRA_REQUIREMENTS_INSTALL.split()]
-            session.install(*install_command, silent=PIP_INSTALL_SILENT)
+
+            if EXTRA_REQUIREMENTS_INSTALL:
+                session.log(
+                    "Installing the following extra requirements because the EXTRA_REQUIREMENTS_INSTALL "
+                    "environment variable was set: EXTRA_REQUIREMENTS_INSTALL='%s'",
+                    EXTRA_REQUIREMENTS_INSTALL,
+                )
+                install_command = ["--progress-bar=off", "-c", tfile.name]
+                install_command += [req.strip() for req in EXTRA_REQUIREMENTS_INSTALL.split()]
+                session.install(*install_command, silent=PIP_INSTALL_SILENT, env=env)
 
     session.run("coverage", "erase")
 

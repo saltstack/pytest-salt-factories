@@ -2,6 +2,7 @@ import shutil
 
 import attr
 import pytest
+import importlib_metadata
 
 from saltfactories import CODE_ROOT_DIR
 from saltfactories.utils.virtualenv import VirtualEnv
@@ -28,9 +29,12 @@ class ExtensionVirtualEnv(VirtualEnv):
         self.venv.__enter__()
         self.venv.run("git", "init", ".")
         self.venv.run("git", "add", ".")
-        self.venv.install(str(CODE_ROOT_DIR.parent.parent))
 
         import salt.version  # pylint: disable=import-outside-toplevel
+
+        self.venv.install(f"salt=={salt.version.__saltstack_version__}")
+        self.venv.install(f"pytest=={importlib_metadata.version('pytest')}")
+        self.venv.install(str(CODE_ROOT_DIR.parent.parent))
 
         if salt.version.__saltstack_version__ < "3006":
             # Only Salt >= 3006 supports importlib-metadata>=5.0.0

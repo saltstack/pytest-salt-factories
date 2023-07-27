@@ -2,3 +2,4 @@
 docker>=4.0.0
 pytest-subtests
 pyfakefs
+importlib-metadata
