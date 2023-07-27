@@ -20,6 +20,33 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc24 (2023-07-27)
+======================
+
+Improvements
+------------
+
+- Several improvements to reduce failure points:
+
+  * Log the exception instead of raising it.
+  * Always populate the `*_dirs` config settings, regardless of how salt-factories is being used
+  * Improved the connect/disconnect behavior of the event listener client
+  * The minimum supported Salt version is now 3005.0
+  * The minimum supported Pytest version is now 7.0.0 (`#149 <https://github.com/saltstack/pytest-salt-factories/issues/149>`_)
+
+
+Bug Fixes
+---------
+
+- Do not blindly overwrite the `retuner_address` configuration key (`#146 <https://github.com/saltstack/pytest-salt-factories/issues/146>`_)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Start checking the code base with ruff (`#149 <https://github.com/saltstack/pytest-salt-factories/issues/149>`_)
+
+
 1.0.0rc23 (2022-12-15)
 ======================
 
