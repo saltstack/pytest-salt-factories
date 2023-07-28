@@ -1,0 +1,1 @@
+Publish packages to PyPi with trusted publishers

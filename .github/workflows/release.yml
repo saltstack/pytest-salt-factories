@@ -5,19 +5,26 @@ on:
     types: [created]
 
 jobs:
-  Publish:
+  publish:
+    name: Publish Release
+    environment: release
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
     steps:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
+
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
         python-version: 3.9
+
     - name: Install Nox
       run: |
         python -m pip install nox
+
     - name: Build a binary wheel and a source tarball
       run: |
         nox -e build
@@ -25,6 +32,6 @@ jobs:
     - name: Publish distribution 📦 to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        user: __token__
-        password: ${{ secrets.PYPI_TOKEN }}
-        print_hash: true
+        print-hash: true
+        skip-existing: true
+        verify-metadata: true
