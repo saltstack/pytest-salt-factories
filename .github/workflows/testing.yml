@@ -99,7 +99,7 @@ jobs:
       run: |
         nox --force-color -e lint --install-only
 
-    - name: Build Docs
+    - name: Lint Code
       env:
         SKIP_REQUIREMENTS_INSTALL: YES
       run: |
