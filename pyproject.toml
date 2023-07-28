@@ -212,7 +212,9 @@ ignore = [
   "PLR0913", # Too many arguments to function call"
   "PLR0915", # Too many statements
 ]
-
+"tools/**/*.py" = [
+  "D104",     # Missing docstring in public package
+]
 [tool.ruff.pydocstyle]
 # Use Google-style docstrings.
 convention = "google"
