@@ -16,7 +16,7 @@ def pytest_runtest_setup(item):
     saltfactories.utils.markers.evaluate_markers(item)
 
 
-@pytest.mark.trylast
+@pytest.hookimpl(trylast=True)
 def pytest_configure(config):
     """
     Configure the pytest plugin.
