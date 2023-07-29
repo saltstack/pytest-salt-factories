@@ -18,7 +18,7 @@ from salt.utils import immutabletypes
 
 try:
     from salt.utils.data import CaseInsensitiveDict
-except ImportError:
+except ImportError:  # pragma: no cover
     CaseInsensitiveDict = None
 
 try:
@@ -34,13 +34,13 @@ __virtualname__ = "pytest"
 
 
 def __virtual__():
-    if HAS_MSGPACK is False:
+    if HAS_MSGPACK is False:  # pragma: no cover
         return False, "msgpack was not importable. Please install msgpack."
-    if "__role" not in __opts__:
+    if "__role" not in __opts__:  # pragma: no cover
         return False, "The required '__role' key could not be found in the options dictionary"
     role = __opts__["__role"]
     pytest_key = "pytest-{}".format(role)
-    if pytest_key not in __opts__:
+    if pytest_key not in __opts__:  # pragma: no cover
         return False, "No '{}' key in opts dictionary".format(pytest_key)
 
     pytest_config = __opts__[pytest_key]

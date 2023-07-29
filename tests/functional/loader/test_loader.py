@@ -4,7 +4,7 @@ import saltfactories
 
 try:
     saltfactories.__salt__  # pylint: disable=pointless-statement
-    HAS_SALT_DUNDER = True
+    HAS_SALT_DUNDER = True  # pragma: no cover
 except AttributeError:
     HAS_SALT_DUNDER = False
 
