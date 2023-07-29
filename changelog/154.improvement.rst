@@ -1,0 +1,1 @@
+Remove `pytest-tempdir` package dependency
