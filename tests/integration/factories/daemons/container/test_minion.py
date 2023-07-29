@@ -24,7 +24,7 @@ pytestmark = [
 
 @pytest.fixture(scope="session")
 def docker_client(salt_factories, docker_client):
-    if salt_factories.system_service:
+    if salt_factories.system_service:  # pragma: no cover
         msg = "Test should not run against system install of Salt"
         raise pytest.skip.Exception(msg, _use_item_location=True)
     return docker_client

@@ -136,16 +136,11 @@ class Loaders:
         import salt.loader  # pylint: disable=import-outside-toplevel
 
         if self._grains is None:
-            try:
-                self._grains = salt.loader.grains(  # pylint: disable=unexpected-keyword-arg
-                    self.opts,
-                    context=self.context,
-                    loaded_base_name=self.loaded_base_name,
-                )
-            except TypeError:
-                # Salt < 3005
-                with mock.patch(PATCH_TARGET, self.loaded_base_name):
-                    self._grains = salt.loader.grains(self.opts, context=self.context)
+            self._grains = salt.loader.grains(
+                self.opts,
+                context=self.context,
+                loaded_base_name=self.loaded_base_name,
+            )
         return self._grains
 
     @property
@@ -158,16 +153,11 @@ class Loaders:
         import salt.loader  # pylint: disable=import-outside-toplevel
 
         if self._utils is None:
-            try:
-                self._utils = salt.loader.utils(  # pylint: disable=unexpected-keyword-arg
-                    self.opts,
-                    context=self.context,
-                    loaded_base_name=self.loaded_base_name,
-                )
-            except TypeError:
-                # Salt < 3005
-                with mock.patch(PATCH_TARGET, self.loaded_base_name):
-                    self._utils = salt.loader.utils(self.opts, context=self.context)
+            self._utils = salt.loader.utils(
+                self.opts,
+                context=self.context,
+                loaded_base_name=self.loaded_base_name,
+            )
         return self._utils
 
     @property
@@ -238,17 +228,10 @@ class Loaders:
         import salt.loader  # pylint: disable=import-outside-toplevel
 
         if self._serializers is None:
-            try:
-                self._serializers = (
-                    salt.loader.serializers(  # pylint: disable=unexpected-keyword-arg
-                        self.opts,
-                        loaded_base_name=self.loaded_base_name,
-                    )
-                )
-            except TypeError:
-                # Salt < 3005
-                with mock.patch(PATCH_TARGET, self.loaded_base_name):
-                    self._serializers = salt.loader.serializers(self.opts)
+            self._serializers = salt.loader.serializers(
+                self.opts,
+                loaded_base_name=self.loaded_base_name,
+            )
         return self._serializers
 
     @property
@@ -261,25 +244,14 @@ class Loaders:
         import salt.loader  # pylint: disable=import-outside-toplevel
 
         if self._states is None:
-            try:
-                _states = salt.loader.states(  # pylint: disable=unexpected-keyword-arg
-                    self.opts,
-                    functions=self.modules,
-                    utils=self.utils,
-                    serializers=self.serializers,
-                    context=self.context,
-                    loaded_base_name=self.loaded_base_name,
-                )
-            except TypeError:
-                # Salt < 3005
-                with mock.patch(PATCH_TARGET, self.loaded_base_name):
-                    _states = salt.loader.states(
-                        self.opts,
-                        functions=self.modules,
-                        utils=self.utils,
-                        serializers=self.serializers,
-                        context=self.context,
-                    )
+            _states = salt.loader.states(
+                self.opts,
+                functions=self.modules,
+                utils=self.utils,
+                serializers=self.serializers,
+                context=self.context,
+                loaded_base_name=self.loaded_base_name,
+            )
             # For state execution modules, because we'd have to almost copy/paste what salt.modules.state.single
             # does, we actually "proxy" the call through salt.modules.state.single instead of calling the state
             # execution modules directly. This was also how the non pytest test suite worked
@@ -327,26 +299,14 @@ class Loaders:
         # onedir build in salt's repo checkout.
         import salt.pillar  # pylint: disable=import-outside-toplevel
 
-        if self._pillar is None:
-            try:
-                self._pillar = salt.pillar.get_pillar(  # pylint: disable=unexpected-keyword-arg
-                    self.opts,
-                    self.grains,
-                    self.opts["id"],
-                    saltenv=self.opts["saltenv"],
-                    pillarenv=self.opts.get("pillarenv"),
-                    loaded_base_name=self.loaded_base_name,
-                ).compile_pillar()
-            except TypeError:
-                # Salt < 3005
-                with mock.patch(PATCH_TARGET, self.loaded_base_name):
-                    self._pillar = salt.pillar.get_pillar(
-                        self.opts,
-                        self.grains,
-                        self.opts["id"],
-                        saltenv=self.opts["saltenv"],
-                        pillarenv=self.opts.get("pillarenv"),
-                    ).compile_pillar()
+        with mock.patch(PATCH_TARGET, self.loaded_base_name):
+            self._pillar = salt.pillar.get_pillar(
+                self.opts,
+                self.grains,
+                self.opts["id"],
+                saltenv=self.opts["saltenv"],
+                pillarenv=self.opts.get("pillarenv"),
+            ).compile_pillar()
         return self._pillar
 
     def refresh_pillar(self):

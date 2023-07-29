@@ -12,7 +12,7 @@ def _connectable_docker_client():
     try:
         client = docker.from_env()
         connectable = Container.client_connectable(client)
-        if not connectable:
+        if not connectable:  # pragma: no cover
             pytest.skip(connectable)
     except docker.errors.DockerException as exc:
         pytest.skip(f"Failed to instantiate a docker client: {exc}")

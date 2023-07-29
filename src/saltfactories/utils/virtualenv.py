@@ -81,7 +81,7 @@ class VirtualEnv:
         """
         try:
             self._create_virtualenv()
-        except subprocess.CalledProcessError as exc:
+        except subprocess.CalledProcessError as exc:  # pragma: no cover
             msg = "Failed to create virtualenv"
             raise AssertionError(msg) from exc
         return self

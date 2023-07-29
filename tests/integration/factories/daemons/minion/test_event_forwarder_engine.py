@@ -45,7 +45,7 @@ def test_event_listener_engine(minion, salt_call_cli, event_listener):
     expected_tag = salt.defaults.events.MINION_PILLAR_REFRESH_COMPLETE
     master_event_pattern = (minion.id, expected_tag)
     while True:
-        if time.time() > stop_time:
+        if time.time() > stop_time:  # pragma: no cover
             pytest.fail("Failed to receive the refresh pillar event.")
 
         if not master_event:

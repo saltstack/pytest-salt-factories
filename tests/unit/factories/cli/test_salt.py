@@ -66,7 +66,7 @@ def test_missing_minion_id_does_not_raise_exception(
     proc = Salt(script_name=cli_script_name, config=config)
     try:
         proc.cmdline(*args)
-    except RuntimeError:
+    except RuntimeError:  # pragma: no cover
         pytest.fail(
             f"The Salt class raised RuntimeError when the CLI flag '{flag}' was present in args"
         )
