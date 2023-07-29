@@ -5,8 +5,10 @@ import logging
 import os
 import pathlib
 import pprint
+import tempfile
 
 import pytest
+import pytestskipmarkers.utils.platform
 
 import saltfactories
 
@@ -45,10 +47,36 @@ def salt_factories_config():
 
 
 @pytest.fixture(scope="session")
+def salt_factories_default_root_dir():
+    """
+    The root directory from where to base all paths.
+
+    For example, in a salt system installation, this would be ``/``.
+
+    .. admonition:: Attention
+
+        If `root_dir` is returned on the `salt_factories_config()` fixture
+        dictionary, then that's the value used, and not the one returned by
+        this fixture.
+    """
+    # Taken from https://github.com/saltstack/salt/blob/v2019.2.0/tests/support/paths.py
+    # Avoid ${TMPDIR} and gettempdir() on MacOS as they yield a base path too long
+    # for unix sockets: ``error: AF_UNIX path too long``
+    # Gentoo Portage prefers ebuild tests are rooted in ${TMPDIR}
+    if pytestskipmarkers.utils.platform.is_windows():
+        tempdir = "C:/Windows/Temp"
+    elif pytestskipmarkers.utils.platform.is_darwin():
+        tempdir = "/tmp"  # noqa: S108
+    else:
+        tempdir = os.environ.get("TMPDIR") or tempfile.gettempdir()
+    return pathlib.Path(tempdir).resolve()
+
+
+@pytest.fixture(scope="session")
 def salt_factories(
-    tempdir,
     event_listener,
     stats_processes,
+    salt_factories_default_root_dir,  # pylint: disable=redefined-outer-name
     salt_factories_config,  # pylint: disable=redefined-outer-name
     _salt_factories_config,
 ):
@@ -69,11 +97,11 @@ def salt_factories(
         log.debug("Salt Factories Manager User Config:\n%s", pprint.pformat(salt_factories_config))
     factories_config = _salt_factories_config.copy()
     factories_config.update(salt_factories_config)
+    factories_config.setdefault("root_dir", salt_factories_default_root_dir)
     log.debug(
         "Instantiating the Salt Factories Manager with the following keyword arguments:\n%s",
         pprint.pformat(factories_config),
     )
-    factories_config.setdefault("root_dir", tempdir)
     return FactoriesManager(
         stats_processes=stats_processes, event_listener=event_listener, **factories_config
     )
