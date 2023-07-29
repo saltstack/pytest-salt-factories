@@ -100,22 +100,12 @@ class LoaderModuleMock:
                     f"not {type(globals_to_mock)}"
                 )
                 raise pytest.UsageError(msg)
-            for key in self.salt_module_dunders:
-                if not hasattr(module, key):
-                    # Set the dunder name as an attribute on the module if not present
-                    setattr(module, key, {})
-                    # Remove the added attribute after the test finishes
-                    self.addfinalizer(delattr, module, key)
 
             # Patch sys.modules as the first step
-            self._patch_sys_modules(globals_to_mock)
+            if "sys.modules" in globals_to_mock:
+                self._patch_sys_modules(globals_to_mock)
 
             # Now patch the module globals
-            # We actually want to grab a copy of the module globals so that if mocking
-            # multiple modules, and at least one of the modules has a function to path,
-            # the patch only happens on the module it's supposed to patch and not all of them.
-            # It's not a deepcopy because we want to maintain the reference to the salt dunders
-            # added in the start of this function
             self._patch_module_globals(module, globals_to_mock, module_globals.copy())
 
     def stop(self):
@@ -138,8 +128,6 @@ class LoaderModuleMock:
         self._finalizers.append((func, args, kwargs))
 
     def _patch_sys_modules(self, mocks):
-        if "sys.modules" not in mocks:
-            return
         sys_modules = mocks["sys.modules"]
         if not isinstance(sys_modules, dict):
             msg = f"'sys.modules' must be a dictionary not: {type(sys_modules)}"
@@ -163,22 +151,11 @@ class LoaderModuleMock:
                 if key not in allowed_salt_dunders:
                     msg = f"Don't know how to handle {key!r}. Passed loader module dict: {self.setup_loader_modules}"
                     raise pytest.UsageError(msg)
-                if key in salt_dunder_dicts and not hasattr(module, key):
-                    # Add the key as a dictionary attribute to the module so it can be patched by `patch.dict`'
-                    setattr(module, key, {})
-                    # Remove the added attribute after the test finishes
-                    self.addfinalizer(delattr, module, key)
-
-            if not hasattr(module, key):
-                # Set the key as an attribute so it can be patched
-                setattr(module, key, None)
-                # Remove the added attribute after the test finishes
-                self.addfinalizer(delattr, module, key)
             module_globals[key] = mocks[key]
 
         # Patch the module!
         log.log(LOGGING_TRACE_LEVEL, "Patching globals for %s; globals: %s", module, module_globals)
-        patcher = patch.multiple(module, **module_globals)
+        patcher = patch.multiple(module, create=True, **module_globals)
         patcher.start()
         self.addfinalizer(patcher.stop)
 
