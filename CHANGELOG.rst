@@ -20,6 +20,28 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc25 (2023-07-31)
+======================
+
+Improvements
+------------
+
+- Remove `pytest-tempdir` package dependency (`#154 <https://github.com/saltstack/pytest-salt-factories/issues/154>`_)
+- Stop using deprecated `@pytest.mark.trylast` (`#155 <https://github.com/saltstack/pytest-salt-factories/issues/155>`_)
+- Simplify and reduce the amount of patching required to unit test loader modules (`#156 <https://github.com/saltstack/pytest-salt-factories/issues/156>`_)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Some internal processes improvements:
+
+  * Publish packages to PyPi with trusted publishers
+  * Enable dependabot to update the GH Actions versions on a weekly basis (`#151 <https://github.com/saltstack/pytest-salt-factories/issues/151>`_)
+- Start using actionlint and shellcheck to validate GH Actions workflows (`#153 <https://github.com/saltstack/pytest-salt-factories/issues/153>`_)
+- Improve code coverage by either removing code not getting used anymore or marking sections of the code which are not expected to be covered (`#157 <https://github.com/saltstack/pytest-salt-factories/issues/157>`_)
+
+
 1.0.0rc24 (2023-07-27)
 ======================
 

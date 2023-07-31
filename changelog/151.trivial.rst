@@ -1,4 +1,0 @@
-Some internal processes improvements:
-
-* Publish packages to PyPi with trusted publishers
-* Enable dependabot to update the GH Actions versions on a weekly basis
