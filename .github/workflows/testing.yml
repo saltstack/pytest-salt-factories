@@ -20,7 +20,7 @@ jobs:
   Pre-Commit:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - uses: ./.github/actions/setup-actionlint
     - uses: ./.github/actions/setup-shellcheck
     - name: Set up Python
@@ -48,7 +48,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -80,7 +80,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Python 3.9 For Nox
       uses: actions/setup-python@v4
@@ -118,7 +118,7 @@ jobs:
           - "3005"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -200,7 +200,7 @@ jobs:
           - "7.4.0"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -285,7 +285,7 @@ jobs:
           - "7.4.0"
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -371,7 +371,7 @@ jobs:
           - {"python-version": "3.10", "salt-version": "3005.0"}
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -445,7 +445,7 @@ jobs:
       - MacOS
       - Linux-System-Service
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     - name: Set up Python
