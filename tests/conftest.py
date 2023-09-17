@@ -121,6 +121,16 @@ def salt_version():
     return pkg_version("salt")
 
 
+@pytest.fixture(scope="session")
+def salt_version_info():
+    return pkg_version_info("salt")
+
+
+@pytest.fixture(scope="session")
+def salt_version_name(salt_version):
+    return salt.version.SaltStackVersion.parse(str(salt_version)).name
+
+
 def pytest_collection_modifyitems(items):
     system_service_skip_paths = (
         # There's no point on running these tests against a system install of salt
