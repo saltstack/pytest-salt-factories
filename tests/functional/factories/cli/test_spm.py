@@ -28,11 +28,11 @@ def spm_formulas_dir(salt_master):
         yield salt_master.state_tree.base.write_path / "formulas"
 
 
-def test_version_info(salt_master, salt_version):
+def test_version_info(salt_master, cli_salt_version):
     cli = salt_master.salt_spm_cli()
     ret = cli.run("--version")
     assert ret.returncode == 0, ret
-    assert ret.stdout.strip() == f"{pathlib.Path(cli.script_name).name} {salt_version}"
+    assert ret.stdout.strip() == f"{pathlib.Path(cli.script_name).name} {cli_salt_version}"
 
 
 def test_build_and_install(salt_master, spm_formulas_dir):

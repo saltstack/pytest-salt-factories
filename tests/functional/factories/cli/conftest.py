@@ -38,3 +38,11 @@ def salt_proxy_minion(salt_master, proxy_minion_id):
     This fixture just configures a salt-minion. It does not start one.
     """
     return salt_master.salt_proxy_minion_daemon(proxy_minion_id)
+
+
+@pytest.fixture(scope="session")
+def cli_salt_version(salt_version, salt_version_info, salt_version_name):
+    _salt_version = f"{salt_version}"
+    if salt_version_info >= (3006, 3):
+        _salt_version += f" ({salt_version_name})"
+    return _salt_version
