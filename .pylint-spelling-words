@@ -98,6 +98,8 @@ msgpack
 mtime
 multistateresult
 mworker
+mydir
+myfile
 mypy
 mysql
 namespace
