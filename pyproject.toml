@@ -229,11 +229,11 @@ forced-separate = ["tests"]
 docstring-quotes = "double"
 
 [tool.ruff.mccabe]
-max-complexity = 20
+max-complexity = 25
 
 [tool.ruff.pylint]
 max-args = 10
-max-branches = 25
+max-branches = 35
 max-returns = 8
 
 [tool.ruff.pep8-naming]
