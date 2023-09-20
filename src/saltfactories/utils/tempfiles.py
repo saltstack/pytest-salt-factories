@@ -269,6 +269,8 @@ class SaltEnv:
         Create a temporary file within this saltenv.
 
         Please check :py:func:`saltfactories.utils.tempfiles.temp_file` for documentation.
+        Note: directory keyword is not supported, to place a file within a directory,
+            give path with directory for file, for example: "mydir/myfile".
         """
         return temp_file(
             name=name,
