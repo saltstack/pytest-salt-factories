@@ -20,6 +20,22 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc26 (2023-09-20)
+======================
+
+Bug Fixes
+---------
+
+- Check if path exists before running additional checks on the `temp_directory` context manager. (`#160 <https://github.com/saltstack/pytest-salt-factories/issues/160>`_)
+- The ``container`` implementation is now sensible to the ``exited`` state when starting containers. (`#165 <https://github.com/saltstack/pytest-salt-factories/issues/165>`_)
+
+
+Improved Documentation
+----------------------
+
+- Updated documentation for SaltEnv temp_file and added an example usage (`#163 <https://github.com/saltstack/pytest-salt-factories/issues/163>`_)
+
+
 1.0.0rc25 (2023-07-31)
 ======================
 

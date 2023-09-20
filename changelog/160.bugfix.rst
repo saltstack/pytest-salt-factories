@@ -1,1 +1,0 @@
-Check if path exists before running additional checks on the `temp_directory` context manager.
