@@ -1,0 +1,1 @@
+The ``container`` implementation is now sensible to the ``exited`` state when starting containers.

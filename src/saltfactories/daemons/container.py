@@ -354,6 +354,28 @@ class Container(BaseFactory):
                 # state, and now it is, we have to re-set the self.container attribute
                 # so that it gives valid status information
                 self.container = self.docker_client.containers.get(self.name)
+
+                if self.container.status == "exited":
+                    logs = self.container.logs(stdout=True, stderr=True, stream=False)
+                    if isinstance(logs, bytes):
+                        stdout = logs.decode()
+                        stderr = None
+                    else:
+                        stdout = logs[0].decode()
+                        stderr = logs[1].decode()
+                    if stdout and stderr:
+                        log.info("Container Exited. Logs:\n%s\n%s", stdout, stderr)
+                    elif stdout:
+                        log.info("Container Exited. Logs:\n%s", stdout)
+
+                    try:
+                        self.container.remove(force=True)
+                        self.container.wait()
+                    except APIError:
+                        pass
+                    self.container = None
+                    break
+
                 if self.container.status != "running":
                     time.sleep(0.25)
                     continue
