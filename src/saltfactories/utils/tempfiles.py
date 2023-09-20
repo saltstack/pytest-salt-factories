@@ -72,11 +72,12 @@ def temp_directory(name=None, basepath=None):
         while True:
             if str(created_directory) == str(basepath):
                 break
-            if not any(created_directory.iterdir()):
-                shutil.rmtree(str(created_directory), ignore_errors=True)
-                log.debug("Deleted temp directory: %s", created_directory)
-            else:
-                log.debug("Not deleting %s because it's not empty", created_directory)
+            if created_directory.is_dir():
+                if not any(created_directory.iterdir()):
+                    shutil.rmtree(str(created_directory), ignore_errors=True)
+                    log.debug("Deleted temp directory: %s", created_directory)
+                else:
+                    log.debug("Not deleting %s because it's not empty", created_directory)
             created_directory = created_directory.parent
 
 
