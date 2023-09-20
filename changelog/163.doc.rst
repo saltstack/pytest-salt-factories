@@ -1,1 +1,1 @@
-Updated documentation for SaltEnv temp_file
+Updated documentation for SaltEnv temp_file and added an example usage
