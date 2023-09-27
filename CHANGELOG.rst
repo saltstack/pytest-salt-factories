@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc27 (2023-09-27)
+======================
+
+Bug Fixes
+---------
+
+- Allow the Salt engine to run on Python 3.6 (`#167 <https://github.com/saltstack/pytest-salt-factories/issues/167>`_)
+
+
 1.0.0rc26 (2023-09-20)
 ======================
 
