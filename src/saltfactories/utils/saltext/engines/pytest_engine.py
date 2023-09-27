@@ -116,7 +116,11 @@ class PyTestEventForwardClient(asyncio.Protocol):
         self._connected.set_result(True)
         # pylint: disable=attribute-defined-outside-init
         self.transport = transport
-        loop = asyncio.get_running_loop()
+        try:
+            loop = asyncio.get_running_loop()
+        except AttributeError:
+            # Python < 3.7
+            loop = asyncio.get_event_loop()
         self.task = loop.create_task(self._process_queue())
         # pylint: enable=attribute-defined-outside-init
 
