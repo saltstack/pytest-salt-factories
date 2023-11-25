@@ -755,6 +755,7 @@ class SaltDaemon(Container, bases.SaltDaemon):
 
     _daemon_started = attr.ib(init=False, repr=False, default=False)
     _daemon_starting = attr.ib(init=False, repr=False, default=False)
+    _in_container_post_init = attr.ib(init=False, repr=False, default=False)
 
     def __attrs_post_init__(self):
         """
@@ -764,7 +765,9 @@ class SaltDaemon(Container, bases.SaltDaemon):
         # and not the python_executable set by salt-factories
         self.python_executable = "python"
         bases.SaltDaemon.__attrs_post_init__(self)
+        self._in_container_post_init = True
         Container.__attrs_post_init__(self)
+        self._in_container_post_init = False
         # There are some volumes which NEED to exist on the container so
         # that configs are in the right place and also our custom salt
         # plugins along with the custom scripts to start the daemons.
@@ -870,7 +873,7 @@ class SaltDaemon(Container, bases.SaltDaemon):
         :keyword kwargs:
             The keyword arguments to pass to the callback
         """
-        if on_container:
+        if self._in_container_post_init or on_container:
             Container.before_start(self, callback, *args, **kwargs)
         else:
             bases.SaltDaemon.before_start(self, callback, *args, **kwargs)
@@ -890,7 +893,7 @@ class SaltDaemon(Container, bases.SaltDaemon):
         :keyword kwargs:
             The keyword arguments to pass to the callback
         """
-        if on_container:
+        if self._in_container_post_init or on_container:
             Container.after_start(self, callback, *args, **kwargs)
         else:
             bases.SaltDaemon.after_start(self, callback, *args, **kwargs)
@@ -910,7 +913,7 @@ class SaltDaemon(Container, bases.SaltDaemon):
         :keyword kwargs:
             The keyword arguments to pass to the callback
         """
-        if on_container:
+        if self._in_container_post_init or on_container:
             Container.before_terminate(self, callback, *args, **kwargs)
         else:
             bases.SaltDaemon.before_terminate(self, callback, *args, **kwargs)
@@ -930,7 +933,7 @@ class SaltDaemon(Container, bases.SaltDaemon):
         :keyword kwargs:
             The keyword arguments to pass to the callback
         """
-        if on_container:
+        if self._in_container_post_init or on_container:
             Container.after_terminate(self, callback, *args, **kwargs)
         else:
             bases.SaltDaemon.after_terminate(self, callback, *args, **kwargs)
