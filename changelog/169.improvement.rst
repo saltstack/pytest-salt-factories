@@ -1,0 +1,1 @@
+Switch to testing against Salt 3006.x instead of 3005.x

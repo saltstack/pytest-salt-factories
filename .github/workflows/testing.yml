@@ -115,7 +115,7 @@ jobs:
         pytest-version:
           - "7.3.0"
         salt-version:
-          - "3005"
+          - "3006"
 
     steps:
     - uses: actions/checkout@v4

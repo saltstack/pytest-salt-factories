@@ -60,7 +60,7 @@ def salt_master(
         overrides=config_overrides,
         factory_class=SaltMaster,
         base_script_args=["--log-level=debug"],
-        image="ghcr.io/saltstack/salt-ci-containers/salt:3005",
+        image="ghcr.io/saltstack/salt-ci-containers/salt:3006",
         container_run_kwargs={
             "network": docker_network_name,
             "hostname": master_id,
@@ -99,7 +99,7 @@ def salt_minion(
         extra_cli_arguments_after_first_start_failure=["--log-level=debug"],
         # SaltMinion kwargs
         name=minion_id,
-        image="ghcr.io/saltstack/salt-ci-containers/salt:3005",
+        image="ghcr.io/saltstack/salt-ci-containers/salt:3006",
         container_run_kwargs={
             "network": docker_network_name,
             "hostname": minion_id,
