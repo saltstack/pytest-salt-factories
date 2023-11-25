@@ -16,3 +16,43 @@ def docker_client():
     if connectable is not True:  # pragma: no cover
         pytest.skip(connectable)
     return client
+
+
+@pytest.fixture(scope="session")
+def docker_network_name():
+    return "salt-factories-e2e"
+
+
+@pytest.fixture(scope="session")
+def host_docker_network_ip_address(docker_client, docker_network_name):
+    network_subnet = "10.0.21.0/24"
+    network_gateway = "10.0.21.1"
+    network = None
+    try:
+        network = docker_client.api.inspect_network(docker_network_name)
+        yield network_gateway
+    except DockerException:
+        ipam_pool = docker.types.IPAMPool(
+            subnet=network_subnet,
+            gateway=network_gateway,
+        )
+        ipam_config = docker.types.IPAMConfig(pool_configs=[ipam_pool])
+        network = docker_client.networks.create(
+            docker_network_name,
+            driver="bridge",
+            ipam=ipam_config,
+        )
+        yield network_gateway
+    finally:
+        if network is not None:
+            docker_client.networks.prune()
+
+
+@pytest.fixture(scope="session")
+def salt_factories_config(salt_factories_config, host_docker_network_ip_address):
+    """
+    Return a dictionary with the keyword arguments for FactoriesManager.
+    """
+    config = salt_factories_config.copy()
+    config["log_server_host"] = host_docker_network_ip_address
+    return config
