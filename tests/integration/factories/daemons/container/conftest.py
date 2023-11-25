@@ -1,3 +1,4 @@
+import attr
 import pytest
 
 from saltfactories.daemons.container import Container
@@ -56,3 +57,34 @@ def salt_factories_config(salt_factories_config, host_docker_network_ip_address)
     config = salt_factories_config.copy()
     config["log_server_host"] = host_docker_network_ip_address
     return config
+
+
+@attr.s(slots=True)
+class ContainerCallbacksCounter:
+    """
+    A callbacks counter.
+    """
+
+    before_start_count = attr.ib(init=False, default=0)
+    after_start_count = attr.ib(init=False, default=0)
+    before_terminate_count = attr.ib(init=False, default=0)
+    after_terminate_count = attr.ib(init=False, default=0)
+
+    def before_start(self):
+        self.before_start_count += 1
+
+    def after_start(self):
+        self.after_start_count += 1
+
+    def before_terminate(self):
+        self.before_terminate_count += 1
+
+    def after_terminate(self):
+        self.after_terminate_count += 1
+
+
+@attr.s(slots=True)
+class SaltCallbacksCounter(ContainerCallbacksCounter):
+    """
+    The same, thing, a different class name.
+    """

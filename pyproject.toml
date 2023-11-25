@@ -176,6 +176,7 @@ ignore = [
   "PTH",      # Convert to pathlib.Path
   "ARG001",   # Unused function argument
   "D100",     # Missing docstring in public module
+  "D102",     # Missing docstring in public method
   "D103",     # Missing docstring in public function
   "D104",     # Missing docstring in public package
   "DTZ003",   # The use of `datetime.datetime.utcnow()` is not allowed, use `datetime.datetime.now(tz=)` instead
