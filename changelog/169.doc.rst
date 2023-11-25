@@ -1,0 +1,1 @@
+Fix the readthedocs builds due to https://blog.readthedocs.com/migrate-configuration-v2/
