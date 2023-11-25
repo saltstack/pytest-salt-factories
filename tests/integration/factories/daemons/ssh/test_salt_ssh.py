@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 pytestmark = [
     pytest.mark.skip_on_darwin,
     pytest.mark.skip_on_windows,
+    pytest.mark.skip_on_salt_system_service,
 ]
 
 
