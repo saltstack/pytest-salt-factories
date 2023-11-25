@@ -76,7 +76,7 @@ def salt_minion(
         extra_cli_arguments_after_first_start_failure=["--log-level=debug"],
         # SaltMinion kwargs
         name=minion_id,
-        image="ghcr.io/saltstack/salt-ci-containers/salt:3005",
+        image="ghcr.io/saltstack/salt-ci-containers/salt:3006",
         docker_client=docker_client,
         start_timeout=120,
         pull_before_start=False,
@@ -119,7 +119,7 @@ def test_callbacks(salt_master, docker_client, host_docker_network_ip_address):
         extra_cli_arguments_after_first_start_failure=["--log-level=debug"],
         # SaltMinion kwargs
         name=minion_id,
-        image="ghcr.io/saltstack/salt-ci-containers/salt:3005",
+        image="ghcr.io/saltstack/salt-ci-containers/salt:3006",
         docker_client=docker_client,
         start_timeout=120,
         pull_before_start=True,
