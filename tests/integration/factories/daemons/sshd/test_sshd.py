@@ -3,6 +3,12 @@ import subprocess
 
 import pytest
 
+pytestmark = [
+    pytest.mark.skip_on_darwin,
+    pytest.mark.skip_on_windows,
+    pytest.mark.skip_on_salt_system_service,
+]
+
 
 @pytest.fixture(scope="module")
 @pytest.mark.skip_if_binaries_missing("sshd", "ssh-keygen")

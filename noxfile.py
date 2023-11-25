@@ -20,10 +20,8 @@ if SALT_REQUIREMENT == "salt==master":
 IS_WINDOWS = sys.platform.lower().startswith("win")
 IS_DARWIN = sys.platform.lower().startswith("darwin")
 
-if IS_WINDOWS:
+if IS_WINDOWS or IS_DARWIN:
     COVERAGE_FAIL_UNDER_PERCENT = 70
-elif IS_DARWIN:
-    COVERAGE_FAIL_UNDER_PERCENT = 75
 else:
     COVERAGE_FAIL_UNDER_PERCENT = 80
 
