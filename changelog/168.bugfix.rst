@@ -1,1 +1,0 @@
-The ``Container._pull_container`` callback now properly registers on the ``SaltMinion`` and the ``SaltMaster`` classes when ``pull_before_start`` is True

@@ -20,6 +20,33 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc28 (2023-11-25)
+======================
+
+Features
+--------
+
+- Added a containarized salt master class implementation, ``SaltMaster`` (`#169 <https://github.com/saltstack/pytest-salt-factories/issues/169>`_)
+
+
+Improvements
+------------
+
+- Switch to testing against Salt 3006.x instead of 3005.x (`#169 <https://github.com/saltstack/pytest-salt-factories/issues/169>`_)
+
+
+Bug Fixes
+---------
+
+- The ``Container._pull_container`` callback now properly registers on the ``SaltMinion`` and the ``SaltMaster`` classes when ``pull_before_start`` is True (`#168 <https://github.com/saltstack/pytest-salt-factories/issues/168>`_)
+
+
+Improved Documentation
+----------------------
+
+- Fix the readthedocs builds due to https://blog.readthedocs.com/migrate-configuration-v2/ (`#169 <https://github.com/saltstack/pytest-salt-factories/issues/169>`_)
+
+
 1.0.0rc27 (2023-09-27)
 ======================
 
