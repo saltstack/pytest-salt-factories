@@ -17,6 +17,7 @@ from pytestshellutils.utils.processes import ProcessResult
 
 from saltfactories import CODE_ROOT_DIR
 from saltfactories import bases
+from saltfactories.daemons import master
 from saltfactories.daemons import minion
 from saltfactories.utils import random_string
 
@@ -986,3 +987,24 @@ class SaltMinion(SaltDaemon, minion.SaltMinion):
         Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
         """
         return minion.SaltMinion.get_check_events(self)
+
+
+@attr.s(kw_only=True, slots=True)
+class SaltMaster(SaltDaemon, master.SaltMaster):
+    """
+    Salt master daemon implementation running in a docker container.
+    """
+
+    def get_display_name(self):
+        """
+        Returns a human readable name for the factory.
+        """
+        return master.SaltMaster.get_display_name(self)
+
+    def get_check_events(self):
+        """
+        Return salt events to check.
+
+        Return a list of tuples in the form of `(master_id, event_tag)` check against to ensure the daemon is running
+        """
+        return master.SaltMaster.get_check_events(self)

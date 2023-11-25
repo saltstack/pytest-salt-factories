@@ -2,6 +2,7 @@ import logging
 
 import pytest
 
+from saltfactories.daemons.container import SaltMaster
 from saltfactories.daemons.container import SaltMinion
 from saltfactories.utils import random_string
 
@@ -28,43 +29,68 @@ def docker_client(salt_factories, docker_client):
     return docker_client
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def minion_id(salt_version):
     return random_string(f"salt-minion-{salt_version}-", uppercase=False)
 
 
 @pytest.fixture(scope="module")
-def salt_master(salt_factories, host_docker_network_ip_address):
+def master_id(salt_version):
+    return random_string(f"salt-master-{salt_version}-", uppercase=False)
+
+
+@pytest.fixture(scope="module")
+def salt_master(
+    salt_factories, docker_client, docker_network_name, master_id, host_docker_network_ip_address
+):
     config_overrides = {
-        "interface": host_docker_network_ip_address,
-        "log_level_logfile": "quiet",
-        # We also want to scrutinize the key acceptance
         "open_mode": True,
+        "user": "root",
+        "interface": "0.0.0.0",  # noqa: S104
+        "log_level_logfile": "quiet",
+        "pytest-master": {
+            "log": {"host": host_docker_network_ip_address},
+            "returner_address": {"host": host_docker_network_ip_address},
+        },
     }
+
     factory = salt_factories.salt_master_daemon(
-        random_string("master-"),
+        master_id,
+        name=master_id,
         overrides=config_overrides,
+        factory_class=SaltMaster,
+        base_script_args=["--log-level=debug"],
+        image="ghcr.io/saltstack/salt-ci-containers/salt:3005",
+        container_run_kwargs={
+            "network": docker_network_name,
+            "hostname": master_id,
+        },
+        docker_client=docker_client,
+        start_timeout=660,
+        max_start_attempts=1,
+        pull_before_start=True,
     )
+
     with factory.started():
         yield factory
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def salt_minion(
     minion_id,
     salt_master,
     docker_client,
+    docker_network_name,
     host_docker_network_ip_address,
 ):
     config_overrides = {
-        "master": salt_master.config["interface"],
+        "master": salt_master.id,
         "user": "root",
         "pytest-minion": {
             "log": {"host": host_docker_network_ip_address},
             "returner_address": {"host": host_docker_network_ip_address},
         },
-        # We also want to scrutinize the key acceptance
-        "open_mode": False,
+        "open_mode": True,
     }
     factory = salt_master.salt_minion_daemon(
         minion_id,
@@ -74,9 +100,14 @@ def salt_minion(
         # SaltMinion kwargs
         name=minion_id,
         image="ghcr.io/saltstack/salt-ci-containers/salt:3005",
+        container_run_kwargs={
+            "network": docker_network_name,
+            "hostname": minion_id,
+        },
         docker_client=docker_client,
-        start_timeout=120,
-        pull_before_start=False,
+        start_timeout=60,
+        max_start_attempts=1,
+        pull_before_start=True,
     )
     with factory.started():
         yield factory
@@ -87,8 +118,17 @@ def salt_cli(salt_master, salt_cli_timeout):
     return salt_master.salt_cli(timeout=salt_cli_timeout)
 
 
-def test_minion(salt_minion, salt_cli):
+def test_master(salt_minion, salt_master, salt_cli):
+    # If the minion is running, and we can ping it, so is the master in the container
     assert salt_minion.is_running()
-    ret = salt_cli.run("test.ping", minion_tgt=salt_minion.id)
-    assert ret.returncode == 0, ret
-    assert ret.data is True
+
+    ret = salt_master.run(
+        *salt_cli.cmdline(
+            "test.ping",
+            minion_tgt=salt_minion.id,
+        )
+    )
+    assert ret.returncode == 0
+    assert ret.data
+    assert salt_minion.id in ret.data
+    assert ret.data[salt_minion.id] is True

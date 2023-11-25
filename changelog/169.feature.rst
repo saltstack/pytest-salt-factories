@@ -1,0 +1,1 @@
+Added a containarized salt master class implementation, ``SaltMaster``
