@@ -147,3 +147,14 @@ def pytest_collection_modifyitems(items):
         )
         if str(item.fspath).startswith(system_service_skip_paths):
             item.add_marker(skip_marker)
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_setup(item):
+    skip_on_salt_system_service_marker = item.get_closest_marker("skip_on_salt_system_service")
+    if skip_on_salt_system_service_marker is not None and (
+        item.config.getoption("--system-service")
+        or os.environ.get("SALT_FACTORIES_SYSTEM_SERVICE", "0") == "1"
+    ):
+        msg = "Salt as a system service detected, and test should skip this scenario."
+        raise pytest.skip.Exception(msg, _use_item_location=True)

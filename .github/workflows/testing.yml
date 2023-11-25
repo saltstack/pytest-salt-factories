@@ -145,8 +145,9 @@ jobs:
       id: run-tests
       env:
         SKIP_REQUIREMENTS_INSTALL: YES
+        SALT_FACTORIES_SYSTEM_SERVICE: "1"
       run: |
-        sudo -E nox --force-color -e tests --no-venv -- -vv tests/
+        sudo -E nox --force-color -e tests --no-venv -- -vv --system-service tests/
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
