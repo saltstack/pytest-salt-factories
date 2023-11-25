@@ -7,6 +7,11 @@ from saltfactories.utils import random_string
 
 log = logging.getLogger(__name__)
 
+pytestmark = [
+    pytest.mark.skip_on_darwin,
+    pytest.mark.skip_on_windows,
+]
+
 
 @pytest.fixture(scope="module")
 @pytest.mark.skip_if_binaries_missing("sshd", "ssh-keygen")
