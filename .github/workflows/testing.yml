@@ -174,7 +174,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: runtests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-System-Pytest${{ matrix.pytest-version }}.log
         path: artifacts/runtests-*.log
@@ -260,7 +260,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: runtests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}.log
         path: artifacts/runtests-*.log
@@ -341,7 +341,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: runtests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}.log
         path: artifacts/runtests-*.log
@@ -427,7 +427,7 @@ jobs:
 
     - name: Upload Logs
       if: always()
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: runtests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}.log
         path: artifacts/runtests-*.log
