@@ -1,0 +1,1 @@
+Switch pipelines to use Python 3.11 and start testing Pytest 8.0.0rc2
