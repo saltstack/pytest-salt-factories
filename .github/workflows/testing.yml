@@ -268,10 +268,10 @@ jobs:
 
 
   MacOS:
-    runs-on: macOS-latest
+    runs-on: ${{ github.event.repository.fork && 'macos-latest' || 'macos-13-large' }}
     needs: Pre-Commit
 
-    timeout-minutes: 60
+    timeout-minutes: 90
 
     strategy:
       fail-fast: false

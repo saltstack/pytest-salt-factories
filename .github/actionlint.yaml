@@ -1,0 +1,7 @@
+self-hosted-runner:
+  # Labels of self-hosted runner in array of string
+  labels:
+    # Not self hosted but actionlint still does not have a
+    # release out supporting it
+    - macos-13-large
+    - macos-13-xlarge
