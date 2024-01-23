@@ -26,7 +26,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: 3.11
     - name: Set Cache Key
       run: echo "PY=$(python --version --version | sha256sum | cut -d' ' -f1)" >> "$GITHUB_ENV"
     - uses: actions/cache@v4
@@ -52,10 +52,10 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Set up Python 3.9 For Nox
+    - name: Set up Python 3.11 For Nox
       uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: 3.11
 
     - name: Install Nox
       run: |
@@ -82,10 +82,10 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up Python 3.9 For Nox
+    - name: Set up Python 3.11 For Nox
       uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: 3.11
 
     - name: Install Nox
       run: |
@@ -199,6 +199,7 @@ jobs:
         pytest-version:
           - "7.3.0"
           - "7.4.0"
+          - "8.0.0rc2"
 
     steps:
     - uses: actions/checkout@v4
@@ -284,6 +285,7 @@ jobs:
         pytest-version:
           - "7.3.0"
           - "7.4.0"
+          - "8.0.0rc2"
 
     steps:
     - uses: actions/checkout@v4
@@ -368,8 +370,11 @@ jobs:
         pytest-version:
           - "7.3.0"
           - "7.4.0"
+          - "8.0.0rc2"
         exclude:
           - {"python-version": "3.10", "salt-version": "3005.0"}
+          - {"pytest-version": "8.0.0rc2", "salt-version": "3005.0"}
+          - {"pytest-version": "8.0.0rc2", "python-version": "3.7"}
 
     steps:
     - uses: actions/checkout@v4
@@ -452,7 +457,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
-        python-version: 3.9
+        python-version: 3.11
 
     - name: Install Nox
       run: |

@@ -118,7 +118,7 @@ def session_run_always(session, *command, **kwargs):
             session._runner.global_config.install_only = old_install_only_value
 
 
-@nox.session(python=("3", "3.6", "3.7", "3.8", "3.9", "3.10"))
+@nox.session(python=("3", "3.6", "3.7", "3.8", "3.9", "3.10", "3.11"))
 def tests(session):
     """
     Run tests.
@@ -293,6 +293,9 @@ def tests(session):
 
 
 def _lint(session, rcfile, extra_args, paths):
+    python_version_info = _get_session_python_version_info(session)
+    if python_version_info < (3, 11):
+        session.error("Please run with nox installed under Python 3.11")
     if SKIP_REQUIREMENTS_INSTALL is False:
         python_version_info = _get_session_python_version_info(session)
         salt_requirements = []
