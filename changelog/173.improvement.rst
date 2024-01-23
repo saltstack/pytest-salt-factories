@@ -1,0 +1,1 @@
+Add ``--sys-info-and-exit`` which basically prints the system information and exit. Doesn't run any tests.

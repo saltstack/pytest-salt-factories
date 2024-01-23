@@ -1,5 +1,5 @@
 """
-Tests related to system information reports enabled by the `--sys-info` flag..
+Tests related to system information reports.
 """
 import pytest
 
@@ -44,3 +44,23 @@ def test_no_sysinfo(pytester):
             "* 1 passed in *",
         ]
     )
+
+
+def test_sysinfo_and_exit(pytester):
+    pytester.makepyfile(
+        """
+        def test_one():
+            assert True
+        """
+    )
+    res = pytester.runpytest("-vv", "--sys-info-and-exit")
+    res.stdout.fnmatch_lines(
+        [
+            "*>> System Information >>*",
+            "*-- Salt Versions Report --*",
+            "*-- System Grains Report --*",
+            "*<< System Information <<*",
+        ]
+    )
+    res.stdout.no_fnmatch_line("collect*")
+    res.stdout.no_fnmatch_line("INTERNALERROR*")

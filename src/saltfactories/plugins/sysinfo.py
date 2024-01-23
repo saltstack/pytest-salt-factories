@@ -87,6 +87,7 @@ import tempfile
 
 import pytest
 import yaml
+from _pytest.config import ExitCode
 
 
 def pytest_addoption(parser):
@@ -100,6 +101,12 @@ def pytest_addoption(parser):
         default=False,
         action="store_true",
         help="Print system information on test session startup",
+    )
+    output_options_group.addoption(
+        "--sys-info-and-exit",
+        default=False,
+        action="store_true",
+        help="Print system information on test session startup and exit",
     )
 
 
@@ -125,7 +132,10 @@ def pytest_sessionstart(session):
 
     # Let PyTest do its own thing
     yield
-    if session.config.getoption("--sys-info") is True:
+    if (
+        session.config.getoption("--sys-info") is True
+        or session.config.getoption("--sys-info-and-exit") is True
+    ):
         # And now we add our reporting sections
         terminal_reporter = session.config.pluginmanager.getplugin("terminalreporter")
         terminal_reporter.ensure_newline()
@@ -167,3 +177,23 @@ def pytest_sessionstart(session):
         terminal_reporter.ensure_newline()
         terminal_reporter.section("System Information", sep="<")
         terminal_reporter.ensure_newline()
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_collection(session):
+    """
+    Custom hook implementation to avoid collecting tests if necessary.
+    """
+    if session.config.getoption("--sys-info-and-exit") is True:
+        session.items = []
+        return False
+    return None
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_sessionfinish(session):
+    """
+    Custom hook implementation to exit early if necessary.
+    """
+    if session.config.getoption("--sys-info-and-exit") is True:
+        session.exitstatus = ExitCode.OK

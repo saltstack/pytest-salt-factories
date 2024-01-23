@@ -83,7 +83,6 @@ builtins = [
   "__salt_system_encoding__",
 ]
 # Group violations by containing file.
-format = "grouped"
 ignore = [
   "ANN",     # annotations
   "PTH",     # Replace with pathlib.Path
