@@ -20,6 +20,21 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0rc29 (2024-01-23)
+======================
+
+Improvements
+------------
+
+- Add ``--sys-info-and-exit`` which basically prints the system information and exit. Doesn't run any tests. (`#173 <https://github.com/saltstack/pytest-salt-factories/issues/173>`_)
+
+
+Trivial/Internal Changes
+------------------------
+
+- Switch pipelines to use Python 3.11 and start testing Pytest 8.0.0rc2 (`#173 <https://github.com/saltstack/pytest-salt-factories/issues/173>`_)
+
+
 1.0.0rc28 (2023-11-25)
 ======================
 
