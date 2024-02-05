@@ -150,7 +150,7 @@ jobs:
         sudo -E nox --force-color -e tests --no-venv -- -vv --system-service tests/
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: artifacts/
@@ -161,7 +161,7 @@ jobs:
         verbose: true
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: artifacts/
@@ -237,7 +237,7 @@ jobs:
         nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: artifacts/
@@ -248,7 +248,7 @@ jobs:
         verbose: true
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: artifacts/
@@ -319,7 +319,7 @@ jobs:
         nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: artifacts/
@@ -330,7 +330,7 @@ jobs:
         verbose: true
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: artifacts/
@@ -408,7 +408,7 @@ jobs:
         nox --force-color -e tests-${{ matrix.python-version }} -- -vv --sys-stats tests/
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: artifacts/
@@ -419,7 +419,7 @@ jobs:
         verbose: true
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         directory: artifacts/
