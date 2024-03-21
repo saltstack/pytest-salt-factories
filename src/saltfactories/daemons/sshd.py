@@ -35,7 +35,9 @@ class Sshd(Daemon):
     display_name = attr.ib(default=None)
     client_key = attr.ib(default=None, init=False, repr=False)
     sshd_config = attr.ib(default=None, init=False)
+    _host_keys = attr.ib(init=False, repr=False, default=None)
     _ssh_keygen_path = attr.ib(default=shutil.which("ssh-keygen"))
+    _ssh_keyscan_path = attr.ib(default=shutil.which("ssh-keyscan"))
 
     def __attrs_post_init__(self):
         """
@@ -218,3 +220,43 @@ class Sshd(Daemon):
             )
             msg = "Failed to generate ssh key."
             raise FactoryFailure(msg, process_result=process_result) from exc
+
+    def get_host_keys(self):
+        """
+        Return a list of strings which are the SSHD server host keys.
+        """
+        if self._host_keys is None:
+            log.info("Collecting SSHD server keys ...")
+            cmdline = [
+                self._ssh_keyscan_path,
+                "-p",
+                str(self.listen_port),
+                "-t",
+                "rsa,dsa,ecdsa,ed25519",
+                self.listen_address,
+            ]
+            try:
+                ret = subprocess.run(
+                    cmdline,  # noqa: S603
+                    cwd=str(self.config_dir),
+                    check=True,
+                    text=True,
+                    capture_output=True,
+                )
+            except subprocess.CalledProcessError as exc:
+                process_result = ProcessResult(
+                    cmdline=exc.args,
+                    stdout=exc.stdout,
+                    stderr=exc.stderr,
+                    returncode=exc.returncode,
+                )
+                msg = "Failed to get the sshd server keys."
+                raise FactoryFailure(msg, process_result=process_result) from exc
+            else:
+                self._host_keys = []
+                for line in ret.stdout.splitlines():
+                    key = line.strip()
+                    if not key or key.startswith("#"):
+                        continue
+                    self._host_keys.append(key)
+        return self._host_keys

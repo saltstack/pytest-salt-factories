@@ -1,0 +1,1 @@
+The `SSHD` daemon implementation now has a `get_host_keys` method which returns the host keys that can then be written to a ``known_hosts`` file.
