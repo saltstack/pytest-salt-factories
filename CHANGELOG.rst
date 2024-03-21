@@ -20,6 +20,26 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.0 (2024-03-21)
+==================
+
+Improvements
+------------
+
+- The `SSHD` daemon implementation now has a `get_host_keys` method which returns the host keys that can then be written to a ``known_hosts`` file. (`#176 <https://github.com/saltstack/pytest-salt-factories/issues/176>`_)
+
+
+Trivial/Internal Changes
+------------------------
+
+- CI pipeline changes:
+
+  * Stop testing against Pytest 8.0.0rc2 and instead test against 8.0.x
+  * Stop testing against Salt 3005.x
+  * Add Salt 3007.x to the versions to test
+  * Stop testing against Pytest 7.3.x and add 8.1.x to the list of versions to test (`#177 <https://github.com/saltstack/pytest-salt-factories/issues/177>`_)
+
+
 1.0.0rc29 (2024-01-23)
 ======================
 
