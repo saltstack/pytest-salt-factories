@@ -113,7 +113,7 @@ jobs:
       fail-fast: false
       matrix:
         pytest-version:
-          - "7.3.0"
+          - "7.4.0"
         salt-version:
           - "3006"
 
@@ -198,9 +198,9 @@ jobs:
           - "3006.0"
           - "3007.0"
         pytest-version:
-          - "7.3.0"
           - "7.4.0"
           - "8.0.0"
+          - "8.1.0"
         exclude:
           - {"salt-version": "3007.0", "python-version": "3.8"}
           - {"salt-version": "3007.0", "python-version": "3.9"}
@@ -287,9 +287,9 @@ jobs:
         salt-version:
           - "3006.0"
         pytest-version:
-          - "7.3.0"
           - "7.4.0"
           - "8.0.0"
+          - "8.1.0"
 
     steps:
     - uses: actions/checkout@v4
@@ -372,11 +372,12 @@ jobs:
           - "3006.0"
           - "3007.0"
         pytest-version:
-          - "7.3.0"
           - "7.4.0"
           - "8.0.0"
+          - "8.1.0"
         exclude:
           - {"pytest-version": "8.0.0", "python-version": "3.7"}
+          - {"pytest-version": "8.1.0", "python-version": "3.7"}
           - {"salt-version": "3007.0", "python-version": "3.7"}
           - {"salt-version": "3007.0", "python-version": "3.8"}
           - {"salt-version": "3007.0", "python-version": "3.9"}
