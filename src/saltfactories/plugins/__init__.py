@@ -60,7 +60,9 @@ def pytest_load_initial_conftests(*_):
     if salt.version.__saltstack_version__ < "3005":
         msg = f"Only salt>=3005 is supported(Installed version {salt.version.__saltstack_version__}"
         raise pytest.UsageError(msg)
+    # pylint: disable=no-member
     if "temp_directory" not in pytest.helpers:
         pytest.helpers.register(saltfactories.utils.tempfiles.temp_directory, name="temp_directory")
     if "temp_file" not in pytest.helpers:
         pytest.helpers.register(saltfactories.utils.tempfiles.temp_file, name="temp_file")
+    # pylint: enable=no-member

@@ -1,9 +1,9 @@
 import logging
-import textwrap
 
 import pytest
 
 from saltfactories.utils import random_string
+from saltfactories.utils import tempfiles
 
 log = logging.getLogger(__name__)
 
@@ -32,30 +32,29 @@ def master(salt_factories):
 
 @pytest.fixture(scope="module")
 def salt_ssh_cli(sshd, salt_factories, master):
-    roster_file_path = salt_factories.tmp_root_dir / "salt_ssh_roster"
-    with open(str(roster_file_path), "w", encoding="utf-8") as wfh:
-        contents = textwrap.dedent(
-            f"""\
-        localhost:
-          host: 127.0.0.1
-          port: {sshd.listen_port}
-          mine_functions:
-            test.arg: ['itworked']
-        """
-        )
-        wfh.write(contents)
-        log.debug("Wrote '%s' with contents:\n%s", roster_file_path, contents)
-        log.warning("")
-    try:
+    roster_file_contents = f"""
+    localhost:
+        host: 127.0.0.1
+        port: {sshd.listen_port}
+        mine_functions:
+        test.arg: ['itworked']
+    """
+    # pylint: disable=no-member
+    with tempfiles.temp_file(
+        "salt_ssh_roster", roster_file_contents, salt_factories.tmp_root_dir
+    ) as roster_file_path, tempfiles.temp_file(
+        "known_hosts", "\n".join(sshd.get_host_keys()), salt_factories.tmp_root_dir
+    ) as known_hosts_file, tempfiles.temp_file(
+        "master.d/known-hosts.conf", f"known_hosts_file: {known_hosts_file}\n", master.config_dir
+    ):
         yield master.salt_ssh_cli(
             roster_file=str(roster_file_path), client_key=str(sshd.client_key)
         )
-    finally:
-        roster_file_path.unlink()
+    # pylint: enable=no-member
 
 
 @pytest.mark.skip_on_windows
 def test_salt_ssh(salt_ssh_cli):
-    ret = salt_ssh_cli.run("--ignore-host-keys", "test.echo", "It Works!", minion_tgt="localhost")
+    ret = salt_ssh_cli.run("test.echo", "It Works!", minion_tgt="localhost")
     assert ret.returncode == 0
     assert ret.data == "It Works!"
