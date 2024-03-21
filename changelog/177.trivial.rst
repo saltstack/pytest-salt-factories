@@ -1,0 +1,1 @@
+Stop testing against Pytest 8.0.0rc2 and instead test against 8.0.x

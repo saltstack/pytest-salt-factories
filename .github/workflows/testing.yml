@@ -199,7 +199,7 @@ jobs:
         pytest-version:
           - "7.3.0"
           - "7.4.0"
-          - "8.0.0rc2"
+          - "8.0.0"
 
     steps:
     - uses: actions/checkout@v4
@@ -285,7 +285,7 @@ jobs:
         pytest-version:
           - "7.3.0"
           - "7.4.0"
-          - "8.0.0rc2"
+          - "8.0.0"
 
     steps:
     - uses: actions/checkout@v4
@@ -370,11 +370,11 @@ jobs:
         pytest-version:
           - "7.3.0"
           - "7.4.0"
-          - "8.0.0rc2"
+          - "8.0.0"
         exclude:
           - {"python-version": "3.10", "salt-version": "3005.0"}
-          - {"pytest-version": "8.0.0rc2", "salt-version": "3005.0"}
-          - {"pytest-version": "8.0.0rc2", "python-version": "3.7"}
+          - {"pytest-version": "8.0.0", "salt-version": "3005.0"}
+          - {"pytest-version": "8.0.0", "python-version": "3.7"}
 
     steps:
     - uses: actions/checkout@v4
