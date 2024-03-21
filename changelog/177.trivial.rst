@@ -1,1 +1,5 @@
-Stop testing against Pytest 8.0.0rc2 and instead test against 8.0.x
+CI pipeline changes:
+
+* Stop testing against Pytest 8.0.0rc2 and instead test against 8.0.x
+* Stop testing against Salt 3005.x
+* Add Salt 3007.x to the versions to test

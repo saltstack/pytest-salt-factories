@@ -133,7 +133,7 @@ jobs:
 
     - name: Install Salt
       run: |
-        curl -L https://bootstrap.saltstack.com | sudo sh -s -- -M -X -x python3 ${{ matrix.salt-version == '3005' && 'old-stable' || 'stable' }} ${{ matrix.salt-version }}
+        curl -L https://bootstrap.saltstack.com | sudo sh -s -- -M -X -x python3 stable ${{ matrix.salt-version }}
         sudo apt-get install -y salt-api salt-ssh salt-syndic salt-cloud python3-pip
         for service in $(sudo systemctl list-unit-files | grep salt | grep -v @ | awk '{ print $1 }'); do sudo systemctl stop "$service"; done
 
@@ -184,7 +184,7 @@ jobs:
     runs-on: windows-latest
     needs: Pre-Commit
 
-    timeout-minutes: 40
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
@@ -196,10 +196,14 @@ jobs:
           - "3.10"
         salt-version:
           - "3006.0"
+          - "3007.0"
         pytest-version:
           - "7.3.0"
           - "7.4.0"
           - "8.0.0"
+        exclude:
+          - {"salt-version": "3007.0", "python-version": "3.8"}
+          - {"salt-version": "3007.0", "python-version": "3.9"}
 
     steps:
     - uses: actions/checkout@v4
@@ -365,16 +369,17 @@ jobs:
           - "3.9"
           - "3.10"
         salt-version:
-          - "3005.0"
           - "3006.0"
+          - "3007.0"
         pytest-version:
           - "7.3.0"
           - "7.4.0"
           - "8.0.0"
         exclude:
-          - {"python-version": "3.10", "salt-version": "3005.0"}
-          - {"pytest-version": "8.0.0", "salt-version": "3005.0"}
           - {"pytest-version": "8.0.0", "python-version": "3.7"}
+          - {"salt-version": "3007.0", "python-version": "3.7"}
+          - {"salt-version": "3007.0", "python-version": "3.8"}
+          - {"salt-version": "3007.0", "python-version": "3.9"}
 
     steps:
     - uses: actions/checkout@v4
