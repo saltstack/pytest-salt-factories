@@ -20,6 +20,15 @@ Backward incompatible (breaking) changes will only be introduced in major versio
 
 .. towncrier release notes start
 
+1.0.1 (2024-03-22)
+==================
+
+Bug Fixes
+---------
+
+- Properly configure the SSHD server when FIPS is enabled/enforced on a system (`#179 <https://github.com/saltstack/pytest-salt-factories/issues/179>`_)
+
+
 1.0.0 (2024-03-21)
 ==================
 

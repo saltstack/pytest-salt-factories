@@ -1,1 +1,0 @@
-Properly configure the SSHD server when FIPS is enabled/enforced on a system
