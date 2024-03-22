@@ -86,6 +86,41 @@ class Sshd(Daemon):
             "PidFile": self.config_dir / "sshd.pid",
             "AuthorizedKeysFile": authorized_keys_file,
         }
+        if platform.is_fips_enabled():
+            log.info(
+                "Adding additional default configuration to support FIPS which is "
+                "enabled on the system"
+            )
+            _default_config.update(
+                {
+                    "Ciphers": (
+                        "aes256-gcm@openssh.com,aes256-ctr,aes256-cbc,aes128-gcm@openssh.com,aes128-ctr,aes128-cbc"
+                    ),
+                    "MACs": (
+                        "hmac-sha2-256-etm@openssh.com,hmac-sha1-etm@openssh.com,hmac-sha2-512-etm@openssh.com,"
+                        "hmac-sha2-256,hmac-sha1,hmac-sha2-512"
+                    ),
+                    "KexAlgorithms": (
+                        "ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,"
+                        "diffie-hellman-group14-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512"
+                    ),
+                    "HostKeyAlgorithms": (
+                        "ecdsa-sha2-nistp256,ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384,"
+                        "ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521,"
+                        "ecdsa-sha2-nistp521-cert-v01@openssh.com,rsa-sha2-256,rsa-sha2-256-cert-v01@openssh.com,"
+                        "rsa-sha2-512,rsa-sha2-512-cert-v01@openssh.com"
+                    ),
+                    "PubkeyAcceptedKeyTypes": (
+                        "ecdsa-sha2-nistp256,ecdsa-sha2-nistp256-cert-v01@openssh.com,ecdsa-sha2-nistp384,"
+                        "ecdsa-sha2-nistp384-cert-v01@openssh.com,ecdsa-sha2-nistp521,"
+                        "ecdsa-sha2-nistp521-cert-v01@openssh.com,rsa-sha2-256,rsa-sha2-256-cert-v01@openssh.com,"
+                        "rsa-sha2-512,rsa-sha2-512-cert-v01@openssh.com"
+                    ),
+                    "CASignatureAlgorithms": (
+                        "ecdsa-sha2-nistp256,ecdsa-sha2-nistp384,ecdsa-sha2-nistp521,rsa-sha2-256,rsa-sha2-512"
+                    ),
+                }
+            )
         if self.sshd_config_dict:
             _default_config.update(self.sshd_config_dict)
         self.sshd_config = _default_config
@@ -231,8 +266,6 @@ class Sshd(Daemon):
                 self._ssh_keyscan_path,
                 "-p",
                 str(self.listen_port),
-                "-t",
-                "rsa,dsa,ecdsa,ed25519",
                 self.listen_address,
             ]
             try:
