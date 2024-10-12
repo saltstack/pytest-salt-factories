@@ -156,8 +156,6 @@ class Sshd(Daemon):
                 config_lines.append(f"{key} {value}\n")
 
             # Let's generate the host keys
-            if platform.is_fips_enabled() is False:
-                self._generate_server_dsa_key()
             self._generate_server_ecdsa_key()
             self._generate_server_ed25519_key()
             for host_key in pathlib.Path(self.config_dir).glob("ssh_host_*_key"):
@@ -180,17 +178,6 @@ class Sshd(Daemon):
         if key_path_prv.exists() and key_path_pub.exists():
             return key_path_prv
         self._ssh_keygen(key_filename, "ecdsa", "521")
-        for key_path in (key_path_prv, key_path_pub):
-            key_path.chmod(0o0400)
-        return key_path_prv
-
-    def _generate_server_dsa_key(self):
-        key_filename = "ssh_host_dsa_key"
-        key_path_prv = self.config_dir / key_filename
-        key_path_pub = self.config_dir / f"{key_filename}.pub"
-        if key_path_prv.exists() and key_path_pub.exists():
-            return key_path_prv
-        self._ssh_keygen(key_filename, "dsa", "1024")
         for key_path in (key_path_prv, key_path_pub):
             key_path.chmod(0o0400)
         return key_path_prv
