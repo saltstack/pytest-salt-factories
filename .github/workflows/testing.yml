@@ -104,7 +104,7 @@ jobs:
 
 
   Linux-System-Service:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: Pre-Commit
 
     timeout-minutes: 25
@@ -127,7 +127,7 @@ jobs:
         sudo -E apt-get update
         sudo -E apt-get install -y python3-setuptools python-is-python3
         sudo -E python3 -m pip install --upgrade pip
-        sudo -E python3 -m pip install 'nox<2022.8.7'
+        sudo -E python3 -m pip install 'nox<2024.04.15'
         sudo mv /usr/bin/pip /usr/bin/pip2
         sudo ln -sf /usr/bin/pip3 /usr/bin/pip
 
@@ -191,19 +191,17 @@ jobs:
       max-parallel: 16
       matrix:
         python-version:
-          - "3.8"
           - "3.9"
           - "3.10"
         salt-version:
-          - "3006.0"
-          - "3007.0"
+          - "3006.9"
+          - "3007.1"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
           - "8.1.0"
         exclude:
-          - {"salt-version": "3007.0", "python-version": "3.8"}
-          - {"salt-version": "3007.0", "python-version": "3.9"}
+          - {"salt-version": "3007.1", "python-version": "3.9"}
 
     steps:
     - uses: actions/checkout@v4
@@ -285,7 +283,7 @@ jobs:
           - "3.9"
           - "3.10"
         salt-version:
-          - "3006.0"
+          - "3006.9"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
@@ -354,7 +352,7 @@ jobs:
 
 
   Linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: Pre-Commit
 
     timeout-minutes: 25
@@ -364,23 +362,17 @@ jobs:
       max-parallel: 16
       matrix:
         python-version:
-          - "3.7"
-          - "3.8"
           - "3.9"
           - "3.10"
         salt-version:
-          - "3006.0"
-          - "3007.0"
+          - "3006.9"
+          - "3007.1"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
           - "8.1.0"
         exclude:
-          - {"pytest-version": "8.0.0", "python-version": "3.7"}
-          - {"pytest-version": "8.1.0", "python-version": "3.7"}
-          - {"salt-version": "3007.0", "python-version": "3.7"}
-          - {"salt-version": "3007.0", "python-version": "3.8"}
-          - {"salt-version": "3007.0", "python-version": "3.9"}
+          - {"salt-version": "3007.1", "python-version": "3.9"}
 
     steps:
     - uses: actions/checkout@v4

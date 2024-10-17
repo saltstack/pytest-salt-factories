@@ -445,7 +445,7 @@ class SystemdSaltDaemonImpl(DaemonImpl):
         log.info("Stopping %s", self.factory)
         pid = self.pid
         # Collect any child processes information before terminating the process
-        with contextlib.suppress(psutil.NoSuchProcess):
+        with contextlib.suppress(psutil.NoSuchProcess, psutil.AccessDenied):
             for child in psutil.Process(pid).children(recursive=True):
                 if child not in self._children:  # pylint: disable=access-member-before-definition
                     self._children.append(child)  # pylint: disable=access-member-before-definition
