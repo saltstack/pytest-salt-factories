@@ -127,7 +127,7 @@ jobs:
         sudo -E apt-get update
         sudo -E apt-get install -y python3-setuptools python-is-python3
         sudo -E python3 -m pip install --upgrade pip
-        sudo -E python3 -m pip install 'nox<2024.04.15'
+        sudo -E python3 -m pip install 'nox<2022.8.7'
         sudo mv /usr/bin/pip /usr/bin/pip2
         sudo ln -sf /usr/bin/pip3 /usr/bin/pip
 
