@@ -191,7 +191,6 @@ jobs:
       max-parallel: 16
       matrix:
         python-version:
-          - "3.9"
           - "3.10"
         salt-version:
           - "3006.9"
@@ -202,8 +201,6 @@ jobs:
           - "8.1.1"
           - "8.2.0"
           - "8.3.3"
-        exclude:
-          - {"salt-version": "3007.1", "python-version": "3.9"}
 
     steps:
     - uses: actions/checkout@v4
@@ -282,7 +279,6 @@ jobs:
       max-parallel: 16
       matrix:
         python-version:
-          - "3.9"
           - "3.10"
         salt-version:
           - "3006.9"
@@ -293,8 +289,6 @@ jobs:
           - "8.1.1"
           - "8.2.0"
           - "8.3.3"
-        exclude:
-          - {"salt-version": "3007.1", "python-version": "3.9"}
 
     steps:
     - uses: actions/checkout@v4
@@ -369,7 +363,6 @@ jobs:
       max-parallel: 16
       matrix:
         python-version:
-          - "3.9"
           - "3.10"
         salt-version:
           - "3006.9"
@@ -380,8 +373,6 @@ jobs:
           - "8.1.1"
           - "8.2.0"
           - "8.3.3"
-        exclude:
-          - {"salt-version": "3007.1", "python-version": "3.9"}
 
     steps:
     - uses: actions/checkout@v4
