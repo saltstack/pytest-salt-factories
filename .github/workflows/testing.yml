@@ -282,7 +282,6 @@ jobs:
           - "3.10"
         salt-version:
           - "3006.9"
-          - "3007.1"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
