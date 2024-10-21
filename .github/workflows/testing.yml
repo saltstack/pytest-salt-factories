@@ -104,7 +104,7 @@ jobs:
 
 
   Linux-System-Service:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: Pre-Commit
 
     timeout-minutes: 25
@@ -191,19 +191,16 @@ jobs:
       max-parallel: 16
       matrix:
         python-version:
-          - "3.8"
-          - "3.9"
           - "3.10"
         salt-version:
-          - "3006.0"
-          - "3007.0"
+          - "3006.9"
+          - "3007.1"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
-          - "8.1.0"
-        exclude:
-          - {"salt-version": "3007.0", "python-version": "3.8"}
-          - {"salt-version": "3007.0", "python-version": "3.9"}
+          - "8.1.1"
+          - "8.2.0"
+          - "8.3.3"
 
     steps:
     - uses: actions/checkout@v4
@@ -282,14 +279,15 @@ jobs:
       max-parallel: 16
       matrix:
         python-version:
-          - "3.9"
           - "3.10"
         salt-version:
-          - "3006.0"
+          - "3006.9"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
-          - "8.1.0"
+          - "8.1.1"
+          - "8.2.0"
+          - "8.3.3"
 
     steps:
     - uses: actions/checkout@v4
@@ -354,7 +352,7 @@ jobs:
 
 
   Linux:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: Pre-Commit
 
     timeout-minutes: 25
@@ -364,23 +362,16 @@ jobs:
       max-parallel: 16
       matrix:
         python-version:
-          - "3.7"
-          - "3.8"
-          - "3.9"
           - "3.10"
         salt-version:
-          - "3006.0"
-          - "3007.0"
+          - "3006.9"
+          - "3007.1"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
-          - "8.1.0"
-        exclude:
-          - {"pytest-version": "8.0.0", "python-version": "3.7"}
-          - {"pytest-version": "8.1.0", "python-version": "3.7"}
-          - {"salt-version": "3007.0", "python-version": "3.7"}
-          - {"salt-version": "3007.0", "python-version": "3.8"}
-          - {"salt-version": "3007.0", "python-version": "3.9"}
+          - "8.1.1"
+          - "8.2.0"
+          - "8.3.3"
 
     steps:
     - uses: actions/checkout@v4
