@@ -1,0 +1,1 @@
+Updated GitHub Actions for recent EOL of Python 3.7 and 3.8, using Salt 3006.9 and 3007.1, also use of psutil.AccessDenied
