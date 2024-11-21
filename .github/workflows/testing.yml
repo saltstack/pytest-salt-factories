@@ -133,7 +133,7 @@ jobs:
 
     - name: Install Salt
       run: |
-        curl -L https://bootstrap.saltstack.com | sudo sh -s -- -M -X -x python3 stable ${{ matrix.salt-version }}
+        curl -L https://github.com/saltstack/salt-bootstrap/releases/latest/download/bootstrap-salt.sh | sudo sh -s -- -M -X -x python3 stable ${{ matrix.salt-version }}
         sudo apt-get install -y salt-api salt-ssh salt-syndic salt-cloud python3-pip
         for service in $(sudo systemctl list-unit-files | grep salt | grep -v @ | awk '{ print $1 }'); do sudo systemctl stop "$service"; done
 
@@ -269,7 +269,7 @@ jobs:
 
 
   MacOS:
-    runs-on: ${{ github.event.repository.fork && 'macos-latest' || 'macos-13-large' }}
+    runs-on: ${{ github.event.repository.fork && 'macos-latest' || 'macos-13' }}
     needs: Pre-Commit
 
     timeout-minutes: 90
