@@ -42,6 +42,7 @@ class LoaderModuleMock:
             "__thorium__",
             "__states__",
             "__serializers__",
+            "__matchers__",
             "__ret__",
             "__grains__",
             "__pillar__",
