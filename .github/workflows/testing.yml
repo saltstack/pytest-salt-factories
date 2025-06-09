@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   Pre-Commit:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
     - uses: ./.github/actions/setup-actionlint
@@ -42,7 +42,7 @@ jobs:
         pre-commit run --show-diff-on-failure --color=always --all-files
 
   Docs:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: Pre-Commit
 
     timeout-minutes: 10
@@ -74,7 +74,7 @@ jobs:
 
 
   PyLint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: Pre-Commit
 
     timeout-minutes: 10
@@ -104,7 +104,7 @@ jobs:
 
 
   Linux-System-Service:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: Pre-Commit
 
     timeout-minutes: 25
@@ -114,8 +114,10 @@ jobs:
       matrix:
         pytest-version:
           - "7.4.0"
+          - "8.4.0"
         salt-version:
           - "3006"
+          - "3007"
 
     steps:
     - uses: actions/checkout@v4
@@ -149,29 +151,6 @@ jobs:
       run: |
         sudo -E nox --force-color -e tests --no-venv -- -vv --system-service tests/
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: artifacts/
-        fail_ci_if_error: false
-        files: coverage-project.xml
-        flags: src,${{ runner.os }},salt-${{ matrix.salt-version }},system,pytest-${{ matrix.pytest-version }}
-        name: project-${{ runner.os }}-Salt-${{ matrix.salt-version }}-System-Pytest${{ matrix.pytest-version }}
-        verbose: true
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: artifacts/
-        env_vars: PYTHON,SALT,TESTSUITE,SOURCE
-        fail_ci_if_error: false
-        files: coverage-tests.xml
-        flags: tests,${{ runner.os }},salt-${{ matrix.salt-version }},system,pytest-${{ matrix.pytest-version }}
-        name: tests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-System-Pytest${{ matrix.pytest-version }}
-        verbose: true
-
     - name: Upload Logs
       if: always()
       uses: actions/upload-artifact@v4
@@ -181,7 +160,7 @@ jobs:
 
 
   Windows:
-    runs-on: windows-latest
+    runs-on: windows-2025
     needs: Pre-Commit
 
     timeout-minutes: 60
@@ -193,14 +172,15 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - "3006.9"
-          - "3007.1"
+          - "3006.11"
+          - "3007.3"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
           - "8.1.1"
           - "8.2.0"
           - "8.3.3"
+          - "8.4.0"
 
     steps:
     - uses: actions/checkout@v4
@@ -237,29 +217,6 @@ jobs:
         export PATH="/C/Program Files (x86)/Windows Kits/10/bin/10.0.18362.0/x64;$PATH"
         nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: artifacts/
-        fail_ci_if_error: false
-        files: coverage-project.xml
-        flags: src,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
-        name: project-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
-        verbose: true
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: artifacts/
-        env_vars: PYTHON,SALT,TESTSUITE,SOURCE
-        fail_ci_if_error: false
-        files: coverage-tests.xml
-        flags: tests,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
-        name: tests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
-        verbose: true
-
     - name: Upload Logs
       if: always()
       uses: actions/upload-artifact@v4
@@ -269,7 +226,7 @@ jobs:
 
 
   MacOS:
-    runs-on: ${{ github.event.repository.fork && 'macos-latest' || 'macos-13' }}
+    runs-on: ${{ github.event.repository.fork && 'macos-15' || 'macos-15' }}
     needs: Pre-Commit
 
     timeout-minutes: 90
@@ -281,13 +238,15 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - "3006.9"
+          - "3006.11"
+          - "3007.3"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
           - "8.1.1"
           - "8.2.0"
           - "8.3.3"
+          - "8.4.0"
 
     steps:
     - uses: actions/checkout@v4
@@ -320,29 +279,6 @@ jobs:
       run: |
         nox --force-color -e tests-${{ matrix.python-version }} -- -vv tests/
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: artifacts/
-        fail_ci_if_error: false
-        files: coverage-project.xml
-        flags: src,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
-        name: project-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
-        verbose: true
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: artifacts/
-        env_vars: PYTHON,SALT,TESTSUITE,SOURCE
-        fail_ci_if_error: false
-        files: coverage-tests.xml
-        flags: tests,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
-        name: tests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
-        verbose: true
-
     - name: Upload Logs
       if: always()
       uses: actions/upload-artifact@v4
@@ -352,7 +288,7 @@ jobs:
 
 
   Linux:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: Pre-Commit
 
     timeout-minutes: 25
@@ -364,14 +300,15 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - "3006.9"
-          - "3007.1"
+          - "3006.11"
+          - "3007.3"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
           - "8.1.1"
           - "8.2.0"
           - "8.3.3"
+          - "8.4.0"
 
     steps:
     - uses: actions/checkout@v4
@@ -404,29 +341,6 @@ jobs:
       run: |
         nox --force-color -e tests-${{ matrix.python-version }} -- -vv --sys-stats tests/
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: artifacts/
-        fail_ci_if_error: false
-        files: coverage-project.xml
-        flags: src,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
-        name: project-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
-        verbose: true
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        directory: artifacts/
-        env_vars: PYTHON,SALT,TESTSUITE,SOURCE
-        fail_ci_if_error: false
-        files: coverage-tests.xml
-        flags: tests,${{ runner.os }},salt-${{ matrix.salt-version }},py${{ matrix.python-version }},pytest-${{ matrix.pytest-version }}
-        name: tests-${{ runner.os }}-Salt-${{ matrix.salt-version }}-Py${{ matrix.python-version}}-Pytest${{ matrix.pytest-version }}
-        verbose: true
-
     - name: Upload Logs
       if: always()
       uses: actions/upload-artifact@v4
@@ -436,7 +350,7 @@ jobs:
 
 
   Build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: release
     permissions:
       id-token: write  # IMPORTANT: this permission is mandatory for trusted publishing
@@ -478,7 +392,7 @@ jobs:
     # on a pull request instead of requiring all
     name: Set the ${{ github.workflow }} Pipeline Exit Status
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs:
       - pre-commit
       - Docs
