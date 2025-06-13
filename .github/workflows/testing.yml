@@ -42,7 +42,7 @@ jobs:
         pre-commit run --show-diff-on-failure --color=always --all-files
 
   Docs:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     needs: Pre-Commit
 
     timeout-minutes: 10
