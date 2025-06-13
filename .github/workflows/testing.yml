@@ -128,7 +128,6 @@ jobs:
       run: |
         sudo -E apt-get update
         sudo -E apt-get install -y python3-setuptools python-is-python3
-        # sudo -E python3 -m pip install --upgrade pip
         sudo -E python3 -m pip install 'nox<2022.8.7'
         sudo mv /usr/bin/pip /usr/bin/pip2
         sudo ln -sf /usr/bin/pip3 /usr/bin/pip
@@ -172,8 +171,8 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - "3006.12"
-          - "3007.4"
+          - "3006.9"
+          - "3007.1"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
@@ -238,8 +237,8 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - "3006.12"
-          - "3007.4"
+          - "3006.9"
+          - "3007.1"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
@@ -300,8 +299,8 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - "3006.12"
-          - "3007.4"
+          - "3006.9"
+          - "3007.1"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
