@@ -172,8 +172,8 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - "3006.11"
-          - "3007.3"
+          - "3006.12"
+          - "3007.4"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
@@ -238,8 +238,8 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - "3006.11"
-          - "3007.3"
+          - "3006.12"
+          - "3007.4"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
@@ -300,8 +300,8 @@ jobs:
         python-version:
           - "3.10"
         salt-version:
-          - "3006.11"
-          - "3007.3"
+          - "3006.12"
+          - "3007.4"
         pytest-version:
           - "7.4.0"
           - "8.0.0"
