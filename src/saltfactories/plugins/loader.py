@@ -7,6 +7,11 @@ import pytest
 
 from saltfactories.utils.loader import LoaderModuleMock
 
+try:
+    from _pytest.fixtures import FixtureFunctionDefinition
+except ImportError:
+    FixtureFunctionDefinition = None
+
 log = logging.getLogger(__name__)
 
 
@@ -30,17 +35,15 @@ def pytest_collection_modifyitems(items):
         for typo in typos:
             try:
                 fixture = getattr(item.module, typo)
-                try:
-                    fixture._pytestfixturefunction  # pylint: disable=pointless-statement
-                    msg = (
-                        f"The module {item.module} defines a '{typo}' fixture but the correct fixture "
-                        "name is 'configure_loader_modules'"
-                    )
-                    raise RuntimeError(msg)
-                except AttributeError:
+                if not _verify_fixture(fixture):
                     # It's a regular function?!
                     # Carry on
-                    pass
+                    continue
+                msg = (
+                    f"The module {item.module} defines a '{typo}' fixture but the correct fixture "
+                    "name is 'configure_loader_modules'"
+                )
+                raise RuntimeError(msg)
             except AttributeError:
                 # The test module does not define a function with the typo as the name. Good.
                 pass
@@ -52,15 +55,21 @@ def pytest_collection_modifyitems(items):
             continue
         else:
             # The test module defines a `configure_loader_modules` function. Is it a fixture?
-            try:
-                fixture._pytestfixturefunction
-            except AttributeError:
-                # It's not a fixture, raise an error
-                msg = (
-                    f"The module {item.module} defines a 'configure_loader_modules' function but "
-                    "that function is not a fixture"
-                )
-                raise RuntimeError(msg) from None
+            if _verify_fixture(fixture):
+                continue
+            # It's not a fixture, raise an error
+            msg = (
+                f"The module {item.module} defines a 'configure_loader_modules' function but "
+                "that function is not a fixture"
+            )
+            raise RuntimeError(msg) from None
+
+
+def _verify_fixture(func):
+    if FixtureFunctionDefinition is not None:
+        # pytest 8.4+
+        return isinstance(func, FixtureFunctionDefinition)
+    return hasattr(func, "_pytestfixturefunction")
 
 
 @pytest.fixture(autouse=True)

@@ -156,10 +156,16 @@ def tests(session):
         constraints = [*salt_requirements, *pytest_requirements]
         with tempfile.NamedTemporaryFile(
             "w", prefix="reqs-constraints-", suffix=".txt", delete=False
-        ) as tfile:
+        ) as tfile, tempfile.NamedTemporaryFile(
+            "w", prefix="build-constraints-", suffix=".txt", delete=False
+        ) as build_constraints:
             with open(tfile.name, "w", encoding="utf-8") as wfh:
                 for req in constraints:
                     wfh.write(f"{req}\n")
+            with open(build_constraints.name, "w", encoding="utf-8") as wfh:
+                wfh.write("setuptools<75.6.0\n")
+            base_env = {"PIP_CONSTRAINT": build_constraints.name}
+            env.update(base_env)
             if system_service:
                 if pytest_requirements:
                     session.install(
@@ -175,7 +181,9 @@ def tests(session):
                         silent=PIP_INSTALL_SILENT,
                         env=env,
                     )
-                session.install("-c", tfile.name, "-e", ".", silent=PIP_INSTALL_SILENT)
+                session.install(
+                    "-c", tfile.name, "-e", ".", silent=PIP_INSTALL_SILENT, env=base_env
+                )
             session.install(
                 "-c",
                 tfile.name,
