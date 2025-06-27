@@ -3,5 +3,6 @@ self-hosted-runner:
   labels:
     # Not self hosted but actionlint still does not have a
     # release out supporting it
-    - macos-13
-    - macos-14
+    - macos-15
+    - ubuntu-24.04
+    - windows-2025

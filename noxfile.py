@@ -118,7 +118,7 @@ def session_run_always(session, *command, **kwargs):
             session._runner.global_config.install_only = old_install_only_value
 
 
-@nox.session(python=("3", "3.6", "3.7", "3.8", "3.9", "3.10", "3.11"))
+@nox.session(python=("3", "3.10", "3.11"))
 def tests(session):
     """
     Run tests.
