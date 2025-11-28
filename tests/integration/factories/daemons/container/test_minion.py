@@ -23,14 +23,6 @@ pytestmark = [
 ]
 
 
-@pytest.fixture(scope="session")
-def docker_client(salt_factories, docker_client):
-    if salt_factories.system_service:  # pragma: no cover
-        msg = "Test should not run against system install of Salt"
-        raise pytest.skip.Exception(msg, _use_item_location=True)
-    return docker_client
-
-
 @pytest.fixture
 def minion_id(salt_version):
     return random_string(f"salt-minion-{salt_version}-", uppercase=False)
@@ -38,6 +30,9 @@ def minion_id(salt_version):
 
 @pytest.fixture(scope="module")
 def salt_master(salt_factories, host_docker_network_ip_address):
+    if salt_factories.system_service:  # pragma: no cover
+        msg = "Test should not run against system install of Salt"
+        raise pytest.skip.Exception(msg, _use_item_location=True)
     config_overrides = {
         "interface": host_docker_network_ip_address,
         "log_level_logfile": "quiet",
