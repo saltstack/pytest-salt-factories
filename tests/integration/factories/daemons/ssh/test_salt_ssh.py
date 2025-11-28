@@ -15,7 +15,6 @@ pytestmark = [
 
 
 @pytest.fixture(scope="module")
-@pytest.mark.skip_if_binaries_missing("sshd", "ssh-keygen")
 def sshd(salt_factories):
     # Set StrictModes to no because our config directory lives in /tmp and those permissions
     # are not acceptable by sshd strict paranoia.
@@ -54,6 +53,7 @@ def salt_ssh_cli(sshd, salt_factories, master):
 
 
 @pytest.mark.skip_on_windows
+@pytest.mark.skip_if_binaries_missing("ssh", "sshd", "ssh-keygen")
 def test_salt_ssh(salt_ssh_cli):
     ret = salt_ssh_cli.run("test.echo", "It Works!", minion_tgt="localhost")
     assert ret.returncode == 0
