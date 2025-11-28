@@ -37,7 +37,7 @@ def test_sshd(sshd):
 
 
 @pytest.mark.skip_on_windows
-@pytest.mark.skip_if_binaries_missing("ssh")
+@pytest.mark.skip_if_binaries_missing("ssh", "sshd", "ssh-keygen")
 def test_connect(sshd, known_hosts_file):
     ssh = shutil.which("ssh")
     assert ssh is not None
