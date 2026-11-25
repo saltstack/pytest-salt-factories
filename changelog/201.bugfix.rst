@@ -1,0 +1,1 @@
+Guarded the ``salt.features`` import so tests work against Salt 3009+, where the module was removed.

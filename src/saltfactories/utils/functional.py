@@ -75,9 +75,16 @@ class Loaders:
 
         # Do not move these deferred imports. It allows running against a Salt
         # onedir build in salt's repo checkout.
-        import salt.features  # pylint: disable=import-outside-toplevel
-
-        salt.features.setup_features(self.opts)
+        # Mirror Salt's own startup (the Features singleton is populated by
+        # setup_features). salt.features was removed in Salt 3009 (Potassium);
+        # earlier releases still ship it. Skip gracefully when absent so the
+        # plugin works against both.
+        try:
+            import salt.features  # pylint: disable=import-outside-toplevel
+        except ImportError:
+            pass
+        else:
+            salt.features.setup_features(self.opts)
         self.reload_all()
         # Force the minion to populate it's cache if need be
         self.modules.saltutil.sync_all()

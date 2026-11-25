@@ -82,6 +82,8 @@ repos:
         alias: bandit-salt
         name: Run bandit against Salt
         args: [--silent, -lll, --skip, B701]
+        additional_dependencies:
+          - pbr
         exclude: >
             (?x)^(
                 tests/.*
@@ -93,6 +95,8 @@ repos:
         alias: bandit-tests
         name: Run bandit against the test suite
         args: [--silent, -lll, --skip, B701]
+        additional_dependencies:
+          - pbr
         files: ^tests/.*
   # <---- Security ---------------------------------------------------------------------------------------------------
 
